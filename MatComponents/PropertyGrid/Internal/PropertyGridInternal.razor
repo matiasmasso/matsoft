@@ -1,36 +1,33 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
-@using MatComponents.PropertyGrid.Internal
-@using MatComponents.PropertyGrid.Metadata
 
 @namespace MatComponents.PropertyGrid
-@inherits PropertyGridBase
 
 
 <EditForm EditContext="_editContext">
     <CascadingValue Value="_editContext">
-        <div class="pg-container">
+        <div class="mat-propertygrid-container">
 
             @if (_categories != null)
             {
                 @foreach (var cat in _categories)
                 {
-                    <div class="pg-category-header" @onclick="() => Toggle(cat)">
-                        <span class="pg-category-arrow">
+                    <div class="mat-propertygrid-category-header" @onclick="() => Toggle(cat)">
+                        <span class="mat-propertygrid-category-arrow">
                             @(cat.Expanded ? "▼" : "▶")
                         </span>
-                        <span class="pg-category-title">@cat.Name</span>
+                        <span class="mat-propertygrid-category-title">@cat.Name</span>
                     </div>
 
                     @if (cat.Expanded)
                     {
                         @foreach (var meta in cat.Properties)
                         {
-                            <div class="pg-row">
-                                <div class="pg-label">@meta.Label</div>
-                                <div class="pg-splitter"></div>
+                            <div class="mat-propertygrid-row">
+                                <div class="mat-propertygrid-label">@meta.Label</div>
+                                <div class="mat-propertygrid-splitter"></div>
 
-                                <div class="pg-editor @(
+                                <div class="mat-propertygrid-editor @(
                                      _editContext.IsModified(meta.Field) &&
                                      _editContext.GetValidationMessages(meta.Field).Any()
                                          ? "invalid"
@@ -52,6 +49,9 @@
 @code {
     [Parameter] public object Model { get; set; }
     [CascadingParameter] public EditContext CascadedEditContext { get; set; }
+    [Parameter] public object? SelectedObject { get; set; }
+    [Parameter] public EventCallback<object?> OnObjectChanged { get; set; }
+    [Parameter] public PropertyGridOptions? Options { get; set; }
 
 
     private EditContext _editContext;
@@ -62,6 +62,8 @@
     {
         if (Model == null)
             return;
+
+        var opts = Options ?? new PropertyGridOptions();
 
         if (CascadedEditContext != null)
         {
@@ -148,16 +150,6 @@
     private void Toggle(CategoryModel cat)
         => cat.Expanded = !cat.Expanded;
 
-    public partial class PropertyGridBase : ComponentBase
-    {
-        [Parameter] public object? SelectedObject { get; set; }
 
-        protected List<PropertyCategory> Categories = new();
-
-        protected override void OnParametersSet()
-        {
-            Categories = PropertyGridBuilder.Build(SelectedObject);
-        }
-    }
 
 }

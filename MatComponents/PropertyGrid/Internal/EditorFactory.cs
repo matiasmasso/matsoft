@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Reflection;
+using MatComponents.PropertyGrid.Internal.Editors.Builtin;
+using MatComponents.PropertyGrid.Internal.Metadata;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Rendering;
-using PropertyGridTest.Components.PropertyGrid.Editors.Builtin;
-using PropertyGridTest.Components.PropertyGrid.Metadata;
-using PropertyGridTest.Components.PropertyGrid.Attributes;
 
 namespace MatComponents.PropertyGrid.Internal;
 

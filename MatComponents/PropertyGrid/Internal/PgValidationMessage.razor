@@ -2,9 +2,9 @@
 
 @if (EditContext.IsModified(Field) && Messages.Any())
 {
-    <div class="pg-error animated-error">
-        <div class="pg-error-icon"></div>
-        <div class="pg-error-text">
+    <div class="mat-propertygrid-error animated-error">
+        <div class="mat-propertygrid-error-icon"></div>
+        <div class="mat-propertygrid-error-text">
             @foreach (var msg in Messages)
             {
                 <div>@msg</div>

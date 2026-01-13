@@ -1,0 +1,14 @@
+﻿@namespace MatComponents.PropertyGrid
+
+<PropertyGridInternal
+    SelectedObject="SelectedObject"
+    OnObjectChanged="OnObjectChanged"
+    Options="Options" />
+
+@code {
+    [Parameter] public object? SelectedObject { get; set; }
+
+    [Parameter] public EventCallback<object?> OnObjectChanged { get; set; }
+
+    [Parameter] public PropertyGridOptions? Options { get; set; }
+}

@@ -1,4 +1,5 @@
-﻿using PropertyGridTest.Components.PropertyGrid.Metadata;
+﻿
+using MatComponents.PropertyGrid.Internal.Metadata;
 
 namespace MatComponents.PropertyGrid.Internal;
 

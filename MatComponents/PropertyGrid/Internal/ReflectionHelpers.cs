@@ -1,6 +1,6 @@
 ﻿using MatComponents.PropertyGrid;
-using PropertyGridTest.Components.PropertyGrid.Attributes;
-using PropertyGridTest.Components.PropertyGrid.Metadata;
+using MatComponents.PropertyGrid.Internal.Attributes;
+using MatComponents.PropertyGrid.Internal.Metadata;
 using System.Reflection;
 using System.Xml.Linq;
 

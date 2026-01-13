@@ -1,6 +1,6 @@
 ﻿/* Contenidor principal */
-.pg-container {
-    --pg-label-width: 160px;
+.mat-propertygrid-container {
+    --mat-propertygrid-label-width: 160px;
     font-family: "Segoe UI", Roboto, sans-serif;
     font-size: 14px;
     color: #333;
@@ -8,7 +8,7 @@
 }
 
 /* Fila del grid */
-.pg-row {
+.mat-propertygrid-row {
     display: flex;
     align-items: center;
     min-height: 28px;
@@ -17,13 +17,13 @@
     transition: background 0.15s ease;
 }
 
-    .pg-row:hover {
+    .mat-propertygrid-row:hover {
         background: #f7f7f7;
     }
 
 /* Columna esquerra (labels) */
-.pg-label {
-    width: var(--pg-label-width);
+.mat-propertygrid-label {
+    width: var(--mat-propertygrid-label-width);
     padding: 4px 6px;
     font-weight: 500;
     color: #444;
@@ -33,7 +33,7 @@
 }
 
 /* Splitter discret i elegant */
-.pg-splitter {
+.mat-propertygrid-splitter {
     width: 6px;
     cursor: col-resize;
     background: transparent;
@@ -41,20 +41,20 @@
     align-self: stretch;
 }
 
-    .pg-splitter:hover {
+    .mat-propertygrid-splitter:hover {
         background: #d0d0d0;
     }
 
 /* Columna dreta (editors) */
-.pg-editor {
+.mat-propertygrid-editor {
     flex: 1;
     padding: 2px 0;
 }
 
     /* Inputs */
-    .pg-editor input[type="text"],
-    .pg-editor input[type="number"],
-    .pg-editor select {
+    .mat-propertygrid-editor input[type="text"],
+    .mat-propertygrid-editor input[type="number"],
+    .mat-propertygrid-editor select {
         width: 100%;
         padding: 3px 6px;
         border: 1px solid #ccc;
@@ -64,19 +64,19 @@
         transition: border-color 0.15s ease;
     }
 
-        .pg-editor input:focus,
-        .pg-editor select:focus {
+        .mat-propertygrid-editor input:focus,
+        .mat-propertygrid-editor select:focus {
             border-color: #0078d4;
             outline: none;
         }
 
     /* Checkbox alineat */
-    .pg-editor input[type="checkbox"] {
+    .mat-propertygrid-editor input[type="checkbox"] {
         transform: scale(1.1);
     }
 
 /* Categoria */
-.pg-category-header {
+.mat-propertygrid-category-header {
     font-weight: 600;
     padding: 6px 4px;
     background: #f0f0f0;
@@ -87,11 +87,11 @@
     user-select: none;
 }
 
-    .pg-category-header:hover {
+    .mat-propertygrid-category-header:hover {
         background: #e5e5e5;
     }
 
-.pg-category-arrow {
+.mat-propertygrid-category-arrow {
     width: 18px;
     display: inline-block;
     text-align: center;
@@ -99,12 +99,12 @@
     color: #666;
 }
 
-.pg-category-title {
+.mat-propertygrid-category-title {
     font-size: 13px;
     color: #444;
 }
 
-.pg-input {
+.mat-propertygrid-input {
     width: 100%;
     padding: 4px 6px;
     border: 1px solid #ccc;
@@ -114,12 +114,12 @@
     transition: border-color 0.15s ease;
 }
 
-    .pg-input:focus {
+    .mat-propertygrid-input:focus {
         border-color: #0078d4;
         outline: none;
     }
 
-.pg-object-header {
+.mat-propertygrid-object-header {
     padding: 4px 6px;
     background: #f3f3f3;
     border-bottom: 1px solid #ddd;
@@ -130,28 +130,28 @@
     font-weight: 600;
 }
 
-    .pg-object-header:hover {
+    .mat-propertygrid-object-header:hover {
         background: #e8e8e8;
     }
 
-.pg-object-arrow {
+.mat-propertygrid-object-arrow {
     width: 18px;
     text-align: center;
     color: #666;
 }
 
-.pg-object-title {
+.mat-propertygrid-object-title {
     color: #444;
 }
 
-.pg-object-children {
+.mat-propertygrid-object-children {
     margin-left: 20px;
     border-left: 2px solid #ddd;
     padding-left: 10px;
 }
 
 
-.pg-error {
+.mat-propertygrid-error {
     color: #c62828;
     font-size: 12px;
     margin-top: 2px;
@@ -161,7 +161,7 @@
 }
 
 /* Icona d’error */
-.pg-error-icon {
+.mat-propertygrid-error-icon {
     width: 16px;
     height: 16px;
     background-color: #b00020;
@@ -192,12 +192,12 @@
     }
 }
 
-.pg-editor.invalid {
+.mat-propertygrid-editor.invalid {
     transition: background-color 200ms ease 150ms, border-color 200ms ease 150ms;
 }
-.pg-editor.invalid input,
-.pg-editor.invalid select,
-.pg-editor.invalid textarea {
+.mat-propertygrid-editor.invalid input,
+.mat-propertygrid-editor.invalid select,
+.mat-propertygrid-editor.invalid textarea {
     border-color: #b00020;
     background-color: #fff5f5;
     transition: border-color 160ms ease, background-color 160ms ease;
@@ -231,14 +231,14 @@
     }
 }
 
-.pg-editor.invalid input:focus,
-.pg-editor.invalid select:focus,
-.pg-editor.invalid textarea:focus {
+.mat-propertygrid-editor.invalid input:focus,
+.mat-propertygrid-editor.invalid select:focus,
+.mat-propertygrid-editor.invalid textarea:focus {
     box-shadow: 0 0 0 3px rgba(176, 0, 32, 0.25);
     transition: box-shadow 160ms ease;
 }
 
-.pg-editor {
+.mat-propertygrid-editor {
     transition: background-color 160ms ease, border-color 160ms ease;
 }
 
@@ -252,14 +252,14 @@
 @media (max-width: 600px) {
 
     /* Fila vertical */
-    .pg-row {
+    .mat-propertygrid-row {
         flex-direction: column;
         align-items: stretch;
         padding: 6px 0;
     }
 
     /* Label a dalt */
-    .pg-label {
+    .mat-propertygrid-label {
         width: 100% !important;
         padding: 4px 2px;
         font-weight: 600;
@@ -268,20 +268,20 @@
     }
 
     /* Splitter desapareix */
-    .pg-splitter {
+    .mat-propertygrid-splitter {
         display: none;
     }
 
     /* Editor ocupa tot l’ample */
-    .pg-editor {
+    .mat-propertygrid-editor {
         width: 100%;
         padding-top: 2px;
     }
 
         /* Inputs més grans per a mòbil */
-        .pg-editor input[type="text"],
-        .pg-editor input[type="number"],
-        .pg-editor select {
+        .mat-propertygrid-editor input[type="text"],
+        .mat-propertygrid-editor input[type="number"],
+        .mat-propertygrid-editor select {
             font-size: 16px; /* evita zoom automàtic en iOS */
             padding: 8px;
         }
