@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MatComponents/MatComponents.csproj" />
+  <Project Path="MatComponentsDemo/MatComponentsDemo.csproj" />
+</Solution>

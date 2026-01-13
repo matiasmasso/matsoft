@@ -1,0 +1,65 @@
+﻿@page "/"
+@using MatComponents.Loading
+@using MatComponents.PropertyGrid
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<button class="mat-raised-button mat-primary" @onclick="() => isLoading = !isLoading">
+    Toggle Loading State</button>
+<Loading Visible="isLoading" />
+
+    <PropertyGrid SelectedObject="smtpSettings"
+              OnObjectChanged="SaveSettings" />
+
+    @* <PropertyGrid SelectedObject="@Settings"
+              Options="@GridOptions"
+              OnObjectChanged="SaveSettings" /> *@
+
+@code {
+    private bool isLoading = false;
+
+    private AppSettings Settings = new();
+    private SmtpSettings smtpSettings = new();
+
+    // private PropertyGridOptions GridOptions = new()
+    // {
+    //     ExpandNestedObjects = true,
+    //     ShowDescriptions = true
+    // };
+
+    private void SaveSettings(object? updated)
+    {
+        // Persist to database or configuration file
+        //return SettingsService.SaveAsync((AppSettings)updated!);
+    }
+
+
+
+    public class AppSettings
+    {
+        public SmtpSettings Smtp { get; set; } = new();
+        public LoggingSettings Logging { get; set; } = new();
+        public UiSettings Ui { get; set; } = new();
+    }
+
+    public class LoggingSettings
+    {
+        public string LogLevel { get; set; } = "Information";
+        public string LogFilePath { get; set; } = "logs/app.log";
+    }
+    public class UiSettings
+    {
+        public string Theme { get; set; } = "Light";
+        public int ItemsPerPage { get; set; } = 10;
+    }
+    public class SmtpSettings
+    {
+        public string Host { get; set; } = "";
+        public int Port { get; set; } = 587;
+        public bool UseSsl { get; set; } = true;
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

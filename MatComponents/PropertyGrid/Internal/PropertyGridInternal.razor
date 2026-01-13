@@ -1,5 +1,6 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
 
 @namespace MatComponents.PropertyGrid
 
@@ -33,7 +34,7 @@
                                          ? "invalid"
                                          : ""
                                         )">
-                                    @EditorFactory.Render(meta, Model, meta.Field)
+                                    @EditorFactory.Render(meta, SelectedObject, meta.Field)
                                     <PgValidationMessage Field="meta.Field" />
                                 </div>
                             </div>
@@ -47,12 +48,14 @@
 </EditForm>
 
 @code {
-    [Parameter] public object Model { get; set; }
+    //[Parameter] public object Model { get; set; }
     [CascadingParameter] public EditContext CascadedEditContext { get; set; }
     [Parameter] public object? SelectedObject { get; set; }
     [Parameter] public EventCallback<object?> OnObjectChanged { get; set; }
     [Parameter] public PropertyGridOptions? Options { get; set; }
 
+    //Recommended JS structure for your PropertyGrid
+    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private EditContext _editContext;
     private ValidationMessageStore _messages;
@@ -60,7 +63,7 @@
 
     protected override void OnParametersSet()
     {
-        if (Model == null)
+        if (SelectedObject == null)
             return;
 
         var opts = Options ?? new PropertyGridOptions();
@@ -83,9 +86,9 @@
         else
         {
             // Som el root → creem l’EditContext
-            if (_editContext == null || _editContext.Model != Model)
+            if (_editContext == null || _editContext.Model != SelectedObject)
             {
-                _editContext = new EditContext(Model);
+                _editContext = new EditContext(SelectedObject);
                 _messages = new ValidationMessageStore(_editContext);
 
                 _editContext.OnFieldChanged -= HandleFieldChanged;
@@ -130,10 +133,10 @@
 
     private void LoadCategories()
     {
-        var props = ReflectionHelpers.GetMetadata(Model);
+        var props = ReflectionHelpers.GetMetadata(SelectedObject);
 
         foreach (var meta in props)
-            meta.Field = new FieldIdentifier(Model, meta.Property.Name);
+            meta.Field = new FieldIdentifier(SelectedObject, meta.Property.Name);
 
         _categories = props
             .GroupBy(p => p.Category)

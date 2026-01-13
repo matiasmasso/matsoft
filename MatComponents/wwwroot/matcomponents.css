@@ -1,4 +1,36 @@
-﻿/* Contenidor principal */
+﻿/* ============================================================
+   LOADING SPINNER
+   ============================================================ */
+
+.mat-loading {
+    display: inline-block;
+}
+
+.mat-loading-rect {
+    animation: mat-loading-dance .8s linear infinite;
+    opacity: 1;
+}
+
+.mat-loading-rect2 {
+    animation-delay: -.65s;
+}
+
+.mat-loading-rect3 {
+    animation-delay: -.5s;
+}
+
+@keyframes mat-loading-dance {
+    93.75%, 100% {
+        opacity: .2;
+    }
+}
+
+
+/* ============================================================
+   PROPERTY GRID
+   ============================================================ */
+
+/* Contenidor principal */
 .mat-propertygrid-container {
     --mat-propertygrid-label-width: 160px;
     font-family: "Segoe UI", Roboto, sans-serif;
