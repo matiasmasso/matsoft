@@ -1,10 +1,11 @@
-﻿using System;
-using System.Reflection;
-using MatComponents.PropertyGrid.Internal.Editors.Builtin;
+﻿using MatComponents.PropertyGrid.Internal.Editors.Builtin;
+using MatComponents.PropertyGrid.Internal.Editors.Custom;
 using MatComponents.PropertyGrid.Internal.Metadata;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Rendering;
+using System;
+using System.Reflection;
 
 namespace MatComponents.PropertyGrid.Internal;
 
@@ -36,7 +37,7 @@ public static class EditorFactory
             }
 
             // 3) Editor per tipus
-            var editorType = ResolveEditorType(type);
+            var editorType = Resolve(meta);
 
             // 4) Editor d’objectes (nested)
             if (editorType == typeof(ObjectEditor))
@@ -50,20 +51,44 @@ public static class EditorFactory
         };
 
     // ------------------------------------------------------------
-    // RESOLUCIÓ D’EDITOR PER TIPUS
+    // RESOLUCIÓ D’EDITOR PER METADATA
     // ------------------------------------------------------------
-    private static Type ResolveEditorType(Type type)
-    {
-        if (type == typeof(string)) return typeof(StringEditor);
-        if (type == typeof(int)) return typeof(IntEditor);
-        if (type == typeof(double)) return typeof(DoubleEditor);
-        if (type == typeof(decimal)) return typeof(DecimalEditor);
-        if (type == typeof(bool)) return typeof(BoolEditor);
-        if (type == typeof(DateTime)) return typeof(DateEditor);
-        if (type.IsEnum) return typeof(EnumEditor);
 
-        return typeof(ObjectEditor);
+    public static Type Resolve(PgPropertyMetadata meta)
+    {
+        // 1. Custom editor attribute overrides everything
+        if (meta.CustomEditor != null)
+            return meta.CustomEditor;
+
+        // 2. Search-based lookup (large datasets)
+        if (meta.SearchFunc != null)
+            return typeof(SearchLookupEditor<>).MakeGenericType(meta.PropertyType);
+
+        // 3. Preloaded lookup values (small datasets)
+        if (meta.LookupValues != null)
+            return typeof(LookupEditor<>).MakeGenericType(meta.PropertyType);
+
+        // 4. Enum
+        if (meta.PropertyType.IsEnum)
+            return typeof(EnumEditor);
+
+        // 5. Primitive types
+        if (meta.PropertyType == typeof(string)) return typeof(StringEditor);
+        if (meta.PropertyType == typeof(int)) return typeof(IntEditor);
+        if (meta.PropertyType == typeof(double)) return typeof(DoubleEditor);
+        if (meta.PropertyType == typeof(decimal)) return typeof(DecimalEditor);
+        if (meta.PropertyType == typeof(bool)) return typeof(BoolEditor);
+        if (meta.PropertyType == typeof(DateTime)) return typeof(DateEditor);
+
+        // 6. Complex type → nested object editor
+        if (meta.IsComplexType)
+            return typeof(ObjectEditor);
+
+        // 7. Fallback
+        return typeof(StringEditor);
     }
+
+
 
     // ------------------------------------------------------------
     // EDITOR BUILTIN

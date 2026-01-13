@@ -16,10 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="PropertyGrid\Internal\Editors\Custom\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="wwwroot\matcomponents.css" />
   </ItemGroup>
 

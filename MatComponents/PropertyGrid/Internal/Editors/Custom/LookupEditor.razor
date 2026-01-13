@@ -1,0 +1,50 @@
+﻿@typeparam T
+@inherits EditorBase<T>
+
+<select class="mat-pg-lookup-editor"
+        value="@CurrentValueString"
+        @onchange="OnChange">
+    <option value="">-- Select --</option>
+
+    @if (Metadata.LookupValues != null)
+    {
+        @foreach (var obj in Metadata.LookupValues)
+        {
+            var item = (LookupItem<T>)obj;
+            <option value="@item.Value?.ToString()">@item.Label</option>
+        }
+    }
+</select>
+
+@code {
+    private string? CurrentValueString => Value?.ToString();
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        var str = e.Value?.ToString();
+
+        if (string.IsNullOrWhiteSpace(str))
+        {
+            await NotifyValueChangedAsync(default);
+            return;
+        }
+
+        T? converted = default;
+
+        if (typeof(T) == typeof(Guid))
+        {
+            if (Guid.TryParse(str, out var g))
+                converted = (T)(object)g;
+        }
+        else if (typeof(T).IsEnum)
+        {
+            converted = (T)Enum.Parse(typeof(T), str);
+        }
+        else
+        {
+            converted = (T)Convert.ChangeType(str, typeof(T));
+        }
+
+        await NotifyValueChangedAsync(converted);
+    }
+}

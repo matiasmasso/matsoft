@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
+@inherits EditorBase<decimal>
 
 <input class="mat-propertygrid-input"
        type="number"
@@ -7,8 +8,6 @@
        @oninput="OnInput" />
 
 @code {
-    [CascadingParameter] public EditContext EditContext { get; set; }
-
     [Parameter] public double Value { get; set; }
     [Parameter] public EventCallback<double> ValueChanged { get; set; }
 

@@ -1,25 +1,15 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+﻿@inherits EditorBase<decimal>
 
-<input class="mat-propertygrid-input"
-       type="number"
-       step="any"
+<input type="number"
+       step="0.01"
        value="@Value"
-       @oninput="OnInput" />
+       @onchange="OnChange" />
 
 @code {
-    [CascadingParameter] public EditContext EditContext { get; set; }
-
-    [Parameter] public decimal Value { get; set; }
-    [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
-
-    [Parameter] public FieldIdentifier Field { get; set; }
-
-    private async Task OnInput(ChangeEventArgs e)
+    private async Task OnChange(ChangeEventArgs e)
     {
-        if (decimal.TryParse(e.Value?.ToString(), out var newValue))
-        {
-            await ValueChanged.InvokeAsync(newValue);
-            EditContext?.NotifyFieldChanged(Field);
-        }
+        if (decimal.TryParse(e.Value?.ToString(), out var d))
+            await NotifyValueChangedAsync(d);
     }
 }
+

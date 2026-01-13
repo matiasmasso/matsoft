@@ -1,4 +1,42 @@
-﻿/* ============================================================
+﻿
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.mat-btn {
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    font-size: 0.9rem;
+}
+
+    .mat-btn svg {
+        display: block;
+    }
+
+.mat-btn-primary {
+    background: #0078d4;
+    color: white;
+}
+
+.mat-btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.mat-btn-danger {
+    background: #d83b01;
+    color: white;
+}
+
+.mat-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* ============================================================
    LOADING SPINNER
    ============================================================ */
 
@@ -275,8 +313,18 @@
 }
 
 
-
-
+.mat-propertygrid-buttons {
+    margin-top: 16px;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 12px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    z-index: 10;
+}
 
 /* ============================
    RESPONSIVE MODE

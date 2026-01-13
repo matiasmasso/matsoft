@@ -3,12 +3,15 @@
     [AttributeUsage(AttributeTargets.Property)]
     public class PgDisplayAttribute : Attribute
     {
-        public string Label { get; }
-        public int Order { get; set; } = 0;
+        public string Label { get; set; } = "";
+        public int Order { get; set; }
+
+        public PgDisplayAttribute() { }
 
         public PgDisplayAttribute(string label)
         {
             Label = label;
         }
     }
+
 }

@@ -1,12 +1,11 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
+@inherits EditorBase<decimal>
 
 <input type="checkbox"
        checked="@Value"
        @onchange="OnChange" />
 
 @code {
-    [CascadingParameter] public EditContext EditContext { get; set; }
-
     [Parameter] public bool Value { get; set; }
     [Parameter] public EventCallback<bool> ValueChanged { get; set; }
 

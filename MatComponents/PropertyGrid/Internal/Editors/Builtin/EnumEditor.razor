@@ -1,4 +1,5 @@
-﻿
+﻿@inherits EditorBase<decimal>
+
 <select class="mat-propertygrid-input"
         value="@Value"
         @onchange="OnChange">
@@ -10,18 +11,12 @@
 </select>
 
 @code {
-    [CascadingParameter] public EditContext EditContext { get; set; }
-
-    [Parameter] public object Value { get; set; }
-    [Parameter] public EventCallback<object> ValueChanged { get; set; }
-    [Parameter] public FieldIdentifier Field { get; set; }
-
     [Parameter] public Type EnumType { get; set; }
 
     private async Task OnChange(ChangeEventArgs e)
     {
         var parsed = Enum.Parse(EnumType, e.Value.ToString());
-        await ValueChanged.InvokeAsync(parsed);
+        await ValueChanged.InvokeAsync((decimal)parsed);
         EditContext.NotifyFieldChanged(Field);
     }
 }

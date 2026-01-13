@@ -1,4 +1,6 @@
-﻿<select class="mat-propertygrid-input"
+﻿@inherits EditorBase<string>
+
+<select class="mat-propertygrid-input"
         value="@Value"
         @onchange="OnChange">
 
@@ -9,17 +11,10 @@
 </select>
 
 @code {
-    [CascadingParameter] public EditContext EditContext { get; set; }
-
-    [Parameter] public string Value { get; set; }
-    [Parameter] public EventCallback<string> ValueChanged { get; set; }
-    [Parameter] public FieldIdentifier Field { get; set; }
-
     [Parameter] public IEnumerable<string> Items { get; set; }
 
     private async Task OnChange(ChangeEventArgs e)
     {
-        await ValueChanged.InvokeAsync(e.Value.ToString());
-        EditContext.NotifyFieldChanged(Field);
+        await NotifyValueChangedAsync(e.Value?.ToString());
     }
 }

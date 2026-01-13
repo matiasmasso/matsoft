@@ -1,7 +1,9 @@
-﻿<div class="mat-propertygrid-object-editor">
+﻿@inherits EditorBase<decimal>
+
+<div class="mat-propertygrid-object-editor">
     @if (Node?.Instance != null)
     {
-        <PropertyGrid Model="Node.Instance" />
+        <PropertyGrid SelectedObject="Node.Instance" />
     }
 </div>
 

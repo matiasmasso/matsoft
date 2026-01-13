@@ -1,26 +1,13 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+﻿@inherits EditorBase<DateTime>
 
 <input type="date"
-       class="mat-propertygrid-input"
-       value="@BindValue"
+       value="@Value.ToString("yyyy-MM-dd")"
        @onchange="OnChange" />
 
 @code {
-    [CascadingParameter] public EditContext EditContext { get; set; }
-
-    [Parameter] public DateTime Value { get; set; }
-    [Parameter] public EventCallback<DateTime> ValueChanged { get; set; }
-    [Parameter] public FieldIdentifier Field { get; set; }
-
-    private string BindValue
-        => Value == default ? "" : Value.ToString("yyyy-MM-dd");
-
     private async Task OnChange(ChangeEventArgs e)
     {
         if (DateTime.TryParse(e.Value?.ToString(), out var dt))
-        {
-            await ValueChanged.InvokeAsync(dt);
-            EditContext.NotifyFieldChanged(Field);
-        }
+            await NotifyValueChangedAsync(dt);
     }
 }

@@ -1,9 +1,9 @@
 ﻿@using System.ComponentModel.DataAnnotations
+@using MatComponents.Loading
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
 
 @namespace MatComponents.PropertyGrid
-
 
 <EditForm EditContext="_editContext">
     <CascadingValue Value="_editContext">
@@ -33,8 +33,11 @@
                                      _editContext.GetValidationMessages(meta.Field).Any()
                                          ? "invalid"
                                          : ""
-                                        )">
-                                    @EditorFactory.Render(meta, SelectedObject, meta.Field)
+                                                     )">
+
+                                    <DynamicComponent Type="@ResolveEditorType(meta)"
+                                                      Parameters="BuildEditorParameters(meta)" />
+
                                     <PgValidationMessage Field="meta.Field" />
                                 </div>
                             </div>
@@ -44,22 +47,86 @@
             }
 
         </div>
+
+        <div class="mat-propertygrid-buttons">
+            @if (OnCancel.HasDelegate)
+            {
+                <button class="mat-btn mat-btn-secondary"
+                        @onclick="Cancel"
+                        disabled="@_busy">
+                    @if (_busy && _busyAction == "cancel")
+                    {
+                        <Loading />
+                    }
+                    else
+                    {
+
+                        <span>Cancel</span>
+                    }
+                </button>
+            }
+
+            @if (OnDelete.HasDelegate)
+            {
+                <button class="mat-btn mat-btn-danger"
+                        @onclick="Delete"
+                        disabled="@_busy">
+                    @if (_busy && _busyAction == "delete")
+                    {
+                        <Loading />
+                    }
+                    else
+                    {
+
+                        <span>Delete</span>
+                    }
+                </button>
+            }
+
+            @if (OnUpdate.HasDelegate)
+            {
+                <button class="mat-btn mat-btn-primary"
+                        @onclick="Update"
+                        disabled="@_busy">
+                    @if (_busy && _busyAction == "update")
+                    {
+                        <Loading />
+                    }
+                    else
+                    {
+
+                        <span>Update</span>
+                    }
+                </button>
+            }
+        </div>
+
     </CascadingValue>
 </EditForm>
 
 @code {
-    //[Parameter] public object Model { get; set; }
     [CascadingParameter] public EditContext CascadedEditContext { get; set; }
     [Parameter] public object? SelectedObject { get; set; }
     [Parameter] public EventCallback<object?> OnObjectChanged { get; set; }
     [Parameter] public PropertyGridOptions? Options { get; set; }
 
-    //Recommended JS structure for your PropertyGrid
+    [Parameter] public EventCallback<object?> OnUpdate { get; set; }
+    [Parameter] public EventCallback<object?> OnDelete { get; set; }
+    [Parameter] public EventCallback<object?> OnCancel { get; set; }
+
+    [Parameter]
+    public Dictionary<string, IEnumerable<object>>? Lookups { get; set; }
+
+    [Parameter]
+    public Dictionary<string, Func<string, Task<IEnumerable<object>>>>? SearchLookups { get; set; }
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
     private EditContext _editContext;
     private ValidationMessageStore _messages;
     private List<CategoryModel> _categories;
+
+    private bool _busy = false;
+    private string? _busyAction = null;
 
     protected override void OnParametersSet()
     {
@@ -136,7 +203,17 @@
         var props = ReflectionHelpers.GetMetadata(SelectedObject);
 
         foreach (var meta in props)
+        {
             meta.Field = new FieldIdentifier(SelectedObject, meta.Property.Name);
+
+            // Inject lookup values
+            if (Lookups?.TryGetValue(meta.Property.Name, out var lookupValues) == true)
+                meta.LookupValues = lookupValues;
+
+            // Inject search delegate
+            if (SearchLookups?.TryGetValue(meta.Property.Name, out var searchFunc) == true)
+                meta.SearchFunc = searchFunc;
+        }
 
         _categories = props
             .GroupBy(p => p.Category)
@@ -150,9 +227,97 @@
             .ToList();
     }
 
+    private Type ResolveEditorType(PgPropertyMetadata meta)
+    {
+        // 1. Search-based lookup (large datasets)
+        if (meta.SearchFunc != null)
+            return typeof(SearchLookupEditor<>).MakeGenericType(meta.PropertyType);
+
+        // 2. Preloaded lookup values (small datasets)
+        if (meta.LookupValues != null)
+            return typeof(LookupEditor<>).MakeGenericType(meta.PropertyType);
+
+        // 3. Enum
+        if (meta.PropertyType.IsEnum)
+            return typeof(EnumEditor);
+
+        // 4. Primitive types
+        if (meta.PropertyType == typeof(string)) return typeof(StringEditor);
+        if (meta.PropertyType == typeof(int)) return typeof(IntEditor);
+        if (meta.PropertyType == typeof(double)) return typeof(DoubleEditor);
+        if (meta.PropertyType == typeof(decimal)) return typeof(DecimalEditor);
+        if (meta.PropertyType == typeof(bool)) return typeof(BoolEditor);
+        if (meta.PropertyType == typeof(DateTime)) return typeof(DateEditor);
+
+        // 5. Complex type → nested object editor
+        if (meta.IsComplexType)
+            return typeof(ObjectEditor);
+
+        // 6. Fallback
+        return typeof(StringEditor);
+    }
+
+
+    private Dictionary<string, object?> BuildEditorParameters(PgPropertyMetadata meta)
+    {
+        var property = meta.Property;
+        var value = property.GetValue(SelectedObject);
+
+        return new Dictionary<string, object?>
+        {
+            ["Value"] = value,
+
+            ["ValueChanged"] = EventCallback.Factory.Create(this, (object? newValue) =>
+            {
+                // Assign the new value to the model
+                property.SetValue(SelectedObject, newValue);
+
+                // Notify Blazor validation system
+                _editContext.NotifyFieldChanged(meta.Field);
+
+                // Notify parent component
+                if (OnObjectChanged.HasDelegate)
+                    OnObjectChanged.InvokeAsync(SelectedObject);
+            }),
+
+            ["Metadata"] = meta
+        };
+    }
+
     private void Toggle(CategoryModel cat)
         => cat.Expanded = !cat.Expanded;
 
+    private async Task Update()
+    {
+        if (!OnUpdate.HasDelegate) return;
 
+        _busy = true;
+        _busyAction = "update";
+        StateHasChanged();
 
+        await OnUpdate.InvokeAsync(SelectedObject);
+
+        _busy = false;
+        _busyAction = null;
+    }
+
+    private async Task Delete()
+    {
+        if (!OnDelete.HasDelegate) return;
+
+        _busy = true;
+        _busyAction = "delete";
+        StateHasChanged();
+
+        await OnDelete.InvokeAsync(SelectedObject);
+
+        _busy = false;
+        _busyAction = null;
+    }
+
+    private async Task Cancel()
+    {
+        if (!OnCancel.HasDelegate) return;
+        await OnCancel.InvokeAsync(SelectedObject);
+    }
 }

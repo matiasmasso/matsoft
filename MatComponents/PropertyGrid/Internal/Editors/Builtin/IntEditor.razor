@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+﻿@inherits EditorBase<decimal>
+
 
 <input class="mat-propertygrid-input"
        type="number"
@@ -6,13 +7,6 @@
        @oninput="OnInput" />
 
 @code {
-    [CascadingParameter] public EditContext EditContext { get; set; }
-
-    [Parameter] public int Value { get; set; }
-    [Parameter] public EventCallback<int> ValueChanged { get; set; }
-
-    [Parameter] public FieldIdentifier Field { get; set; }
-
     private async Task OnInput(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var newValue))
