@@ -1,0 +1,95 @@
+﻿@page "/ProductBrands_Page"
+@inherits _ComponentBase
+
+<div class="PageWrapper600">
+    <h1>@Localizer("ProductBrands")</h1>
+
+    <PageOptions IsShowingOptions>
+        <UxToggle @bind-Value="@IsShowingObsolets"
+                  TrueText="OutdatedIncluded"
+                  FalseText="OutdatedNotIncluded"></UxToggle>
+
+        <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+    </PageOptions>
+
+    @if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("ProductBrands.Found",model.Count(),model.Where(x=>x.Obsoleto == false).Count())
+        </div>
+
+        <ProductBrands_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></ProductBrands_List>
+
+    }
+    else
+    {
+        <ProductBrand Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></ProductBrand>
+    }
+
+
+
+</div>
+
+@code {
+    List<ProductBrandModel> model;
+    CacheDTO cache;
+    string searchTerm;
+    bool IsShowingObsolets = false;
+    ProductBrandModel selectedItem = null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        model = cache.Brands;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Tpa);
+        model = cache.Brands;
+    }
+
+    List<ProductBrandModel> FilteredItems()
+    {
+        var retval = model;
+        if (!string.IsNullOrEmpty(searchTerm))
+            retval = retval.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.Obsoleto == false).ToList();
+        retval = retval.OrderBy(x => x.Obsoleto).ToList();
+        return retval;
+    }
+
+    private void ItemClick(ProductBrandModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new ProductBrandModel
+            {
+                Emp = (int)EmpModel.EmpIds.MatiasMasso
+            };
+    }
+
+    private void OnUpdate(ProductBrandModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(ProductBrandModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+}

@@ -1,0 +1,243 @@
+﻿@inject ApiService ApiService
+
+@if (selectedContact != null)
+{
+    <Contact Value="selectedContact" 
+    AfterUpdate="AfterUpdateContact"
+    CloseRequest="@(()=>selectedContact = null)"></Contact>
+}
+else
+{
+    <h3>Entrar factura de proveidor</h3>
+
+    <PageOptions>
+        <a href="#" @onclick:preventDefault @onclick="@(()=>hasIva=!hasIva)">Devenga Iva</a>
+    </PageOptions>
+    <PropertyGrid Model="propertyGrid"
+    ItemChanged="ItemChanged"
+    UpdateRequest="UpdateAsync"
+    CancelRequest="CancelRequest"
+    UpdateState="UpdateState()">
+    </PropertyGrid>
+
+    <Error @bind-Value="exception"></Error>
+}
+
+
+@code {
+    [Parameter] public FacturaProveidorModel? Value { get; set; }
+    [Parameter] public EventCallback RequestToClose { get; set; }
+    [Parameter] public EventCallback<FacturaProveidorModel> AfterUpdate { get; set; }
+
+    private FacturaProveidorModel? value;
+    private PropertyGridModel? propertyGrid;
+    private CrudButton.States updateState;
+    private List<PgcCtaModel>? ctas;
+    private List<ProjecteModel>? allProjectes;
+
+    private ContactModel? selectedContact;
+    private List<ContactModel>? contacts;
+
+    private bool hasIva;
+    private EmpModel.EmpIds emp;
+    private Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Numero,
+        Fch,
+        Vto,
+        Proveidor,
+        Concept,
+        Base1,
+        Base2,
+        Base3,
+        Liquid,
+        CtaDeb,
+        CtaHab,
+
+        Projecte,
+        Docfile
+    }
+
+    protected override void OnInitialized()
+    {
+        value = Value;
+        _ = Task.Run(async () => await FetchAsync());
+    }
+
+    protected override void OnParametersSet()
+    {
+        emp = (EmpModel.EmpIds)ApiService.Emp!;
+        propertyGrid = PropertyGrid();
+    }
+
+
+    PropertyGridModel PropertyGrid()
+    {
+        var projectes = allProjectes?.Where(x => x.Emp == emp).Select(x => x.ToGuidnom()).ToList();
+        var ctaGuidnoms = ctas?.Select(x => x.ToGuidNom()).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddEmp(emp);
+        retval.AddString("Numero", value?.FraNum);
+        retval.AddDateOnly("Data", value?.Fch);
+        retval.AddDateOnly("Venciment", value?.Vto);
+        //retval.AddGuidnom("Proveidor", value?.Proveidor, ApiService.GetContacts(emp), AddContact);
+        retval.AddModel<ContactModel>("Proveidor", value?.Proveidor, contacts, AddContact);
+        retval.AddString("Concepte", value?.Concept, 60);
+        retval.AddBaseQuota("Base Iva1", value?.Ivas.Count > 0 ? value.Ivas[0] : null);
+        retval.AddBaseQuota("Base Iva2", value?.Ivas.Count > 1 ? value.Ivas[1] : null);
+        retval.AddBaseQuota("Base Iva3", value?.Ivas.Count > 2 ? value.Ivas[2] : null);
+        retval.AddEur("Liquid", value?.Liquid());
+        retval.AddGuidnom("Compte de càrrec", ctaGuidnoms?.FirstOrDefault(x => x.Guid == value?.CtaDeb), ctaGuidnoms);
+        retval.AddGuidnom("Compte abonament", ctaGuidnoms?.FirstOrDefault(x => x.Guid == value?.CtaHab), ctaGuidnoms);
+        retval.AddGuidnom("Projecte", projectes?.FirstOrDefault(x => x.Guid == value?.Projecte), projectes);
+        retval.AddDocfile(value?.Docfile);
+        return retval;
+    }
+
+    void ItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            contacts = ApiService.GetContacts(emp);
+            propertyGrid = PropertyGrid();
+        }
+        else if (args.Format == PropertyGridModel.Formats.BaseTipusQuota)
+        {
+            value = CurrentValue();
+            propertyGrid!.Items[(int)Fields.Liquid] = new PropertyGridModel.Item<string>("Liquid", ((decimal)value!.Liquid()!).ToString("0.00", propertyGrid.Culture), PropertyGridModel.Formats.Eur);
+        }
+        else if (args.Field == (int)Fields.Numero || args.Field == (int)Fields.Proveidor)
+        {
+            var val = CurrentValue();
+            var item = (PropertyGridModel.Item<string>)propertyGrid!.Items.First(x => x.Field == (int)Fields.Concept);
+            if (!item.IsDirty)
+            {
+                if (val?.Proveidor == null)
+                    value!.Concept = $"Fra.{val?.FraNum}";
+                else
+                {
+                    var contact = ApiService.GetContact(val?.Proveidor);
+                    value!.Concept = $"Fra.{val?.FraNum} de {contact?.FullNom}";
+                }
+                propertyGrid = PropertyGrid();
+            }
+        } 
+    }
+
+
+
+    FacturaProveidorModel? CurrentValue()
+    {
+        var retval = value;
+        if (retval != null)
+        {
+            retval.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            retval.FraNum = propertyGrid.Value<string>((int)Fields.Numero);
+            retval.Fch = propertyGrid!.GetDateOnly((int)Fields.Fch);
+            retval.Vto = propertyGrid!.GetDateOnly((int)Fields.Vto);
+            //retval.Proveidor = propertyGrid.GetGuidNom((int)Fields.Proveidor)?.Guid;
+            retval.Proveidor = propertyGrid.GetModelGuid((int)Fields.Proveidor);
+            retval.RaoSocial = contacts?.FirstOrDefault(x => x.Guid == retval.Proveidor)?.RaoSocial;
+            retval.NIF = contacts?.FirstOrDefault(x => x.Guid == retval.Proveidor)?.Nifs.FirstOrDefault()?.Value;
+            retval.Concept = propertyGrid.Value<string>((int)Fields.Concept);
+
+            value!.Ivas = new List<BaseQuotaModel>();
+            var base1 = propertyGrid!.GetBaseQuota((int)Fields.Base1);
+            var base2 = propertyGrid!.GetBaseQuota((int)Fields.Base2);
+            var base3 = propertyGrid!.GetBaseQuota((int)Fields.Base3);
+            if (base1 != null && base1.Base != 0) value.Ivas.Add(base1);
+            if (base2 != null && base2.Base != 0) value.Ivas.Add(base2);
+            if (base3 != null && base3.Base != 0) value.Ivas.Add(base3);
+
+            retval.CtaDeb = propertyGrid.GetGuidNom((int)Fields.CtaDeb)?.Guid;
+            retval.CtaHab = propertyGrid.GetGuidNom((int)Fields.CtaHab)?.Guid;
+            retval.Projecte = propertyGrid.GetGuidNom((int)Fields.Projecte)?.Guid;
+            retval.Cfp = PndModel.Cfps.domiciliacioBancaria;
+            retval.Docfile = propertyGrid.GetDocfile((int)Fields.Docfile);
+        }
+        return retval;
+    }
+
+
+    async Task UpdateAsync()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            var fra = CurrentValue();
+            if (fra != null)
+            {
+                await ApiService.PostMultipartAsync<FacturaProveidorModel, bool>(fra.Docfile, fra, "FacturaProveidor");
+                await AfterUpdate.InvokeAsync(fra);
+            }
+        }
+        catch (Exception ex)
+        {
+            updateState = CrudButton.States.StandBy;
+            exception = ex;
+        }
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            ctas = ApiService.GetCurrentPgcCtas();
+            contacts = ApiService.GetContacts(emp);
+            allProjectes = await ApiService.GetAsync<List<ProjecteModel>>("projectes");
+            value!.CtaHab = ctas!.FirstOrDefault(x => x.Id == "41000")!.Guid;
+            propertyGrid = PropertyGrid();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    CrudButton.States UpdateState()
+    {
+        CrudButton.States retval = updateState;
+        var val = CurrentValue();
+        if (val?.Fch == null | val?.Proveidor == null | val?.CtaDeb == null)
+            retval = CrudButton.States.Disabled;
+        if(hasIva && val.Ivas.Count == 0)
+            retval = CrudButton.States.Disabled;
+        return retval;
+    }
+
+    void CancelRequest()
+    {
+        RequestToClose.InvokeAsync();
+    }
+
+    void AddContact()
+    {
+        selectedContact = new ContactModel
+            {
+                Emp = (EmpModel.EmpIds)ApiService.Emp!,
+                RaoSocial = "(Nou contacte)"
+            };
+    }
+
+    void AfterUpdateContact(ContactModel? contact)
+    {
+        if (contact != null)
+        {
+            var previous = contacts?.FirstOrDefault(x => x.Guid == contact.Guid);
+            if (previous == null)
+                contacts?.Add(contact);
+            else
+                contacts![contacts.IndexOf(previous!)] = contact;
+
+            value = CurrentValue();
+            value.Proveidor = contact.Guid;
+            propertyGrid = PropertyGrid();
+        }
+        selectedContact = null;
+    }
+}

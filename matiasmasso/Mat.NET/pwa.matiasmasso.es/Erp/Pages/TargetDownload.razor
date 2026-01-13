@@ -1,0 +1,100 @@
+﻿@page "/TargetDownload/{Target:guid}"
+
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>
+        @Localizer("VehicleProperties")
+    </h1>
+
+
+    <TabControl >
+        <TabPage Text="@Localizer("General")">
+
+            <UxDocFile Src="@value.DocFile" Width="350" Height="400" ></UxDocFile>
+        </TabPage>
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <UxButtonsBar CanEdit="true"
+                      IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></UxButtonsBar>
+    </div>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+
+@code {
+    [Parameter] public Guid Target { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private DownloadTargetModel value;
+    private PropertyGridModel gridModel;
+    private Media media;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    new ProblemDetails problemDetails;
+
+    private enum Fields : int
+    {
+    }
+
+    private enum Tabs
+    {
+        General,
+        Img,
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var cache = await base.Cache(CacheDTO.Table.TableIds.CliGral);
+        ApiResponse<DownloadTargetModel> apiResponse = await HttpService.GetAsync<DownloadTargetModel>(http, "TargetDownload", Target.ToString());
+            if (apiResponse.Success())
+                value = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+
+    }
+
+
+    private void ImgChanged(Media args)
+    {
+        isDirty = true;
+        media = args;
+    }
+
+
+    private void UpdateRequest()
+    {
+        base.BackToLastPage();
+    }
+
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await HttpService.GetAsync<ApiResponse<bool>>(http, "TargetDownload/delete", value!.Target.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        base.BackToLastPage();
+    }
+
+    private void AddNewDocfile()
+    {
+        problemDetails = new ProblemDetails { Title = "Not implemented yet" };
+    }
+
+
+
+}

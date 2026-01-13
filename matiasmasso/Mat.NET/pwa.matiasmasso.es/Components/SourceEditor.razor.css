@@ -1,0 +1,25 @@
+﻿.Wrapper {
+    position:relative;
+}
+
+.EditButton {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 50px;
+    height: 18px;
+
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+
+    color: transparent;
+    fill: transparent;
+}
+
+    .EditButton:hover {
+        background-color: white;
+        color: #DA4567;
+        fill: #DA4567;
+    }
+

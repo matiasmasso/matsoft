@@ -1,0 +1,113 @@
+﻿@inherits _Base
+
+
+<div class="Wrapper">
+    <h1>@Localizer("Credentials")</h1>
+
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("Credentials.AddNew")</a>
+            </PageOptions>
+        </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} credencials", model.Count())
+        </div>
+
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders HideOnMobile">
+                <a href="#" class="Truncate"
+               @onclick="@(()=>SortColumn(Cols.Ref))"
+               @onclick:preventDefault="true">
+                    @Localizer("Ref")
+                </a>
+                <a href="#" class="Truncate"
+               @onclick="@(()=>SortColumn(Cols.User))"
+               @onclick:preventDefault="true">
+                    @Localizer("UserName")
+                </a>
+            </div>
+
+            <div class="GridRowDivider"></div>
+
+            @foreach (var item in model.Where(x => x.Matches(searchTerm)))
+            {
+                <a href="#" class="Item"
+                   @onclick="@(()=>ItemClick(item))"
+                   @onclick:preventDefault="true">
+
+                    <div class="Ref">@item.Referencia</div>
+                    <div class="User">@item.Usuari</div>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+
+@code {
+    private List<CredencialModel>? model;
+    private string searchTerm = string.Empty;
+    private Cols? sortedColumn = Cols.Ref;
+    private bool isDescendingOrder = false;
+    private ProblemDetails? problemDetails;
+
+    private enum Cols
+    {
+        Ref,
+        User
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var apiResponse = await GetAsync<List<CredencialModel>>("credencials");
+            model = apiResponse.Value;
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private List<CredencialModel> FilteredItems() => model!.Where(x => x.Matches(searchTerm)).ToList();
+
+
+    private void SortColumn(Cols col)
+    {
+        var lang = base.Lang;
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            case Cols.Ref:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Referencia ?? "").ToList() : model!.OrderBy(x => x.Referencia ?? "").ToList();
+                break;
+            case Cols.User:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Usuari ?? "").ToList() : model!.OrderBy(x => x.Usuari ?? "").ToList();
+                break;
+        }
+    }
+
+    private void ItemClick(CredencialModel item)
+    {
+        var url = item.PropertyPageUrl();
+        navigationManager?.NavigateTo(url);
+    }
+
+    public void AddNew() => navigationManager?.NavigateTo(Globals.PageUrl("PgCredencial"));
+
+
+}

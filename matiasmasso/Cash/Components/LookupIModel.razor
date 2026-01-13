@@ -1,0 +1,43 @@
+﻿@inject ApiService ApiService
+
+<Dropdown Values="values" 
+Value="value" 
+ValueChanged="HandleValueChanged"
+PlaceHolder="@PlaceHolder"
+RequestToAdd="@(AddNewRequest.HasDelegate ? HandleAddNewRequest : null)"
+AllowToClear="AllowToClear"></Dropdown>
+
+
+@code {
+    [Parameter] public IModel? Value { get; set; }
+    [Parameter] public string? PlaceHolder { get; set; }
+    [Parameter] public List<IModel?>? Values { get; set; }
+    [Parameter] public EventCallback<IModel?> ValueChanged { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+    [Parameter] public bool AllowToClear { get; set; } = true;
+
+    private object[]? values;
+    private object? value;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        values = Values?.Select(x => (object)x!).ToArray();
+        value = (object?)Value;
+    }
+
+    void HandleValueChanged(object args)
+    {
+        if (args != null)
+        {
+            var value = (IModel)args;
+            ValueChanged.InvokeAsync(value);
+        }
+    }
+
+    void HandleAddNewRequest()
+    {
+        if(AddNewRequest.HasDelegate)
+        AddNewRequest.InvokeAsync();
+    }
+}

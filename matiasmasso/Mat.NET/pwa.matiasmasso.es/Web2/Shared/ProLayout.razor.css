@@ -1,0 +1,73 @@
+﻿.Layout {
+    max-width: 1200px;
+    margin: auto;
+    height: 100%;
+}
+
+.Header {
+    grid-area: header;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.Body {
+    grid-area: body;
+    height: 100%;
+    /*    width: 100%;
+*/ max-width: 100%;
+}
+
+.Menu {
+    grid-area: menu;
+}
+
+/* ------------- mobiles -----------------*/
+
+@media(max-width:599px) {
+    .Layout {
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+    }
+
+
+        .Layout .Body {
+            display: none;
+        }
+
+        .Layout .Menu {
+            display: block;
+        }
+
+        .Layout.HideMenuOnMobile .Body {
+            display: block;
+        }
+
+        .Layout.HideMenuOnMobile .Menu {
+            display: none;
+        }
+}
+
+/* ------------- desktop -----------------*/
+
+
+@media(min-width:600px) {
+    .Layout {
+        display: grid;
+        grid-template-columns: minmax(150px,265px) minmax(50%,1fr);
+        grid-template-rows: max-content 1fr;
+        gap: 10px;
+        padding: 10px;
+        grid-template-areas: "header header"
+            "menu body"
+    }
+
+        .Layout.HideMenuOnDesktop {
+            grid-template-columns: 1fr;
+            grid-template-areas: "header"
+                "body"
+        }
+        .Layout.HideMenuOnDesktop .Menu {
+            display:none;
+        }
+}

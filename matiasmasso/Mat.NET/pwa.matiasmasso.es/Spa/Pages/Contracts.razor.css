@@ -1,0 +1,36 @@
+﻿.Codi {
+    display: block;
+}
+.SelectedCodi {
+    display: block;
+    font-size: 1.1em;
+    padding: 10px 0;
+}
+
+.Item {
+    display: grid;
+    grid-template-areas: "ico nom"
+        "ico details";
+    grid-template-columns: min-content 1fr;
+    font-size: 0.9em;
+    margin: 10px 0;
+}
+
+.Ico {
+    grid-area: ico;
+    margin-right: 10px;
+}
+
+    .Ico img {
+        height: 100%;
+        width: auto;
+    }
+
+.Nom {
+    grid-area: nom;
+}
+
+.Details {
+    grid-area: details;
+    color: darkgray;
+}

@@ -1,0 +1,160 @@
+﻿@inject CultureService culture
+@inject InvoicesSentService invoicesSentService
+@inject DeliveriesService deliveriesService
+
+<div class="PageWrapper600">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Details">
+            <div>@culture.Localize("Invoice")</div>
+            <div>@model?.SerieYNum()</div>
+            <div>@culture.Localize("Fch")</div>
+            <div>@model?.Fch.ToShortDateString()</div>
+            <div>@culture.Localize("Customer")</div>
+            <div>@customer?.RaoSocial</div>
+        </div>
+
+        <div class="Items @(model.HasDiscount() ? "" : "NoDiscount")">
+            <div class="ColHeaders">
+                <div class="Nom">@culture.Localize("Ref")</div>
+                <div class="Nom">@culture.Localize("Sku")</div>
+                <div class="Num">@culture.Localize("Qty")</div>
+                <div class="Num">@culture.Localize("Price")</div>
+                @if (model.HasDiscount())
+                {
+                    <div class="Num">@culture.Localize("Dto")</div>
+                }
+                <div class="Num">@culture.Localize("Amt")</div>
+            </div>
+
+
+            @foreach (var item in @model.Items)
+            {
+                @if (HasChangedDelivery(item))
+                {
+                    <a href="#" class="Item Delivery" @onclick="@(()=>DeliveryClick(item))" @onclick:preventDefault>
+                        <div>
+                            @item.Delivery?.Nom
+                        </div>
+                    </a>
+                }
+                @if (HasChangedPurchaseOrder(item))
+                {
+                    <a href="#" class="Item Pdc" @onclick="@(()=>PdcClick(item))" @onclick:preventDefault>
+                        <div>
+                            @item.PurchaseOrder?.Nom
+                        </div>
+                    </a>
+                }
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Nom">@invoicesSentService.Sku(item)?.Id</div>
+                    <div class="Nom">@invoicesSentService.Sku(item)?.NomLlarg?.Tradueix(culture.Lang())</div>
+                    <div class="Num">@item.Qty</div>
+                    <div class="Num">@($"{item.Price ?? 0} €")</div>
+                    @if (model.HasDiscount())
+                    {
+                        <div class="Num">@($"{item.Dto ?? 0} %")</div>
+                    }
+                    <div class="Num">@($"{item.Amt()} €")</div>
+                </a>
+            }
+        </div>
+
+    }
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public InvoiceSentModel? Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    InvoiceSentModel? model;
+    ContactModel? customer;
+    Guid lastDeliveryGuid = Guid.NewGuid();
+    Guid lastPdcGuid = Guid.NewGuid();
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Model != null)
+        {
+            try
+            {
+                model = await invoicesSentService.FindAsync(Model.Guid);
+                customer = invoicesSentService.Contact(model);
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+        }
+    }
+
+    private bool HasChangedDelivery(InvoiceSentModel.Item item)
+    {
+        bool retval = false;
+        if (item.Delivery?.Guid != lastDeliveryGuid)
+        {
+            lastDeliveryGuid = item.Delivery!.Guid;
+            retval = true;
+        }
+        return retval;
+    }
+
+    private bool HasChangedPurchaseOrder(InvoiceSentModel.Item item)
+    {
+        bool retval = false;
+        if (item.PurchaseOrder.Guid != lastPdcGuid)
+        {
+            lastPdcGuid = item.PurchaseOrder.Guid;
+            retval = true;
+        }
+        return retval;
+    }
+
+    async Task PdcClick(InvoiceSentModel.Item item)
+    {
+        var purchaseOrder = item?.PurchaseOrder;
+        if (purchaseOrder != null)
+        {
+            var po = new PurchaseOrderModel(purchaseOrder.Guid);
+            var caption = purchaseOrder.Nom;
+            var breadcrumb = new ModelEditor.Breadcrumb(po, caption);
+            await EditorRequest.InvokeAsync(breadcrumb);
+        }
+    }
+
+    async Task DeliveryClick(InvoiceSentModel.Item item)
+    {
+        var fake = item.Delivery;
+        if (fake != null)
+        {
+            var delivery = new DeliveryModel(fake.Guid);
+            var caption = fake.Nom;
+            var breadcrumb = new ModelEditor.Breadcrumb(delivery, caption);
+            await EditorRequest.InvokeAsync(breadcrumb);
+        }
+    }
+
+    async Task ItemClick(InvoiceSentModel.Item item)
+    {
+        try
+        {
+            var delivery = await deliveriesService.FindAsync(item.Delivery.Guid);
+            var deliveryItem = delivery.Items.FirstOrDefault(x => x.Guid == item.Guid);
+            deliveryItem.Parent = delivery;
+            var caption = item.Delivery.Nom;
+            var breadcrumb = new ModelEditor.Breadcrumb(deliveryItem, $"Lin.{item.Lin}");
+            await EditorRequest.InvokeAsync(breadcrumb);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+}

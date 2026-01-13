@@ -1,0 +1,167 @@
+﻿@page "/Contracts"
+@inject ApiService ApiService
+
+<PageTitle>Cash</PageTitle>
+
+@if (selectedItem != null)
+{
+    <Contract Value = "selectedItem"
+        Codis="allCodis"
+        AfterUpdate="HandleAfterUpdate"
+              AfterDelete="HandleAfterDelete"
+              CloseRequest="@(()=>selectedItem = null)"></Contract>
+}
+else
+{
+    <div class="PageWrapper600">
+
+
+        <h3>Contractes</h3>
+
+        <div class="PageOptions">
+            <PageOptions>
+                <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+                <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir</a>
+                <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+            </PageOptions>
+        </div>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+
+        @if (selectedCodi == null)
+        {
+            <div class="Codis">
+                @foreach (var codi in Codis() ?? new())
+                {
+                    <a href="#" class="Codi" @onclick="@(()=>selectedCodi = codi)" @onclick:preventDefault>
+                        @codi.Nom
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <a href="#" class="SelectedCodi" @onclick="@(()=>selectedCodi = null)" @onclick:preventDefault>@selectedCodi.Nom</a>
+
+            <div class="Grid">
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a href="#" @onclick="@(()=>selectedItem=item)" class="Item @(item.IsOver() ? "Baixa" : "")" @onclick:preventDefault>
+                        <div class="Nom Truncate">@item.Nom</div>
+                        <div class="Num HideOnMobile">@item.Num</div>
+                        <div class="Fch">@($"{item.FchFrom:dd/MM/yy}")</div>
+                    </a>
+                }
+            </div>
+        }
+
+
+
+    </div>
+
+    <Error @bind-Value="exception"></Error>
+}
+
+
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds? emp;
+
+    List<ContractModel>? allValues;
+    List<ContractModel>? values;
+    List<ContractModel.CodiClass>? allCodis;
+    ContractModel.CodiClass? selectedCodi;
+    ContractModel? selectedItem;
+    string? searchterm = string.Empty;
+    string? title;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        try
+        {
+            allCodis = await ApiService.GetAsync<List<ContractModel.CodiClass>>("Contracts/codis");
+            allValues = await ApiService.GetAsync<List<ContractModel>>("Contracts");
+            allValues = allValues?.OrderBy(x => x.IsOver() ? 1 : 0)
+            .ThenByDescending(x => x.FchFrom)
+            .ToList();
+            emps = allValues?.Where(x => x.Emp != null).Select(x => (EmpModel.EmpIds)x.Emp!).Distinct().ToList();
+            emp = ApiService.Emp;
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private List<ContractModel>? FilteredItems()
+    {
+        List<ContractModel>? retval = allValues?.Where(x => x.Emp == emp && x.Codi == selectedCodi!.Guid).ToList();
+        if (!isShowingObsolets) retval = retval?.Where(x => !x.IsOver()).ToList();
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = retval?.Where(x => x.Matches(searchterm)).ToList();
+        return retval;
+    }
+
+    private List<ContractModel.CodiClass>? Codis()
+    {
+        List<ContractModel>? contracts = allValues?.Where(x => x.Emp == emp).ToList();
+        if (!isShowingObsolets) contracts = contracts?.Where(x => !x.IsOver()).ToList();
+        var retval = contracts?.Select(x => allCodis!.FirstOrDefault(y => y.Guid == x.Codi)).Distinct()
+    .OrderBy(x => x!.Nom)
+        .ToList();
+        return retval;
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+        selectedCodi = null;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    void HandleAfterUpdate(ContractModel args)
+    {
+        selectedItem = null;
+        if(allValues?.Any(x=> x.Guid == args.Guid) ?? false){
+            var oldValue = allValues.First(x => x.Guid == args.Guid);
+            var idx = allValues.IndexOf(oldValue);
+            allValues[idx] = args;
+        } else
+        {
+            allValues?.Add(args);
+        }
+        //     values = allValues?
+        //     .Where(x=>x.Emp == emp)
+        //     .OrderBy(x => x.FchTo == null ? 0 : 1)
+        // .ThenByDescending(x => x.FchFrom)
+        // .ToList();
+        emps = allValues?.Where(x => x.Emp != null).Select(x => (EmpModel.EmpIds)x.Emp!).Distinct().ToList();
+        emp = (EmpModel.EmpIds)args.Emp!;
+    }
+
+    void HandleAfterDelete(ContractModel args)
+    {
+        selectedItem = null;
+        var oldValue = allValues.First(x => x.Guid == args.Guid);
+        allValues.Remove(oldValue);
+        emps = allValues?.Where(x => x.Emp != null).Select(x => (EmpModel.EmpIds)x.Emp!).Distinct().ToList();
+    }
+
+    void AddNew()
+    {
+        selectedItem = new ContractModel { Emp = emp, Codi=selectedCodi?.Guid };
+    }
+}

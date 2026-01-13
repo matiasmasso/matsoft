@@ -1,0 +1,135 @@
+﻿@page "/Provincias_Page"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("Provincias")</h1>
+
+    <PageOptions IsShowingOptions>
+        <CountryLookup HideEllipsis
+                       Value="@country"
+                       ValueChanged="CountryChanged">
+        </CountryLookup>
+        @if (region != null)
+        {
+            <RegionLookup HideEllipsis
+                      Value="@region"
+                      ValueChanged="RegionChanged">
+            </RegionLookup>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+        }
+    </PageOptions>
+
+    @if (region == null & requestToAddNewRegion)
+    {
+        var region = new RegionModel { Country = country.Guid };
+        <Region Model="region" RequestToCancel="@(()=>requestToAddNewRegion = false)" OnUpdate="OnRegionAdded"></Region>
+    }
+    else if (region == null)
+    {
+        <div>@Localizer("NoRegionsAvailable",country.Nom.Tradueix(base.Lang())) </div>
+        <a href="#" @onclick="@(()=>requestToAddNewRegion = true)" @onclick:preventDefault>@Localizer("AddNew")</a>
+    }
+    else if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("Provinces.Found",model.Count(), RegionProvincias().Count(), country.Nom.Tradueix(base.Lang()))
+        </div>
+
+        <Provincias_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></Provincias_List>
+
+    }
+    else
+    {
+        <Provincia Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></Provincia>
+    }
+
+
+
+</div>
+
+@code {
+    List<ProvinciaModel> model;
+    CacheDTO cache;
+    string searchTerm;
+    CountryModel country;
+    RegionModel region;
+    List<RegionModel> regions;
+    ProvinciaModel selectedItem = null;
+    bool requestToAddNewRegion = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        country = cache.Country(CountryModel.Wellknown(CountryModel.Wellknowns.Spain).Guid);
+        regions = cache.Regions.Where(x => x.Country == country.Guid).ToList();
+        region = regions.FirstOrDefault();
+        model = cache.Provincias;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Country, CacheDTO.Table.TableIds.Provincia);
+        model = cache.Provincias;
+    }
+
+    List<ProvinciaModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+            return RegionProvincias();
+        else
+            return RegionProvincias().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<ProvinciaModel> RegionProvincias() => model.Where(x => x.Region == region.Guid).ToList();
+
+    private void ItemClick(ProvinciaModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new ProvinciaModel()
+            {
+                Region = region.Guid
+            };
+    }
+
+    private void OnUpdate(ProvinciaModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.Nom).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(ProvinciaModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void CountryChanged(CountryModel args)
+    {
+        country = args;
+        region = cache.Regions.FirstOrDefault(x => x.Country == country.Guid);
+    }
+    private void RegionChanged(RegionModel args)
+    {
+        region = args;
+    }
+    private void OnRegionAdded(RegionModel args)
+    {
+        region = args;
+        cache.Regions.Add(region);
+        cache.Regions = cache.Regions.OrderBy(x => x.Nom).ToList();
+        requestToAddNewRegion = false;
+    }
+
+}

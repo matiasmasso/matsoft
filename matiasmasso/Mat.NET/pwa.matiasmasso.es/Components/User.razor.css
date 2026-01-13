@@ -1,0 +1,19 @@
+﻿.Wrapper600 {
+    position:relative;
+}
+
+.Avatar {
+    position:absolute;
+    right:5px;
+    top:-3px;
+}
+
+@media(max-width:600px){
+    .Avatar {
+        display:block;
+        width: 80px;
+        height: 80px;
+        max-width:100%;
+        top:10px;
+    }
+}

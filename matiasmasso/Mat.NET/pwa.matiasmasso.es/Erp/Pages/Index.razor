@@ -1,0 +1,93 @@
+﻿@page "/"
+@inherits _ComponentBase
+
+<div class="Wrapper">
+
+    @if(model == null){
+        <Loading></Loading>
+    } else {
+        <div class="Banner">
+            <BannerRotator Banners="@model?.RotatingBanners"></BannerRotator>
+        </div>
+
+
+        @if (model.News.Count > 1)
+        {
+            <a href="@model.News[0].Url" class="News0 ShowOnMobile">
+                <img src="@model.News[0].ImageUrl" title="@(model.News[0].Caption ?? "")" />
+                <span>@model.News[0].Caption</span>
+            </a>
+            <a href="@model.News[1].Url" class="News1 ShowOnMobile">
+                <img src="@model.News[1].ImageUrl" title="@(model.News[1].Caption ?? "")" />
+                <span>@model.News[1].Caption</span>
+            </a>
+        }
+
+
+        <a href="@model.PortadaImgNavigateTo(PortadaImgModel.Ids.V1)" class="Brand1">
+            <img src="@model.PortadaImgSrc(PortadaImgModel.Ids.V1)" 
+                class="BrandsV" 
+                title="@model.PortadaImgTitle(PortadaImgModel.Ids.V1)" 
+                width="200" 
+                height="242" />
+            <img src="@model.PortadaImgSrc(PortadaImgModel.Ids.H1)" 
+                 class="BrandsH"
+                 title="@model.PortadaImgTitle(PortadaImgModel.Ids.H1)" 
+                 width="600" 
+                 height="338" />
+        </a>
+        <a href="@model.PortadaImgNavigateTo(PortadaImgModel.Ids.V2)" class="Brand2">
+            <img src="@model.PortadaImgSrc(PortadaImgModel.Ids.V2)"
+                 class="BrandsV"
+                 title="@model.PortadaImgTitle(PortadaImgModel.Ids.V2)"
+                 width="200"
+                 height="242" />
+            <img src="@model.PortadaImgSrc(PortadaImgModel.Ids.H2)"
+                 class="BrandsH"
+                 title="@model.PortadaImgTitle(PortadaImgModel.Ids.H2)"
+                 width="600"
+                 height="338" />
+        </a>
+        <a href="@model.PortadaImgNavigateTo(PortadaImgModel.Ids.V3)" class="Brand3">
+            <img src="@model.PortadaImgSrc(PortadaImgModel.Ids.V3)" 
+                class="BrandsV" 
+                title="@model.PortadaImgTitle(PortadaImgModel.Ids.V3)" 
+                width="200" 
+                height="242" />
+            <img src="@model.PortadaImgSrc(PortadaImgModel.Ids.H3)" 
+                class="BrandsH"
+                title="@model.PortadaImgTitle(PortadaImgModel.Ids.H3)" 
+                width="600" 
+                height="338" />
+        </a>
+
+
+        <div class="Raffle">
+            @if (model?.CurrentOrNextRaffle is not null)
+            {
+                <RaffleCurrentOrNext Value="@model!.CurrentOrNextRaffle"></RaffleCurrentOrNext>
+            }
+        </div>
+
+    }
+
+
+</div>
+
+
+@code {
+    private HomeDTO? model = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            model = await GetAsync<HomeDTO>("Home");
+            StateHasChanged();
+        }
+    }
+
+
+
+}

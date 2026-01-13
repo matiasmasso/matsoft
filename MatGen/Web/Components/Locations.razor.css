@@ -1,0 +1,49 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.Grid {
+    max-width: 450px;
+}
+
+.Parent {
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    grid-column-gap: 10px;
+    width: 100%;
+    background-color: azure;
+    border-bottom: 1px solid black;
+    font-weight: 600;
+}
+
+.Item {
+    display: flex;
+    gap: 10px;
+}
+
+.Icon {
+    width: 20px;
+}
+
+.GridRowDivider {
+    margin: 0;
+}
+
+/*-------------- mobiles --------------*/
+@media(max-width:599px) {
+    .Parent {
+        padding: 7px 0 7px 5px;
+    }
+
+    .Item {
+        padding: 7px 0 7px 5px;
+    }
+}
+
+/*-------------- desktop --------------*/
+@media(min-width:600px) {
+}

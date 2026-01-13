@@ -1,0 +1,115 @@
+﻿@inherits _ComponentBase
+
+@inject CustomAuthenticationStateProvider AuthStateProvider;
+
+<div class="Wrapper">
+    @if (isAuthenticated)
+    {
+        <!-------------------- Email ----------------------->
+        <div class="Label">@Localizer("Email")</div>
+        <div class="Value">@Value.Lead.EmailAddress</div>
+
+
+        <!-------------------- Nom i Cognoms ----------------------->
+        @if (hasNomAndCognoms)
+        {
+            <div class="Label">@Localizer("NomAndCognoms")</div>
+            <a class="Value" href="#"
+       @onclick="@(()=>{hasNomAndCognoms = false;})"
+       @onclick:preventDefault>
+                @Value.NomAndCognoms()
+            </a>
+        }
+        else
+        {
+            <div class="Label">@Localizer("Nom")</div>
+            <div class="Value"><input type="text" @bind-value="@Value.Lead.Nom" @onblur="@(()=>{isDirty = true;})" /></div>
+
+            <div class="Label">@Localizer("Cognoms")</div>
+            <div class="Value"><input type="text" @bind-value="@Value.Lead.Cognoms" @onblur="@(()=>{isDirty = true;})" /></div>
+        }
+
+        <!-------------------- Naixement ----------------------->
+        <div class="Label">
+            @Localizer("BirthYear")
+        </div>
+
+        @if (hasBirthYear)
+        {
+            <a class="Value" href="#"
+       @onclick="@(()=>{hasBirthYear = false;})"
+       @onclick:preventDefault>
+                @Value.Lead.BirthYea
+            </a>
+        }
+        else
+        {
+            <div class="Value">
+                <input type="number" min="1900" max="@DateTime.Today.Year" @bind-value="@Value.Lead.BirthYea" @onblur="@(()=>{isDirty = true;})" />
+            </div>
+        }
+
+        <!-------------------- Residencia ----------------------->
+        <div class=" Label">
+            @Localizer("Residence")
+        </div>
+        <div class="Value">
+            <UxLookupZip Value="@Value.Lead?.Residence" ValueChanged="ZipChanged"></UxLookupZip>
+        </div>
+
+        <div class="Buttons">
+            <button @onclick="onSubmit">@Localizer("Confirmar")</button>
+            <button @onclick="onCancel">@Localizer("Cambiar")</button>
+        </div>
+    }
+    else
+    {
+        <div class="SignUp">
+            <UxSignUp></UxSignUp>
+        </div>
+    }
+</div>
+
+
+
+@code {
+    private bool isAuthenticated;
+    private bool isDirty = false;
+    private bool hasNomAndCognoms = false;
+    private bool hasBirthYear = false;
+    [Parameter] public RaffleModel.Player Value { get; set; }
+    [Parameter] public EventCallback<RaffleModel.Player> ValueChanged { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        isAuthenticated = user.Identity.IsAuthenticated;
+    }
+
+    protected override void OnParametersSet()
+    {
+        hasNomAndCognoms = Value.HasNomAndCognoms();
+        hasBirthYear = Value.HasBirthYea();
+    }
+
+    void ZipChanged(GuidNom zip)
+    {
+        Value.Lead.Residence = zip;
+        isDirty = true;
+    }
+
+    async Task onSubmit()
+    {
+        if (isDirty)
+        {
+            await PostAsync<UserModel, bool>(Value.Lead, "User");
+        }
+        if (ValueChanged.HasDelegate) await ValueChanged.InvokeAsync(Value);
+    }
+
+    void onCancel()
+    {
+        isAuthenticated = false;
+    }
+}

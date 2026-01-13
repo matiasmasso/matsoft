@@ -1,0 +1,30 @@
+﻿.Banner img {
+    width: 100%;
+    height: auto;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap: 10px;
+    grid-row-gap: 5px;
+}
+
+.Item:nth-child(2n-1){
+    white-space:nowrap;
+}
+
+@media (max-width:900px) {
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Label {
+        color: gray;
+    }
+
+    .Value {
+        padding: 0 0 10px 15px;
+    }
+}

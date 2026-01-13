@@ -1,0 +1,453 @@
+﻿@page "/sumasysaldos"
+
+@inject ApiService ApiService
+
+<div class="PageWrapper900">
+    @if (selectedExtracte != null)
+    {
+        <Extracte Value="selectedExtracte"
+                  Values="@(allValues?.Where(x => x.Emp == selectedEmp).ToList())"
+                  FetchRequest="HandleFetchRequestAsync"
+                  CloseRequest="@(()=>selectedExtracte = null)"></Extracte>
+    }
+    else
+    {
+
+        <h3>Comptes</h3>
+
+        @if (values == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+
+            <PageOptions>
+                <LookupEmp Value="selectedEmp" ValueChanged="HandleEmpChanged" Values="availableEmps"></LookupEmp>
+                <LookupYears Value="selectedYear" Values="years" ValueChanged="HandleYearChanged"></LookupYears>
+                <ButtonExcel LoadRequest="LoadExcel" IsReady="@(ApiService.GetPgcCtas() != null)"></ButtonExcel>
+                <a href="#" @onclick:preventDefault @onclick="HandleIsShowingSaldatsChange">
+                    @(isShowingSaldats ? "oculta els comptes saldats" : "mostra els comptes saldats")
+                </a>
+                <a href="#" @onclick:preventDefault @onclick="@(()=>isShowingActius = !isShowingActius)">
+                    @(isShowingActius ? "mostra subcomptes" : "enumera els actius")
+                </a>
+            </PageOptions>
+
+            <div class="Grid">
+
+                @foreach (Item.Ids epg in Enum.GetValues(typeof(Item.Ids)))
+                {
+                    <div class="Item Epg">
+                        <div class="Nom">@epg.ToString()</div>
+                        <div class="Eur">@($"{EpgValue(epg):N2} €")</div>
+                    </div>
+
+                    @foreach (var group in valueGroups?.Where(x => x.Id == epg).ToList() ?? new())
+                    {
+                        <a href="#" class="Item @( Quadra(group) ? "" : "Warn")"
+                           title="@QuadraText(group)"
+                           @onclick:preventDefault @onclick="@(()=>HandleCtaClick(group))">
+                            <div class="Nom">@group.Nom</div>
+                            <div class="Eur">
+                                @($"{(group.IsDeutora ? group.SaldoDeudor : group.SaldoCreditor):N2} €")
+                            </div>
+                        </a>
+
+                        @if (group == selectedGroup)
+                        {
+                            if (isShowingActius && group.IsActivated)
+                            {
+                                foreach (var actiu in Actius(group) ?? new())
+                                {
+                                    <a href="#" class="Item Contact"
+                                       @onclick:preventDefault
+                                       @onclick="@(()=>HandleActiuClick(actiu))">
+
+                                        <div class="Nom">
+                                            @(string.IsNullOrEmpty(actiu?.Nom) ? "(actiu sense especificar)" : actiu.Nom)
+                                        </div>
+                                        <div class="Eur">
+                                            @($"{ActiuValue(actiu):N2} €")
+                                        </div>
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                foreach (var saldo in contactSaldos ?? new())
+                                {
+                                    @if (contactSaldos!.Count > 1 || !string.IsNullOrEmpty(saldo.Nom))
+                                    {
+                                        <a href="#" class="Item Contact @(saldo == selectedSaldo ? "Selected" : "")"
+                                           @onclick:preventDefault
+                                           @onclick="@(()=>HandleContactClick(saldo))">
+
+                                            <div class="Nom">
+                                                @(string.IsNullOrEmpty(saldo.Nom) ? "(sense subcompte)" : saldo.Nom)
+                                            </div>
+                                            <div class="Eur">
+                                                @($"{(saldo.IsDeutora ? saldo.SaldoDeudor : saldo.SaldoCreditor):N2} €")
+                                            </div>
+                                        </a>
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                    @if (epg == Item.Ids.Despeses)
+                    {
+                        <div class="Item Result">
+                            <div class="Nom">Resultats</div>
+                            <div class="Eur">@($"{EpgValue(Item.Ids.Ingressos) - EpgValue(Item.Ids.Despeses):N2} €")</div>
+                        </div>
+                    }
+                }
+            </div>
+
+
+        }
+    }
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    List<PgcCtaModel.Extracte>? allValues;
+    List<PgcCtaModel.Extracte>? values;
+    List<Item>? valueGroups;
+    List<Item>? contactSaldos;
+    List<int>? years;
+    List<PgcCtaModel>? ctas;
+    List<ContactModel>? contacts;
+    EmpModel.EmpIds selectedEmp;
+    List<EmpModel.EmpIds>? availableEmps;
+    List<ActiuModel>? allActius;
+    List<ActiuModel.Mov>? actiuMovs;
+    int? selectedYear;
+    Item? selectedGroup;
+    Item? selectedSaldo;
+    PgcCtaModel.Extracte? selectedExtracte;
+    bool isShowingSaldats;
+    bool isShowingActius;
+
+    Exception? exception;
+    protected override void OnInitialized()
+    {
+        try
+        {
+            ApiService.OnChange += Refresca;
+            _ = Task.Run(async () => await FetchAsync());
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    async Task FetchAsync()
+    {
+        ctas = ApiService.GetPgcCtas();
+        contacts = ApiService.GetContacts();
+
+        var request = new PgcCtaModel.Extracte();
+        allValues = await ApiService.PostAsync<PgcCtaModel.Extracte, List<PgcCtaModel.Extracte>>(request, "pgcctas/saldos");
+
+        if (availableEmps == null)
+        {
+            availableEmps = allValues?.Select(x => (EmpModel.EmpIds)x.Emp!).Distinct().ToList();
+            selectedEmp = (EmpModel.EmpIds)ApiService.DefaultEmp(availableEmps)!;
+            HandleEmpChanged(selectedEmp);
+
+        }
+
+        allActius = await ApiService.GetAsync<List<ActiuModel>>("actius");
+        actiuMovs = await ApiService.GetAsync<List<ActiuModel.Mov>>("actiuMovs");
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        ctas = ApiService.GetPgcCtas();
+        contacts = ApiService.GetContacts();
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task HandleFetchRequestAsync()
+    {
+        selectedExtracte = null;
+        values = null;
+        await InvokeAsync(StateHasChanged);
+
+        await FetchAsync();
+        HandleYearChanged(selectedYear);
+    }
+
+    void HandleEmpChanged(EmpModel.EmpIds args)
+    {
+        selectedEmp = args;
+        if (allValues != null)
+        {
+            years = allValues.Where(x => x.Emp == selectedEmp).Select(x => x.Year).Distinct().OrderByDescending(x => x).ToList();
+            var lastYear = years.FirstOrDefault();
+            HandleYearChanged(lastYear);
+        }
+    }
+
+    void HandleYearChanged(int? args)
+    {
+        selectedYear = args;
+        values = allValues?.Where(x => x.Emp == selectedEmp && x.Year == selectedYear).ToList();
+        valueGroups = ValueGroups();
+
+        // var results = EpgValue(Item.Ids.Ingressos) - EpgValue(Item.Ids.Despeses);
+        valueGroups?.Add(new Item
+            {
+                Nom = "12900 Resultat de l'exercici",
+                Id = Item.Ids.Passiu,
+                IsCreditora = true,
+                SaldoCreditor = EpgValue(Item.Ids.Ingressos) - EpgValue(Item.Ids.Despeses),
+            });
+        valueGroups = valueGroups?.OrderBy(x => x.Nom).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<Item>? ValueGroups()
+    {
+        return values?.GroupBy(x => x.Cta).Select(x => new PgcCtaModel.Extracte
+            {
+                Emp = selectedEmp,
+                Year = selectedYear ?? 0,
+                Cta = x.Key,
+                Deb = x.Sum(y => y.Deb),
+                Hab = x.Sum(y => y.Hab)
+            }).Select(x => new Item(x, ctas))
+             .Where(x => (isShowingSaldats || x.HasValue()))
+             .OrderBy(x => x.Nom)
+             .ToList();
+    }
+
+    List<Item>? ContactSaldos(Guid? cta)
+    {
+        return cta == null ? null : allValues?
+            .Where(x => x.Emp == selectedEmp
+                && x.Year == selectedYear
+                && x.Cta == cta)
+            .Select(x => new Item(x, ctas, contacts))
+            .Where(x => isShowingSaldats || x.HasValue())
+            .OrderBy(x => x.Nom)
+            .ToList();
+    }
+
+    List<ActiuModel?>? Actius(Item group)
+    {
+        var extracte = group.Tag;
+        List<ActiuModel?>? retval = actiuMovs?
+        .Where(x => x.Emp == extracte.Emp && x.Fch.Year <= extracte.Year)
+        .GroupBy(x => x.Actiu)
+        .Where(x => x.Sum(y => y.Eur) != 0)
+        .Select(x => allActius?.FirstOrDefault(y => x.Key == y.Guid))
+        .Where(x => x.Cta == extracte.Cta)
+        .OrderBy(x => x.Nom)
+        .ToList();
+        return retval;
+    }
+
+    decimal? ValorActius(Item group)
+    {
+        var actius = allActius?.Where(x => x.Cta == group.Tag?.Cta).ToList();
+        var extracte = group.Tag;
+        var retval = actiuMovs?
+        .Where(x => (actius?.Any(y => x.Actiu == y.Guid) ?? false) && x.Emp == extracte.Emp && x.Fch.Year <= extracte.Year)
+        .Sum(x => x.Eur);
+        return retval;
+    }
+
+    bool Quadra(Item group)
+    {
+        var retval = true;
+        if (group.IsActivated)
+            retval = ValorActius(group) == (group.IsDeutora ? group.SaldoDeudor : group.SaldoCreditor);
+        return retval;
+    }
+
+    string QuadraText(Item group)
+    {
+        if (Quadra(group))
+            return "quadra amb la suma d'actius";
+        else
+            return $"suma d'actius: {ValorActius(group):N2} €";
+    }
+
+    void HandleCtaClick(Item? args)
+    {
+        if (selectedGroup == args)
+            selectedGroup = null;
+        else
+        {
+            selectedGroup = args;
+            if (!args.IsActivated || !isShowingActius)
+            {
+                contactSaldos = ContactSaldos((Guid)selectedGroup!.Tag.Cta);
+                if (contactSaldos?.Count == 1) selectedExtracte = contactSaldos.First().Tag;
+            }
+        }
+    }
+
+    void HandleContactClick(Item? args)
+    {
+        selectedExtracte = args?.Tag;
+    }
+
+    void HandleActiuClick(ActiuModel? args)
+    {
+
+    }
+
+    decimal ActiuValue(ActiuModel? args)
+    {
+        decimal retval = actiuMovs?
+        .Where(x => x.Actiu == args?.Guid && x.Emp == selectedEmp && x.Fch.Year <= selectedYear)
+        .Sum(x => x.Eur) ?? 0;
+        return retval;
+    }
+
+    void HandleIsShowingSaldatsChange()
+    {
+        isShowingSaldats = !isShowingSaldats;
+        valueGroups = ValueGroups();
+        contactSaldos = ContactSaldos((Guid?)selectedGroup?.Tag.Cta);
+    }
+
+    decimal EpgValue(Item.Ids id)
+    {
+        var retval = valueGroups?.Where(x => x.Id == id)
+        .Sum(x => (x.Id == Item.Ids.Actiu || x.Id == Item.Ids.Despeses) ? x.SaldoDeudor : x.SaldoCreditor);
+        return retval ?? 0;
+    }
+
+    void LoadExcel(DTO.Excel.Book book)
+    {
+       book.Filename = $"Comptes {selectedEmp.GetDisplayName()} {selectedYear}.xlsx";
+
+        foreach (Item.Ids epg in Enum.GetValues(typeof(Item.Ids)))
+        {
+            var sheet = book.AddSheet(epg.ToString());
+            sheet.AddColumn();
+            sheet.AddColumn();
+            sheet.AddColumn();
+            sheet.AddColumn("", DTO.Excel.Cell.NumberFormats.Euro);
+            sheet.AddColumn("", DTO.Excel.Cell.NumberFormats.Euro);
+            sheet.AddColumn("", DTO.Excel.Cell.NumberFormats.Euro);
+
+
+            var row = sheet.AddRow();
+            row.AddCell(epg.ToString());
+            row.AddCell();
+            row.AddCell();
+            row.AddCell();
+            row.AddCell();
+            row.AddEur(EpgValue(epg));
+
+            foreach (var group in valueGroups?.Where(x => x.Id == epg).ToList() ?? new()){
+                row = sheet.AddRow();
+                row.AddCell();
+                row.AddCell(group.Nom);
+                row.AddCell();
+                row.AddCell();
+                row.AddEur(group.IsDeutora ? group.SaldoDeudor : group.SaldoCreditor);
+
+                if (group.IsActivated && Actius(group)?.Count>0)
+                {
+                    foreach (var actiu in Actius(group) ?? new()){
+                        row = sheet.AddRow();
+                        row.AddCell();
+                        row.AddCell();
+                        row.AddCell(actiu?.Nom);
+                        row.AddEur(ActiuValue(actiu));
+                    }
+                }
+                else if (ContactSaldos(group.Tag?.Cta)?.Count > 1 || !string.IsNullOrEmpty(ContactSaldos(group.Tag?.Cta)?.FirstOrDefault()?.Nom))
+                {
+                    foreach (var saldo in ContactSaldos(group.Tag?.Cta) ?? new())
+                    {
+                        row = sheet.AddRow();
+                        row.AddCell();
+                        row.AddCell();
+                        row.AddCell(saldo!.Nom ?? "diversos");
+                        row.AddEur(saldo.IsDeutora ? saldo.SaldoDeudor : saldo.SaldoCreditor);
+                    }
+                }
+            }
+        }
+    }
+
+    private class Item
+    {
+        public PgcCtaModel.Extracte Tag { get; set; }
+        public decimal? SaldoDeudor { get; set; }
+        public decimal? SaldoCreditor { get; set; }
+        public bool IsDeutora { get; set; } = false;
+        public bool IsCreditora { get; set; } = false;
+        public string? Nom { get; set; }
+        public Ids Id { get; set; }
+        public bool IsActivated { get; set; }
+
+        public enum Ids
+        {
+            Ingressos,
+            Despeses,
+            Actiu,
+            Passiu
+        }
+
+        public Item() { }
+
+        public Item(PgcCtaModel.Extracte saldo, List<PgcCtaModel>? ctas)
+        {
+            Tag = saldo;
+            var cta = ctas?.FirstOrDefault(x => x.Guid == Tag.Cta);
+            Nom = cta?.ToString();
+            IsActivated = cta?.Id?.StartsWith("2") ?? false;
+            IsDeutora = cta?.Act == PgcCtaModel.Acts.Deutora;
+            IsCreditora = cta?.Act == PgcCtaModel.Acts.Creditora;
+            if (IsDeutora)
+                SaldoDeudor = Tag.Deb - Tag.Hab;
+            else
+                SaldoCreditor = Tag.Hab - Tag.Deb;
+
+            if (cta?.Id?.CompareTo("6") < 1)
+                Id = (IsDeutora ? Ids.Actiu : Ids.Passiu);
+            else
+                Id = (IsDeutora ? Ids.Despeses : Ids.Ingressos);
+
+        }
+
+        public Item(PgcCtaModel.Extracte saldo, List<PgcCtaModel>? ctas, List<ContactModel>? contacts)
+        {
+            Tag = saldo;
+            var cta = ctas?.FirstOrDefault(x => x.Guid == Tag.Cta);
+            var contact = contacts?.FirstOrDefault(x => x.Guid == Tag.Contact);
+            Nom = contact?.FullNom;
+            IsDeutora = cta?.Act == PgcCtaModel.Acts.Deutora;
+            IsCreditora = cta?.Act == PgcCtaModel.Acts.Creditora;
+            if (IsDeutora)
+                SaldoDeudor = Tag.Deb - Tag.Hab;
+            else
+                SaldoCreditor = Tag.Hab - Tag.Deb;
+        }
+
+        public bool HasValue() => Tag.Deb != Tag.Hab;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+
+}

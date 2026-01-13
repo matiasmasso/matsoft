@@ -1,0 +1,279 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject NominasService nominasService
+
+<div class="ControlWrapper">
+    <div class="SelectedValues">
+        <SelectedValues @bind-Values="selectedValues" Nested></SelectedValues>
+    </div>
+
+    @if (SelectedYear() == null)
+    {
+        <div>@culture.Localize("Select.Year")</div>
+        <div class="Years">
+            @foreach (var year in Years() ?? new())
+            {
+                <a href="#" @onclick="@(()=>YearClicked(year))" @onclick:preventDefault>
+                    <div>@year</div>
+                </a>
+            }
+        </div>
+    }
+    else if (SelectedFch() == null)
+    {
+        <div>@culture.Localize("Select.Fch")</div>
+        <div class="Fchs">
+            @foreach (var fch in Fchs() ?? new())
+            {
+                <a href="#" @onclick="@(()=>FchClicked(fch))" @onclick:preventDefault>
+                    @string.Format("{0:dd/MM/yyyy}",fch)
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="Grid @colsClass">
+            <div class="ColHeaders">
+                <div class="Icon">
+                    &nbsp;
+                </div>
+                <div class="Nom">
+                    @culture.Localize("Staff")
+                </div>
+                <div class="Amt">
+                    @culture.Localize("Devengado")
+                </div>
+                @if (!hiddenCols.Contains(Cols.Dietas))
+                {
+                    <div class="Amt">
+                        @culture.Localize("Dietas")
+                    </div>
+                }
+                <div class="Amt">
+                    @culture.Localize("Seg.Social")
+                </div>
+                <div class="Amt">
+                    @culture.Localize("Irpf")
+                </div>
+                @if (!hiddenCols.Contains(Cols.Deutes))
+                {
+                    <div class="Amt">
+                        @culture.Localize("Deutes")
+                    </div>
+                }
+                <div class="Amt">
+                    @culture.Localize("Liquido")
+                </div>
+                <div>&nbsp;</div>
+            </div>
+
+
+            @foreach (var nomina in items ?? new())
+            {
+                <div class="Item">
+                    <a href="@nomina.Cca?.Docfile?.DownloadUrl()" target="_blank" class="Doc">
+                        <Icon Id="Icon.Ids.Doc"></Icon>
+                    </a>
+                    <div class="Nom">
+                        @nominasService.Staff(nomina)?.Abr
+                    </div>
+
+                    <CellAmt Value="nomina.Devengat"></CellAmt>
+
+                    @if (!hiddenCols.Contains(Cols.Dietas))
+                    {
+                        <CellAmt Value="nomina.Dietes"></CellAmt>
+                    }
+
+                    <CellAmt Value="nomina.SegSocial"></CellAmt>
+                    <CellAmt Value="nomina.Irpf"></CellAmt>
+
+                    @if (!hiddenCols.Contains(Cols.Deutes))
+                    {
+                        <CellAmt Value="nomina.Deutes"></CellAmt>
+                    }
+
+                    <CellAmt Value="nomina.Liquid"></CellAmt>
+
+                    @if (IsBeingDeleted(nomina))
+                    {
+                        <div class="Del">
+                            <Loading></Loading>
+                        </div>
+                    }
+                    else
+                    {
+                        <a href="#" class="Del" title="@culture.Localize("Delete")"
+                        @onclick="@(()=>DeleteItem(nomina))" @onclick:preventDefault>
+                            <Icon Id="Icon.Ids.TrashCan"></Icon>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (items?.Any() ?? false)
+        {
+            <a class="DeleteAll" href="#" @onclick="DeleteAll" @onclick:preventDefault>
+                [eliminar totes les de la llista]
+            </a>
+        }
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public EmpModel? Emp { get; set; }
+    SelectedValues.Collection? selectedValues;
+    List<NominaModel>? allValues;
+    List<NominaModel>? items;
+    List<NominaModel> itemsBeingDeleted = new();
+    List<Cols> hiddenCols = new();
+    string colsClass = "Cols6";
+    Exception? exception;
+
+    private enum Cols
+    {
+        Ico,
+        Fch,
+        Staff,
+        Devengat,
+        Dietas,
+        SegSocial,
+        Irpf,
+        Deutes,
+        Liquid
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        nominasService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        Refresca(null);
+
+    }
+
+    int? SelectedYear() => selectedValues == null || selectedValues.Count < 1 ? null : (int)selectedValues![0].Value;
+    DateOnly? SelectedFch() => selectedValues == null || selectedValues.Count < 2 ? null : (DateOnly)selectedValues![1].Value;
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        allValues = nominasService.Values;
+        if (allValues?.Any() ?? false && selectedValues == null)
+        {
+            selectedValues = new SelectedValues.Collection();
+            var lastFch = DateOnly.FromDateTime((DateTime)allValues.Max(x => x.Cca?.Fch ?? DateTime.Today));
+            selectedValues.Add(lastFch.Year, lastFch.Year.ToString());
+            selectedValues.Add(lastFch, $"{lastFch:dd/MM/yy}");
+            items = FilteredItems();
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    List<int>? Years()
+    {
+        var retval = allValues?
+        .Where(x => x.Cca?.Fch != null)
+        .GroupBy(x => x.Cca?.Fch?.Year)
+        .Select(x => ((DateTime)x.First().Cca!.Fch!).Year)
+        .ToList();
+        return retval;
+    }
+
+    List<DateOnly>? Fchs()
+    {
+        var retval = allValues?
+        .Where(x => x.Cca?.Fch != null && ((DateTime)x.Cca!.Fch!).Year == SelectedYear())
+        .GroupBy(x => x.Cca?.Fch)
+        .Select(x => DateOnly.FromDateTime((DateTime)x.First().Cca!.Fch!))
+        .ToList();
+        return retval;
+    }
+
+    List<NominaModel>? FilteredItems()
+    {
+        var retval = allValues?
+        .Where(x => DateOnly.FromDateTime((DateTime)x.Cca!.Fch!) == SelectedFch())
+        .OrderBy(x => nominasService.Staff(x)?.Abr)
+        .ToList();
+
+        hiddenCols.Clear();
+        if (retval?.All(x => x.Dietes == 0) ?? true) hiddenCols.Add(Cols.Dietas);
+        if (retval?.All(x => x.Deutes == 0) ?? true) hiddenCols.Add(Cols.Deutes);
+
+        colsClass = "Cols6";
+        if (hiddenCols.Count == 1) colsClass = "Cols5";
+        if (hiddenCols.Count >= 2) colsClass = "Cols4";
+
+        return retval;
+    }
+
+    void YearClicked(int year)
+    {
+        selectedValues = new SelectedValues.Collection();
+        selectedValues.Add(year, year.ToString());
+    }
+
+    void FchClicked(DateOnly fch)
+    {
+        selectedValues?.Add(fch, $"{fch:dd/MM/yy}");
+        items = FilteredItems();
+    }
+
+    void ItemClicked(NominaModel item)
+    {
+
+    }
+
+    async void DeleteItem(NominaModel item)
+    {
+        try
+        {
+            itemsBeingDeleted.Add(item);
+            await nominasService.DeleteAsync(item);
+            itemsBeingDeleted.Remove(item);
+            items = FilteredItems();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async void DeleteAll()
+    {
+        try
+        {
+            itemsBeingDeleted = items ?? new();
+            if (itemsBeingDeleted.Any())
+            {
+                await nominasService.DeleteAsync(itemsBeingDeleted);
+                itemsBeingDeleted.Clear();
+                items = FilteredItems();
+            }
+        }
+        catch (Exception ex)
+        {
+            itemsBeingDeleted.Clear();
+            exception = ex;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    bool IsBeingDeleted(NominaModel item) => itemsBeingDeleted.Any(x => x == item);
+
+
+    public void Dispose()
+    {
+        nominasService.OnChange -= Refresca;
+    }
+}

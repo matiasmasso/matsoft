@@ -1,0 +1,62 @@
+﻿@typeparam T
+
+<div class="Grid">
+    @foreach (var item in Values ?? new())
+    {
+        @if (Values?.IndexOf(item) == selectedIdx)
+        {
+            <a href="#" class="Item Selected"
+               @onclick="Clear"
+            @onclick:preventDefault>
+                @DisplayName(item)
+            </a>
+        }
+        else
+        {
+            <a href="#" class="Item"
+               @onclick="@(()=>ItemClick(item))"
+            @onclick:preventDefault>
+                @DisplayName(item)
+            </a>
+        }
+
+    }
+</div>
+
+@code {
+    [Parameter] public List<T>? Values { get; set; }
+    [Parameter] public T? SelectedValue { get; set; }
+    [Parameter] public EventCallback<T> SelectedValueChanged { get; set; }
+
+    int selectedIdx = -1;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Values != null && SelectedValue != null)
+            selectedIdx = Values!.IndexOf(SelectedValue);
+    }
+
+    void ItemClick(T item)
+    {
+        SelectedValueChanged.InvokeAsync(item);
+    }
+
+    void Clear()
+    {
+        SelectedValueChanged.InvokeAsync(default(T));
+    }
+
+    string? DisplayName(T item)
+    {
+        if (item is EmpModel.EmpIds)
+        {
+            int id = Convert.ToInt32(item);
+            var empId = (EmpModel.EmpIds)id;
+            var retval = empId.GetDisplayName();
+            return retval;
+        }
+        else
+            return item.ToString();
+    }
+}

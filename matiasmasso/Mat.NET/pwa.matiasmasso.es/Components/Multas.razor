@@ -1,0 +1,58 @@
+﻿@inherits _Base
+
+@if (Values != null)
+{
+    <div class="Grid">
+        @foreach (var item in Values)
+        {
+            <a class="Item" href="#" target="_blank"
+               @onclick="@(()=>ItemClick(item))"
+               @onclick:preventDefault>
+
+                <div class="Ico">
+                    @if (item.Pagat == null)
+                    {
+                        <span>&nbsp;</span>
+                    }
+                    else
+                    {
+                        <i class="fa-solid fa-check"></i>
+                    }
+                </div>
+                <div class="Fch">
+                    @string.Format("{0:dd/MM/yy}",item.Fch ?? item.Fch)
+                </div>
+                <div class="Emisor Truncate">
+                    @item.Emisor?.Nom
+                </div>
+                <div class="Expedient Truncate">
+                    @item.Expedient
+                </div>
+                <div class="Import Truncate">
+                    @if (item.Amt == null)
+                    {
+                        <span>&nbsp;</span>
+                    }
+                    else
+                    {
+                        @string.Format("{0:N2} €",item.Amt)
+                    }
+                </div>
+                <div class="Vto Truncate">
+                    @string.Format("{0:dd/MM/yy}",item.Vto)
+                </div>
+            </a>
+            <div class="GridRowDivider" />
+        }
+    </div>
+}
+
+
+@code {
+    [Parameter] public List<MultaModel>? Values { get; set; }
+
+    void ItemClick(MultaModel item)
+    {
+        navigationManager?.NavigateTo(item.PageUrl());
+    }
+}

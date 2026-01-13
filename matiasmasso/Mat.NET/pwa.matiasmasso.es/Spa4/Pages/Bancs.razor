@@ -1,0 +1,63 @@
+﻿@page "/Bancs"
+@inherits _ComponentBase
+@layout ProLayout
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Entidades bancarias","Entitats bancaries","Banks")</h1>
+    @if (model == null)
+    {
+
+    }
+    else
+    {
+        @if (model.Count > 5)
+        {
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+        }
+
+        <div class="Grid">
+            @if (model == null)
+            {
+                <div>loading...</div>
+            }
+            else
+            {
+                foreach (var item in model!.Where(x => x.Matches(searchTerm)))
+                {
+                    <BancSaldoItem Item="@item" ShowEmp="@showEmp" ItemClicked="@(()=>ItemClicked(item))"></BancSaldoItem>
+                }
+            }
+        </div>
+
+    }
+</div>
+
+
+
+
+@code {
+    private List<BancDTO.Saldo>? model;
+    private string searchTerm = string.Empty;
+    private bool showEmp = false;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            model = await base.GetAsync<List<BancDTO.Saldo>>("Bancs/Saldos");
+            if (model.Count > 0)
+                showEmp = model.Any(x => x.Emp != model.First().Emp);
+            StateHasChanged();
+        };
+    }
+
+    private void ItemClicked(BancDTO.Saldo item)
+    {
+        NavigationManager.NavigateTo("/PgcCtaSdos/" + item.Guid.ToString());
+    }
+
+
+
+}

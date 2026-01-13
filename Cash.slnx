@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="matiasmasso/ApiCore/ApiCore.csproj" />
+  <Project Path="matiasmasso/Cash/Cash.csproj" />
+  <Project Path="matiasmasso/DTO/DTO.csproj" />
+</Solution>

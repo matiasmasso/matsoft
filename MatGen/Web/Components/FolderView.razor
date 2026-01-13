@@ -1,0 +1,33 @@
+﻿
+
+<div class="folder">
+    <a href="#" @onclick="ItemClick" @onclick:preventDefault>@Folder?.Name</a>
+
+    @if (Folder?.SubFolders.Any() ?? false)
+    {
+        <div class="subfolders" style="margin-left:20px;">
+            @foreach (var sub in Folder.SubFolders)
+            {
+                <FolderView Folder="sub" ItemSelected="ItemSelectedHandler" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public DTO.FolderModel? Folder { get; set; }
+    [Parameter] public EventCallback<FolderModel> ItemSelected { get; set; }
+
+    void ItemClick()
+    {
+        if (Folder != null)
+        {
+            ItemSelected.InvokeAsync(Folder);
+        }
+    }
+
+    void ItemSelectedHandler(FolderModel folder)
+    {
+        ItemSelected.InvokeAsync(folder);
+    }
+}

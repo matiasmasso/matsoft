@@ -1,0 +1,31 @@
+﻿@inject IJSRuntime JSRuntime
+
+<form action="@Url" method="post" style="display:none">
+    @if (Data != null)
+    {
+        @foreach (var item in Data ?? new Dictionary<string, string>())
+        {
+            <input type="hidden" name="@item.Key" value="@item.Value" />
+        }
+    }
+    <input type="submit" value="submit" @ref="SubmitButton" />
+</form>
+
+
+
+@code {
+    ElementReference SubmitButton;
+
+    [Parameter] public string? Url { get; set; }
+    [Parameter] public Dictionary<string, string>? Data { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // if (firstRender) JSRuntime = ScopedServices.GetRequiredService<CatalogService>();
+
+        if (Data != null && !string.IsNullOrEmpty(Url))
+        {
+            await JSRuntime.InvokeVoidAsync("triggerClick", SubmitButton);
+        }
+    }
+}

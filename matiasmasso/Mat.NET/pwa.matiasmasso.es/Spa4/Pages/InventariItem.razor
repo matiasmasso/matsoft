@@ -1,0 +1,49 @@
+﻿@page "/InventariItem"
+@page "/InventariItem/{Guid:guid}"
+@inherits _ComponentBase
+@using System.Net.Http.Formatting
+
+<div class="Wrapper">
+    <h1>Fitxa inventari</h1>
+
+    <TabControl SelectedTab="1">
+
+        <ChildContent>
+
+            <TabPage Text="General">
+                <InventariItemEditor @bind-Model="@Model"></InventariItemEditor>
+            </TabPage>
+
+            <TabPage Text="Documentacio">
+                @if (Guid != null)
+                {
+                    <SrcDownloads Src="@((Guid)Guid!)"></SrcDownloads>
+                }
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>
+
+
+
+</div>
+@code {
+    private ImmobleDTO.InventariItem? Model = null;
+
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Guid == null)
+            Model = new ImmobleDTO.InventariItem();
+        else
+        {
+            Model = await base.GetAsync<ImmobleDTO.InventariItem>("immoble/inventariItem", ((Guid)Guid!).ToString());
+        }
+        StateHasChanged();
+    }
+
+
+}

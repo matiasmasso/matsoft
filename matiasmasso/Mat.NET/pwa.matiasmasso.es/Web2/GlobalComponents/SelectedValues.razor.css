@@ -1,0 +1,14 @@
+﻿.SelectedValues {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+    .SelectedValues a {
+        display: inline-flex;
+        gap: 10px;
+        padding: 4px 7px 2px 4px;
+        border-radius: 5px;
+        border: 1px solid gray;
+        background-color: aliceblue;
+        margin: 0 10px 10px 0;
+    }

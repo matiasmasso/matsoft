@@ -1,0 +1,90 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider AuthStateProvider
+
+
+<div class="app-shell">
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="LogoTitle">
+            <img src="/icon-192.png" width="40" height="40" />
+            <div class="app-title">Els meus albums de fotos</div>
+        </div>
+
+        <button class="nav-toggle" @onclick="ToggleNav">☰</button>
+    </header>
+
+    <div class="app-body">
+
+        <!-- Side navigation -->
+        <nav class="@NavCssClass">
+            <ul class="nav-list">
+
+                <li><NavLink href="" Match="NavLinkMatch.All" @onclick="CloseNav">Home</NavLink></li>
+
+                <AuthorizeView Roles="Admin,Guest">
+                    <Authorized>
+                        <li><NavLink href="albums" @onclick="CloseNav">Albums</NavLink></li>
+
+                        <!-- Only Admin sees Users -->
+                        <AuthorizeView Roles="Admin">
+                            <Authorized Context="AdminsOnly">
+                                <li><NavLink href="users" @onclick="CloseNav">Users</NavLink></li>
+                            </Authorized>
+                        </AuthorizeView>
+
+                        <li><LogoutButton /></li>
+                    </Authorized>
+
+                    <NotAuthorized>
+                        <li><NavLink href="login" @onclick="CloseNav">Login</NavLink></li>
+                    </NotAuthorized>
+                </AuthorizeView>
+
+
+                <li><ApiToggleButton /></li>
+
+                <li><NavLink href="settings" @onclick="CloseNav">Settings</NavLink></li>
+                <li><NavLink href="about" @onclick="CloseNav">About</NavLink></li>
+            </ul>
+        </nav>
+
+        @if (navOpen)
+        {
+            <div class="app-nav-backdrop" @onclick="CloseNav"></div>
+        }
+
+        <!-- Main content -->
+        <main class="app-main">
+            @Body
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        © @DateTime.Now.Year - Matias Massó
+    </footer>
+
+</div>
+
+@code {
+    private bool navOpen;
+
+    private string NavCssClass =>
+        navOpen ? "app-nav app-nav-open" : "app-nav";
+
+    private void ToggleNav()
+    {
+        navOpen = !navOpen;
+        StateHasChanged();
+    }
+
+    private void CloseNav()
+    {
+        navOpen = false;
+        StateHasChanged();
+    }
+
+
+}

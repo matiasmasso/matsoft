@@ -1,0 +1,15 @@
+﻿@page "/MiPedido/{OrderNum}"
+@page "/{LangSegment}/MiPedido/{OrderNum}"
+@inherits _PageBase
+
+<ConsumerTicket OrderNum="@OrderNum"></ConsumerTicket>
+
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+
+@code {
+    [Parameter] public string? OrderNum { get; set; }
+}

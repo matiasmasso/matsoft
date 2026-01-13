@@ -1,0 +1,45 @@
+﻿.StoreLocator{
+    display:flex;
+    flex-direction: column;
+    gap:10px;
+}
+
+select {
+    padding:4px 7px 2px 4px;
+    min-width:50%;
+}
+
+.Distributor{
+    display:block;
+    padding: 5px 0;
+}
+
+.Distributor div:first-child{
+    font-weight: 600;
+}
+
+.ClickToChange {
+    display:flex;
+    gap:10px;
+    align-items: center;
+    color:gray;
+    margin-top:10px;
+}
+
+.ClickToChange ::deep .fa-primary {
+    fill:gray;
+}
+
+.ClickToChange:hover {
+    color: black;
+}
+
+    .ClickToChange:hover ::deep .fa-primary {
+        fill: black;
+    }
+
+@media(max-width:500) {
+    select {
+        width: 100%;
+    }
+}

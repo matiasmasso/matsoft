@@ -1,0 +1,176 @@
+﻿@implements IDisposable;
+@inject CultureService culture
+@inject ProductCategoriesService categoriesService
+@inject NavigationManager? navigationManager
+@inject IncidenciasService? incidenciasService
+
+<h3>@culture.Localize("Incidencia.Title")
+@Model?.Asin
+</h3>
+
+<div class="Wrapper600">
+    @if (isShowingThanks)
+    {
+        <div class="Thanks">
+            <p>
+                @culture.Tradueix(
+            "Gracias por sus datos.",
+            "Gracies per les seves dades.",
+            "Thanks for your data.",
+            "Obrigado pelos vossos dados."
+            )
+            </p>
+            <p>
+                @culture.Tradueix(
+            "Su incidencia ha sido registrada correctamente con la referencia",
+            "La seva incidencia ha sigut registrada correctament amb la referència",
+            "A support incidence has been successfully logged under reference",
+            "Foi registada com sucesso uma incidência de apoio com a referência"
+            )
+                <b>@Model?.Asin</b>
+            </p>
+            <p>
+                @culture.Tradueix(
+            "Los técnicos de nuestro servicio de postventa se pondran en contacto a la mayor brevedad.",
+            "Els tecnics del nostre servei de postvenda es posaran en contacte en breu.",
+            "Our technicians will contact you at soonest.",
+            "Os nossos técnicos do serviço pós-venda entrarão em contacto consigo o mais rapidamente possível."
+            )
+            </p>
+        </div>
+    }
+    else
+    {
+        <div>
+            <PropertyGrid model="@gridModel"
+                          Display="PropertyGrid.DisplayModes.Wide"
+                          CanEdit="true"
+                          SetDirty="SetDirty"></PropertyGrid>
+
+            <ButtonsBar State="state"
+                        CanEdit="true"
+                        RequestToCancel="CancelRequest"
+                        RequestToUpdate="UpdateRequest"></ButtonsBar>
+        </div>
+
+        <Error Exception="exception"></Error>
+    }
+</div>
+
+@code {
+    [Parameter] public IncidenciaModel? Model { get; set; }
+    DbState state;
+    PropertyGridModel? gridModel;
+    List<GuidNom>? categories;
+    List<DocFileModel> docfiles = new();
+    bool isDirty;
+    bool isShowingThanks;
+    Exception? exception;
+
+    enum Fields
+    {
+        ContactPerson,
+        EmailAdr,
+        ContactTel,
+        Product,
+        SerialNumber,
+        ManufactureDate,
+        FchCompra,
+        BoughtFrom,
+        Description,
+        PurchaseTicket,
+        Images,
+        Videos
+    }
+
+    protected override void OnInitialized()
+    {
+        categoriesService.OnChange += LoadedHandler;
+    }
+
+    private async void LoadedHandler()
+    {
+        LoadGrid();
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    private void LoadGrid()
+    {
+        categories = categoriesService.Values?.Where(x => x.Codi < 2)
+        .OrderBy(x => x.Nom.Tradueix(culture.Lang()))
+        .Select(x => new GuidNom(x.Guid, x.Nom.Tradueix(culture.Lang())))
+        .ToList() ?? new();
+
+        var nullCategory = new GuidNom(Guid.Empty, $"({culture.Localize("SelectProduct")})");
+        categories.Insert(0, nullCategory);
+
+        gridModel = new PropertyGridModel(Model);
+        gridModel.AddString((int)Fields.ContactPerson, Model.ContactPerson, culture.Localize("ContactPerson"));
+        gridModel.AddString((int)Fields.EmailAdr, Model.EmailAdr, culture.Localize("ContactEmail"));
+        gridModel.AddString((int)Fields.ContactTel, Model.Tel, culture.Localize("ContactTel"));
+        gridModel.AddFch((int)Fields.FchCompra, Model.FchCompra, culture.Localize("FchCompra"));
+        gridModel.AddString((int)Fields.BoughtFrom, Model.CustomerRef, culture.Localize("BoughtFrom"));
+        gridModel.AddDropdown((int)Fields.Product, categories ?? new(), default, culture.Localize("Product"));
+        gridModel.AddString((int)Fields.SerialNumber, Model.SerialNumber, culture.Localize("SerialNumber"));
+        gridModel.AddString((int)Fields.ManufactureDate, Model.ManufactureDate, culture.Localize("ManufactureDate"));
+        gridModel.AddString((int)Fields.Description, Model.Description, culture.Localize("Incidencia.Description"), multiline: true);
+        gridModel.AddFiles((int)Fields.PurchaseTicket, Model.PurchaseTickets, culture.Localize("Incidencia.PurchaseTicket"), ".pdf,.jpg,.jpeg,.png,.tif,.tiff,.gif,.bmp", 2);
+        gridModel.AddFiles((int)Fields.Images, Model.DocFileImages, culture.Localize("Incidencia.Images") + "(.jpg,.png,.tiff,.gif,.bmp)", ".jpg,.jpeg,.png,.tif,.tiff,.gif,.bmp", 5);
+        gridModel.AddFiles((int)Fields.Videos, Model.Videos, culture.Localize("Incidencia.Videos") + " (.mpg,.mov,.mp4)", ".mpg,.mov,.mp4", 10);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (categoriesService.State == DbState.StandBy && categories == null) LoadGrid();
+    }
+
+    void SetDirty(PropertyGridModel.Item item)
+    {
+        state = DbState.IsDirty;
+    }
+
+    void CancelRequest()
+    {
+        navigationManager?.NavigateTo("/");
+    }
+
+    async Task UpdateRequest()
+    {
+        state = DbState.IsUpdating;
+        Model!.ContactPerson = gridModel!.GetString((int)Fields.ContactPerson);
+        Model!.EmailAdr = gridModel!.GetString((int)Fields.EmailAdr);
+        Model!.Tel = gridModel!.GetString((int)Fields.ContactTel);
+        Model!.FchCompra = gridModel!.GetFch((int)Fields.FchCompra);
+        Model!.BoughtFrom = gridModel!.GetString((int)Fields.BoughtFrom);
+        Model!.SerialNumber = gridModel!.GetString((int)Fields.SerialNumber);
+        Model!.ManufactureDate = gridModel!.GetString((int)Fields.ManufactureDate);
+        Model!.Description = gridModel!.GetString((int)Fields.Description);
+        Model!.PurchaseTickets = gridModel!.GetDocfiles((int)Fields.PurchaseTicket) ?? new();
+        Model!.DocFileImages = gridModel!.GetDocfiles((int)Fields.Images) ?? new();
+        Model!.Videos = gridModel!.GetDocfiles((int)Fields.Videos) ?? new();
+
+        var productGuid = gridModel!.GetModelGuid((int)Fields.Product);
+        Model!.Product = productGuid == Guid.Empty ? null : productGuid;
+
+        try
+        {
+            if (await incidenciasService.UpdateAsync(Model!))
+                isShowingThanks = true;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+
+    }
+
+    public void Dispose()
+    {
+        categoriesService.OnChange -= LoadedHandler;
+    }
+
+}

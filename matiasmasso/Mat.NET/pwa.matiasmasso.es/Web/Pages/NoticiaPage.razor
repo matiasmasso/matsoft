@@ -1,0 +1,15 @@
+﻿@page "/news/{url1}/{url2?}/{url3?}/{url4?}/{url5?}"
+
+<Noticia Url1="@Url1"
+         Url2="@Url2"
+         Url3="@Url3"
+         Url4="@Url4"
+         Url5="@Url5"></Noticia>
+
+@code {
+    [Parameter] public string? Url1 { get; set; }
+    [Parameter] public string? Url2 { get; set; }
+    [Parameter] public string? Url3 { get; set; }
+    [Parameter] public string? Url4 { get; set; }
+    [Parameter] public string? Url5 { get; set; }
+}

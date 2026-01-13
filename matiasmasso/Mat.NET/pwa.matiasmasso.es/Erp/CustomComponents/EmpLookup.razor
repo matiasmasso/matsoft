@@ -1,0 +1,64 @@
+﻿@inherits _ComponentBase
+
+<div class="Wrapper">
+    @if (isEditing)
+    {
+        <input type="text" @bind="searchTerm" @bind:event="oninput" />
+        <div class="Dropdown">
+            <Emps_List Model="FilteredItems()" SelectedItemChanged="OnItemSelected"></Emps_List>
+        </div>
+
+    }
+    else
+    {
+        <a href="#" @onclick="@(()=>isEditing = true)" @onclick:preventDefault>
+            @(((EmpModel.EmpIds)Value.Id).GetDisplayName())
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public EmpModel Value { get; set; }
+    [Parameter] public EventCallback<EmpModel> ValueChanged { get; set; }
+
+    string caption;
+    string searchTerm;
+    bool isEditing = false;
+    bool isShowingMenu = false;
+    CacheDTO cache = AppState.DefaultCache();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        caption = ((EmpModel.EmpIds)Value?.Id).GetDisplayName();
+    }
+
+    void ToggleContextMenu()
+    {
+        isShowingMenu = !isShowingMenu;
+    }
+
+    void EditRequest()
+    {
+        isEditing = true;
+        searchTerm = caption;
+    }
+
+    List<EmpModel> FilteredItems()
+    {
+        var retval = base.UserEmps()
+        .Select(x => new EmpModel((int)x))
+        .ToList();
+        if (!string.IsNullOrEmpty(searchTerm))
+            retval = retval.Where(x => x.Matches(searchTerm)).ToList();
+        return retval;
+    }
+
+
+    void OnItemSelected(EmpModel item)
+    {
+        isEditing = false;
+        //caption = Value?.Nom.Tradueix(base.Lang());
+        ValueChanged.InvokeAsync(item);
+    }
+}

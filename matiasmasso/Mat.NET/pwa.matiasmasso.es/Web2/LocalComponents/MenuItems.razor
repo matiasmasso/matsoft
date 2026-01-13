@@ -1,0 +1,94 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject NavService nav
+
+<div class="PageWrapper600">
+
+    @if (nav.Values == null)
+    {
+        <h1>Menu</h1>
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>Menu</h1>
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+             <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                 @culture.Localize("AddNew")
+             </a>
+         </PageOptions>
+     </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+            @if (nav.Values != null)
+            {
+                foreach (var item in nav.Values.Where(x => x.Matches(searchTerm)))
+                {
+                    <div class="Item">
+                        <a href="#" @onclick="(() => ItemClick(item))"
+                        @onclick:preventDefault="true">
+                            @nav.MenuItemNom(item)?.Tradueix(culture.Lang())
+                        </a>
+                    </div>
+
+                }
+            }
+        </div>
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    //[Parameter] public List<ModelEditor.Breadcrumb> Breadcrumbs { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+
+    private string searchTerm = string.Empty;
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        session.OnChange += Refresca;
+        nav.OnChange += Refresca;
+    }
+
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    async Task ItemClick(NavDTO.MenuItem item)
+    {
+        var breadcrumb = new ModelEditor.Breadcrumb(item, item.Nom?.Tradueix(culture.Lang()) ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    async Task AddNew()
+    {
+        NavDTO.MenuItem? item = null;
+        var emp = session.Emps?.FirstOrDefault();
+        if (emp != null)
+        {
+            item = new NavDTO.MenuItem();
+            item.Emps.Add(emp.Id);
+            item.Nom.Load("(nuevo menuitem)", "(nou menuitem)", "(new menu item)");
+            var breadcrumb = new ModelEditor.Breadcrumb(item, item.Nom?.Tradueix(culture.Lang()) ?? "?");
+            await EditorRequest.InvokeAsync(breadcrumb);
+        }
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        nav.OnChange -= Refresca;
+    }
+}

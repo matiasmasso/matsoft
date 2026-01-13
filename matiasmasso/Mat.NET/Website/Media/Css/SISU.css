@@ -1,0 +1,174 @@
+﻿.SISU {
+
+}
+
+#SISU_RowEmail {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+#SISU_RowPwd {
+    display: flex;
+    align-items: center;
+}
+
+#SISU_RowFirstName {
+    display: flex;
+    align-items: center;
+    padding: 4px 0 2px;
+}
+
+#SISU_RowSurName {
+    display: flex;
+    align-items: center;
+    padding: 4px 0 2px;
+}
+
+#SISU_RowNickname {
+    display: flex;
+    align-items: center;
+    padding: 4px 0 2px;
+}
+
+#SISU_RowCountry {
+    display: flex;
+    align-items: center;
+    padding: 4px 0 2px;
+}
+
+#SISU_RowZip {
+    display: flex;
+    align-items: center;
+    padding: 4px 0 2px;
+}
+
+#SISU_RowTel {
+    display: flex;
+    align-items: center;
+    padding: 4px 0 2px;
+}
+
+#SISU_RowBirth {
+    display: flex;
+    align-items: center;
+    padding: 4px 0 2px;
+}
+
+#SISU_RowSubmit {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.SISU_Label {
+    display: inline-block;
+    flex: 0 0 100px;
+    /*
+    width: 150px !important;
+        */
+}
+
+.SISU .warning16 {
+    padding: 0 5px;
+}
+
+#SISU_Msg {
+    display: inline-block;
+    margin-bottom: 10px;
+}
+#SISU_Email,
+#SISU_textboxPwd {
+    font-size: 1em;
+    padding: 3px 10px;
+    width: 100%;
+    height: 18px;
+}
+
+
+#SISU_ButtonEmail,
+#SISU_ButtonPwd,
+#SISU_ButtonSubmit {
+    font-size: 1em;
+    color: white;
+    background-color: #167ac6;
+    margin: 10px 0 10px 10px;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 4px;
+}
+
+#SISU_EmailOk {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+#SISU_LinkRemindMyPwd {
+    margin-left: 100px;
+}
+
+#SISU_FormRowSet {
+    display: none;
+    padding: 2px 0 15px;
+}
+
+#SISU_textboxFirstname {
+    font-size: 1em;
+    padding: 3px 10px;
+    width: 100%;
+    height: 18px;
+}
+
+#SISU_textboxSurname {
+    font-size: 1em;
+    padding: 3px 10px;
+    width: 100%;
+    height: 18px;
+}
+
+#SISU_textboxNickname {
+    font-size: 1em;
+    padding: 3px 10px;
+    width: 100%;
+    height: 18px;
+}
+
+#SISU_selectCountry {
+    font-size: 1em;
+    padding: 3px 10px;
+    width: 100%;
+}
+
+#SISU_textboxZip {
+    font-size: 1em;
+    padding: 3px 10px;
+    flex: 0 0 100px;
+    height: 18px;
+}
+
+#SISU_textboxTel {
+    font-size: 1em;
+    padding: 3px 10px;
+    flex: 0 0 100px;
+    height: 18px;
+}
+
+#SISU_spanLocation {
+    font-size: 1em;
+    margin-left: 10px;
+    flex: 0 0 1fr;
+}
+
+#SISU_textboxBirth {
+    font-size: 1em;
+    padding: 3px 10px;
+    flex: 0 0 100px;
+    height: 18px;
+}
+
+.SISU_Comment {
+    font-size: 1em;
+    margin-left: 10px;
+    flex: 0 0 1fr;
+}
+

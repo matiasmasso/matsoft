@@ -1,0 +1,123 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+
+    <Title Value="Model de Hisenda" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (value == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="UpdateRequestHandler"
+                      CancelRequest="CloseRequestHandler"
+                      DeleteRequest="DeleteRequestHandler"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    }
+
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public AeatModel.Item? Value { get; set; }
+    [Parameter] public EventCallback<AeatModel.Item> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<AeatModel.Item> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    AeatModel.Item? value;
+    List<AeatModel>? models;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Parent,
+        Emp,
+        Fch,
+        Docfile
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            models = await ApiService.GetAsync<List<AeatModel>>("Aeats");
+            if (Value!.IsNew)
+                value = Value;
+            else
+                value = await ApiService.GetAsync<AeatModel.Item>("Aeat/item", Value.Guid.ToString());
+            propertyGrid = PropertyGrid();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddGuidnom("Parent", value?.Parent, models);
+        retval.AddEmp(value?.Emp);
+        retval.AddDateOnly("Data", value?.Fch);
+        retval.AddDocfile(value?.Docfile);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Parent = propertyGrid!.GetGuid((int)Fields.Parent);
+            value.Emp = propertyGrid.GetEmp((int)Fields.Emp);
+            value.Fch = (DateOnly)propertyGrid.GetDateOnly((int)Fields.Fch)!;
+            value.Docfile = propertyGrid.GetDocfile((int)Fields.Docfile);
+            await ApiService.PostMultipartAsync<AeatModel.Item, bool>(value.Docfile, value, "Aeat/updateItem");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Aeat/deleteItem", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+            await CloseRequest.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void AddNew()
+    {
+
+    }
+
+}
+

@@ -1,0 +1,86 @@
+﻿.Header {
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.CloseButton {
+    width: 24px;
+    opacity: .3;
+}
+.CloseButton:hover {
+    opacity: 1.0;
+}
+/*.PropertyGrid {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap: 10px;
+    grid-row-gap: 1px;
+}
+
+    .PropertyGrid .Label {
+        background-color: #DFDFDF;
+    }
+
+    .PropertyGrid .Value {
+        border-bottom: 1px solid #DFDFDF;
+    }
+
+*/
+.Concepte {
+    margin-top: 15px;
+}
+
+        .Concepte label, .Ctas label, .Contact label {
+            display: block;
+            font-size: .8em;
+        }
+
+    .Concepte input, .Ctas input, .Contact input {
+        width: 100%;
+        padding: 4px 7px 2px 4px;
+    }
+
+.WarnLength {
+    background-color: lightsalmon;
+}
+
+.DataInput {
+    margin-top: 15px;
+    display: flex;
+    gap: 25px;
+}
+
+.Projectes {
+}
+
+.Projecte {
+    display: block;
+    white-space:nowrap;
+}
+
+.Form {
+    display:flex;
+    flex-direction: column;
+    gap:15px;
+    border:1px solid gray;
+    border-radius:5px;
+    width:100%;
+    padding:10px;
+}
+
+.Ctas::deep input, .Ctas::deep a.Caption, .Contacts::deep input .Contacts::deep a.Caption {
+    display: inline-block;
+    border: 1px solid gray;
+    border-radius: 5px;
+    min-width: 300px;
+}
+
+.Submit {
+    display:flex;
+    justify-content:flex-end;
+}
+
+.Submit a {
+    padding:4px 15px 2px;
+}

@@ -1,0 +1,74 @@
+﻿@inherits _ComponentBase
+
+
+<CascadingValue Value="contextMenuItem">
+    <div class="Grid">
+        @foreach (var item in Model)
+        {
+            <div class="Item">
+                <UxCaptionEllipsis Tag="item"
+                               Caption="@Caption(item)"
+                               OnClick="ItemClick"
+                               OnEllipsis="ToggleContextMenu"></UxCaptionEllipsis>
+
+                @if (item == contextMenuItem)
+                {
+                    <ContextMenu_Deprecated Model="contextMenu" OnClick="@(()=>contextMenuItem = null)"></ContextMenu_Deprecated>
+                }
+            </div>
+        }
+    </div>
+</CascadingValue>
+
+@code {
+    [Parameter] public List<ZipModel> Model { get; set; }
+    [Parameter] public EventCallback<ZipModel> SelectedItemChanged { get; set; }
+    [Parameter] public bool ShowLocation { get; set; } = false;
+
+    CacheDTO cache = AppState.DefaultCache();
+
+    /// <summary>
+    /// the item which has the context menu open, if any
+    /// </summary>
+    ZipModel contextMenuItem = null;
+    ContextMenuModel contextMenu = null;
+
+    string Caption(ZipModel item)
+    {
+        if (ShowLocation)
+            return string.Format("{0} {1}", item.ZipCod, cache.Locations.FirstOrDefault(x => x.Guid == item.Location)?.Nom ?? "");
+        else
+            return item.ZipCod;
+    }
+
+    /// <summary>
+    /// The user clicked on the item caption.
+    /// Forward the event to parent component so it takes the default action
+    /// </summary>
+    /// <param name="args">the item the context menu refers to</param>
+    void ItemClick(Object args)
+    {
+        ZipModel item = (ZipModel)args;
+        SelectedItemChanged.InvokeAsync(item);
+    }
+
+    /// <summary>
+    /// The user clicked on the item ellipsis.
+    /// Either collapse the context menu if it was being displayed
+    /// or display it if it was hidden
+    /// </summary>
+    /// <param name="args">the item the context menu refers to</param>
+    void ToggleContextMenu(Object args)
+    {
+        ZipModel item = (ZipModel)args;
+        if (item == contextMenuItem)
+            contextMenuItem = null;
+        else
+        {
+            contextMenuItem = item;
+            contextMenu = ContextMenuModel.Factory(item);
+        }
+    }
+
+
+}

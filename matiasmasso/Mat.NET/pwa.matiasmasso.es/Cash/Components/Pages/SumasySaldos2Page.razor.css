@@ -1,0 +1,15 @@
+﻿@media(max-width:599px){
+    .Item {
+        display: grid;
+        grid-template-columns: 1fr 1fr 100px 100px 100px 100px;
+    }
+}
+
+@media(min-width:600px){
+    .Grid {
+        display: grid;
+        grid-template-columns: minmax(100px, min-content) minmax(100px, min-content) min-content min-content min-content min-content;
+    }
+
+
+}

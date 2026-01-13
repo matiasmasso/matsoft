@@ -1,0 +1,62 @@
+﻿@inherits _ComponentBase
+
+@if (Item != null)
+{
+
+    <div class="Contents ShowOnDesktop">
+        <a class="Ico @(Item.HasDoc ? "Doc" : "" )" href="@(Item.HasDoc ? Item.DownloadUrl() : "#")" @onclick:preventDefault="@(!Item.HasDoc)">
+        </a>
+
+        <a href="#" class="CcaId @(Item.Fch >DateTime.Today ? "Grayed" : "")" @onclick=@(()=>ItemClicked(Item)) @onclick:preventDefault="true">
+            @Item.CcaId
+        </a>
+
+        <a href="#" class="Fch @(Item.Fch >DateTime.Today ? "Grayed" : "")" @onclick=@(()=>ItemClicked(Item)) @onclick:preventDefault="true">
+            @Item.Fch.ToString("dd/MM/yy")
+        </a>
+
+        <a href="#" class="Concept @(Item.Fch >DateTime.Today ? "Grayed" : "")" @onclick=@(()=>ItemClicked(Item)) @onclick:preventDefault="true">
+            @Item.Concept
+        </a>
+
+        <div class="Deb">@(Item.Deb() == 0 ? "" : string.Format("{0:n2} €",Item.Deb()))</div>
+        <div class="Hab">@(Item.Hab() == 0 ? "" : string.Format("{0:n2} €",Item.Hab()))</div>
+        <div class="Sdo @(Item.Fch >DateTime.Today ? "Grayed" : "")">@string.Format("{0:n2} €",Item.Saldo)</div>
+    </div>
+
+    <a href="#" class="Contents ShowOnMobile @(Item.Fch >DateTime.Today ? "Grayed" : "")" @onclick=@(()=>ItemClicked(Item)) @onclick:preventDefault="true">
+        <!--First line-->
+        <div class="Ico @(Item.HasDoc ? "Doc" : "" )" href="@(Item.HasDoc ? Item.DownloadUrl() : "#")" @onclick:preventDefault="@(!Item.HasDoc)"></div>
+
+        <div class="Concept">
+            @Item.Concept
+        </div>
+
+
+        <!--Second line-->
+        <div class="Spacer"></div>
+
+        <div class="Fch">
+            @Item.Fch.ToString("dd/MM/yy")
+        </div>
+
+        <div class="Deb">@(Item.Deb() == 0 ? "" : string.Format("{0:n2}",Item.Deb()))</div>
+        <div class="Hab">@(Item.Hab() == 0 ? "" : string.Format("{0:n2}",Item.Hab()))</div>
+        <div class="Sdo @(Item.Fch >DateTime.Today ? "Grayed" : "")">@string.Format("{0:n2}",Item.Saldo)</div>
+
+        <!--Divider-->
+        <div class="Line"></div>
+    </a>
+}
+
+@code {
+
+    [Parameter] public PgcCtaExtracteDTO.Item? Item { get; set; }
+
+    private void ItemClicked(PgcCtaExtracteDTO.Item item)
+    {
+        NavigationManager.NavigateTo("/Cca/" + item.CcaGuid.ToString());
+    }
+
+
+}

@@ -1,0 +1,18 @@
+﻿@page "/ConsumerSku/{Guid:guid}"
+@inherits _PageBase
+@inject IJSRuntime JSRuntime;
+
+<ConsumerSku Guid="Guid" Cache="AppState.DefaultCache()"></ConsumerSku>
+
+<AnchorNavigation ScrollRequest="ScrollToFragment"></AnchorNavigation>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+
+    async Task ScrollToFragment(string elementId)
+    {
+        //allows Blazor anchor navigation within same page
+        await JSRuntime.InvokeVoidAsync("BlazorScrollToId", elementId);
+    }
+
+}

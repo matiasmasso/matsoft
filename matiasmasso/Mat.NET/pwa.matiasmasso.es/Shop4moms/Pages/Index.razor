@@ -1,0 +1,117 @@
+﻿@page "/"
+@page "/es"
+@page "/ca"
+@page "/en"
+@page "/pt"
+
+@inherits _PageBase
+@implements IDisposable
+@inject SessionStateService session
+@inject CultureService culture
+
+<PageTitle>4moms | @title</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@base.CanonicalUrl()" />
+    @foreach (var lang in LangDTO.All())
+    {
+        <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@base.CanonicalUrl(lang)" />
+    }
+
+    <meta name="description" content="@culture.Tradueix(
+          "4moms® crea productos infantiles innovadores para bebés, fáciles de usar, que simplifican la vida a los padres. Compra nuestra selección de hamaquitas, columpios, cunas y más."
+        , "4moms® crea productes infantils innovadors per nadons, fàcils d'usar, que simplifiquen la vida als pares. Compra la nostre selecció de ganduletes, glonxadors, bressols i més."
+        , "4moms® is dedicated to making innovative, easy to use baby products that make life easier for parents. Shop our selection of baby swings, portable playards, bassinets, high chairs and more."
+        , "A 4moms® cria produtos para bebés inovadores e fáceis de usar que facilitam a vida dos padres. Compre nossa seleção de balanços, berços, cadeiras altas e muito mais."
+)">
+</HeadContent>
+
+<h1>@heading</h1>
+
+@if (Items == null && problemDetails == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="Gallery">
+        @foreach (var item in Items ?? new())
+        {
+            <a href="@(base.RelativeUrl(base.Lang(),Route(item)))" class="Item">
+                @if (item.HasImage)
+                {
+                <img src="@item.ImageUrl()" width="410" height="410" alt="@Nom(item)" />
+                    
+                } else
+                {
+                    <div class="NoImg" >
+                    <Icon Id="Icon.Ids.NoImg" Width="410"></Icon>
+                    </div>
+                }
+                <h2 class="Caption">@Nom(item)</h2>
+                <div class="Excerpt">@Excerpt(item, 100)</div>
+            </a>
+        }
+    </div>
+
+    <Error ProblemDetails="problemDetails"></Error>
+}
+
+
+@code {
+    List<DTO.ProductCategoryModel>? Items;
+    RouteModel.Collection? Routes;
+    string? title;
+    string? heading;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        session.ShowAllProductsOnChange += SessionChangedHandler;
+        title = Lang().Tradueix(
+            "Artículos para bebés de alta tecnología. Hamaquitas, columpios, cunitas",
+            "Articles per nadons de alta tecnología. Ganduletes, glonxadors, bressols",
+            "High Tech baby gear. Baby Swings, rockers, bassinets",
+            "Artigos de bebé de alta tecnologia. Redes, balanços, berços"
+            );
+
+        heading = Lang().Tradueix(
+            "Alta tecnología para bebés",
+            "Alta tecnología per nadons",
+            "High Tech baby gear",
+            "Artigos de bebé de alta tecnologia"
+            );
+        await Refresca();
+    }
+
+    private async Task Refresca()
+    {
+        var apiResponse = await GetAsync<List<ProductCategoryModel>>("Shop4moms/Categories");
+        if (session.ShowAllProducts)
+            Items = apiResponse.Value;
+        else
+            Items = apiResponse?.Value?.Where(x => (int)x.Codi < 2 && x.Obsoleto == false).ToList();
+        problemDetails = apiResponse?.ProblemDetails;
+
+        var apiResponse2 = await GetAsync<RouteModel.Collection>("Shop4moms/Routes");
+        Routes = apiResponse2.Value;
+        problemDetails = apiResponse?.ProblemDetails;
+
+    }
+
+    string Nom(ProductCategoryModel category) => category.CamelCase4moms(Lang());
+    string Excerpt(ProductCategoryModel category, int pos) => category.Excerpt?.Tradueix(Lang())?.TrimAtNearestWhiteSpace(pos) ?? "";
+    LangTextModel? Route(ProductCategoryModel category) => Routes?.LangText(category.Guid);
+
+    private async void SessionChangedHandler()
+    {
+        await Refresca();
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose() => session.ShowAllProductsOnChange -= SessionChangedHandler;
+}

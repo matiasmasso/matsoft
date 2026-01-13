@@ -1,0 +1,20 @@
+﻿@page "/marketplacemenu/{Guid:guid}"
+@layout ProLayout
+
+<Nav nav="@model"></Nav>
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    private NavDTO? model;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if(firstRender)
+        {
+            model = new NavDTO();
+            //model.AddItem("/marketplace/" + Guid.ToString(), "Ficha", "Fitxa", "Details");
+            model.AddItem("/Stats/fromCustomer/" + Guid.ToString(), "Sellout");
+            base.OnAfterRender(firstRender);
+            StateHasChanged();
+        }
+    }
+}

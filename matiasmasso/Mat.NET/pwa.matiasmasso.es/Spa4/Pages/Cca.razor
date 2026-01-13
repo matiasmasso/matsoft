@@ -1,0 +1,50 @@
+﻿@page "/Cca/{Guid:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <div>Loading...</div>
+    }
+    else
+    {
+        <div class="Details">
+            @string.Format("{0} {1:dd/MM/yy} {2}", model!.Id, model!.Fch, model!.Concept)
+        </div>
+
+        <div class="Grid">
+
+            <div class="Header Cta Truncate">@base.Tradueix("Cuenta","Compte","Account")</div>
+            <div class="Header Cli">@base.Tradueix("Subuenta","Subcompte","Subaccount")</div>
+            <div class="Header Deb">@base.Tradueix("Debe","Deure","Debit")</div>
+            <div class="Header Hab">@base.Tradueix("Haber","Haver","Credit")</div>
+
+            @foreach (var item in model!.Items)
+            {
+                <a href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault="true" class="Cta">@item.Cta.Nom</a>
+                <a href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault="true" class="Cli">@(item.Contact == null ? "" : item.Contact!.Nom)</a>
+                <div class="Deb">@(item.DH == 1 ? string.Format("{0:n2} €",item.Eur) : "")</div>
+                <div class="Hab">@(item.DH == 2 ? string.Format("{0:n2} €",item.Eur) : "")</div>
+            }
+        </div>
+
+        <Docfile model="@model.Docfile"></Docfile>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    private CcaModel? model;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        model = await GetAsync<CcaModel>("Cca", Guid.ToString());
+    }
+
+    private void ItemClick(CcaModel.Item item)
+    {
+        var url = string.Format("/PgcCtaExtracte/{0}/{1}/{2}/{3}", "1", model.Fch.Year.ToString(), item.Cta.Guid.ToString(), item.Contact?.Guid.ToString());
+        NavigationManager.NavigateTo(url);
+    }
+}

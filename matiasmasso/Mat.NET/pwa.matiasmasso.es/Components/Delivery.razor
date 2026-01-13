@@ -1,0 +1,139 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <a class="CloseButton" href="#" @onclick="RequestToClose" @onclick:preventDefault>
+        [@(Localizer("Close"))]
+    </a>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@Localizer("Delivery") @model.Id</h1>
+
+        <TabControl>
+            <TabPage Text="@Localizer("Details")">
+                <ChildContent>
+
+                    <div class="Truncate">
+                        @Localizer("DeliveryIdFromFch",model.Id.ToString(),model.Fch)
+                    </div>
+                    <div class="Truncate">
+                        @model.Contact.Nom
+                    </div>
+                    <div class="Truncate">
+                        @Localizer("Transmission"):
+                        @(model.Transmission == null ? Localizer("TransmissionPending") : model.Transmission.Nom)
+                    </div>
+                    <div class="Truncate">
+                        @Localizer("Invoice"):
+                        @(model.Invoice == null ? Localizer("InvoicePending") : model.Invoice.Nom)
+                    </div>
+                    <div class="UsrLog Truncate">
+                        @model.UsrLog.Caption(base.Lang())
+                    </div>
+
+                    <div class="Items @(isShowingDto ? "IsShowingDto":"IsHiddingDto")">
+                        <div class="Item ColumnHeader HideOnMobile">
+                            <div class="Sku">
+                                @Localizer("Sku")
+                            </div>
+                            <div class="Qty">
+                                @Localizer("Qty")
+                            </div>
+                            <div class="Price">
+                                @Localizer("Price")
+                            </div>
+                            @if (isShowingDto)
+                            {
+                                <div class="Dto">
+                                    @Localizer("Dto")
+                                </div>
+                            }
+                            <div class="Amt">
+                                @Localizer("Amt")
+                            </div>
+                        </div>
+                        @foreach (var item in model.Items)
+                        {
+                            <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                                <div class="Sku Truncate">
+                                    @SkuNomLlarg(item)
+                                </div>
+                                <div class="Qty">
+                                    @string.Format("{0:N0}",item.Qty)
+                                </div>
+                                <div class="Price">
+                                    @string.Format("{0:N2} €",item.Price)
+                                </div>
+                                @if (isShowingDto)
+                                {
+                                    <div class="Dto">
+                                        @(item.Dto == 0 ? "" : string.Format(dtoPattern, item.Dto))
+                                    </div>
+                                }
+                                <div class="Amt">
+                                    @string.Format("{0:N2} €",item.Amt())
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </ChildContent>
+            </TabPage>
+        </TabControl>
+    }
+</div>
+
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    DeliveryModel model;
+
+    bool isShowingDto;
+    int dtoDecimals;
+    string dtoPattern;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (model == null)
+        {
+            var apiResponse = await GetAsync<DeliveryModel>("Delivery", Guid.ToString());
+            if (apiResponse.Success())
+            {
+                model = apiResponse.Value;
+                isShowingDto = model.Items.Any(x => x.Dto != 0);
+                dtoDecimals = model.Items.Select(x => x.Dto?.GetDecimalPlaces() ?? 0).Max();
+                dtoPattern = "{0:N" + dtoDecimals.ToString() + "}%";
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+    }
+
+    void ItemClick(DeliveryModel.Item item)
+    {
+    }
+
+
+
+    string SkuNomLlarg(DeliveryModel.Item item)
+    {
+        var sku = Cache.Sku(item.Sku);
+        var retval = sku.NomLlarg.Tradueix(base.Lang());
+        return retval;
+    }
+
+    private void RequestToClose()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}
+

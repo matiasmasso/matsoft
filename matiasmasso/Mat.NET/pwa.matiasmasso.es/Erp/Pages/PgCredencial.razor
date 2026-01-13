@@ -1,0 +1,153 @@
+﻿@page "/PgCredencial"
+@page "/PgCredencial/{Guid:guid}"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>@Localizer("Credentials")</h1>
+
+    <div class="PageOptions">
+        <PageOptions IsShowingOptions>
+            <a href="#" @onclick="CopyPwd" @onclick:preventDefault>@Localizer("CopyPwd")</a>
+        </PageOptions>
+    </div>
+
+    <TabControl>
+        <TabPage Text="General">
+
+            <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          CanEdit="true"></PropertyGrid>
+        </TabPage>
+
+        <TabPage Text="@Localizer("Permissions")">
+            <UxCheckBoxList Data="@AllRols()"
+                          SelectedValues="@SelectedRols" 
+                          SelectedValuesChanged="SelectedRolsChanged"
+                          TextField="@((item)=>item.Text)"
+                          ValueField="@((item)=>item.Value)"/>
+        </TabPage>
+
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <UxButtonsBar CanEdit="true"
+                      IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(value != null && !value.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></UxButtonsBar>
+    </div>
+
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    [Parameter] public Guid? guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private CredencialModel value;
+    private PropertyGridModel gridModel;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    private int selectedTab = 1;
+    private List<UserModel.Rols> _selectedRols;
+    private ProblemDetails problemDetails;
+
+    private List<String> SelectedRols
+    {
+        get =>  _selectedRols.Select(x => ((int)x).ToString()).ToList();
+
+        set
+        {
+            _selectedRols = value.Select(x => ((UserModel.Rols)Convert.ToInt16(x))).ToList();
+        }
+    }
+
+    private enum Fields : int
+    {
+        Referencia,
+        Url,
+        Usuari,
+        Password,
+        Obs
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (guid == null)
+            value = new CredencialModel { Referencia = string.Format("({0})", Localizer("NewCredential")) };
+        else
+        {
+            value = await GetAsync<CredencialModel>("Credencial", guid.ToString());
+            if (value != null)
+            {
+                var model = new PropertyGridModel(value);
+                model.AddString((int)Fields.Referencia, value.Referencia, Localizer("Credential.Ref"));
+                model.AddString((int)Fields.Url, value.Url, Localizer("Url"));
+                model.AddString((int)Fields.Usuari, value.Usuari, Localizer("UserName"));
+                model.AddPassword((int)Fields.Password, value.Password, Localizer("Password"));
+                model.AddString((int)Fields.Obs, value.Obs, Localizer("Obs"));
+                gridModel = model;
+                _selectedRols = value.Rols;
+                StateHasChanged();
+            }
+        }
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        isUpdating = true;
+        value!.Referencia = gridModel!.GetString((int)Fields.Referencia);
+        value!.Url = gridModel!.GetString((int)Fields.Url);
+        value!.Usuari = gridModel!.GetString((int)Fields.Usuari);
+        value!.Password = gridModel!.GetString((int)Fields.Password);
+        value!.Obs = gridModel!.GetString((int)Fields.Obs);
+        value.Rols = _selectedRols;
+        var apiResponse = await HttpService.PostAsync<CredencialModel, bool>(http, value, "credencial");
+        if (apiResponse.Value)
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+        isUpdating = false;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<ApiResponse<bool>>("credencial/delete", value!.Guid.ToString());
+        if (apiResponse.Value)
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        base.BackToLastPage();
+    }
+
+    private void CopyPwd()
+    {
+
+    }
+
+    private List<ValueText> AllRols()
+    {
+        return Enum.GetValues(typeof(UserModel.Rols))
+        .Cast<UserModel.Rols>()
+        .Select(x=>new ValueText(((int)x).ToString(),x.ToString()))
+        .ToList();
+    }
+
+    private void SelectedRolsChanged(List<string> values)
+    {
+        SelectedRols = values;
+        isDirty = true;
+    }
+
+
+}

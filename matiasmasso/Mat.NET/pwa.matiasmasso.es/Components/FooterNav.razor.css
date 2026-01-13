@@ -1,0 +1,20 @@
+﻿.Wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin:0 auto;
+}
+
+.Item {
+    display: block;
+    padding: 0 10px;
+    margin:0 10px;
+    white-space: nowrap;
+    color:white;
+}
+
+@media(max-width:600px){
+    .Item {
+        padding: 10px 10px;
+    }
+}

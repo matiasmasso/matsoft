@@ -1,0 +1,47 @@
+﻿<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public int? SelectedStep
+    {
+        get
+        {
+            return _selectedStep;
+        }
+        set
+        {
+            _selectedStep = value;
+            SetCompletedStep?.Invoke((_selectedStep ?? 1) - 1);
+        }
+    }
+
+    public event Action<int>? SetCompletedStep;
+    private int? _selectedStep = 1;
+
+
+    public Step? ActiveStep;
+
+    internal List<Step> Items = new();
+
+    internal void AddStep(Step item)
+    {
+        Items.Add(item);
+        if (Items.Count == SelectedStep)
+            ActiveStep = item;
+
+        StateHasChanged();
+    }
+
+    internal void NextStep()
+    {
+        if (SelectedStep < Items.Count)
+            SelectedStep += 1;
+        ActiveStep = Items[(int)SelectedStep! - 1];
+        StateHasChanged();
+
+    }
+}

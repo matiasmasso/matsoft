@@ -1,0 +1,80 @@
+﻿
+
+<div class="Wrapper">
+    @if (Model != null)
+    {
+        <div class="Grid">
+            @foreach (var item in Model.Items)
+            {
+                <div class="Label">
+                    @item?.Label
+                </div>
+
+                <div class="Value">
+                    <PropertyGridEditorControl Item="@item"
+                                               CanEdit="CanEdit"
+                                               RequestToAddNew="@(RequestToAddNew.HasDelegate ?  AddNewRequest : null)"
+                                               ItemClick="NotifyItemSelected"
+                                               SetDirty="@(() => EditorChanged(item))">
+                    </PropertyGridEditorControl>
+                </div>
+            }
+        </div>
+    }
+</div>
+@*
+<ContextMenu Id="myMenu">
+    <Item Key="Zoom" OnClick="@MenuItemClick">Zoom</Item>
+    <Item Key="Edit" OnClick="@MenuItemClick">Edit</Item>
+    <Item Key="Clear" OnClick="@MenuItemClick">Clear</Item>
+    <Item Key="AddNew" OnClick="@MenuItemClick">Add new</Item>
+</ContextMenu> *@
+
+@code {
+    [Parameter] public PropertyGridModel? Model { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> SetDirty { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> RequestToAddNew { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> ItemSelected { get; set; }
+
+    private string? Label(PropertyGridModel.Item item) => item?.Label;
+
+    private async Task NotifyItemSelected(PropertyGridModel.Item item)
+    {
+        await ItemSelected.InvokeAsync(item);
+    }
+
+    private void AddNewRequest(PropertyGridModel.Item item)
+    {
+        RequestToAddNew.InvokeAsync(item);
+    }
+
+    void EditorChanged(PropertyGridModel.Item? item)
+    {
+        //item.IsEditing = false;
+        SetDirty.InvokeAsync(item);
+    }
+
+    // async Task MenuItemClick(ItemClickEventArgs e)
+    // {
+    //     var item = (PropertyGridModel.Item)e.Data;
+    //     var key = e.MenuItem.Attributes["Key"].ToString();
+    //     switch (key)
+    //     {
+    //         case "Zoom":
+    //             await NotifyItemSelected(item);
+    //             break;
+    //         case "Edit":
+    //             item.IsEditing = true;
+    //             break;
+    //         case "Clear":
+    //             item.Value = null;
+    //             await SetDirty.InvokeAsync(item);
+    //             break;
+    //         case "AddNew":
+    //             await RequestToAddNew.InvokeAsync(item);
+    //             break;
+    //     }
+    // }
+
+}

@@ -1,0 +1,63 @@
+﻿.Wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    font-size: 2.0em;
+    font-weight: bold;
+    color: gray;
+    margin-bottom: 20px;
+    font-family: Open Sans, Arial;
+}
+.Wrapper > a {
+    display:inline-block;
+    margin-right:10px;
+}
+.Anchor {
+    color:black;
+}
+
+/*--------------------------------------Breadcrumbs--------------------------------------------*/
+.Breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    overflow: hidden;
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0 0 20px 0;
+}
+
+footer .Breadcrumbs {
+    font-size: 1em;
+    font-weight: 400;
+}
+
+.Breadcrumbs span {
+    color: darkgray;
+}
+
+.Breadcrumbs a:hover {
+    color: #167ac6;
+}
+
+.Breadcrumbs > *:first-child {
+    padding-right: 20px;
+}
+
+.Breadcrumbs > *:not(:first-child) {
+    padding-right: 10px;
+    padding-left: 10px;
+    transform: translateX(-10px);
+    position: relative;
+}
+
+    .Breadcrumbs > *:not(:first-child)::before {
+        content: "";
+        width: 2px;
+        height: 100%;
+        background: #c8c0d5;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+/*-------------------------------------------------------------------------------------------*/

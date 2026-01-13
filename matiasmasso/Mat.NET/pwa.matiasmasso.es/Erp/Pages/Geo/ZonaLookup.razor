@@ -1,0 +1,77 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    @if (isEditing)
+    {
+        <input type="text" @bind="searchTerm" @bind:event="oninput" />
+        <div class="Dropdown">
+            <Zonas_List Model="FilteredItems()" SelectedItemChanged="OnItemSelected"></Zonas_List>
+        </div>
+
+    }
+    else
+    {
+        <UxCaptionEllipsis Tag="Value"
+                       Caption="@caption"
+                       OnClick="EditRequest"
+                       HideEllipsis="HideEllipsis"
+                       OnEllipsis="ToggleContextMenu"></UxCaptionEllipsis>
+
+        @if (Value != null && isShowingMenu)
+        {
+            <ContextMenu_Deprecated Model="ContextMenuModel.Factory(Value)" OnClick="@(()=>isShowingMenu = false)"></ContextMenu_Deprecated>
+        }
+
+    }
+</div>
+
+@code {
+    [Parameter] public bool HideEllipsis { get; set; } = false;
+    [Parameter] public ZonaModel Value { get; set; }
+    [Parameter] public EventCallback<ZonaModel> ValueChanged { get; set; }
+
+    string caption;
+    string searchTerm;
+    bool isEditing = false;
+    bool isShowingMenu = false;
+    CountryModel country;
+    CacheDTO cache = AppState.DefaultCache();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        caption = Value?.Nom;
+        var countryGuid = Value == null ? CountryModel.Wellknown(CountryModel.Wellknowns.Spain).Guid : Value.Country;
+        country = cache.Country(countryGuid);
+    }
+
+    void ToggleContextMenu()
+    {
+        isShowingMenu = !isShowingMenu;
+    }
+
+    void EditRequest()
+    {
+        isEditing = true;
+        searchTerm = caption;
+    }
+
+    List<ZonaModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm) || searchTerm == caption)
+            return CountryZonas();
+        else
+            return CountryZonas().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<ZonaModel> CountryZonas() => cache.Zonas.Where(x => x.Country == country.Guid).ToList();
+
+
+    void OnItemSelected(ZonaModel item)
+    {
+        isEditing = false;
+        //caption = Value?.Nom.Tradueix(base.Lang());
+        ValueChanged.InvokeAsync(item);
+    }
+}

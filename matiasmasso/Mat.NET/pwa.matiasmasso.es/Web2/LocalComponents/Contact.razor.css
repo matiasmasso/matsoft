@@ -1,0 +1,7 @@
+﻿.Emails{
+    margin:0 0 15px 15px;
+}
+
+    .Emails > a {
+        display: block;
+    }

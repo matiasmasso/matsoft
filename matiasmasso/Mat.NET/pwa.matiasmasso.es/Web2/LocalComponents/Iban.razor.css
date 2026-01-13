@@ -1,0 +1,33 @@
+﻿.Iban {
+    display:grid;
+    grid-template-columns: 50px 1fr;
+    grid-template-areas: "label ccc"
+        "logo bank"
+        "logo branch";
+    grid-column-gap:10px;
+}
+
+.Label {
+    grid-area: label;
+}
+
+.Ccc {
+    grid-area: ccc;
+}
+
+.Ccc input {
+    width:250px;
+}
+
+.Logo{
+    grid-area: logo;
+}
+
+.Bank {
+    grid-area: bank;
+}
+
+
+.Branch {
+    grid-area: branch;
+}

@@ -1,0 +1,138 @@
+﻿@using DTO.Integracions.Banca
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    <div class="Header">
+        <h3>Plantilla Norma43</h3>
+        <a href="#" class="CloseButton" @onclick="HandleCloseRequest" @onclick:preventDefault>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z" />
+            </svg>
+        </a>
+    </div>
+
+    <div class="PropertyGrid">
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="HandleUpdateRequest"
+                      CancelRequest="HandleCloseRequest"
+                      DeleteRequest="HandleDeleteRequest"
+                      ItemChanged="HandleItemChanged"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    </div>
+
+    <Error @bind-Value="exception"></Error>
+
+</div>
+
+
+@code {
+    [Parameter] public Norma43.Template? Value { get; set; }
+    //[Parameter] public EmpModel.EmpIds? Emp { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<Norma43.Template> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<Norma43.Template> AfterDelete { get; set; }
+
+    Norma43.Template? value;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Pattern,
+        Concepte,
+        Cta,
+        Contact,
+        Projecte
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+                value = Value;
+            else
+                value = await ApiService.GetAsync<Norma43.Template>("Norma43Template", Value!.Guid.ToString());
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value!.Emp);
+        retval.AddString("Clau", value!.Pattern, 62);
+        retval.AddString("Concepte", value!.Concepte, 62);
+        retval.AddGuidnom("Compte", value.Cta, ApiService.GetCurrentPgcCtas());
+        retval.AddGuidnom("Subcompte", value.Contact, ApiService.GetContacts(value!.Emp));
+        retval.AddGuidnom("Projecte", value.Projecte, ApiService.GetProjectes(value!.Emp));
+        return retval;
+    }
+
+
+    async Task HandleCloseRequest()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            value!.Emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+    async Task HandleUpdateRequest()
+    {
+        updateState = CrudButton.States.Loading;
+        value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+        value!.Pattern = propertyGrid!.GetString((int)Fields.Pattern);
+        value!.Concepte = propertyGrid!.GetString((int)Fields.Concepte);
+        value!.Cta = propertyGrid.GetGuidNom((int)Fields.Cta)?.Guid;
+        value!.Contact = propertyGrid.GetGuidNom((int)Fields.Contact)?.Guid;
+        value!.Projecte = propertyGrid.GetGuidNom((int)Fields.Projecte)?.Guid;
+
+        try
+        {
+            await ApiService.PostAsync<Norma43.Template, bool>(value,"Norma43Template");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            updateState = CrudButton.States.StandBy;
+        }
+    }
+    async Task HandleDeleteRequest()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Norma43Template/delete", Value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            deleteState = CrudButton.States.StandBy;
+        }
+    }
+}

@@ -1,0 +1,87 @@
+﻿@implements IDisposable
+@inject BankBranchesService bankBranchesService
+@inject CultureService culture
+
+<div class="PageWrapper600">
+    @if (bankBranchesService.Values == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <PageOptions>
+            <ToggleObsolets Value="isShowingObsolets"></ToggleObsolets>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>@culture.Localize("AddNew")</a>
+        </PageOptions>
+
+        <SearchBox @bind-Value="searchterm"></SearchBox>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Id">@item.Id</div>
+                    <div class="Adr">@bankBranchesService.LocationAndAddress(item.Guid)</div>
+                </a>
+            }
+        </div>
+
+    }
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+@code {
+    [Parameter] public BankModel? Model { get; set; }
+    [Parameter] public EventCallback<IModel> RequestToEdit { get; set; }
+    bool isShowingObsolets;
+    string? searchterm;
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        bankBranchesService.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<BankModel.Branch>? FilteredItems()
+    {
+        List<BankModel.Branch>? retval;
+        if (string.IsNullOrEmpty(searchterm))
+        {
+            retval = bankBranchesService.Values?
+                .Where(x => x.Bank == Model?.Guid && (isShowingObsolets || !x.Obsoleto))
+                .OrderBy(x => bankBranchesService.LocationAndAddress(x))
+                .ToList();
+        }
+        else
+            retval = bankBranchesService.Values?
+            .Where(x => x.Bank == Model?.Guid && (isShowingObsolets || !x.Obsoleto) && x.Matches(searchterm, bankBranchesService.LocationAndAddress(x))).ToList();
+        return retval;
+    }
+
+    async Task ItemClick(BankModel.Branch item)
+    {
+        await RequestToEdit.InvokeAsync((IModel)item);
+    }
+
+    async Task AddNew()
+    {
+        var branchToAdd = new BankModel.Branch { Bank = Model?.Guid };
+        await RequestToEdit.InvokeAsync((IModel)branchToAdd);
+    }
+
+
+    public void Dispose()
+    {
+        bankBranchesService.OnChange -= Refresca;
+    }
+}
+

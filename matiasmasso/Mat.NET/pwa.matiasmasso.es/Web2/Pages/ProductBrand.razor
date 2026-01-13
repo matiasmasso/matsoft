@@ -1,0 +1,8 @@
+﻿@inject CultureService culture;
+
+<h3>Brand @Model.Nom.Tradueix(culture.Lang())</h3>
+
+@code {
+    [Parameter] public ProductBrandModel Model { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+}

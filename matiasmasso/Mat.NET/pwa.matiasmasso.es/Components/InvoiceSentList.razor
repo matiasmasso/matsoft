@@ -1,0 +1,177 @@
+﻿@page "/invoiceSentList"
+@inherits _Base
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+@if (model == null)
+{
+    <Loading ></Loading>
+}
+else if (selectedYear == null)
+{
+    foreach (var year in model.Years)
+    {
+        <a href="#" class="Year" @onclick="@(()=>YearClicked(year))" @onclick:preventDefault="true">
+            <div class="Concept">@year.Id.ToString()</div>
+            <div class="Eur">@string.Format("{0:n2} €",year.Eur)</div>
+        </a>
+    }
+}
+else if (selectedItem == null)
+{
+    <a href="#" class="Year Selected" @onclick="@SelectedYearClicked" @onclick:preventDefault="true">
+        <div class="Concept">@selectedYear.Id.ToString()</div>
+        <div class="Eur">@string.Format("{0:n2} €",selectedYear.Eur)</div>
+    </a>
+
+    <div class="Line"></div>
+
+    @if (selectedMonth == null)
+    {
+        foreach (var month in Months())
+        {
+            <a href="#" class="Month" @onclick="@(()=>MonthClicked(month))" @onclick:preventDefault="true">
+                <div class="Concept">@base.Lang().MonthAbr(month.Id)</div>
+                <div class="Eur">@string.Format("{0:n2} €",month.Eur)</div>
+            </a>
+        }
+    }
+    else
+    {
+        <a href="#" class="Month Selected" @onclick="@SelectedMonthClicked" @onclick:preventDefault="true">
+            <div class="Concept">@base.Lang().MonthAbr(selectedMonth.Id)</div>
+            <div class="Eur">@string.Format("{0:n2} €",selectedMonth.Eur)</div>
+        </a>
+
+        <div class="Line"></div>
+
+        <div class="Grid">
+            <Virtualize Items="@FilteredItems()" Context="item">
+                <a href="#" class="ItemContents" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="SiiResult">@item.SiiResult</div>
+                    <div class="PrintMode">@item.PrintMode</div>
+                    <div class="FraId">@item.Id</div>
+                    <div class="Fch">@item.Fch.ToString("dd/MM/yy")</div>
+                    <div class="Cli">@item.Contact.Nom</div>
+                    <div class="Eur">@string.Format("{0:n2} €",item.Amt.Eur)</div>
+                    <div class="Fpg">@item.Fpg</div>
+                    <div class="TipoFactura">@item.TipoFactura</div>
+                    <div class="SiiL9">@item.SiiL9</div>
+                    <div class="RegimenEspecialOTrascendencia">@item.RegimenEspecialOTrascendencia</div>
+                    <div class="Concepte">@item.Concepte</div>
+                </a>
+                <div class="Line ShowOnMobile"></div>
+            </Virtualize>
+        </div>
+
+    }
+
+} 
+else
+{
+    <InvoiceSent Guid="selectedItem.Guid" CloseRequest="@(()=>selectedItem = null)"></InvoiceSent>
+}
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    private InvoiceSentListDTO? model;
+    private IdEur? selectedYear;
+    private IdEur? selectedMonth;
+    private InvoiceSentListDTO.Item? selectedItem;
+    private UserModel? user;
+    private ProblemDetails? problemDetails;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await base.GetUser();
+        ApiResponse<InvoiceSentListDTO> apiResponse = null;
+        if (user.IsCustomer())
+        {
+            apiResponse = await GetAsync<InvoiceSentListDTO>("InvoiceSentList");
+        }
+        else
+        {
+            apiResponse = await GetAsync<InvoiceSentListDTO>("InvoiceSentList", ((int)Globals.DefaultEmp).ToString(), "0");
+        }
+        if(apiResponse.Success()){
+            model = apiResponse.Value;
+        model.Years = Years();
+        if (model.Years.Count > 0)
+        {
+            selectedYear = model.Years.First();
+            selectedMonth = Months().First();
+        }
+        } else {
+            problemDetails = apiResponse.ProblemDetails;
+        }
+        StateHasChanged();
+    }
+
+    private void YearClicked(IdEur value)
+    {
+        selectedYear = value;
+        selectedMonth = null;
+    }
+
+    private void SelectedYearClicked()
+    {
+        selectedYear = null;
+        selectedMonth = null;
+    }
+
+    private void MonthClicked(IdEur value)
+    {
+        selectedMonth = value;
+    }
+
+    private void SelectedMonthClicked()
+    {
+        selectedMonth = null;
+    }
+
+    private List<IdEur> Years()
+    {
+        return model.Items
+        .GroupBy(x => x.Fch.Year)
+        .Select(x => new IdEur
+            {
+                Id = x.Key,
+                Eur = x.Sum(y => y.Amt.Eur)
+            })
+            .OrderByDescending(x => x.Id)
+            .ToList();
+    }
+
+    private List<IdEur> Months()
+    {
+        return model.Items
+        .Where(x => x.Fch.Year == selectedYear.Id)
+        .GroupBy(x => x.Fch.Month)
+        .Select(x => new IdEur
+            {
+                Id = x.Key,
+                Eur = x.Sum(y => y.Amt.Eur)
+            })
+            .OrderByDescending(x => x.Id)
+            .ToList();
+    }
+
+    private List<InvoiceSentListDTO.Item> FilteredItems()
+    {
+        return model.Items.Where(x => x.Fch.Month == selectedMonth.Id).ToList();
+    }
+
+    private string LoadingMessage() => base.Tradueix("Cargando facturas", "Carregant factures", "Loading invoices");
+
+    private void ItemClick(InvoiceSentListDTO.Item item)
+    {
+        selectedItem = item;
+    }
+
+    private void RequestToClose()
+    {
+        selectedItem = null;
+    }
+}

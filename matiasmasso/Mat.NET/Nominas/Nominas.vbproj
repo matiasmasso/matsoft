@@ -1,0 +1,961 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B05AC839-8BDA-45B3-84BD-875ED56ECA57}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>Nominas.My.MyApplication</StartupObject>
+    <RootNamespace>Nominas</RootNamespace>
+    <AssemblyName>Nominas</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>WindowsForms</MyType>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>Nominas.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>Nominas.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="DTO" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DatagridviewSortedColumnChangedEventArgs.vb" />
+    <Compile Include="Form1.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.vb">
+      <DependentUpon>Form1.vb</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Frm_NominasFactory.Designer.vb">
+      <DependentUpon>Frm_NominasFactory.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Frm_NominasFactory.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Helpers\UIHelper.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="SortableBindingList.vb" />
+    <Compile Include="Xl_NominasFactory.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="_Xl_ReadOnlyDatagridview.vb">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Frm_NominasFactory.resx">
+      <DependentUpon>Frm_NominasFactory.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="App.config" />
+    <None Include="Resources\warn.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DTO\DTO.csproj">
+      <Project>{c2f49505-452b-4856-b8a0-c504df10cdf2}</Project>
+      <Name>DTO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FEB\FEB.vbproj">
+      <Project>{8ab5a06a-2b87-4ef0-aab5-afda31a53b22}</Project>
+      <Name>FEB</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelperCFwk\MatHelperCFwk.csproj">
+      <Project>{66309f27-9c40-420c-8a6d-8db2cc8514da}</Project>
+      <Name>MatHelperCFwk</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelperStd\MatHelperStd.vbproj">
+      <Project>{38401BFE-45C6-4E67-BA29-12F8DD0C483E}</Project>
+      <Name>MatHelperStd</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelper\MatHelper.csproj">
+      <Project>{d6ab48f7-36e9-4ce3-8850-1ca00a508141}</Project>
+      <Name>MatHelper</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\16 pdf.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\16 printer.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AddFile.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AddFileGroc.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ai_140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Api_16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\aspa.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Basket 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Basket.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bell 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bell.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\binoculares 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\binoculares 161.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\binoculares.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\book-blue.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\book-yellow.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\book.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BookClose.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BookOpen.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\browse.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\calcula.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\call.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CallClosed.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CallOpen.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\candado.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\candau 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\candau.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\candau_edit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Carrefour.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cash.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cat.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CellPhone.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Checked13.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CheckedGrayed13.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\clip 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\clip 161.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\clip.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\collapse9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\collapse9inverse.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Collapsed9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\component 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\component.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Copy.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\correos2.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\credit.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\crono.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CUT.BMP" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cyc.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dau.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dau2_17x17.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dau3_17x17.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dau4_17x17.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dau5_17x17.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dau6_17x17.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DefaultContact.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\del 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\del.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\delivery-van.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DelText 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DelText.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\disk.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DollarBlue.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DollarOrange2.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Door.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\download.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\duplicated.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\edi.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\email64.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\empty-box.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\empty 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\empty box.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\empty.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\eng.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\esp.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Excel-16.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Excel 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Excel.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Excel_Big.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Excel48.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\expand.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\expand9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\expand9inverse.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Expanded9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EXPLORER.BMP" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\farmacia.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\fax.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Fax2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\fax64.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Fb-login.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder_16closed.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder_16open.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32BlueBallFull.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32BlueBallLight.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32BlueBallMedium.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32BlueDown.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32Green.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32Locked.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32Notes.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32UpRed.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32Wait.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32Warn.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Folder32WarnEmpty.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\full-box.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Gears 64.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Gears.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Gears1.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GoDown 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GoDown.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GoUp 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GoUp.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\harveyballEmpty.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\harveyballFull.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\harveyballHalf.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\help 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\help.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\home-24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Hyperlink.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\iExplorer.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\img_16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\img_yellow.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\info 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\info.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\intrastat.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\intrastat1.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\label16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LedBlue.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LedGreen.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LedOff.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LedRed.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LedYellow.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Logo-M+O-2cm-300x300.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Logo-M+O.16X16.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Logo-NUK-16x16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Logo_M_O_200x200.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Lupa.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Lupa.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailSobreGroc.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailSobreGroc1.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailSobreGrocBlau.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MailSobreObert.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\medalla.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Message.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\minus.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\movil.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\movil_red.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\movil64.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Mxf_fadi.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Mxf_matias.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Mxf_michael.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Mxf_xavi.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NewDoc 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NewDoc.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NoImg140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NoMail.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NoPark 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NoPark.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\notepad.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ok.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\OpenZoom 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\OpenZoom.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Outlook-16.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\package.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pallet.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pc.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pda.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pdf.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pdf_100.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PdfClear.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\People_Blue.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\People_Orange.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pfx.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Phone.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pinpoint_blue.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pinpoint_empty.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pinpoint_red.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pirata.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pirata_negro.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pirata_rojo.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pirata18X20.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PLUS.BMP" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\plus.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\preview_16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\printer.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\prismatics 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\prismatics.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\rayo 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\rayo.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RecycleSonae.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\REDO.BMP" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\reembols.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\refresca 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\refresca 161.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\refresca.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\refresh.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\retrocedir_16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SandClock.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\save_16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SaveFilex48.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SaveFilex48disabled.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\scissors24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\screen.64.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\search 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Search 32.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\search.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SEPA.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SexFemale.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SexMale.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SexPending.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\sheriff blank.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\sheriff.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\speaker.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Spv.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SquareArrowBackOrange.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SquareArrowLavanda.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SquareArrowOrange.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SquareArrowOrange1.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SquareArrowTurquesa.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SS.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\star.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\star_blue.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\star_green.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\star_red.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tabla 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tampon.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tel.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tel_red.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tel64.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\trucadaKO.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TruckGreen.JPG" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TruckWhite.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TruckYellow.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\UnChecked13.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\UNDO.BMP" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Unknown.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\UsrGirl.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\UsrMan.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\vb.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\video16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\VideoFrame.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\VISA.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\visa.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wait_animated_32.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Waiting clock.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WaitingWheel.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\warn 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WarnEmpty.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\warning.JPG" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WarnRed16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wav.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wav32.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\word.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\word.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wrong 16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wrong.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WrongMail.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\xml.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\xps.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zip.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zip_140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zip350x400.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Zip86.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zoom-in.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zoom-out.gif" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+</Project>

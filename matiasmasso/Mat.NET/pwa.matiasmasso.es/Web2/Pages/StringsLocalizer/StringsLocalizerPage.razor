@@ -1,0 +1,88 @@
+﻿@page "/{LangSegment}/stringLocalizer"
+@page "/stringLocalizer"
+@implements IDisposable
+
+@layout ProLayout
+@inject CultureService culture
+@inject StringsLocalizerService localizer
+
+<div class="PageWrapper900">
+    <h1 class="PageTitle">String Localizer</h1>
+
+    <div class="PageOptions">
+
+        <PageOptions IsShowingOptions>
+            <a href="#" @onclick="@AddNew" @onclick:preventDefault>@culture.Localize("AddNew")</a>
+        </PageOptions>
+
+    </div>
+
+    @if (Items == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else if (itemToAdd != null)
+    {
+        <StringLocalizerEditor Model="itemToAdd"
+                               RequestToUpdate="UpdateRequest"
+                               RequestToClose="@(()=>itemToAdd=null)"></StringLocalizerEditor>
+    }
+    else
+    {
+        <StringsLocalizer Items="Items" RequestToUpdate="UpdateRequest"></StringsLocalizer>
+    }
+
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+<PageTitle>Strings Localizer</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    bool isUpdating;
+    List<StringLocalizerModel>? Items;
+    StringLocalizerModel? itemToAdd = null;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        Refresca();
+        localizer.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        Items = localizer.Values;
+    }
+
+    private async Task UpdateRequest(StringLocalizerModel value)
+    {
+        try
+        {
+            await localizer.UpdateAsync(value);
+            itemToAdd = null;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    void AddNew()
+    {
+        itemToAdd = new StringLocalizerModel();
+        itemToAdd.IsNew = true;
+    }
+
+    public void Dispose()
+    {
+        localizer.OnChange -= Refresca;
+    }
+
+}

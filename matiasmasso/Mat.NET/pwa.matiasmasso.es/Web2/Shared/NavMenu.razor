@@ -1,0 +1,175 @@
+﻿@implements IDisposable
+
+@inject SessionStateService session
+@inject CultureService culture
+@inject NavService navService
+@inject NavigationManager navigationManager
+
+@using Microsoft.AspNetCore.Hosting;
+@using Microsoft.Extensions.Hosting;
+@inject IWebHostEnvironment Env
+
+@using DTO.Helpers
+
+<div>
+
+    @if (session.IsLoading())
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="ButtonsBar">
+            <div class="Lang" hidden="@IsShowingSearchbox">
+                <Lang Value="culture.Lang()" ValueChanged="CultureChanged"></Lang>
+            </div>
+            <a href="#" title="search menu..." hidden="@IsShowingSearchbox" @onclick="ShowSearchbox" @onclick:preventDefault="true">
+                <img src="img/Lupa-20.png" alt="search menu..." width="20" height="20" />
+            </a>
+            <div class="Searchbox" hidden="@(!IsShowingSearchbox)">
+                <SearchBox @bind-Value="@searchterm"></SearchBox>
+            </div>
+        </div>
+
+        @foreach (var item in session.SelectedMenuItems ?? new())
+        {
+            <a href="#" class="Item Selected" @onclick="@(()=>ItemClickHandler(item))" @onclick:preventDefault>
+                @navService.MenuItemNom(item)?.Tradueix(culture.Lang())
+            </a>
+        }
+
+        @foreach (var item in displayItems ?? new())
+        {
+            <a href="#" class="Item" @onclick="@(()=>ItemClickHandler(item))" @onclick:preventDefault>
+                @if (hasLoadedLangTexts)
+                {
+                    <span>@navService.MenuItemNom(item)?.Tradueix(culture.Lang())</span>
+                }
+                else
+                {
+                    <Loading></Loading>
+                }
+            </a>
+        }
+
+
+        <AuthorizeView>
+            <Authorized>
+                <a href="#" class="Item" @onclick="LogoutAsync" @onclick:preventDefault>Logout</a>
+            </Authorized>
+            <NotAuthorized>
+                <a href="#" class="Item" @onclick="LoginRequestAsync" @onclick:preventDefault>Login</a>
+            </NotAuthorized>
+        </AuthorizeView>
+
+    }
+
+    @if (Env.IsDevelopment())
+    {
+        <a href="#" class="ToggleLocalApi @(session.IsUsingLocalApi() ? "Local":"Remote")"
+        @onclick="@(()=>session.ToggleLocalApi())"
+        @onclick:preventDefault>
+            @(session.IsUsingLocalApi() ? "using local api" : "using remote api")
+        </a>
+    }
+
+</div>
+@code {
+    [Parameter] public EventCallback CloseRequestOnMobile { get; set; }
+    [Parameter] public EventCallback CloseRequestOnDesktop { get; set; }
+    string? searchterm;
+    bool IsShowingSearchbox;
+    bool hasLoadedLangTexts;
+    List<NavDTO.MenuItem>? displayItems;
+
+    protected override void OnInitialized()
+    {
+        session.OnChange += Refresca;
+        navService.OnChange += Refresca;
+        hasLoadedLangTexts = navService.HasLoadedLangTexts();
+        displayItems = session.DisplayMenuItems();
+    }
+
+    async Task ItemClickHandler(NavDTO.MenuItem item)
+    {
+        if (item.Mode == NavDTO.MenuItem.Modes.Navigation)
+        {
+            navigationManager?.NavigateTo(item.Action ?? "/");
+        }
+        else if (item.Mode == NavDTO.MenuItem.Modes.Toggle)
+        {
+            if (item.Action == "UseLocalApi")
+                session.ToggleApiSource();
+        }
+        else
+        {
+            session.SelectMenuItem(item);
+            displayItems = session.DisplayMenuItems();
+        }
+
+        if (!session.HasChildMenuItems(item))
+            await RequestToCloseOnMobile();
+
+    }
+
+    async Task LoginRequestAsync()
+    {
+        navigationManager?.NavigateTo("/Login");
+        await RequestToCloseOnMobile();
+
+    }
+
+    async Task RequestToCloseOnMobile()
+    {
+        //close nav on item click
+        //close nav on login request
+        await CloseRequestOnMobile.InvokeAsync();
+    }
+
+    async Task RequestToCloseOnDesktop()
+    {
+        //close nav on close button click to maximize body area
+        await CloseRequestOnDesktop.InvokeAsync();
+    }
+
+    async Task LogoutAsync()
+    {
+        await session.LogoutAsync();
+        displayItems = session.DisplayMenuItems();
+    }
+
+    void CultureChanged(LangDTO lang)
+    {
+        var uri = new Uri(navigationManager!.Uri);
+        var url = culture!.ResetUrl(lang, uri);
+        navigationManager!.NavigateTo(url, forceLoad: true);
+    }
+
+    private void ShowSearchbox()
+    {
+        IsShowingSearchbox = true;
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        displayItems = session.DisplayMenuItems();
+        hasLoadedLangTexts = session.HasLoadedLangTexts();
+        InvokeAsync(StateHasChanged);
+    }
+
+    //private async void OnChangeHandler(Exception? ex = null)
+    //{
+    //    displayItems = session.DisplayMenuItems();
+    //    await InvokeAsync(() =>
+    //    {
+    //        StateHasChanged();
+    //    });
+    //}
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        navService.OnChange -= Refresca;
+    }
+
+}

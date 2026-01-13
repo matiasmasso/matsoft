@@ -1,0 +1,77 @@
+﻿
+.PageOptions {
+}
+
+.Searchbox {
+}
+
+.Codi {
+    display: block;
+    padding: 4px 0 2px;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr min-content;
+    grid-column-gap: 10px;
+}
+
+.Item {
+    display: contents;
+}
+
+    .Item > * {
+        padding: 4px 0 2px;
+    }
+
+    .Item.Baixa div {
+        color: gray;
+    }
+
+.Num {
+    white-space: nowrap;
+}
+
+
+@media(max-width:599px){
+    .HideOnMobile {
+        display:none;
+    }
+
+    .Grid {
+        display:flex;
+        flex-direction:column;
+    }
+
+    .Codi {
+        padding: 10px;
+    }
+
+    .Codi:not(:last-child){
+        border-bottom:1px solid gray;
+    }
+
+    .Item {
+        display:grid;
+        grid-template-columns: min-content 1fr;
+        grid-template-areas: "fch nom";
+        grid-column-gap:10px;
+        padding:10px 0;
+    }
+
+    .Item:not(:last-child){
+        border-bottom: 1px solid gray;
+    }
+
+    .Fch {
+        grid-area:fch;
+    }
+
+    .Nom {
+        grid-area:nom;
+    }
+
+    .Num {
+        grid-area:num;
+    }
+}

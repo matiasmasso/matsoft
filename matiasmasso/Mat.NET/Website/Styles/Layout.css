@@ -1,0 +1,295 @@
+﻿
+
+    .noscriptmsg {
+        display: none;
+        max-width:500px;
+        margin:10px auto;
+        padding:10px;
+    }
+
+
+
+.pills {
+    padding-top: 0;
+    float: right;
+    margin-top: 0;
+    margin-bottom: 10px;
+    height: 2.0em;
+    font-size: smaller;
+}
+
+    .pills:after {
+        clear: both;
+    }
+
+.contentBanner {
+    max-width: 500px;
+    margin: auto;
+}
+
+    .contentBanner img {
+        width: 100%;
+    }
+
+
+
+.misc {
+    display: inline-block;
+    width: 100%;
+    vertical-align: top;
+    margin: 0 0 5px 0;
+}
+
+    .misc h4 {
+        font-size: 1.2em;
+        margin: 0px;
+    }
+
+    .misc a:link {
+        text-decoration: none;
+        color: black;
+    }
+
+    .misc p {
+        font-size: 0.8em;
+        margin: 0px 0px 5px;
+    }
+
+.rrss {
+    /*float:right;*/
+    z-index: 0;
+}
+
+.SocialIcons a {
+    float: right;
+    display: inline;
+    padding: 2px;
+}
+
+
+    .PageTitle {
+        font-size:1.1em;
+        margin:0 0 15px 0;
+        padding-top:0;
+        color:darkgray;
+    }
+
+#footer {
+    margin: 20px 0 0 0;
+    width: 100%;
+    padding: 4px 10px;
+    height: 30px;
+    font-size: 0.8em;
+}
+
+    #footer a {
+        text-decoration: none;
+    }
+
+@media screen and (max-width:540px) {
+    #footer {
+        clear: both;
+    }
+}
+
+    @media screen and (min-width:541px) {
+
+        #footer {
+            clear: left;
+            margin: 20px 0 0 0;
+            width: 100%;
+            background: #EAEAEA;
+        }
+
+            #footer a {
+                color: #666666;
+            }
+    }
+
+    #LegalContainer {
+        float: left;
+    }
+
+    .innertube {
+        /*margin: 10px; Margins for inner DIV inside each column (to provide padding)
+    margin-top: 0;*/
+        text-align: left;
+    }
+
+
+
+    .truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+
+    .readmore {
+        margin: 1e 10px 0 0;
+        color: darkgray;
+        text-decoration: none;
+        text-align: right;
+    }
+
+        .readmore a:hover {
+            color: red;
+        }
+
+    .wizardButtons {
+        background-color: #EAEAEA;
+        text-align: right;
+    }
+
+    .ShareButtons {
+        /*fb share button*/
+        position: absolute;
+        height: 27px;
+        width: 120px;
+        right: 0px;
+        bottom: 0px;
+    }
+
+
+    /*begin Comments -------------------------------------------------------------------------------------------------*/
+
+    .CommentsWrapper {
+        margin-top: 20px;
+    }
+
+    .CommentBox {
+        border: solid 1px #d0d0d0;
+        padding: 5px 10px;
+        margin-bottom: 5px;
+    }
+
+    .CommentArrow {
+        background: url('/media/img/misc/CommentReply_Arrow.png') no-repeat left top;
+        display: block;
+        width: 25px;
+        height: 45px;
+        float: left;
+        position: relative;
+        left: -25px;
+        top: -5px;
+    }
+
+    .CommentWrapper .CommentWrapper /*make the wrapper margin only for the reply comments */ {
+        margin-left: 25px;
+    }
+
+    /*end Comments----------------------------------------------------------------------------------------------*/
+
+    /*begin cataleg ============================================================================================================================*/
+
+    .CatalegContainer {
+        width: 320px;
+        margin: 0 auto;
+        padding: 0 0 0 0;
+    }
+
+
+    .CatalegBrandBox {
+        border: 1px solid darkgray;
+        margin: 5px 0 20px 0;
+    }
+
+        .CatalegBrandBox > a {
+            display: block;
+            margin: 0 0 0 0;
+            font-size: 1.4em;
+            font-weight: 900;
+            width: 100%;
+            padding: 5px;
+            color: white;
+            background-color: darkgray;
+            text-decoration: none;
+        }
+
+
+    .CatalegCategoryBox {
+        margin: 30px 0px 10px 0;
+        width: 100%;
+    }
+
+        .CatalegCategoryBox > a {
+            display: block;
+            padding: 5px 5px 5px 45px;
+            font-weight: 900;
+            color: white;
+            background-color: #223ba7;
+            text-decoration: none;
+            width: 100%;
+        }
+
+
+    .CatalegSkuBox {
+        display: block;
+        position: relative;
+        height: 24px;
+        vertical-align: top;
+    }
+
+
+    /*end cataleg ============================================================================================================================*/
+
+
+    /*-----------loading -----------*/
+
+    .loading {
+        position: fixed;
+        width: 100%;
+        height: 3%;
+        text-align: center;
+        z-index: 1000;
+    }
+
+        .loading span {
+            display: inline-block;
+            padding: 0.5em 3em 0.5em 3em;
+            font-weight: 600;
+            font-size: 1em;
+            background-color: #fcf4af;
+            border-bottom: 1px solid darkgray;
+            border-right: 1px solid darkgray;
+            border-left: 1px solid darkgray;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+
+
+    @media screen and (max-width:1008px) {
+        .banner {
+            max-width: 460px;
+        }
+    }
+
+    @media screen and (max-width:854px) {
+        .banner {
+            max-width: 305px;
+        }
+    }
+
+
+
+    @media screen and (max-width:540px) {
+        .MobMenu {
+            background-color: #FAFAFA;
+            padding: 10px;
+            //margin: 5px 0;
+            border-top: 1px solid #ccc;
+            //-webkit-border-radius: 5px;
+            //border-radius: 5px;
+            //text-align: center;
+        }
+
+            .MobMenu a {
+                color: black;
+            }
+
+        .MobMenuIco {
+            text-align: right;
+        }
+    }
+

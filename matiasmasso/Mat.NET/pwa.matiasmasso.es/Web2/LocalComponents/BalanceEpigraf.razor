@@ -1,0 +1,48 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject PgcCtaSdosService pgcCtaSdosService
+@inject PgcClassesService pgcClassesService
+
+<div>
+    @pgcClassesService.Nom(Epigraf)?.Tradueix(culture.Lang())
+</div>
+
+@foreach (var epg in tree ?? new())
+{
+    <BalanceEpigraf Epigraf="epg"></BalanceEpigraf>
+}
+
+@foreach (var sdo in Saldos())
+{
+    <div class="Cta">
+
+    </div>
+}
+
+@code {
+    [Parameter] public PgcClassModel? Epigraf { get; set; }
+    Exception? exception;
+    List<PgcClassModel>? tree;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        pgcCtaSdosService.OnChange += Refresca;
+        session.OnChange += Refresca;
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<PgcCtaSdoModel> Saldos() => pgcCtaSdosService.FromEpigraf(Epigraf);
+
+    public void Dispose()
+    {
+        pgcCtaSdosService.OnChange -= Refresca;
+        session.OnChange -= Refresca;
+    }
+}

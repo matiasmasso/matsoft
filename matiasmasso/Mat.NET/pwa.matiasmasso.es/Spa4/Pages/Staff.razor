@@ -1,0 +1,36 @@
+﻿@page "/Staff"
+@page "/Staff/{Guid:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+    <h1>@base.Tradueix("Empleado","Empleat","Employee")</h1>
+
+    <TabControl SelectedTab="1">
+
+        <ChildContent>
+
+            <TabPage Text="General">
+                <StaffEditor @bind-Model="@Model"></StaffEditor>
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>
+@code {
+    private StaffModel? Model = null;
+
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Guid == null)
+            Model = new StaffModel();
+        else
+        {
+            Model = await base.GetAsync<StaffModel>("staff", ((Guid)Guid!).ToString());
+        }
+        StateHasChanged();
+    }
+
+}

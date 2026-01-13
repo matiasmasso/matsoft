@@ -1,0 +1,194 @@
+﻿@page "/mediaResource/{Filename}"
+@page "/{LangSegment}/mediaResource/{Filename}"
+@page "/mediaResource/{Guid:guid}"
+@page "/{LangSegment}/mediaResource/{Guid:guid}"
+@inherits _PageBase
+@inject IJSRuntime JS
+@inject CultureService culture
+
+
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@base.CanonicalUrl()" />
+
+    @foreach (var lang in LangDTO.All())
+    {
+        <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@base.CanonicalUrl(lang,new LangTextModel("mediaresource/"+model?.Filename))" />
+    }
+
+    @if (model?.Description?.HasValue() ?? false)
+    {
+        <meta name="description" content="@model.Description.Tradueix(base.Lang())" />
+    }
+
+</HeadContent>
+
+<div class="Wrapper600">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@model.Filename</h1>
+
+        <div class="Image" itemscope itemtype="https://schema.org/ImageObject" Width="@model?.Width" Height="@model?.Height">
+            <img itemprop="contentUrl" src="@model?.DownloadUrl()" alt="@model?.Filename" />
+            <div itemprop="copyrightNotice">&copy; @DateTime.Today.Year - Copyright 4moms</div>
+        </div>
+
+        <div>
+            @model?.Features()
+        </div>
+
+        <div class="Download">
+            <button class="Button" @onclick="DownloadFileFromStream">
+                <div>
+                    <Icon Id="Icon.Ids.Download"></Icon>
+                    @culture.Localize("Download")
+                </div>
+            </button>
+        </div>
+
+        <p>@model?.Description.Tradueix(base.Lang())</p>
+
+        <hr/>
+
+        <div class="Plugin">
+            @foreach (var item in products ?? new())
+            {
+                <div>
+                    <a class='ProductPluginItem' href='@LandingPageUrl(item)' title='@item.Nom?.Tradueix(base.Lang())'>
+                        <div>
+                            <img alt="@(item.Nom?.Tradueix(base.Lang()))" src="@item.ThumbnailUrl()" width="140" height="160" />
+                        </div>
+                        <div>@item.Nom?.Tradueix(base.Lang())</div>
+                        <div class='BuyIt'>@BuyItFor(item)</div>
+                    </a>
+
+                </div>
+            }
+        </div>
+    }
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? Filename { get; set; }
+
+    MediaResourceModel? model;
+    List<ProductCategoryModel>? categories;
+    List<ProductSkuModel>? skus;
+    List<ProductModel>? products;
+    List<GuidDecimal>? prices;
+    RouteModel.Collection? routes;
+
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        var apiResponse = await GetAsync<MediaResourceModel>("mediaResource", Filename ?? guid.ToString());
+        model = apiResponse.Value;
+        problemDetails = apiResponse.ProblemDetails;
+
+        if (model != null)
+        {
+            var apiResponseSkus = await GetAsync<List<ProductSkuModel>>("Shop4moms/Skus");
+            var apiResponseCategories = await GetAsync<List<ProductCategoryModel>>("Shop4moms/Categories");
+            var apiResponsePrices = await GetAsync<List<GuidDecimal>>("Shop4moms/SkuRetails");
+            var apiResponseRoutes = await GetAsync<RouteModel.Collection>("Shop4moms/Routes");
+            skus = apiResponseSkus.Value;
+            categories = apiResponseCategories.Value;
+            prices = apiResponsePrices.Value;
+            routes = apiResponseRoutes.Value;
+
+            products = new();
+            foreach (var guid in model.Targets)
+            {
+                var sku = skus?.FirstOrDefault(x => x.Guid == guid);
+                if (sku == null)
+                {
+                    var category = categories?.FirstOrDefault(x => x.Guid == guid);
+                    if (category != null)
+                        products.AddRange(skus?.Where(x => x.Category == guid && !x.Obsoleto));
+                }
+                else
+                    products.Add(sku);
+            }
+
+        }
+    }
+
+    List<MediaResourceModel>? Items(MediaResourceModel.Cods cod)
+    {
+        //var retval = model?.Where(x => x.Cod == cod).OrderBy(x => x.Nom).ToList();
+        return new();
+    }
+
+    private async Task DownloadFileFromStream()
+    {
+        var fileStream = GetFileStream();
+        var fileName = model?.Filename ?? "";
+
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+        await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
+
+    private Stream GetFileStream()
+    {
+        var serverPath = model?.ServerPath();
+        return System.IO.File.OpenRead($"{serverPath}");
+    }
+
+
+    string BuyItFor(ProductModel product)
+    {
+        string retval = "";
+        if (product.Src == ProductModel.SourceCods.Sku)
+        {
+            var rrpp = prices?.FirstOrDefault(x => x.Guid == product.Guid)?.Value;
+            retval = BuyItFor(rrpp);
+        }
+        else if (product.Src == ProductModel.SourceCods.Category)
+        {
+            var categorySkus = skus?.Where(x => x.Category == product.Guid);
+            var rrpp = prices?.Where(x => categorySkus.Any(y => x.Guid == y.Guid)).Select(x => x.Value).ToList() ?? new();
+            retval = BuyItFor(rrpp);
+        }
+        return retval;
+    }
+
+    string BuyItFor(Decimal? value)
+    {
+        var retval = string.Format("{0} {1:N2} €", base.Lang().Tradueix("Comprar por", "Comprar per", "Buy it for"), value);
+        return retval;
+    }
+
+    string BuyItFor(List<Decimal> prices)
+    {
+        string retval;
+        var priceMin = prices?.Min();
+        var priceMax = prices?.Max();
+        if (priceMin == priceMax)
+            retval = BuyItFor(priceMin);
+        else
+            retval = string.Format("{0} {1:N2} €", base.Lang().Tradueix("Comprar desde", "Comprar des de", "Buy it from"), priceMin);
+        return retval;
+    }
+
+
+    private string? LandingPageUrl(ProductModel? product)
+    {
+        var lang = base.Lang();
+        var retval = product == null ? null : routes?.LangText(product.Guid)?.Tradueix(lang);
+        if (retval != null)
+        {
+            if (lang.IsCat() | lang.IsEng())
+                retval = string.Format("{0}/{1}", lang.Culture2Digits(), retval);
+        }
+        return retval;
+    }
+
+}

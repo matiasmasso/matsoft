@@ -1,0 +1,25 @@
+﻿@page "/{LangSegment}/BackOffice/tpvlog/{Guid:guid}"
+@page "/BackOffice/tpvlog/{Guid:guid}"
+@inherits _PageBase
+
+<TpvLog Value="value" RequestToCancel="CancelRequest"></TpvLog>
+
+<PageTitle>4moms Backoffice | Tpv log</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    DTO.Integracions.Redsys.TpvLog? value;
+
+    protected override void OnParametersSet()
+    {
+        value = new DTO.Integracions.Redsys.TpvLog(Guid);
+    }
+
+    void CancelRequest()
+    {
+    }
+}

@@ -1,0 +1,114 @@
+﻿@@page "/tpv/feed"
+@inherits _Base
+@inject PostFormService PostFormService
+@inject IAppState appState
+
+<div>Welcome to tpv feed page</div>
+<div>This page is used by Tpv operator (Redsys) to notify the commerce about a new payment</div>
+<div>Consumer is not redirected here, output is just for test purposes</div>
+<div>Data received as follows:</div>
+
+@((MarkupString)TpvService.HtmlReport(response, appState.Tpv, problemDetails))
+
+@code {
+    DTO.Integracions.Redsys.Request? response;
+    ShoppingBasketModel? basket;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            //Globals.UseLocalApi = true; //===================================================
+            response = new DTO.Integracions.Redsys.Request
+                {
+                    Ds_MerchantParameters = PostFormService.Form?["Ds_MerchantParameters"],
+                    Ds_SignatureVersion = PostFormService.Form?["Ds_SignatureVersion"],
+                    Ds_Signature = PostFormService.Form?["Ds_Signature"]
+                };
+
+            await CheckPostAsync();
+
+
+            var tpv = appState.Tpv;
+            if (tpv.IsValidSignature(response))
+            {
+                var tpvLog = DTO.Integracions.Redsys.TpvLog.Factory(response);
+                var apiResponse = await PostAsync<DTO.Integracions.Redsys.TpvLog, ShoppingBasketModel>(tpvLog, "Shop4moms/fromTpvResponse");
+                if (apiResponse.Success())
+                {
+                    var basket = apiResponse.Value;
+                    if (basket != null)
+                    {
+                        var session = appState.Sessions.Where(x => ((Shop4moms.SessionState)x).Basket.Guid == basket.Guid).FirstOrDefault();
+                        if (session != null)
+                            ((Shop4moms.SessionState)session).Basket.Items?.Clear();
+
+                        await NotifyCTOAsync();
+                        await NotifyConsumerAsync();
+
+                    }
+                    else
+                        throw new Exception($"basket not found in database");
+                }
+                else
+                    await WarnSysErrAsync(apiResponse.ProblemDetails);
+
+            }
+            else
+                throw new Exception("Invalid signature");
+        }
+        catch (Exception ex)
+        {
+            await WarnSysErrAsync(Components.ProblemDetails.Factory(ex));
+        }
+    }
+
+
+    async Task CheckPostAsync()
+    {
+        var body = "";
+        var subject = "";
+        var msgTo = "matias@matiasmasso.es";
+        try
+        {
+
+            body = response == null ? "no response" : TpvService.HtmlReport(response, appState.Tpv);
+            subject = response == null ? "4moms TPV NotifyCTO:no response" : appState.Tpv.IsValidSignature(response) ? "4moms TPV NotifyCTO: Tpv success" : "4moms TPV NotifyCTO: Tpv error";
+        }
+        catch (Exception ex) { body = ex.Message; }
+
+        await Services.MailService.SendEmail(msgTo, subject, body);
+    }
+
+    async Task NotifyCTOAsync()
+    {
+        var body = response == null ? "no response" : TpvService.HtmlReport(response, appState.Tpv);
+        var subject = response == null ? "4moms TPV NotifyCTO:no response" : appState.Tpv.IsValidSignature(response) ? "4moms TPV NotifyCTO: Tpv success" : "4moms TPV NotifyCTO: Tpv error";
+        var msgTo = "matias@matiasmasso.es";
+
+        await Services.MailService.SendEmail(msgTo, subject, body);
+    }
+
+    async Task NotifyConsumerAsync()
+    {
+        //TODO: confirm email to consumer
+        var body = response == null ? "no response" : TpvService.HtmlReport(response, appState.Tpv);
+        var subject = "4moms TPV consumer notification: Order confirmation";
+        var msgTo = "matias@matiasmasso.es";
+
+        await Services.MailService.SendEmail(msgTo, subject, body);
+
+    }
+
+    async Task WarnSysErrAsync(Components.ProblemDetails? problemDetails)
+    {
+        var body = response == null ? "no response" : TpvService.HtmlReport(response, appState.Tpv, problemDetails);
+        var subject = "4moms Tpv error SysErr";
+        var msgTo = "matias@matiasmasso.es";
+
+        await Services.MailService.SendEmail(msgTo, subject, body);
+
+    }
+
+}

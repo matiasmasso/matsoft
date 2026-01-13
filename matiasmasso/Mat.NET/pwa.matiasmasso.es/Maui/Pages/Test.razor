@@ -1,0 +1,62 @@
+﻿@page "/test"
+@layout EmptyLayout
+@inject NavigationManager NavigationManager
+@using System.Globalization
+
+<div class="Wrapper">
+    <select @bind="@Culture">
+        @foreach (var culture in cultures)
+        {
+            <option value="@culture">@culture.DisplayName</option>
+        }
+    </select>
+
+    <div>
+        Current culture: @CultureInfo.CurrentCulture.Name
+    </div>
+
+    <button @onclick="Reload">Reload the page</button>
+</div>
+
+<style>
+    .Wrapper {
+        display:flex;
+        flex-direction:column;
+        gap:15px;
+        max-width:200px;
+        margin:50px auto;
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+
+    CultureInfo[] cultures = new[] {
+        new CultureInfo("es-ES"),
+        new CultureInfo("ca"),
+        new CultureInfo("en-US"),
+        new CultureInfo("pt-PT")
+    };
+
+    CultureInfo Culture
+    {
+        get => CultureInfo.CurrentCulture;
+        set
+        {
+            if (CultureInfo.CurrentCulture != value)
+            {
+                Thread.CurrentThread.CurrentCulture = value;
+                Thread.CurrentThread.CurrentUICulture = value;
+                CultureInfo.DefaultThreadCurrentCulture = value;
+                CultureInfo.DefaultThreadCurrentUICulture = value;
+
+            }
+        }
+    }
+
+    void Reload() {
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+    }
+
+
+}

@@ -1,0 +1,137 @@
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage ProtectedLocalStore
+
+
+<div class="Offline">
+
+    <h3>@title</h3>
+
+    <div class="GeoSelectors">
+    <select @onchange="onCountryChange">
+        @foreach (var country in Model!.Countries)
+        {
+            <option value="@country.Guid"
+                selected="@(country.Guid.Equals(CurrentCountry?.Guid))">
+                @country.Nom
+            </option>
+        }
+    </select>
+
+    <select @onchange="onZonaChange">
+        @foreach (var item in CurrentCountry!.Zonas)
+        {
+            <option selected="@(CurrentCountry.Zonas.IndexOf(item) == CurrentCountry.SelectedZona)">
+                @item.Nom
+            </option>
+        }
+    </select>
+
+    <select @onchange="onLocationChange">
+        @foreach (var item in CurrentZona?.Locations!)
+        {
+            <option selected="@(CurrentZona.Locations.IndexOf(item) == CurrentZona.SelectedLocation)">
+                @item.Nom
+            </option>
+        }
+    </select>
+    </div>
+
+    <div class="Distributors">
+        @foreach (StoreLocatorDTO.Distributor distributor in CurrentLocation!.Distributors)
+        {
+            <div class="Distributor">
+                <div class="Truncate">@distributor.Nom</div>
+                <div class="Truncate">@distributor.Address</div>
+                <div class="Truncate">@CurrentLocation.Nom</div>
+                @if (!string.IsNullOrEmpty(distributor.Tel))
+                {
+                    <div class="Truncate">@distributor.Tel</div>
+                }
+            </div>
+        }
+    </div>
+
+</div>
+
+
+
+<style scoped>
+
+    .Offline {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .GeoSelectors {
+        padding:10px 0;
+    }
+
+        .Offline select {
+            width: 100%;
+            max-width:280px;
+            font-size: 1em;
+            padding: 4px 7px 2px 4px;
+        }
+
+            div.Distributor div {
+                max-width:100%;
+            }
+
+    div.Distributor div:first-child {
+        padding-top: 15px;
+        font-weight: 600;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public StoreLocatorDTO.OfflineClass? Model { get; set; }
+
+    private LangDTO? lang;
+    private string? title;
+    private string? zonaNom;
+    private string? locationNom;
+    private StoreLocatorDTO.Country? CurrentCountry;
+    private StoreLocatorDTO.Zona? CurrentZona;
+    private StoreLocatorDTO.Location? CurrentLocation;
+    private List<StoreLocatorDTO.Zona> Zonas = new();
+    private List<StoreLocatorDTO.Location> Locations = new();
+    private List<StoreLocatorDTO.Distributor> Distributors = new();
+
+
+    protected async override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        CurrentCountry = Model!.Countries[Model!.SelectedCountry];
+        CurrentZona = CurrentCountry.Zonas[CurrentCountry.SelectedZona];
+        CurrentLocation = CurrentZona.Locations[CurrentZona.SelectedLocation];
+
+        var result = await ProtectedLocalStore.GetAsync<SessionDTO>("session");
+        var session = result.Value;
+        lang = session?.Lang;
+        title = lang!.Tradueix("¿Dónde comprar?", "On comprar?", "Where to buy?", "Onde comprar");
+        StateHasChanged();
+    }
+
+    private void onCountryChange(ChangeEventArgs args)
+    {
+        CurrentCountry = Model!.Countries.FirstOrDefault(x => x.Guid.Equals(new Guid(args.Value!.ToString()!)));
+        CurrentZona = CurrentCountry!.Zonas[CurrentCountry.SelectedZona];
+        CurrentLocation = CurrentZona.Locations[CurrentZona.SelectedLocation];
+        StateHasChanged();
+    }
+
+    private void onZonaChange(ChangeEventArgs args)
+    {
+        CurrentZona = CurrentCountry!.Zonas.FirstOrDefault(x => x.Nom == args.Value!.ToString());
+        CurrentLocation = CurrentZona!.Locations[CurrentZona.SelectedLocation];
+        StateHasChanged();
+    }
+
+    private void onLocationChange(ChangeEventArgs args)
+    {
+        CurrentLocation = CurrentZona!.Locations.FirstOrDefault(x => x.Nom == args.Value!.ToString());
+        StateHasChanged();
+    }
+
+}

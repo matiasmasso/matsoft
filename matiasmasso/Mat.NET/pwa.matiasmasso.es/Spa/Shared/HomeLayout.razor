@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+@using System.Globalization
+@using Spa.Shared
+@using Spa.Components
+@using DTO
+@inject AppState AppState
+@inject HttpClient Http
+
+    <div class="MainLayout @(IsMenuVisible ? "MenuVisible" : "")">
+        <header>
+            <Header ShowHamburger = "@true" @bind-IsMenuVisibleValue = "@IsMenuVisible"></Header>
+        </header>
+        <main>
+            <ErrorBoundary>
+                @Body
+            </ErrorBoundary>
+        </main>
+        <aside class="Menu">
+            <NavMenu viewModel="@viewModel"></NavMenu>
+        </aside>
+        <aside class="Left">
+            <Gallery Boxes="@viewModel?.Model?.News" ></Gallery>
+        </aside>
+        <aside class="Right">
+            <Gallery Boxes="@viewModel?.Model?.BlogPosts"></Gallery>
+        </aside>
+        <footer>
+            <Footer></Footer>
+        </footer>
+    </div>
+
+@code {
+    LayoutViewModel? viewModel;
+    private bool IsMenuVisible = false;
+
+
+    protected override Task OnParametersSetAsync()
+    {
+        viewModel = new LayoutViewModel(AppState);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch(Http);
+        return base.OnParametersSetAsync();
+    }
+}

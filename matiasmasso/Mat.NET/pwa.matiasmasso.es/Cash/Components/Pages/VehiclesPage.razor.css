@@ -1,0 +1,48 @@
+﻿
+
+.Item.Baixa div {
+  color:gray;   
+}
+
+.Plate {
+    white-space: nowrap;
+}
+
+@media(max-width:599px){
+
+    .HideOnMobile {
+        display:none;
+    }
+
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        display: flex;
+        flex-direction: row;
+        padding: 10px 0;
+    }
+
+    .Item:not(:last-child){
+        border-bottom:1px solid gray;
+    }
+}
+
+@media(min-width:600px){
+
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content 1fr min-content;
+        grid-column-gap: 10px;
+    }
+
+    .Item {
+        display: contents;
+    }
+
+        .Item > * {
+            padding: 4px 0 2px;
+        }
+}

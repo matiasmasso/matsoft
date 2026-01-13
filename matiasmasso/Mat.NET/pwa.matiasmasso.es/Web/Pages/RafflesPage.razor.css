@@ -1,0 +1,128 @@
+﻿.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    gap: 5px;
+}
+
+.Item {
+    display:contents;
+}
+
+
+
+.Title {
+    grid-area: title;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+
+.Properties {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    grid-area: props;
+}
+
+.PropsGrid {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap:10px;
+}
+
+    .PropsGrid > div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .PropsGrid > div:nth-child(2n+1) {
+        color: gray;
+    }
+
+    .SeeMore {
+        display:block;
+        width:100%;
+        text-align:right;
+        margin-top:10px;
+    }
+
+.CallToAction {
+    padding:4px 10px;
+    background-color:red;
+    color:white;
+    font-weight:600;
+    border-radius: 5px;
+}
+
+/*----------------------mobiles----------------------------*/
+@media (max-width:599px) {
+    .Grid {
+        display:flex;
+        flex-direction:column;
+    }
+
+    .HideOnMobile {
+        display: none;
+    }
+
+    .Banner {
+        text-align: center;
+        vertical-align: middle;
+        margin:20px 0 5px;
+    }
+
+        .Banner img {
+            width: 100%;
+            height:auto;
+        }
+
+        .Banner i {
+            font-size: 80px;
+        }
+
+    .PropsGrid {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+        .PropsGrid > div:nth-child(2n+1) {
+            color: gray;
+            font-size: 0.8em;
+        }
+        .PropsGrid > div:nth-child(2n+2) {
+/*            padding: 0 0 0 10px;
+*/            font-size: 0.8em;
+        }
+}
+
+/*desktop*/
+
+@media (min-width:599px) {
+    .HideOnDesktop {
+        display:none;
+    }
+    .PropsGrid {
+        display: grid;
+        grid-template-columns: min-content 1fr;
+        grid-column-gap: 10px;
+    }
+
+    .Thumbnail {
+        width: 178px;
+        height: 125px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+        .Thumbnail img {
+            width: 100%;
+            height:auto;
+        }
+
+        .Thumbnail i {
+            font-size: 80px;
+        }
+
+}
+

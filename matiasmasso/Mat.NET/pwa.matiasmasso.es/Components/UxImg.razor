@@ -1,0 +1,21 @@
+﻿
+
+<img src="@Src" @onerror="onError" class="@(isShowingFallback ? "Hidden" : "")" width="@Width" height="@Height" alt="@Alt" />
+<img src="/img/camera-slash.svg" class="Fallback @(isShowingFallback ? "" : "Hidden")" />
+
+
+@code {
+    /// <summary> Displays a fallback default image if no image available on src link </summary>
+
+    [Parameter] public string Src { get; set; }
+    [Parameter] public string Alt { get; set; } 
+    [Parameter] public int Width { get; set; }
+    [Parameter] public int Height { get; set; }
+
+    bool isShowingFallback;
+
+    void onError(Microsoft.AspNetCore.Components.Web.ErrorEventArgs args)
+    {
+        isShowingFallback = true;
+    }
+}

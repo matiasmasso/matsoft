@@ -1,0 +1,202 @@
+﻿@inject AppStateService appstate
+@inject CultureService culture
+
+<div class="PageWrapper900">
+
+    @if (model == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchterm"></SearchBox>
+
+        <div class="Info">@info</div>
+
+        <div class="Grid">
+            <div class="ColHeaders">
+                <div class="Ico">
+                    &nbsp;
+                </div>
+                <div class="Fch">
+                    @culture.Localize("Fch")
+                </div>
+                <div class="Num">
+                    @culture.Localize("Ticket")
+                </div>
+                <div class="Nom">
+                    @culture.Localize("Customer")
+                </div>
+                <div class="Num">
+                    @culture.Localize("Amt")
+                </div>
+            </div>
+            @foreach (var item in FilteredItems())
+            {
+                <a class="Item @item.Statuses?.FirstOrDefault()" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault title="@string.Format("comanda {0} {1}",item.OrderNumber, item.Statuses.FirstOrDefault())">
+                    <div class="Ico">
+                        <Icon Id="IconId(item)"></Icon>
+                    </div>
+                    <div class="Fch">
+                        @string.Format("{0:dd/MM/yy HH:mm}",DateTime.Parse(item.CreatedAt ?? ""))
+                    </div>
+                    <div class="Num">
+                        @item.Ticket?.Id
+                    </div>
+                    <div class="Nom">
+                        @item.AddressShipping?.NomAndLocation()
+                    </div>
+                    <div class="Num">
+                        @string.Format("{0:N2} €",item.Price)
+                    </div>
+                </a>
+            }
+        </div>
+
+        <div class="Pagination">
+            @if (isLoadingOlder)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <a href="#" @onclick="SeeOlder" @onclick:preventDefault>
+                    [veure anteriors]
+                </a>
+            }
+
+            @if (isLoadingNewer)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <a href="#" class="@(lastFchs.Count==1 ? "Disabled" : "")" @onclick="SeeNewer" @onclick:preventDefault>
+                    [veure posteriors]
+                </a>
+            }
+        </div>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+@code {
+    List<DTO.Integracions.Miravia.Order>? model;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    string? searchterm;
+    string? info;
+    bool isLoadingOlder;
+    bool isLoadingNewer;
+    List<DateTime> lastFchs = new();
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    async Task LoadData()
+    {
+        string url;
+        if (lastFchs.Count == 0)
+        {
+            url = Web.Integracions.Miravia.ApiHelper.Url("/orders/get", "created_after", "2023-07-16T12:00:00Z", "sort_direction", "DESC");
+        }
+        else
+        {
+            var created_before = lastFchs.Last().ToString("s") + "Z";
+            url = Web.Integracions.Miravia.ApiHelper.Url("/orders/get", "created_after", "2023-07-16T12:00:00Z", "created_before", created_before, "sort_direction", "DESC");
+        }
+
+        try
+        {
+            var response = await appstate.GetAsync<DTO.Integracions.Miravia.OrdersResponse>(url);
+            model = response?.Data?.Orders.OrderByDescending(x => DateTime.Parse(x.CreatedAt ?? "?")).ToList();
+            if (model?.LastOrDefault()?.CreatedAt != null)
+            {
+                var lastfch = DateTime.Parse(model!.LastOrDefault()!.CreatedAt!);
+                lastFchs.Add(lastfch);
+            }
+
+            var orderNumbers = model?.Select(x => x.OrderNumber).ToList();
+            if (orderNumbers?.Any() ?? false)
+            {
+                var tickets = await appstate.PostAsync<List<string>, List<ConsumerTicketModel>>(orderNumbers!, "miravia/tickets/fromOrderNumbers");
+                foreach (var order in model)
+                {
+                    var ticket = tickets.FirstOrDefault(x => x.OrderNum == order.OrderNumber);
+                    order.Ticket = ticket;
+                }
+            }
+            info = $"Ultimes {response?.Data?.Count:N0} comandes de un total de {response?.Data?.CountTotal:N0} registrades des del 16/7/23";
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    List<DTO.Integracions.Miravia.Order> FilteredItems()
+    {
+        return model?.Where(x => x.Matches(searchterm)).ToList() ?? new();
+    }
+
+    Icon.Ids IconId(DTO.Integracions.Miravia.Order item)
+    {
+        Icon.Ids retval = Icon.Ids.None;
+        switch (item.Statuses.FirstOrDefault())
+        {
+            case "pending":
+                retval = Icon.Ids.AlarmClock;
+                break;
+            case "packed":
+                retval = Icon.Ids.BoxOpen;
+                break;
+            case "ready_to_ship":
+                retval = Icon.Ids.BoxCheck;
+                break;
+            case "shipped":
+                retval = Icon.Ids.TruckFast;
+                break;
+            case "delivered":
+                retval = Icon.Ids.CheckGreenCircle;
+                break;
+            case "canceled":
+                retval = Icon.Ids.Xmark;
+                break;
+            default:
+                var s = item.Statuses;
+                break;
+        }
+        return retval;
+    }
+
+
+    private void ItemClick(DTO.Integracions.Miravia.Order value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value?.ToString() ?? "?"));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    private async Task SeeOlder()
+    {
+        await LoadData();
+    }
+
+    private async Task SeeNewer()
+    {
+        lastFchs.Remove(lastFchs.LastOrDefault());
+        if (lastFchs.Count == 1) lastFchs.Clear();
+        await LoadData();
+    }
+}

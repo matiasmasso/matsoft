@@ -1,0 +1,30 @@
+﻿@inject ApiService ApiService
+
+<LookupModel Value="Value" Values="values" ValueChanged="HandleValueChanged"></LookupModel>
+
+@code {
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public List<Guid>? Values { get; set; }
+    [Parameter] public EventCallback<Guid?> ValueChanged { get; set; }
+
+    private List<PgcCtaModel>? values;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        var allValues = ApiService.GetCurrentPgcCtas();
+        if (Values == null)
+            values = allValues?.OrderBy(x => x.ToString()).ToList();
+        else
+            values = allValues?.Where(x => Values.Contains(x.Guid)).OrderBy(x => x.ToString()).ToList();
+    }
+
+    void HandleValueChanged(IModel? args)
+    {
+        if (args != null)
+        {
+            var value = (PgcCtaModel)args;
+            ValueChanged.InvokeAsync(value.Guid);
+        }
+    }
+}

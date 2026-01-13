@@ -1,0 +1,55 @@
+﻿.Item {
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    border-bottom: 1px solid #DDDDDD;
+}
+
+.Caption {
+    display:block;
+    flex-basis:1fr;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.Menu {
+    display:none;
+}
+
+.Item.Selected .Menu {
+    display:block;
+    width:20px;
+    text-align:right;
+}
+
+.PropertyGrid {
+    z-index: 2;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color:white;
+    border:1px solid black;
+    padding:10px;
+    width:300px;
+    min-height:200px;
+}
+
+@media (min-width:600px){
+    .Item {
+        padding: 0 10px;
+    }
+
+        .Item.Selected {
+            background-color: lightblue;
+        }
+}
+@media (max-width:599px){
+    .Item {
+        padding: 10px;
+    }
+
+        .Item.Selected {
+            background-color: #DDDDDD;
+        }
+}

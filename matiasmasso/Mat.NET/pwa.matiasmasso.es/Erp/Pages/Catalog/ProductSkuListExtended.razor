@@ -1,0 +1,180 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Catalog">
+<div class="Skus @(SearchResults == null ? "":"SearchResults")">
+    <div class="ColumnHeaders HideOnMobile">
+        <div class="ColumnHeader Brand @(SearchResults == null ? "Hidden":"")">
+            @Localizer("Brand")
+        </div>
+        <div class="ColumnHeader Category  @(SearchResults == null ? "Hidden":"")">
+            @Localizer("Category")
+        </div>
+        <div class="ColumnHeader Ref">
+            @base.Tradueix("Ref")
+        </div>
+        <div class="ColumnHeader Nom">
+            @base.Tradueix("Producto","Producte","Product")
+        </div>
+        <div class="ColumnHeader Ico">
+            &nbsp;
+        </div>
+        <div class="ColumnHeader Stk">
+            @base.Tradueix("Stock")
+        </div>
+        <div class="ColumnHeader Cli">
+            @base.Tradueix("Clientes","Clients","Cust.")
+        </div>
+        <div class="ColumnHeader Prg">
+            @base.Tradueix("Prog")
+        </div>
+        <div class="ColumnHeader Pvp">
+            @base.Tradueix("Pvp","Pvp","Rrpp")
+        </div>
+        <div class="ColumnHeader Img">
+            &nbsp;
+        </div>
+        <div class="ColumnHeader Prv">
+            @base.Tradueix("Prov","Prov","Sup")
+        </div>
+    </div>
+
+    @foreach (var item in Model)
+    {
+        var sku = (ProductSkuModel)item;
+        var pnc = cache.SkuPnc(sku.Guid);
+        var stock = cache.SkuStock(sku.Guid);
+        var available = stock?.Available(pnc) ?? 0;
+        var price = cache.SkuPrice(sku.Guid);
+        var bgColor = sku.BgColor(stock?.Stock ?? 0, pnc);
+        var isSelected = IsSelected(item);
+
+        <div class="Item
+                    @(IsSelected(item)?"Selected":"")
+                    @(HideOnMobile(item) ? "HideOnMobile":"")"
+         @onclick="(()=>SkuClick(item))"
+         @onclick:preventDefault="true"
+         @oncontextmenu="(()=>ContextMenu(item))"
+         @oncontextmenu:preventDefault="true">
+
+            <div class="HideOnDesktop BgColor @bgColor">&nbsp;</div>
+
+            <div class="HideOnDesktop Thumbnail">
+                <img width="@ProductSkuModel.THUMBNAIL_WIDTH"
+                 height="@ProductSkuModel.THUMBNAIL_HEIGHT"
+                 src="@sku.ThumbnailUrl()"
+                 alt="@item.NomLlarg.Tradueix(base.Lang())" />
+            </div>
+
+            <div class="Brand @bgColor  @(SearchResults == null ? "Hidden":"")">
+                @cache.Brand(sku).Nom.Tradueix(base.Lang())
+            </div>
+
+            <div class="Category @bgColor  @(SearchResults == null ? "Hidden":"")">
+                @cache.Category(sku.Category).Nom.Tradueix(base.Lang())
+            </div>
+
+            <div class="Ref @bgColor">
+                <span class="HideOnDesktop">Ref.:</span>
+                @item.Id.ToString()
+            </div>
+            <div class="Nom @bgColor">
+                @item.Nom.Tradueix(base.Lang())
+
+                @if (isSelected & IsShowingContextMenuSku)
+                {
+                    <div class="ContextMenu">
+                        <Nav nav="@item.ContextMenu()" />
+                    </div>
+                }
+
+            </div>
+
+            <div class="Ico">
+                &nbsp;
+            </div>
+
+            <div class="Stk @bgColor">
+                <span class="HideOnMobile">
+                    @((stock?.Stock ?? 0) == 0 ? "" : string.Format("{0:N0}", stock.Stock))
+                </span>
+
+                @if (available == 0)
+                {
+                    <span class="HideOnDesktop">
+                        @base.Tradueix("Producto agotado","Producte esgotat","Out of stock")
+                    </span>
+                }
+                else
+                {
+                    <span class="HideOnDesktop">
+                        @string.Format(base.Tradueix("{0:N0} en stock","{0:N0} en stock","{0:N0} units available"),available)
+                    </span>
+                }
+            </div>
+            <div class="Cli @bgColor">
+                @((pnc?.Clients ?? 0) == 0 ? "" : string.Format("{0:N0}", pnc!.Clients))
+            </div>
+            <div class="Prg @bgColor">
+                @((pnc?.ClientsEnProgramacio ?? 0) == 0 ? "" : string.Format("{0:N0}", pnc!.ClientsEnProgramacio))
+            </div>
+            <div class="Pvp @bgColor">
+                <span class="HideOnDesktop">
+                    @base.Tradueix("PVR:","PVR:","RRPP:")
+                </span>
+                @((price ?? 0) == 0 ? "" : string.Format("{0:N2} €", price))
+            </div>
+            <div class="Img @(sku.ImgExists ? "HasImg" : "")">
+                &nbsp;
+            </div>
+            <div class="Prv">
+                @((pnc?.Proveidors ?? 0) == 0 ? "" : string.Format("{0:N0}", pnc!.Proveidors))
+            </div>
+
+            <div class="HideOnDesktop Line"></div>
+
+        </div>
+    }
+</div>
+</div>
+
+@code {
+    [Parameter] public List<ProductSkuModel> Model { get; set; }
+    [Parameter] public List<ProductSkuModel> SearchResults { get; set; }
+    private CacheDTO cache;
+    ProductSkuModel selectedSku;
+    private bool IsShowingContextMenuSku = false;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        cache = AppState.DefaultCache();
+    }
+
+    void SkuClick(ProductSkuModel item)
+    {
+        selectedSku = selectedSku == item ? null : item;
+        IsShowingContextMenuSku = false;
+    }
+
+    private void ContextMenu(ProductSkuModel item)
+    {
+        selectedSku = item;
+        IsShowingContextMenuSku = true;
+    }
+
+    private bool IsSelected(ProductSkuModel item)
+    {
+        var retval = false;
+        if (selectedSku != null && selectedSku.Guid == item.Guid)
+            retval = true;
+        return retval;
+    }
+
+    private bool HideOnMobile(ProductSkuModel item)
+    {
+        return selectedSku != null && item != selectedSku;
+    }
+
+
+}

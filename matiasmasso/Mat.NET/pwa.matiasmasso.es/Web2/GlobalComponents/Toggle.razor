@@ -1,0 +1,47 @@
+﻿
+<a href="#" @onclick="Clicked" @onclick:preventDefault>
+    <Icon Id="@(_value ? Icon.Ids.ToggleOn : Icon.Ids.ToggleOff)" Width="@Width"></Icon>
+    @* <img src=@(_value ? iconOn : iconOff) /> *@
+</a>
+
+@code {
+
+    [Parameter] public bool? Value { get; set; }
+    [Parameter] public string Width { get; set; } = "1.5em";
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public string TrueText { get; set; } = "Yes";
+    [Parameter] public string FalseText { get; set; } = "No";
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+
+    // [Parameter]
+    // public Object Value
+    // {
+    //     get => _value;
+    //     set
+    //     {
+    //         _value = (bool)value;
+    //     }
+    // }
+
+    bool _value = false;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        _value = Value ?? false;
+    }
+
+
+    private void Clicked()
+    {
+        if (CanEdit)
+        {
+            _value = !_value;
+            if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                ObjChanged.InvokeAsync(_value);
+            else
+                ValueChanged.InvokeAsync(_value);
+        }
+    }
+}

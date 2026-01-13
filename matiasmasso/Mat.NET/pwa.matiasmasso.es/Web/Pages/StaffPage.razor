@@ -1,0 +1,7 @@
+﻿@page "/Staff/{Guid:guid}"
+
+<Staff Guid="@Guid" ></Staff>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+}

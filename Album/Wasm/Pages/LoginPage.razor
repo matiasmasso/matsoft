@@ -1,0 +1,79 @@
+﻿@page "/login"
+@layout LoginLayout
+
+@using DTO
+@using Wasm.Services
+
+@inject AuthService AuthService
+@inject JwtAuthStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject ITokenStore TokenStore
+
+<EditForm Model="@model" OnValidSubmit="HandleLogin" class="login-form">
+    <DataAnnotationsValidator />
+
+    <div class="form-group">
+        <label for="email">Email</label>
+        <InputText id="email"
+                   @bind-Value="model.Email"
+                   class="input" />
+        <ValidationMessage For="@(() => model.Email)" />
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password</label>
+        <InputText id="password"
+                   @bind-Value="model.Password"
+                   type="password"
+                   class="input" />
+        <ValidationMessage For="@(() => model.Password)" />
+    </div>
+
+    <button type="submit" class="btn-primary">
+        @if (isBusy)
+        {
+            <Loading />
+        }
+        else
+        {
+            <span>Login</span>
+        }
+    </button>
+</EditForm>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    private LoginRequest model = new();
+    private bool isBusy;
+    private Exception? exception;
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            isBusy = true;
+            exception = null;
+
+            var ok = await AuthService.LoginAsync(model);
+            if (!ok)
+                throw new Exception("Invalid credentials");
+
+            var bundle = await TokenStore.GetBundleAsync();
+            if (bundle is null)
+                throw new Exception("Token bundle missing after login");
+
+            await AuthStateProvider.MarkUserAsAuthenticatedAsync(bundle);
+
+            Nav.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}

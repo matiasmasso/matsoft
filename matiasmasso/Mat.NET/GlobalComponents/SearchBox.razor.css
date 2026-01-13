@@ -1,0 +1,11 @@
+﻿
+input {
+    padding: 3px 0 2px 30px;
+    background-image: url("/img/Lupa-20.png");
+    background-repeat: no-repeat;
+    background-position: 5px center;
+    width: 100%;
+    border-color: #DDDDDD;
+    -webkit-appearance: none;
+    border-radius: 4px;
+}

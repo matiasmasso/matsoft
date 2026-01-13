@@ -1,0 +1,42 @@
+﻿.Button, .Loading {
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    border-color: #198754;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    border: 1px solid gray;
+    /*padding: .375rem .75rem;*/
+    padding: .25rem .75rem;
+    font-size: 1rem;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    -webkit-appearance: button;
+}
+
+    .Button.Update {
+        color: #fff;
+        background-color: #198754;
+    }
+
+    .Button.Cancel {
+        color: #000;
+        background-color: #EEEEEE;
+    }
+
+    .Button.Delete {
+        color: #fff;
+        background-color: coral;
+    }
+
+
+.Button:Disabled {
+    color: gray !important;
+    background-color: #DDDDDD !important;
+}
+
+    .Button:hover:not([disabled]) {
+        color: #fff;
+        background-color: #5a95f5 !important;
+    }

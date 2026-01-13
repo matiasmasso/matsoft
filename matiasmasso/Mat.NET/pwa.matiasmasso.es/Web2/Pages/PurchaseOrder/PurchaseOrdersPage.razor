@@ -1,0 +1,190 @@
+﻿@page "/purchaseorders"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject PurchaseOrdersService purchaseOrdersService
+@inject SessionStateService session;
+
+<div class="PageWrapper900">
+    <AuthorizeView>
+        <Authorized>
+
+
+            @if (purchaseOrdersService.State == DbState.IsLoading)
+            {
+                <h3>@culture.Localize("PurchaseOrders")</h3>
+                <Loading></Loading>
+            }
+            else if (breadcrumbs.Count > 0)
+            {
+                <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+            }
+            else if (SelectedYear() == null)
+            {
+                <h3>@culture.Localize("PurchaseOrders")</h3>
+
+                @if (purchaseOrdersService.Values == null)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <div class="Info">
+                        @culture.Tradueix("Selecciona un ejercicio","Selecciona un exercici","Select a year"):
+                    </div>
+
+                    <div class="Years">
+                        @foreach (var year in years ?? new())
+                        {
+                            <a href="#" @onclick="@(()=>YearChanged(year))" @onclick:preventDefault>@year</a>
+                        }
+                    </div>
+                }
+
+
+            }
+            else
+            {
+                <h3>@culture.Localize("PurchaseOrders")</h3>
+
+                <SelectedValues @bind-Values="selectedValues"></SelectedValues>
+
+                <SearchBox @bind-Value="@searchterm"></SearchBox>
+
+                <div class="Grid">
+                    <div class="ColHeaders">
+                        <div class="Num">
+                            @culture.Localize("Id")
+                        </div>
+                        <div>
+                            @culture.Localize("Fch")
+                        </div>
+                        <div class="Nom">
+                            @culture.Localize("Nom")
+                        </div>
+                        <div class="Nom">
+                            @culture.Localize("Concept")
+                        </div>
+                        <div class="Num">
+                            @culture.Localize("Amount")
+                        </div>
+                    </div>
+                    <Virtualize Items="FilteredValues()" Context="item">
+                        <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                            <div class="Num">
+                                @item.Id
+                            </div>
+                            <div>
+                                @string.Format("{0:dd/MM/yy}",item.Fch)
+                            </div>
+                            <div class="Nom">
+                                @purchaseOrdersService.Contact(item)?.FullNom
+                            </div>
+                            <div class="Nom">
+                                @item.Concept
+                            </div>
+                            <div class="Num">
+                                @item.Amt?.CurFormatted()
+                            </div>
+                        </a>
+                    </Virtualize>
+                </div>
+            }
+
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="Item" href="/Login">
+                <Login></Login>
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    SelectedValues.Collection? selectedValues;
+    EmpModel? emp;
+    List<int>? years;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    string? searchterm;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        emp = session.Emps?.FirstOrDefault();
+        session.OnChange += Refresca;
+        purchaseOrdersService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        Refresca();
+    }
+
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        emp = session.DefaultEmp();
+
+        if (emp != null && exception == null)
+        {
+            if (years == null)
+            {
+                var yearFrom = emp?.FchFrom?.Year ?? 1985;
+                var yearTo = DateTime.Today.Year;
+                var asc = Enumerable.Range(yearFrom, yearTo - yearFrom + 1).ToList();
+                years = asc.OrderByDescending(x => x).ToList();
+                selectedValues = new SelectedValues.Collection();
+                selectedValues.Add(years.First(), years.First().ToString());
+            }
+            if (purchaseOrdersService.Values == null || purchaseOrdersService.Values.FirstOrDefault()?.Fch?.Year != SelectedYear())
+            {
+                Task.Run(async () => await purchaseOrdersService.FetchAsync(emp!, (int)SelectedYear()!));
+            }
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<PurchaseOrderModel> FilteredValues()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return purchaseOrdersService.Values?.OrderByDescending(x=>x.Id).ToList() ?? new();
+        else
+            return purchaseOrdersService.Values?.Where(x => x.Matches(searchterm)).OrderByDescending(x => x.Id).ToList() ?? new();
+    }
+
+    int? SelectedYear() => (int?)selectedValues?.FirstOrDefault()?.Value;
+
+
+    async Task YearChanged(int year)
+    {
+        selectedValues = new SelectedValues.Collection();
+        selectedValues.Add(year, year.ToString());
+        await purchaseOrdersService.FetchAsync(emp!, year);
+    }
+
+    private void ItemClick(PurchaseOrderModel value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value.ToString()));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        purchaseOrdersService.OnChange -= Refresca;
+        session.OnChange -= Refresca;
+    }
+}

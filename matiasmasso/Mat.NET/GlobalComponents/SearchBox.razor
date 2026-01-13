@@ -1,0 +1,24 @@
+﻿<input @bind="Value" @bind:event="oninput" class="@(IsShowing?"":"Hidden")" />
+
+
+@code {
+    private string? text;
+
+    [Parameter]
+    public string Value
+    {
+        get => text ?? "";
+        set
+        {
+            if (text != value) {
+                text = value;
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    [Parameter] public bool IsShowing { get; set; } = true;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+}

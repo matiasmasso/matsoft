@@ -1,0 +1,278 @@
+﻿@inject ApiService ApiService
+@implements IDisposable
+
+@if (selectedCca == null)
+{
+
+    <div class="PageWrapper900">
+
+
+        @if (tab == Tabs.Despesa)
+        {
+            <VisaCardDespesa Visa="Value"
+            Year="year"
+            AfterUpdate="AfterAddDespesa"
+            CloseRequest="@(()=>tab = Tabs.Extracte)"></VisaCardDespesa>
+        }
+        else
+        {
+
+            <a class="Header" href="#" @onclick="CloseRequestHandler" @onclick:preventDefault>
+                <div class="Ico">
+                    <Icon Id="Icon.Ids.CreditCard"></Icon>
+                </div>
+                <div class="Nom">@Value?.Nom</div>
+                <div class="Digits">@Value?.FormatedDigits()</div>
+            </a>
+
+            <div class="PageOptions">
+                <PageOptions>
+                    <a href="#" @onclick:preventDefault @onclick="@(()=> tab = Tabs.Detalls)">
+                        Detalls
+                    </a>
+                    <a href="#" @onclick:preventDefault @onclick="@(()=> tab = Tabs.Extracte)">
+                        Extracte
+                    </a>
+                    <a href="#" @onclick:preventDefault @onclick="@(()=> tab = Tabs.Despesa)">
+                        Despesa
+                    </a>
+                    <CopyButton Value="@Value?.Digits">Copiar digits</CopyButton>
+                </PageOptions>
+            </div>
+
+            @if (tab == Tabs.Detalls)
+            {
+                <PropertyGrid Model="propertyGrid"
+                UpdateRequest="UpdateRequestHandler"
+                CancelRequest="CloseRequestHandler"
+                DeleteRequest="DeleteRequestHandler"
+                ItemChanged="HandleItemChanged"
+                UpdateState="updateState"
+                DeleteState="deleteState">
+                </PropertyGrid>
+            }
+            else if (tab == Tabs.Extracte)
+            {
+
+                <Extracte Value="@extracte" Values="@allSaldos"
+                CloseRequest="CloseRequestHandler"
+                ></Extracte>
+            }
+        }
+
+
+
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+else
+{
+    <Cca Value="selectedCca" CloseRequest="@(()=>selectedCca =null)"></Cca>
+}
+
+@code {
+    [Parameter] public VisaCardModel? Value { get; set; }
+    [Parameter] public Tabs Tab { get; set; } = Tabs.Extracte;
+    [Parameter] public EventCallback<VisaCardModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<VisaCardModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    VisaCardModel? value;
+    Tabs tab;
+    List<GuidNom>? visaCardEmisors;
+    List<PgcCtaModel>? ctas;
+    List<ContactModel>? contacts;
+    PgcCtaModel? ctaVisa;
+    List<PgcCtaModel.Extracte>? allSaldos;
+    PgcCtaModel.Extracte extracte = new();
+    CcaModel? selectedCca;
+    int? year;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    public enum Tabs
+    {
+        Detalls,
+        Extracte,
+        Despesa
+    }
+
+    enum Fields
+    {
+        Emp,
+        Emisor,
+        Banc,
+        Titular,
+        Nom,
+        Digits,
+        Caduca,
+        Ccv,
+        FchTo
+    }
+
+
+    protected override void OnInitialized()
+    {
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        tab = Tab;
+        _ = Task.Run(async () => await FetchAsync());
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            visaCardEmisors = await ApiService.GetAsync<List<GuidNom>>("VisaCardEmisors");
+            propertyGrid = PropertyGrid();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+                value = await ApiService.GetAsync<VisaCardModel>("VisaCard", Value.Guid.ToString());
+
+            Refresca();
+
+            var request = new PgcCtaModel.Extracte
+                {
+                    Emp = Value?.Emp,
+                    Cta = ctaVisa?.Guid,
+                    Contact = Value?.Titular
+                };
+            allSaldos = await ApiService.PostAsync<PgcCtaModel.Extracte, List<PgcCtaModel.Extracte>>(request, "PgcCtas/saldos");
+
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        ctas = ApiService.GetPgcCtas();
+        contacts = ApiService.GetContacts();
+        ctaVisa = ctas?.FirstOrDefault(x => x.Id == "41003");
+
+        extracte = new PgcCtaModel.Extracte
+            {
+                Emp = value?.Emp,
+                Cta = ctaVisa?.Guid,
+                Contact = value?.Titular,
+                Year = DateTime.Today.Year
+            };
+
+
+        propertyGrid = PropertyGrid();
+
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        contacts = contacts?.Where(x => x.Emp == value?.Emp).ToList();
+        var bancs = contacts?.Where(x => x.Emp == value?.Emp && x.ContactClass == ContactClassModel.Wellknown(ContactClassModel.Wellknowns.Banc)!.Guid).Select(x => x.ToGuidNom()).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value?.Emp);
+        retval.AddGuidnom("Emisor", visaCardEmisors?.FirstOrDefault(x => x.Guid == value?.Emisor), visaCardEmisors);
+        retval.AddGuidnom("Entitat", contacts?.FirstOrDefault(x => x.Guid == value?.Banc)?.Guid, bancs);
+        retval.AddGuidnom("Titular", contacts?.FirstOrDefault(x => x.Guid == value?.Titular)?.Guid, contacts);
+        retval.AddString("Nom", value?.Nom);
+        retval.AddString("Digits", value?.FormatedDigits());
+        retval.AddString("Caduca", value?.FormatedCaducitat());
+        retval.AddString("Ccv", value?.Ccv);
+        retval.AddDateOnly("Baixa", value?.FchTo);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            value.Emisor = propertyGrid.GetGuidNom((int)Fields.Emisor)?.Guid;
+            value.Banc = propertyGrid.GetGuidNom((int)Fields.Banc)?.Guid;
+            value.Titular = propertyGrid.GetGuidNom((int)Fields.Titular)?.Guid;
+            value.Nom = propertyGrid!.Value<string>((int)Fields.Nom);
+            value.Digits = propertyGrid!.GetNumericDigits((int)Fields.Digits);
+            value.Caduca = propertyGrid!.GetNumericDigits((int)Fields.Caduca);
+            value.Ccv = propertyGrid!.GetNumericDigits((int)Fields.Ccv);
+            value.FchTo = propertyGrid.GetDateOnly((int)Fields.FchTo);
+            await ApiService.PostAsync<VisaCardModel, bool>(value, "VisaCard");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("VisaCard/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void AfterAddDespesa(CcaModel args)
+    {
+        year = ((DateOnly)args.Fch!).Year;
+        tab = Tabs.Extracte;
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            value!.Emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+    void HandleCcaRequest(CcaModel args)
+    {
+        selectedCca = args;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

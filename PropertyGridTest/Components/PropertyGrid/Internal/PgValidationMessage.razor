@@ -1,0 +1,23 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+
+@if (EditContext.IsModified(Field) && Messages.Any())
+{
+    <div class="pg-error animated-error">
+        <div class="pg-error-icon"></div>
+        <div class="pg-error-text">
+            @foreach (var msg in Messages)
+            {
+                <div>@msg</div>
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    [CascadingParameter] public EditContext EditContext { get; set; }
+    [Parameter] public FieldIdentifier Field { get; set; }
+
+    private IEnumerable<string> Messages =>
+        EditContext?.GetValidationMessages(Field) ?? Enumerable.Empty<string>();
+}

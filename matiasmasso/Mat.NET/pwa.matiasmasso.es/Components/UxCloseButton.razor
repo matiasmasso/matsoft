@@ -1,0 +1,14 @@
+﻿@inherits _Base
+
+<a class="CloseButton" href="#" @onclick="RequestToClose" @onclick:preventDefault>
+    [@(Localizer("Close"))]
+</a>
+
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    void RequestToClose()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}

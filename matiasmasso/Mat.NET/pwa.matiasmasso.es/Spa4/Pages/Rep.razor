@@ -1,0 +1,39 @@
+﻿@page "/Rep"
+@page "/Rep/{Guid:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+<h1>@base.Tradueix("Representante","Representant","Rep")</h1>
+
+<TabControl SelectedTab="1">
+
+    <ChildContent>
+
+        <TabPage Text="General">
+            <RepEditor @bind-Model="@Model"></RepEditor>
+        </TabPage>
+
+    </ChildContent>
+
+</TabControl>
+@code {
+    private RepModel? Model = null;
+
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (Guid == null)
+                Model = new RepModel();
+            else
+            {
+                Model = await base.GetAsync<RepModel>("rep", ((Guid)Guid!).ToString());
+            }
+            StateHasChanged();
+        }
+    }
+
+}

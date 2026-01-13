@@ -1,0 +1,28 @@
+﻿@inherits _Base
+@using static Microsoft.JSInterop.JSRuntimeExtensions
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+<div class="Online">
+
+    <h3>@base.Lang().Tradueix("Comprar ahora en","Comprar ara a","Buy it now at"):</h3>
+
+    @foreach (StoreLocatorDTO.LandingPage item in Model!.LandingPages)
+    {
+        <a href="#" class="Item" onclick = "@(() => Navigate(item))">
+            <div class="Nom">@item.Nom</div>
+            <div class="Website">@item.Web</div>
+            <div class="InStock" hidden=@(item.InStock == false)>(en stock para entrega inmediata)</div>
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public StoreLocatorDTO.OnlineClass? Model { get; set; }
+
+    protected async Task Navigate(StoreLocatorDTO.LandingPage item)
+    {
+        //await JSRuntime.InvokeAsync<object>("open", item.Url, "_blank");
+        NavigationManager.NavigateTo(item.Url);
+    }
+}

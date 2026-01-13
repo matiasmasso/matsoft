@@ -1,0 +1,481 @@
+﻿@*-------------Sisu Sign-In / Sign-Up component -----------*@
+
+@inherits _ComponentBase
+
+<div class="Wrapper">
+
+    <!-- --------------- username ----------------- -->
+
+    <div class="@(isShowingUsername ? " " : " Hidden") @(activeControl == Controls.username ? "Active" : "" )">
+        <div class="Label">
+            @Localizer("Username"]
+        </div>
+        <div class="Value">
+            <input type="text" @bind="username" @bind:event="oninput" />
+        </div>
+        <div class="UserIsNotRegistered @(isShowingUserIsNotRegistered ? "" : "Hidden")">
+            <UxInfo Text="@Localizer("Login.UserIsNotRegistered"]"></UxInfo>
+        </div>
+
+        @if (Mode == Modes.Register)
+        {
+            <!-- notify user if email is already registered -->
+            <div class="UserIsAlreadyRegistered @(isShowingUserIsAlreadyRegistered ? "" : "Hidden")">
+                <UxInfo Text="@Localizer("Login.UserIsAlreadyRegistered"]"></UxInfo>
+            </div>
+        }
+    </div>
+
+
+    <!-- --------------- password ----------------- -->
+
+    <div class="Password @(isShowingPassword ? "" : "Hidden") @(activeControl == Controls.password ? "Active" : "")">
+        <div class="Label">@Localizer("Password")</div>
+        <div class="Value"><input type="password" @bind-value="password" @bind-value:event="oninput" /></div>
+    </div>
+
+ @*   <div class="IForgot @(isShowingPassword ? "" : "Hidden")">
+        <label>
+            <input type="checkbox" @bind="persist" />
+            @Localizer("Login.Persist"]
+        </label>
+    </div>
+*@
+    <!-- --------------- iForgot ----------------- -->
+
+    <a class="IForgot @(isShowingIForgot ? "" : "Hidden")" href="#" @onclick="@IForgot" @onclick:preventDefault>
+        @Localizer("Login.IForgot.Anchor"]
+    </a>
+
+
+    <!-- ------------ code verification -------------- -->
+
+    <div class="VerificationCodeRequest @(isShowingCodeVerificationRequest ? "" : "Hidden") @(activeControl == Controls.verificationCode ? "Active" : "")">
+        <p>
+            @Localizer("Login.IForgot.VerificationCodeRequest",Localizer("Login.Email.VerificationCodeSubject"]]".
+        </p>
+
+        <div class="VerificationCode">
+            <input type="text" @bind-value="@verificationCode" />
+        </div>
+
+    </div>
+
+
+    <!-- ----------- password reset ------------- -->
+
+    <div class="PasswordReset @(isShowingPasswordReset ? "" : "Hidden" )">
+
+        <div>@Localizer("Login.NewPwdRequest")</div>
+        <div class="@(activeControl == Controls.newPassword ? "Active" : "")">
+            <input type="password" @bind-value="newPassword" />
+        </div>
+
+        <div>@Localizer("Login.NewPwdConfirm")</div>
+        <div class="@(activeControl == Controls.newPasswordConfirmation ? "Active" : "")">
+            <input type="password" @bind-value="newPasswordConfirmation" />
+        </div>
+
+    </div>
+
+
+    <!-- --------------- submit ----------------- -->
+
+    <div class="ButtonsBar">
+        <button class="Button ButtonOk" @onclick="Submit">
+            @if (isSubmitting)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <span>
+                    @Localizer("Submit"]
+                </span>
+            }
+        </button>
+    </div>
+
+
+
+    <!-- --------------- Errors ------------------ -->
+
+    <div class="Error @(string.IsNullOrEmpty(ErrReason) ? "Hidden" : "")">
+        <UxWarning Text="@ErrReason"></UxWarning>
+    </div>
+
+</div>
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    [Parameter] public Modes Mode { get; set; } = Modes.Authenticate;
+    [Parameter] public string Title { get; set; }
+    [Parameter] public EventCallback<string> TitleChanged { get; set; }
+    [Parameter] public EventCallback<string> AfterUpdate { get; set; }
+    private ProblemDetails problemDetails;
+
+    private Steps step;
+
+    private string _username;
+    private bool usernameExists;
+    private bool isShowingUsername;
+    private bool isShowingUserIsNotRegistered;
+    private bool isShowingUserIsAlreadyRegistered;
+
+    private string password;
+    private bool persist;
+    private bool isShowingPassword;
+
+    private bool iForgot;
+    private bool isShowingIForgot;
+    private bool isShowingCodeVerificationRequest;
+    private bool verificationCodeSent;
+    private string randomVerificationCode;
+    private string verificationCode;
+    private bool codeVerified;
+
+    private bool isShowingPasswordReset;
+    private string newPassword;
+    private string newPasswordConfirmation;
+
+    private bool isSubmitting = false;
+    private string ErrReason;
+
+    private Controls activeControl = Controls.none;
+
+    public enum Modes
+    {
+        Login,
+        Register,
+        Authenticate,
+        PwdReset
+    }
+
+    private enum Controls
+    {
+        none,
+        username,
+        password,
+        verificationCode,
+        newPassword,
+        newPasswordConfirmation
+    }
+
+    private string username
+    {
+        get => _username;
+        set
+        {
+            _username = value;
+            step = Steps.FindEmail;
+            if (TitleChanged.HasDelegate && Title != Localizer("Login.Title"))
+                TitleChanged.InvokeAsync(Localizer("Login.Title"));
+            isShowingUserIsNotRegistered = false;
+            isShowingUserIsAlreadyRegistered = false;
+            isShowingCodeVerificationRequest = false;
+            isShowingPasswordReset = false;
+            ErrReason = string.Empty;
+        }
+    }
+
+
+    private enum Steps
+    {
+        FindEmail,
+        CredentialsRequest,
+        IForgot,
+        VerificationCode,
+        PasswordReset
+    }
+
+
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (TitleChanged.HasDelegate)
+            TitleChanged.InvokeAsync(Localizer("Login.Title"));
+        randomVerificationCode = RandomVerificationCode(6);
+        persist = Microsoft.Maui.Storage.Preferences.Get("PersistCredentials", true);
+    }
+
+    protected override void OnParametersSet()
+    {
+        switch (Mode)
+        {
+            case Modes.Authenticate:
+            case Modes.Login:
+            case Modes.Register:
+                isShowingUsername = true;
+                step = Steps.FindEmail;
+                break;
+            case Modes.PwdReset:
+                iForgot = true;
+                isShowingCodeVerificationRequest = true;
+                isShowingPassword = false;
+                _username = base.UserEmailAddress();
+                usernameExists = true;
+                step = Steps.VerificationCode;
+                break;
+        }
+        base.OnParametersSet();
+    }
+
+    private async Task Submit()
+    {
+        isSubmitting = true;
+        activeControl = Controls.none;
+
+        switch (step)
+        {
+            case Steps.FindEmail:
+                usernameExists = false;
+                if (UserNameIsWellFormatted())
+                {
+                    ErrReason = string.Empty;
+                    if (await base.PostAsync<string, bool>(_username, "User/EmailExists"))
+                    {
+                        usernameExists = true;
+                        isShowingUserIsNotRegistered = false;
+                        isShowingUserIsAlreadyRegistered = true;
+                        isShowingPassword = true;
+                        isShowingIForgot = true;
+                        step = Steps.CredentialsRequest;
+                    }
+                    else
+                    {
+                        isShowingUserIsNotRegistered = true;
+                        isShowingUserIsAlreadyRegistered = false;
+                    }
+                }
+                else
+                    ErrReason = Localizer("Login.Err.WrongEmailAddress"];
+                break;
+            case Steps.CredentialsRequest:
+                if (UserNameIsWellFormatted())
+                {
+                    if (string.IsNullOrEmpty(password))
+                        ErrReason = Localizer("Login.Err.MissingPassword"];
+                    else
+                    {
+                        ErrReason = string.Empty;
+                        var hash = DTO.Helpers.CryptoHelper.Hash(_username, password);
+                        await Authenticate(hash);
+                    }
+                }
+                else
+                    ErrReason = Localizer("Login.Err.WrongEmailAddress"];
+                break;
+            case Steps.IForgot:
+                isShowingUserIsNotRegistered = false;
+                isShowingUserIsAlreadyRegistered = false;
+                if (UserNameIsWellFormatted())
+                {
+                    if (TitleChanged.HasDelegate)
+                        await TitleChanged.InvokeAsync(Localizer(usernameExists ? "Login.Title.CreatenewPassword" : "Login.Title.SignUp"));
+                    ErrReason = string.Empty;
+                    await SendVerificationCode();
+                }
+                else
+                {
+                    ErrReason = Localizer("Login.Err.WrongEmailAddress"];
+                }
+                break;
+            case Steps.VerificationCode:
+                if (verificationCode == randomVerificationCode)
+                {
+                    ErrReason = string.Empty;
+                    isShowingCodeVerificationRequest = false;
+                    isShowingPasswordReset = true;
+                    step = Steps.PasswordReset;
+                    activeControl = Controls.newPassword;
+                }
+                else
+                {
+                    ErrReason = Localizer("Login.IForgot.VerificationCodeFail"];
+                }
+                break;
+            case Steps.PasswordReset:
+                if (newPasswordsMatch())
+                {
+
+                    ErrReason = string.Empty;
+                    //check if missing name and location
+
+                    UserModel user = null;
+                    if (usernameExists)
+                        user = await UpdatePasswordAsync();
+                    else
+                        user = await CreateNewUser();
+
+                    if (user == null)
+                        ErrReason = "System error";
+                    else
+                        await Authenticate(user.Hash);
+                }
+                else
+                    ErrReason = Localizer("Login.NewPwd.Unmatch"];
+                break;
+        }
+        isSubmitting = false;
+    }
+
+    private async Task<UserModel> CreateNewUser()
+    {
+        UserModel retval = null;
+        UserModel user = new UserModel()
+            {
+                Emp = EmpModel.EmpIds.MatiasMasso,
+                EmailAddress = _username,
+                Hash = DTO.Helpers.CryptoHelper.Hash(_username, newPassword),
+                Lang = base.Lang(),
+                Rol = (int)UserModel.Rols.guest,
+                Source = (int)UserModel.Sources.erp
+            };
+        if (await PostAsync<UserModel, bool>(user, "User"))
+            retval = user;
+        return retval;
+    }
+
+    private async Task IForgot()
+    {
+        step = Steps.IForgot;
+        iForgot = true;
+        isShowingPassword = false;
+        isShowingIForgot = false;
+
+        if (UserNameIsWellFormatted())
+        {
+            ErrReason = string.Empty;
+            if (TitleChanged.HasDelegate)
+                await TitleChanged.InvokeAsync(Localizer(usernameExists ? "Login.Title.CreatenewPassword" : "Login.Title.SignUp"));
+            await SendVerificationCode();
+        }
+        else
+        {
+            ErrReason = Localizer("Login.Err.WrongEmailAddress"];
+            activeControl = Controls.username;
+        }
+    }
+
+    public async Task SendVerificationCode()
+    {
+        isSubmitting = true;
+        step = Steps.VerificationCode;
+        activeControl = Controls.verificationCode;
+        isShowingCodeVerificationRequest = true;
+        var subject = Localizer("Login.VerificationCode.EmailSubject"];
+        var body = Localizer("Login.VerificationCode.EmailBody", randomVerificationCode];
+        await base.SendEmailAsync(_username, subject, body);
+        verificationCodeSent = true;
+        isSubmitting = false;
+    }
+
+
+
+    private async Task<UserModel> UpdatePasswordAsync()
+    {
+
+        var hash = DTO.Helpers.CryptoHelper.Hash(_username, newPassword);
+        var payload = new LoginRequestDTO
+            {
+                Emp = (int)EmpModel.EmpIds.MatiasMasso,
+                Email = _username,
+                Hash = DTO.Helpers.CryptoHelper.Hash(_username, newPassword)
+            };
+        var retval = await base.PostAsync<LoginRequestDTO, UserModel>(payload, "user/pwdreset");
+        return retval;
+    }
+
+    private async Task Authenticate(string hash)
+    {
+        //var apiResponse = await HttpService.PostAsync<string, UserModel>(http, hash, "user/fromHash", ((int)EmpModel.EmpIds.MatiasMasso).ToString());
+        var apiResponse = await HttpService.PostAsync<string, string>(http, hash, "token", ((int)EmpModel.EmpIds.MatiasMasso).ToString());
+        if (apiResponse.Success())
+        {
+            var token = apiResponse.Value;
+            if (string.IsNullOrEmpty(token))
+                ErrReason = "WrongCredentials";
+            else
+                await AfterUpdate.InvokeAsync(token);
+
+            //switch (Mode)
+            //{
+            //    case Modes.PwdReset:
+            //        break;
+            //    default:
+            //        //Call login and redirect
+            //        await AuthStateProvider.UpdateAuthenticationState(user);
+            //        Microsoft.Maui.Storage.Preferences.Set("PersistCredentials", true);
+            //        //base.NavigateToPageAndReload(""); //Root URL
+            //        break;
+            //}
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+    }
+
+    bool newPasswordsMatch() => !string.IsNullOrEmpty(newPassword) && newPassword == newPasswordConfirmation;
+
+
+    private bool DisableSubmitButton
+    {
+        get
+        {
+            var retval = false;
+            if (string.IsNullOrEmpty(_username))
+                retval = true;
+            else if (string.IsNullOrEmpty(password))
+                retval = true;
+            else
+            {
+                var arroba = _username.IndexOf("@");
+                if (arroba < 1)
+                    retval = true;
+                else
+                    retval = _username.LastIndexOf(".") < arroba;
+
+            }
+            return retval;
+        }
+    }
+
+    private string RandomVerificationCode(int length = 6)
+    {
+        //numeric digits 48 to 57 = 10
+        //capital letters 65 to 90 = 26
+        var sb = new System.Text.StringBuilder();
+        Random rnd = new Random();
+        for (int j = 0; j < length; j++)
+        {
+            var i = rnd.Next(36);//returns random integers < 10
+            var seed = i < 11 ? 48 : 65;
+            var character = (seed + i).ToString();
+            sb.Append(character);
+        }
+        return sb.ToString();
+    }
+
+    private bool UserNameIsWellFormatted()
+    {
+        var retval = !string.IsNullOrEmpty(_username);
+        if (retval)
+        {
+            var arroba = _username.IndexOf("@");
+            var lastDot = _username.LastIndexOf(".");
+            if (arroba < 1) retval = false;
+            if (_username.StartsWith("@") || _username.EndsWith("@")) retval = false;
+            if (_username.StartsWith(".") || _username.EndsWith(".")) retval = false;
+            if (lastDot < arroba) retval = false;
+            if (_username.Length < lastDot - 3) retval = false;
+            if (_username.Contains("..")) retval = false;
+            if (_username.Contains("@@")) retval = false;
+        }
+        return retval;
+    }
+
+}
+

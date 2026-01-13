@@ -1,0 +1,99 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper">
+    <h1>@Model?.Nom</h1>
+
+    <TabControl>
+        <TabPage Text="General">
+            @if (dbState == DbState.IsLoading)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>dbState = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                  State="dbState"
+                                  CanDelete="@(!(Model?.IsNew ?? false))"
+                                  RequestToCancel="CancelRequestHandler"
+                                  RequestToDelete="DeleteRequest"
+                                  RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+        </TabPage>
+
+        <TabPage Text="Persones">
+            <Persons Model="persons"></Persons>
+        </TabPage>
+
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public DocRelModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+
+    private DocRelModel? value;
+    private PropertyGridModel? gridModel;
+    private List<PersonModel>? persons;
+    private DbState dbState;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Nom
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddString((int)Fields.Nom, value?.Nom, "Nom");
+
+        //persons = personsService.Values?.Where(x => x.DocRel == Model?.Guid).ToList();
+    }
+
+    private async Task UpdateRequest()
+    {
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        dbState = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        dbState = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+}

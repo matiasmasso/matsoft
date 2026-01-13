@@ -1,0 +1,70 @@
+﻿@inherits _Base
+
+
+<div class="Grid">
+    <div class="ColumnHeader Cta">@Localizer("Account")</div>
+    <div class="ColumnHeader Scta">@Localizer("SubAccount")</div>
+    <div class="ColumnHeader Deb">@Localizer("Debit")</div>
+    <div class="ColumnHeader Hab">@Localizer("Credit")</div>
+
+    @foreach (var item in Cca?.Items ?? new())
+    {
+        <div class="Cta">@Cta(item)</div>
+        <div class="Scta">@Scta(item)</div>
+        <div class="Deb">@Deb(item)</div>
+        <div class="Hab">@Hab(item)</div>
+    }
+</div>
+
+@code {
+    [Parameter] public CcaModel? Cca { get; set; }
+
+
+    string Cta(CcaModel.Item item)
+    {
+        var retval = string.Empty;
+        if (item?.Cta != null)
+        {
+            var cta = Cache?.PgcCtas?.FirstOrDefault(x => x.Guid == item.Cta);
+            retval = string.Format("{0} {1}", cta?.Id, cta?.Nom?.Tradueix(base.Lang()));
+        }
+        return retval;
+    }
+
+    string? Scta(CcaModel.Item? item)
+    {
+        var retval = string.Empty;
+        if (item?.Contact != null)
+        {
+            retval = Cache?.Contacts?.FirstOrDefault(x => x.Guid == item.Contact)?.Nom;
+        }
+        return retval;
+    }
+
+    string Deb(CcaModel.Item item)
+    {
+        var retval = string.Empty;
+        if(item.Eur != 0)
+        {
+            if(item.Dh == (CcaModel.Item.DhEnum)CcaModel.Item.DhEnum.Deb)
+            {
+                retval = string.Format("{0:N2} €", item.Eur);
+            }
+        }
+        return retval;
+
+    }
+
+    string Hab(CcaModel.Item item)
+    {
+        var retval = string.Empty;
+        if (item.Eur != 0)
+        {
+            if (item.Dh == CcaModel.Item.DhEnum.Hab)
+            {
+                retval = string.Format("{0:N2} €", item.Eur);
+            }
+        }
+        return retval;
+    }
+}

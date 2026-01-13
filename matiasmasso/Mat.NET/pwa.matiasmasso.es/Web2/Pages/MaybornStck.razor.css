@@ -1,0 +1,75 @@
+﻿.PageWrapper900 {
+    padding:15px;
+}
+
+.Depreciations {
+    display: grid;
+    grid-template-columns: min-content min-content 30px;
+    grid-column-gap: 10px;
+}
+
+    .Depreciations .FromDays, .Depreciations .Percent, .Depreciations .Action {
+        white-space: nowrap;
+        display: flex;
+        justify-content: flex-end;
+        width:100px;
+    }
+
+    .Depreciations input, .Depreciations .AddNew{
+        max-width: 100%;
+        text-align: right;
+    }
+
+.Grid {
+    display: grid;
+    grid-template-columns: 24px 1fr min-content min-content;
+    grid-column-gap: 10px;
+    max-width:600px;
+}
+
+    .Grid.IsDepreciating {
+        grid-template-columns: 24px 1fr min-content min-content min-content min-content;
+        max-width:100%;
+    }
+
+    .Total, .Brand, .Category, .Sku {
+        display: contents;
+    }
+
+.Num {
+    white-space: nowrap;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.Grid .Info {
+    font-size: 0.8rem;
+    margin: 10px 0;
+    grid-column: 1/-1;
+}
+
+.Extracte {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: min-content min-content 1fr min-content min-content min-content min-content min-content ;
+    grid-column-gap: 10px;
+    font-size: 0.8rem;
+}
+
+
+    .ColHeaders, .Extracte .Item {
+        display: contents;
+    }
+
+        .ColHeaders div {
+            padding:15px 0 10px;
+            color:darkgray;
+        }
+
+
+
+.Nom {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}

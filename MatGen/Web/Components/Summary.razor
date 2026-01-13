@@ -1,0 +1,171 @@
+﻿@implements IDisposable
+@inject NavigationManager? navigationManager
+@inject ApiService ApiService
+@inject CatalogService CatalogService
+
+<h3>Cataleg</h3>
+
+
+<div class="Wrapper">
+
+
+    <a class="Refresca" href="#" @onclick="Reload" @onclick:preventDefault disabled="@(CatalogService.State == CatalogService.States.IsLoading)">
+        Refresca
+    </a>
+
+    <div class="Grid">
+
+        @foreach (var item in items ?? new())
+        {
+            <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+            <div class="Ico">
+                @if(item.Status == CatalogService.States.IsLoaded)
+                {
+                    <Icon Id="Icon.Ids.CheckGreenCircle"></Icon>
+                } else
+                {
+                    <span>&nbsp;</span>
+                }
+            </div>
+            <div class="Caption Truncate">
+                @item.Caption
+            </div>
+            <div class="Count">
+                @if (item.Status == CatalogService.States.IsLoaded)
+                {
+                    <span>@(string.Format("{0:N0}", item.Count))</span>
+                }
+                else
+                {
+                    <Loading></Loading>
+                }
+            </div>
+            <div class="Ancestors">
+                @(string.Format("{0:N0}", item.Ancestors))
+            </div>
+            </a>
+        }
+
+    </div>
+
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    List<Item> items = new();
+
+    List<AncestorModel> rootAncestors = new();
+
+    Exception? exception;
+
+
+
+    protected override void OnInitialized()
+    {
+        ApiService.OnChange += Refresca;
+        LoadItems();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        LoadItems();
+        //SetAncestors();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task Reload()
+    {
+        CatalogService.Reset();
+        await InvokeAsync(StateHasChanged);
+        await ApiService.FetchAsync(true);
+    }
+
+    public void LoadItems()
+    {
+        items = new List<Item>();
+        AddItem("Usuaris","Users", CatalogService.Users?.Count);
+        var persons = AddItem("Persones", "Persons", CatalogService.Persons?.Count, ApiService.RootAncestors()?.Count);
+        var docs = AddItem("Documents", "Docs", CatalogService.Docs?.Count);
+        AddItem("Citacions de persones als documents", "DocTargets", CatalogService.DocTargets?.Count);
+        AddItem("Fonts documentals", "DocSrcs", CatalogService.DocSrcs?.Count);
+        AddItem("Codis de document", "DocCods", CatalogService.DocCods?.Count);
+        AddItem("Rols de persones a les citacions", "DocRels", CatalogService.DocRels?.Count);
+        AddItem("Matrimonis", "Enlaces", CatalogService.Enlaces?.Count);
+        AddItem("Poblacions", "Locations", CatalogService.Locations?.Count);
+        var professions = AddItem("Professions", "Professions", CatalogService.Professions?.Count);
+        var firstnoms = AddItem("Noms de pila", "Firstnoms", CatalogService.Firstnoms?.Count);
+        var cognoms = AddItem("Cognoms", "Cognoms", CatalogService.Cognoms?.Count);
+        AddItem("Publicacions", "Pubs", CatalogService.Pubs?.Count);
+        AddItem("Cites bibliogràfiques", "Citas", CatalogService.Citas?.Count);
+        AddItem("Repositoris", "Repos", CatalogService.Repos?.Count);
+
+        persons.Ancestors = ApiService.RootAncestors()?.Count();
+        docs.Ancestors = ApiService.AncestorDocs();
+        firstnoms.Ancestors = ApiService.AncestorFirstnoms();
+        cognoms.Ancestors = ApiService.AncestorCognoms();
+        professions.Ancestors = ApiService.AncestorProfessions();
+
+    }
+
+
+    void ItemClick(Item item)
+    {
+        var oGuid = new Guid("3D9AAF0E-A74A-4EDE-83CA-378D84C75BC4");
+        var tmp = ApiService.DocTargets()?.FirstOrDefault(x => x.Guid == oGuid);
+
+        if(!string.IsNullOrEmpty(item.Url))
+            navigationManager?.NavigateTo(item.Url);
+    }
+
+
+    // private void SetAncestors()
+    // {
+    //     var user = sessionState.User;
+    //     var root = personsService.GetValue(user?.RootPerson);
+    //     rootAncestors = root?.Ancestors(personsService.Values) ?? new();
+    // }
+
+
+    Item AddItem(string caption, string url, int? count, int? ancestors = null)
+    {
+        var item = new Item();
+        item.Caption = caption;
+        item.Url = url;
+        if (count == null)
+            item.Status = CatalogService.States.IsLoading;
+        else
+        {
+            item.Status = CatalogService.States.IsLoaded;
+            item.Count = (int)count;
+            item.Ancestors = ancestors;
+        }
+        items.Add(item);
+        return item;
+    }
+
+    public class Item
+    {
+        public string? Caption { get; set; }
+        public string? Url { get; set; }
+        public int Count { get; set; }
+        public int? Ancestors { get; set; }
+        public CatalogService.States Status { get; set; }
+
+        public override string ToString() => Caption ?? "?";
+    }
+
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+}

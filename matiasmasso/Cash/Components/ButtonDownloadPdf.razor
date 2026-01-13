@@ -1,0 +1,40 @@
+﻿@inject IJSRuntime JSRuntime
+
+@if (isDownloading || !IsReady)
+{
+    <Loading></Loading>
+}
+else
+{
+    <a href="#" @onclick:preventDefault @onclick="DownloadAsync">
+        @Caption
+    </a>
+}
+
+
+@code {
+    [Parameter] public string Caption { get; set; } = "Descarregar";
+    [Parameter] public bool IsReady { get; set; } = true;
+    [Parameter] public EventCallback<List<DocfileModel>> LoadRequest { get; set; }
+    bool isDownloading;
+
+    async Task DownloadAsync()
+    {
+        isDownloading = true;
+        await Task.Yield();
+
+        List<DocfileModel>? values = new();
+        await LoadRequest.InvokeAsync(values);
+        foreach (var value in values)
+        {
+            var bytes = value.Document.Data;
+            var fileStream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", value.Filename, streamRef);
+            isDownloading = false;
+            await Task.Yield();
+        }
+
+    }
+
+}

@@ -1,0 +1,60 @@
+﻿@page "/Backoffice/videos"
+@page "/{LangSegment}/Backoffice/videos"
+@inherits _PageBase
+@inject CultureService culture
+@inject AppStateService appState
+
+@if (Items == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="Wrapper600">
+    <div class="Grid">
+        <div class="ColHeaders">
+            <div>@culture.Localize("Id")</div>
+                <div>@culture.Localize("FchCreated")</div>
+                <div>@culture.Localize("Duration")</div>
+            <div class="Text">@culture.Localize("Title")</div>
+            <div class="Text">@culture.Localize("Excerpt")</div>
+        </div>
+        @foreach (var item in Items)
+        {
+            <a class="Item" href="@Url(item)">
+                <div>@item.YoutubeId</div>
+                <div>@string.Format("{0:dd/MM/yy}",item.FchCreated)</div>
+                <div>@(item.Duration == null ? "" : string.Format("{0:c}", item.Duration))</div>
+                <div class="Text">@item.Nom.Tradueix(base.Lang())</div>
+                <div class="Text">@item.Excerpt.Tradueix(base.Lang())</div>
+            </a>
+        }
+    </div>
+    </div>
+}
+<Error Exception="exception"></Error>
+
+@code {
+    [Parameter] public string? Segment { get; set; }
+
+    List<YouTubeMovieModel>? Items;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            Items = await appState.GetAsync<List<YouTubeMovieModel>>("Shop4moms/Videos");
+
+        }catch(Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    string Url(YouTubeMovieModel item) => Culture.RelativeUrl(base.Lang(), item.LandingPageUrl(base.Lang()));
+    string Duration(YouTubeMovieModel item) => Culture.RelativeUrl(base.Lang(), item.LandingPageUrl(base.Lang()));
+
+
+}

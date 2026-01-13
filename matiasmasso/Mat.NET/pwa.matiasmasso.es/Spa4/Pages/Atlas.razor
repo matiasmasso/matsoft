@@ -1,0 +1,183 @@
+﻿@page "/atlas"
+@inherits _ComponentBase
+@layout ProLayout
+
+<div class="Wrapper">
+    @if (isLoaded)
+    {
+        <div class="Grid">
+            <div class="Countries">
+                <div class="ColumnHeader HideOnMobile">
+                    @base.Tradueix("Paises","Països","Countries")
+                </div>
+
+                <div class="FavouriteCountries @(isShowingAllCountries ? "Hidden" : "")">
+                    @foreach (var item in atlas!.FavoriteCountries())
+                    {
+                        <div class="@(selectedCountry != null && item != selectedCountry ? "HideOnMobile":"")">
+                            <AtlasItem Item="@item"
+                               IsSelected="@(item.Equals(selectedCountry))"
+                               ItemClicked="ItemClicked"></AtlasItem>
+                        </div>
+                    }
+                </div>
+
+                <div class="@(selectedCountry != null ? "HideOnMobile":"")">
+                    <a class="SeeMoreCountries" href="#" @onclick="@(()=>{isShowingAllCountries = !isShowingAllCountries;})" @onclick:preventDefault="true">
+                        @(isShowingAllCountries ? base.Tradueix("(ver favoritos)", "(veure favorits)", "(show favourites)") : base.Tradueix("(todos los paises)", "(tots els països)", "(all countries)"))
+                    </a>
+                </div>
+
+                <div class="MoreCountries @(isShowingAllCountries ? "" : "Hidden")">
+                    @foreach (var item in atlas.Countries)
+                    {
+                        <div class="@(selectedCountry != null && item != selectedCountry ? "HideOnMobile":"")">
+                            <AtlasItem Item="@item"
+                               IsSelected="@(item.Equals(selectedCountry))"
+                               ItemClicked="ItemClicked"></AtlasItem>
+                        </div>
+                    }
+                </div>
+
+            </div>
+            <div class="Zonas">
+                <div class="ColumnHeader HideOnMobile @(Zonas().Count == 0 ? "Hidden" : "")">
+                    @base.Tradueix("Zonas","Zones","Areas")
+                </div>
+
+                @foreach (var item in Zonas())
+                {
+                    <div class="@(selectedZona != null && item != selectedZona ? "HideOnMobile":"")">
+                        <AtlasItem Item="@item"
+                           IsSelected="@(item.Equals(selectedZona))"
+                           ItemClicked="ItemClicked"></AtlasItem>
+                    </div>
+                }
+            </div>
+            <div class="Locations">
+                <div class="ColumnHeader HideOnMobile @(Locations().Count == 0 ? "Hidden" : "")">
+                    @base.Tradueix("Poblaciones","Poblacions","Locations")
+                </div>
+                @foreach (var item in Locations())
+                {
+                    <div class="@(selectedLocation != null && item != selectedLocation ? "HideOnMobile":"")">
+                        <AtlasItem Item="@item"
+                           IsSelected="@(item.Equals(selectedLocation))"
+                           ItemClicked="ItemClicked"></AtlasItem>
+                    </div>
+                }
+            </div>
+            <div class="Zips">
+                <div class="ColumnHeader HideOnMobile @(Zips().Count == 0 ? "Hidden" : "")">
+                    @base.Tradueix("Cod.Postal","Cod.Postal","Zip codes")
+                </div>
+                @foreach (var item in Zips())
+                {
+                    <div class="@(selectedZip != null && item != selectedZip ? "HideOnMobile":"")">
+                        <AtlasItem Item="@item"
+                           IsSelected="@(item.Equals(selectedZip))"
+                           ItemClicked="ItemClicked"></AtlasItem>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <Loading Message="@LoadingMessage()"></Loading>
+    }
+</div>
+
+@code {
+    private AtlasModel? atlas;
+    private CountryModel? selectedCountry;
+    private ZonaModel? selectedZona;
+    private LocationModel? selectedLocation;
+    private ZipModel? selectedZip;
+    private bool isLoaded = false;
+    private bool isShowingAllCountries = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!isLoaded)
+        {
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            atlas = await base.Atlas();
+            var browserDimensions = await base.BrowserDimensions();
+            if(browserDimensions.Width > 599){
+                selectedLocation = atlas.Location(LocationModel.Wellknowns.Barcelona);
+                selectedZona = atlas.Zona(selectedLocation!.Zona);
+                selectedCountry = atlas.Country(selectedZona.Country);
+            }
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    private List<ZonaModel> Zonas()
+    {
+        var retval = atlas!.Zonas.Where(x => x.Country == selectedCountry?.Guid).ToList();
+        return retval;
+    }
+
+    private List<LocationModel> Locations() => atlas!.Locations.Where(x => x.Zona == selectedZona?.Guid).ToList();
+    private List<ZipModel> Zips() => atlas!.Zips.Where(x => x.Location == selectedLocation?.Guid).ToList();
+
+    private void ItemClicked(BaseGuid item)
+    {
+        if (item is CountryModel)
+        {
+            if (selectedCountry == null)
+                selectedCountry = (CountryModel)item;
+            else
+            {
+                selectedCountry = selectedCountry == item ? null : (CountryModel)item;
+                selectedZona = null;
+                selectedLocation = null;
+                selectedZip = null;
+            }
+            //selectedZona = Zonas()?.FirstOrDefault();
+            //selectedLocation = Locations()?.FirstOrDefault();
+        }
+        else if (item is ZonaModel)
+        {
+            if (selectedZona == null)
+                selectedZona = (ZonaModel)item;
+            else
+            {
+                selectedZona = selectedZona == item ? null : (ZonaModel)item;
+                selectedLocation = null;
+                selectedZip = null;
+            }
+        }
+        else if (item is LocationModel)
+        {
+            if (selectedLocation == null)
+                selectedLocation = (LocationModel)item;
+            else
+            {
+                selectedLocation = selectedLocation == item ? null : (LocationModel)item;
+                selectedZip = null;
+            }
+        }
+        else if (item is ZipModel)
+        {
+            if (selectedZip == null)
+                selectedZip = (ZipModel)item;
+            else
+                selectedZip = selectedZip == item ? null : (ZipModel)item;
+        }
+    }
+
+
+    private string LoadingMessage()
+    {
+        return base.Tradueix("Cargando atlas", "Carregant atlas", "Loading atlas");
+    }
+}

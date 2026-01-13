@@ -1,0 +1,233 @@
+﻿@inject CultureService culture
+@inject SessionStateService session
+@inject ImmoblesService immoblesService
+@using System.Globalization
+
+<div class="Wrapper">
+    @if (Model == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedInventariItem != null)
+    {
+        <ImmobleInventoryItem Model="Model"
+                              Item="selectedInventariItem"
+                              CloseRequest="@(()=>selectedInventariItem=null)">
+        </ImmobleInventoryItem>
+    }
+    else
+    {
+        <div class="HeaderRow">
+            <h3>Immoble</h3>
+            <CloseButton CloseRequest="RequestToClose"></CloseButton>
+        </div>
+
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("Details")">
+
+                <div class="Label">@culture.Localize("Emp")</div>
+                <div class="Value">
+                    <LookupEmps @bind-Value="emp"></LookupEmps>
+                </div>
+
+
+                <div class="Label">@culture.Localize("Nom")</div>
+                <div class="Value">
+                    <input type="text" @bind-value="nom" @oninput="SetDirty" />
+                </div>
+
+
+                <div class="Label">@culture.Localize("RefCadastral")</div>
+                <div class="Value">
+                    <input type="text" @bind-value="cadastre" @oninput="SetDirty" />
+                    <CopyButton Value="@cadastre"></CopyButton>
+                </div>
+
+                <div class="Label">@culture.Localize("FchFrom")</div>
+                <div class="Value">
+                    <input type="date"
+                           value="@BindConverter.FormatValue(fchFrom, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                    @onchange="FchFromChanged" />
+                </div>
+
+                <div class="Label">@culture.Localize("FchTo")</div>
+                <div class="Value">
+                    <input type="date"
+                           value="@BindConverter.FormatValue(fchTo, "yyyy-MM-dd", CultureInfo.InvariantCulture)"
+                    @onchange="FchToChanged" />
+
+                </div>
+
+                <div class="Label">@culture.Localize("Address")</div>
+                <div class="Value">
+                    <input type="text" @bind-value="adr" @oninput="SetDirty" />
+                </div>
+
+                <div class="Label">@culture.Localize("Location")</div>
+                <div class="Value">
+                    <LookupZip Value="zip" ValueChanged="ZipChanged"></LookupZip>
+                </div>
+
+                <div class="Label">@culture.Localize("Obs")</div>
+                <div class="Value">
+                    <textarea @bind="obs" @oninput="SetDirty"></textarea>
+                </div>
+
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="RequestToClose"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+
+            </TabPage>
+            <TabPage Text="@culture.Localize("Docs")">
+                <DocfileSrcs Model="Model.Docfiles"
+                          EditorRequest="EditorRequestHandler"
+                          RequestToAddNew="AddNewDocfile"></DocfileSrcs>
+            </TabPage>
+            <TabPage Text="@culture.Localize("Inventory")">
+                <ImmobleInventoryItems Model="Model" ItemSelected="@InventariItemSelectedHandler"></ImmobleInventoryItems>
+            </TabPage>
+
+        </TabControl>
+    }
+
+</div>
+
+@code {
+    [Parameter] public ImmobleModel? Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+
+    EmpModel? emp;
+    string? nom;
+    string? cadastre;
+    DateTime? fchFrom;
+    DateTime? fchTo;
+    ZipModel? zip;
+    string? adr;
+    string? obs;
+    bool isAddingDocfile;
+    DocfileModel? docfile;
+    ImmobleModel.InventariItem? selectedInventariItem;
+    DbState state;
+    Exception? exception;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            Model = await immoblesService.FindAsync(Model!.Guid);
+            emp = session.Emps?.FirstOrDefault(x => x.Id == Model!.Emp);
+            nom = Model!.Nom;
+            cadastre = Model.Cadastre;
+            fchFrom = Model.FchFrom;
+            fchTo = Model.FchTo;
+            adr = Model.Address?.Text;
+            zip = Model.Address?.Zip?.ZipModel();
+            obs = Model.Obs;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    private async Task RequestToClose()
+    {
+        await RequestToCancel.InvokeAsync();
+    }
+
+    private void SetDirty()
+    {
+        state = DbState.IsDirty;
+    }
+
+    private async Task UpdateRequest()
+    {
+        try
+        {
+            Model!.Emp = emp!.Id;
+            Model.Nom = nom;
+            Model.Cadastre = cadastre;
+            Model.FchFrom = fchFrom;
+            Model.FchTo = fchTo;
+            Model.Obs = obs;
+            Model.Address = string.IsNullOrEmpty(adr) && zip == null ? null : new AddressModel
+                {
+                    Text = adr,
+                    Zip = zip == null ? null : new ZipDTO(zip.Guid)
+                    {
+                        Location = zip?.Location == null ? null : new LocationDTO(zip.Location)
+                    }
+                };
+            await immoblesService.UpdateAsync(Model);
+            await RequestToClose();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        try
+        {
+            await immoblesService.DeleteAsync(Model);
+            await RequestToClose();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task AddNewDocfile()
+    {
+        var item = new DocfileSrcModel(Model!);
+        var breadcrumb = new ModelEditor.Breadcrumb(item, "(nou document)");
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    private void FileChanged(DocfileModel args)
+    {
+        isAddingDocfile = false;
+    }
+
+    void FchFromChanged(ChangeEventArgs args)
+    {
+        fchFrom = DateTime.ParseExact(args.Value!.ToString()!, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        state = DbState.IsDirty;
+    }
+
+    void FchToChanged(ChangeEventArgs args)
+    {
+        fchTo = DateTime.ParseExact(args.Value!.ToString()!, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        state = DbState.IsDirty;
+    }
+
+    void ZipChanged(ZipModel args)
+    {
+        zip = args;
+        state = DbState.IsDirty;
+    }
+
+    void InventariItemSelectedHandler(ImmobleModel.InventariItem item)
+    {
+        selectedInventariItem = item;
+    }
+
+    async Task EditorRequestHandler(ModelEditor.Breadcrumb breadcrumb)
+    {
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+}

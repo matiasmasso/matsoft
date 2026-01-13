@@ -1,0 +1,70 @@
+﻿<div>
+        @if (CheckableEnums != null)
+    {
+        foreach(var item in CheckableEnums)
+        {
+            <div>
+            <input type="checkbox" @bind="item.IsSelected" />
+            <span> @item.Caption</span>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    private List<UserModel.Rols>? _model;
+
+    [Parameter]
+    public List<UserModel.Rols>? Model
+    {
+        get => _model;
+        set
+        {
+            var hasChanged = !AreEqual(value,_model);
+            if ( !hasChanged) return;
+            _model = value;
+            ModelChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<List<UserModel.Rols>> ModelChanged { get; set; }   
+
+    class CheckableEnum
+    {
+        public UserModel.Rols Rol { get; set; }
+        public string Caption { get; set; }
+        public bool IsSelected;
+    }
+
+    List<CheckableEnum>? CheckableEnums { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        CheckableEnums = new List<CheckableEnum>();
+        foreach (UserModel.Rols rol in Enum.GetValues(typeof(UserModel.Rols)))
+            CheckableEnums.Add(new CheckableEnum() {
+                    Rol = rol,
+                    Caption = rol.ToString(),
+                    IsSelected = Model.Contains(rol)
+            });
+        base.OnParametersSet();
+    }
+
+    public bool AreEqual(List<UserModel.Rols> first, List<UserModel.Rols>? second)
+    {
+        if (second == null)
+            return false;
+
+        if (first.Count != second.Count)
+            return false;
+
+        for (var elementCounter = 0; elementCounter < first.Count; elementCounter++)
+        {
+            if (!first[elementCounter].Equals(second[elementCounter]))
+                return false;
+        }
+        return true;
+    }
+}

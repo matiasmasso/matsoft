@@ -1,0 +1,34 @@
+﻿.Wrapper {
+    max-width: 400px;
+}
+
+.CloseButton {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.UsrLog {
+    font-size:0.8em;
+    color:darkgray;
+}
+
+.Item {
+    display: flex;
+    margin-top: 10px;
+    border-top: 1px solid gray;
+    padding-top: 10px;
+}
+
+.Thumbnail {
+    width:75px;
+}
+
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}
+
+.Amount {
+    text-align: right;
+}
+

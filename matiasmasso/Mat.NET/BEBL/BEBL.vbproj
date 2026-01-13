@@ -1,0 +1,512 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FEC8ED2D-E855-4D72-9F4F-3010405808C7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>BEBL</RootNamespace>
+    <AssemblyName>BEBL</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>Windows</MyType>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <Deterministic>true</Deterministic>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>BEBL.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>BEBL.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="C1.C1Pdf.4, Version=4.1.20142.269, Culture=neutral, PublicKeyToken=79882d576c6336da, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\ComponentOne\Studio for WinForms\bin\v4\C1.C1Pdf.4.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.3.0.1\lib\netstandard2.0\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.0\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ComponentModel.Annotations.5.0.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.1\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.0\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.1\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security" />
+    <Reference Include="System.Text.Encoding.CodePages, Version=9.0.0.3, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encoding.CodePages.9.0.3\lib\net462\System.Text.Encoding.CodePages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="DAL" />
+    <Import Include="DTO" />
+    <Import Include="MatHelperStd" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Addresses.vb" />
+    <Compile Include="AeatDocs.vb" />
+    <Compile Include="AeatMod347.vb" />
+    <Compile Include="AeatModels.vb" />
+    <Compile Include="Aecoc.vb" />
+    <Compile Include="AlbBloqueig.vb" />
+    <Compile Include="Amazon.vb" />
+    <Compile Include="Amortizations.vb" />
+    <Compile Include="ApiLog.vb" />
+    <Compile Include="Apps.vb" />
+    <Compile Include="AppUsrLog.vb" />
+    <Compile Include="Area.vb" />
+    <Compile Include="AreaProvincias.vb" />
+    <Compile Include="AreaRegions.vb" />
+    <Compile Include="ArtCustRefs.vb" />
+    <Compile Include="Atlas.vb" />
+    <Compile Include="AuditStocks.vb" />
+    <Compile Include="Balance.vb" />
+    <Compile Include="Bancs.vb" />
+    <Compile Include="BancSdos.vb" />
+    <Compile Include="BancTerm.vb" />
+    <Compile Include="BancTransferBeneficiaris.vb" />
+    <Compile Include="BancTransferPools.vb" />
+    <Compile Include="BankBranches.vb" />
+    <Compile Include="Banks.vb" />
+    <Compile Include="Banners.vb" />
+    <Compile Include="BlogPost.vb" />
+    <Compile Include="BloggerPost.vb" />
+    <Compile Include="BoxItems.vb" />
+    <Compile Include="BrandAreas.vb" />
+    <Compile Include="CategoriasDeNoticia.vb" />
+    <Compile Include="Ccbs.vb" />
+    <Compile Include="CertificatIrpf.vb" />
+    <Compile Include="CliProductDto.vb" />
+    <Compile Include="CliReturn.vb" />
+    <Compile Include="Cobrament.vb" />
+    <Compile Include="Cod.vb" />
+    <Compile Include="CodisMercancia.vb" />
+    <Compile Include="Comarcas.vb" />
+    <Compile Include="CompactCataleg.vb" />
+    <Compile Include="CompactDiari.vb" />
+    <Compile Include="Computer.vb" />
+    <Compile Include="CondicioCapitol.vb" />
+    <Compile Include="Bloggers.vb" />
+    <Compile Include="BookFras.vb" />
+    <Compile Include="Carrefour.vb" />
+    <Compile Include="Catalog.vb" />
+    <Compile Include="Ccas.vb" />
+    <Compile Include="Cert.vb" />
+    <Compile Include="CliAperturas.vb" />
+    <Compile Include="CliCreditLogs.vb" />
+    <Compile Include="CliProductsBlocked.vb" />
+    <Compile Include="Cnaps.vb" />
+    <Compile Include="CompactCustomerPO.vb" />
+    <Compile Include="Condicions.vb" />
+    <Compile Include="ConsumerTicket.vb" />
+    <Compile Include="ContactClasses.vb" />
+    <Compile Include="ContactDocs.vb" />
+    <Compile Include="ContactMenu.vb" />
+    <Compile Include="ContactMessage.vb" />
+    <Compile Include="Contacts.vb" />
+    <Compile Include="ContactTels.vb" />
+    <Compile Include="Content.vb" />
+    <Compile Include="ContractCodis.vb" />
+    <Compile Include="Contracts.vb" />
+    <Compile Include="Correspondencia.vb" />
+    <Compile Include="Countries.vb" />
+    <Compile Include="Credencial.vb" />
+    <Compile Include="Csas.vb" />
+    <Compile Include="Csbs.vb" />
+    <Compile Include="CurExchangeRates.vb" />
+    <Compile Include="Curs.vb" />
+    <Compile Include="CustomerBasket.vb" />
+    <Compile Include="CustomerCluster.vb" />
+    <Compile Include="CustomerPlatforms.vb" />
+    <Compile Include="CustomerProducts.vb" />
+    <Compile Include="CustomerRanking.vb" />
+    <Compile Include="Customers.vb" />
+    <Compile Include="CustomerTarifa.vb" />
+    <Compile Include="CustomerTarifaDtos.vb" />
+    <Compile Include="DefaultImages.vb" />
+    <Compile Include="Defaults.vb" />
+    <Compile Include="Deliveries.vb" />
+    <Compile Include="DeliveryItems.vb" />
+    <Compile Include="DeliveryTraspas.vb" />
+    <Compile Include="Depts.vb" />
+    <Compile Include="Diari.vb" />
+    <Compile Include="DirtyTables.vb" />
+    <Compile Include="DistributionChannels.vb" />
+    <Compile Include="DocFiles.vb" />
+    <Compile Include="DocFileSrcs.vb" />
+    <Compile Include="ECITransmGroup.vb" />
+    <Compile Include="EdiOrder.vb" />
+    <Compile Include="Ediversa.vb" />
+    <Compile Include="EdiversaDesadv.vb" />
+    <Compile Include="EdiversaExceptions.vb" />
+    <Compile Include="EdiversaFile.vb" />
+    <Compile Include="EdiversaFileSystem.vb" />
+    <Compile Include="EdiversaGenral.vb" />
+    <Compile Include="EdiversaInvRpt.vb" />
+    <Compile Include="EdiversaOrder.vb" />
+    <Compile Include="EdiversaOrdrSp.vb" />
+    <Compile Include="EdiversaRecadv.vb" />
+    <Compile Include="EdiversaRemadv.vb" />
+    <Compile Include="EdiversaSalesReport.vb" />
+    <Compile Include="Ediversa_ORDERS_D_96A_UN_EAN008.vb" />
+    <Compile Include="ElCorteIngles.vb" />
+    <Compile Include="Emails.vb" />
+    <Compile Include="Emps.vb" />
+    <Compile Include="Escripturas.vb" />
+    <Compile Include="Eventos.vb" />
+    <Compile Include="Exercici.vb" />
+    <Compile Include="Extensions\DatetimeOffsetExtensions.vb" />
+    <Compile Include="Extensions\ExcelExtensions.vb" />
+    <Compile Include="Extensions\ImageExtensions.vb" />
+    <Compile Include="Extracte.vb" />
+    <Compile Include="Feedback.vb" />
+    <Compile Include="Filter.vb" />
+    <Compile Include="FilterTargets.vb" />
+    <Compile Include="FourMoms.vb" />
+    <Compile Include="Ftpserver.vb" />
+    <Compile Include="GalleryItems.vb" />
+    <Compile Include="Garantias.vb" />
+    <Compile Include="GrfMesValues.vb" />
+    <Compile Include="Helpers\CsvHelper.vb" />
+    <Compile Include="Helpers\DiversHelper.vb" />
+    <Compile Include="Helpers\MailMessageHelper.vb" />
+    <Compile Include="Helpers\MailMsg.vb" />
+    <Compile Include="Helpers\UrlHelper.vb" />
+    <Compile Include="Helpers\WebPageHelper.vb" />
+    <Compile Include="Holdings.vb" />
+    <Compile Include="Iban.vb" />
+    <Compile Include="IbanStructure.vb" />
+    <Compile Include="Img.vb" />
+    <Compile Include="Immobles.vb" />
+    <Compile Include="Impagats.vb" />
+    <Compile Include="Importacions.vb" />
+    <Compile Include="ImportPrevisions.vb" />
+    <Compile Include="ImportUrl.vb" />
+    <Compile Include="Incentiu.vb" />
+    <Compile Include="IncidenciaCod.vb" />
+    <Compile Include="Incidencias.vb" />
+    <Compile Include="Incoterm.vb" />
+    <Compile Include="InemCompresProductRanking.vb" />
+    <Compile Include="Insolvencias.vb" />
+    <Compile Include="Integracions\AmazonSellerOrder.vb" />
+    <Compile Include="Integracions\Britax.vb" />
+    <Compile Include="Integracions\Edi\InvRpt.vb" />
+    <Compile Include="Integracions\ElCorteInglesDept.vb" />
+    <Compile Include="Integracions\ElCorteIngles\AlineamientoDeDisponibilidad.vb" />
+    <Compile Include="Integracions\Promofarma\Promofarma.vb" />
+    <Compile Include="Integracions\TradeInn.vb" />
+    <Compile Include="Integracions\Worten\Api.vb" />
+    <Compile Include="Integracions\Worten\Offers.vb" />
+    <Compile Include="Intrastats.vb" />
+    <Compile Include="InventariItem.vb" />
+    <Compile Include="InvoiceReceived.vb" />
+    <Compile Include="Invoices.vb" />
+    <Compile Include="Irpf.vb" />
+    <Compile Include="IVALiquidacio.vb" />
+    <Compile Include="JornadaLaboral.vb" />
+    <Compile Include="JsonLog.vb" />
+    <Compile Include="JsonSchemas.vb" />
+    <Compile Include="KeyWords.vb" />
+    <Compile Include="LaCaixaRemesaExportacio.vb" />
+    <Compile Include="LangTexts.vb" />
+    <Compile Include="LeadAreas.vb" />
+    <Compile Include="LiniaTelefon.vb" />
+    <Compile Include="LocalizedString.vb" />
+    <Compile Include="Locations.vb" />
+    <Compile Include="MailingLogs.vb" />
+    <Compile Include="Mailings.vb" />
+    <Compile Include="Margins.vb" />
+    <Compile Include="MarketPlace.vb" />
+    <Compile Include="Mayborn.vb" />
+    <Compile Include="MediaResources.vb" />
+    <Compile Include="Mems.vb" />
+    <Compile Include="Menu.vb" />
+    <Compile Include="Mgzs.vb" />
+    <Compile Include="Mods145.vb" />
+    <Compile Include="Msgs.vb" />
+    <Compile Include="Multas.vb" />
+    <Compile Include="MvcHome.vb" />
+    <Compile Include="Neighbours.vb" />
+    <Compile Include="Newsletters.vb" />
+    <Compile Include="Nominas.vb" />
+    <Compile Include="Noticias.vb" />
+    <Compile Include="Outlet.vb" />
+    <Compile Include="Pdf\PdfDelivery.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PgcClasses.vb" />
+    <Compile Include="PgcCtas.vb" />
+    <Compile Include="PgcGeos.vb" />
+    <Compile Include="PgcPlan.vb" />
+    <Compile Include="PgcSaldos.vb" />
+    <Compile Include="Plantilla.vb" />
+    <Compile Include="Pnds.vb" />
+    <Compile Include="PortadaImg.vb" />
+    <Compile Include="PortsCondicions.vb" />
+    <Compile Include="PostComments.vb" />
+    <Compile Include="PremiumCustomers.vb" />
+    <Compile Include="PremiumLines.vb" />
+    <Compile Include="PriceListItemsCustomer.vb" />
+    <Compile Include="PriceListItemSupplier.vb" />
+    <Compile Include="PriceListsCustomer.vb" />
+    <Compile Include="PriceListSupplier.vb" />
+    <Compile Include="Product.vb" />
+    <Compile Include="ProductBrands.vb" />
+    <Compile Include="ProductCatalog.vb" />
+    <Compile Include="ProductCategory.vb" />
+    <Compile Include="ProductChannels.vb" />
+    <Compile Include="ProductDistributors.vb" />
+    <Compile Include="Downloads.vb" />
+    <Compile Include="ProductDownloads.vb" />
+    <Compile Include="ProductPluginItem.vb" />
+    <Compile Include="ProductPlugins.vb" />
+    <Compile Include="ProductRank.vb" />
+    <Compile Include="ProductSkus.vb" />
+    <Compile Include="ProductSkuForecasts.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="ProductStats.vb" />
+    <Compile Include="ProductStocks.vb" />
+    <Compile Include="ProductUrl.vb" />
+    <Compile Include="Projectes.vb" />
+    <Compile Include="Proveidors.vb" />
+    <Compile Include="PrvCliNums.vb" />
+    <Compile Include="PurchaseOrder.vb" />
+    <Compile Include="PurchaseOrderConceptShortcut.vb" />
+    <Compile Include="PurchaseOrderItem.vb" />
+    <Compile Include="QualityDistribution.vb" />
+    <Compile Include="RaffleParticipants.vb" />
+    <Compile Include="Raffles.vb" />
+    <Compile Include="Ranking.vb" />
+    <Compile Include="RecallCli.vb" />
+    <Compile Include="Recalls.vb" />
+    <Compile Include="RemittanceAdvice.vb" />
+    <Compile Include="RepBasket.vb" />
+    <Compile Include="RepCertsRetencio.vb" />
+    <Compile Include="RepCliComs.vb" />
+    <Compile Include="RepCom.vb" />
+    <Compile Include="RepComLiquidables.vb" />
+    <Compile Include="RepCustomers.vb" />
+    <Compile Include="Repeticions.vb" />
+    <Compile Include="RepLiqs.vb" />
+    <Compile Include="RepProducts.vb" />
+    <Compile Include="Reps.vb" />
+    <Compile Include="Riscs.vb" />
+    <Compile Include="Rols.vb" />
+    <Compile Include="SabiasQue.vb" />
+    <Compile Include="SatRecall.vb" />
+    <Compile Include="SearchRequests.vb" />
+    <Compile Include="SegSocialGrups.vb" />
+    <Compile Include="SellOut.vb" />
+    <Compile Include="SepaMe.vb" />
+    <Compile Include="SepaTexts.vb" />
+    <Compile Include="SermepaConfigs.vb" />
+    <Compile Include="Session.vb" />
+    <Compile Include="ShipmentsReport.vb" />
+    <Compile Include="Sii.vb" />
+    <Compile Include="SiteMaps.vb" />
+    <Compile Include="SkuStocks.vb" />
+    <Compile Include="SkuWiths.vb" />
+    <Compile Include="SocialMediaWidgets.vb" />
+    <Compile Include="Spv.vb" />
+    <Compile Include="SpvIns.vb" />
+    <Compile Include="StaffCategories.vb" />
+    <Compile Include="StaffHolidays.vb" />
+    <Compile Include="StaffPos.vb" />
+    <Compile Include="Staffs.vb" />
+    <Compile Include="StaffSched.vb" />
+    <Compile Include="Statement.vb" />
+    <Compile Include="StatQuotasOnline.vb" />
+    <Compile Include="Stocks.vb" />
+    <Compile Include="StoreLocator.vb" />
+    <Compile Include="Subscription.vb" />
+    <Compile Include="Subscriptors.vb" />
+    <Compile Include="SumasYSaldos.vb" />
+    <Compile Include="ServerCache.vb" />
+    <Compile Include="Tamariu.vb" />
+    <Compile Include="TaskLogs.vb" />
+    <Compile Include="Tasks.vb" />
+    <Compile Include="TaskSchedules.vb" />
+    <Compile Include="Taxes.vb" />
+    <Compile Include="Templates\Template.vb" />
+    <Compile Include="Test.vb" />
+    <Compile Include="TpvLog.vb" />
+    <Compile Include="Tracking.vb" />
+    <Compile Include="VivaceTracking.vb" />
+    <Compile Include="Transmisions.vb" />
+    <Compile Include="Transportistas.vb" />
+    <Compile Include="Txts.vb" />
+    <Compile Include="User.vb" />
+    <Compile Include="UserDefaults.vb" />
+    <Compile Include="Vehicles.vb" />
+    <Compile Include="VisaCards.vb" />
+    <Compile Include="VisaEmisor.vb" />
+    <Compile Include="Vivace.vb" />
+    <Compile Include="VivaceStocks.vb" />
+    <Compile Include="Web2Sync.vb" />
+    <Compile Include="WebAtlas.vb" />
+    <Compile Include="WebErr.vb" />
+    <Compile Include="WebHelper.vb" />
+    <Compile Include="WebLogBrowse.vb" />
+    <Compile Include="WebMenuGroups.vb" />
+    <Compile Include="WebMenuItem.vb" />
+    <Compile Include="WebPageAlias.vb" />
+    <Compile Include="WinBugs.vb" />
+    <Compile Include="WinMenuItems.vb" />
+    <Compile Include="WtbolCtrs.vb" />
+    <Compile Include="WtbolLandingPages.vb" />
+    <Compile Include="Wtbols.vb" />
+    <Compile Include="WtbolSerp.vb" />
+    <Compile Include="Wtbolsites.vb" />
+    <Compile Include="WtbolStocks.vb" />
+    <Compile Include="Xecs.vb" />
+    <Compile Include="XecsPresentacio.vb" />
+    <Compile Include="YearMonths.vb" />
+    <Compile Include="YouTubeMovies.vb" />
+    <Compile Include="Zips.vb" />
+    <Compile Include="Zona.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\licenses.licx" />
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AeatSii\AeatSii.vbproj">
+      <Project>{c852d5c0-bc63-4b99-ae41-22ec93cfa6bc}</Project>
+      <Name>AeatSii</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ApiHelper\ApiHelper.vbproj">
+      <Project>{e36022a4-5371-4ea8-bd78-171ced2eb5fb}</Project>
+      <Name>ApiHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DAL\DAL.vbproj">
+      <Project>{57ec6c6f-a320-4d9f-afdb-7643e97dc0f7}</Project>
+      <Name>DAL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DTO\DTO.csproj">
+      <Project>{c2f49505-452b-4856-b8a0-c504df10cdf2}</Project>
+      <Name>DTO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EdiHelperStd\EdiHelperStd.csproj">
+      <Project>{ab348520-acdb-40dc-88b3-4795cb4c7424}</Project>
+      <Name>EdiHelperStd</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LegacyHelper\LegacyHelper.vbproj">
+      <Project>{d0841f63-fe98-4bc0-bf84-7a9a9608b920}</Project>
+      <Name>LegacyHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelperStd\MatHelperStd.vbproj">
+      <Project>{6feda739-79f5-459f-9967-553095f23816}</Project>
+      <Name>MatHelperStd</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelper\MatHelper.csproj">
+      <Project>{d6ab48f7-36e9-4ce3-8850-1ca00a508141}</Project>
+      <Name>MatHelper</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Resources\warn.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NoImg140.jpg" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+</Project>

@@ -1,0 +1,221 @@
+﻿@page "/AeatMods"
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    @if (allValues == null)
+    {
+        <h3>Models de Hisenda</h3>
+        <Loading></Loading>
+    }
+    else if (selectedModel != null)
+    {
+        <AeatMod Value="selectedModel"
+                 CloseRequest="@(()=>selectedModel = null)"
+                 AfterUpdate="HandleAfterUpdateMod"
+                 AfterDelete="HandleAfterDeleteMod"></AeatMod>
+    }
+    else if (selectedDoc != null)
+    {
+        <AeatItem Value="selectedDoc"
+                  CloseRequest="@(()=>selectedDoc = null)"
+                  AfterUpdate="HandleAfterUpdateItem"
+                  AfterDelete="HandleAfterDeleteItem"></AeatItem>
+    }
+    else if (selectedValue != null)
+    {
+        <Title Value="@($"{emp.GetDisplayName()} {selectedYear} {selectedValue.Id} {selectedValue.Dsc}")" CloseRequest="@(()=>selectedValue = null)"></Title>
+
+        <PageOptions>
+            <a href="#" @onclick:preventDefault @onclick="AddNewModel">
+                Afegir Model
+            </a>
+            <a href="#" @onclick:preventDefault @onclick="AddNewDoc">
+                Afegir Document
+            </a>
+            <ButtonDownloadPdf LoadRequest="LoadDocfiles" IsReady="@(docs != null)"></ButtonDownloadPdf>
+
+
+        </PageOptions>
+
+        <div class="DocsGallery">
+            @foreach (var doc in docs ?? new())
+            {
+                <a href="#" class="DocThumbnail" @onclick:preventDefault @onclick="@(()=>selectedDoc = doc)">
+                    <img src="@doc.Docfile?.ThumbnailUrl()" width="350" height="400" />
+                    <div class="Features">
+                        @doc.Fch.ToString("dd/MM/yy")
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <h3>Models de Hisenda</h3>
+
+        <PageOptions>
+            <LookupEmp Value="emp" Values="availableEmps" ValueChanged="HandleEmpChanged"></LookupEmp>
+            <LookupYears Value="selectedYear" Values="years" ValueChanged="HandleYearChanged"></LookupYears>
+            <a href="#" @onclick:preventDefault @onclick="AddNewModel">
+                Afegir Model
+            </a>
+            <a href="#" @onclick:preventDefault @onclick="AddNewDoc">
+                Afegir Document
+            </a>
+        </PageOptions>
+
+        <div class="Grid">
+            @foreach (var item in values ?? new())
+            {
+                <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>HandleModelChanged(item))">
+                    <div class="Nom">@item.Id</div>
+                    <div class="Dsc">@item.Dsc</div>
+                </a>
+            }
+        </div>
+    }
+</div>
+<Error @bind-Value="exception"></Error>
+
+@code {
+    List<AeatModel>? allValues;
+    List<AeatModel>? values;
+    List<AeatModel.Item>? docs;
+    EmpModel.EmpIds? emp;
+    List<EmpModel.EmpIds>? availableEmps;
+    AeatModel? selectedValue; // per llistar docs
+    AeatModel? selectedModel; // per editar o afegir
+    AeatModel.Item? selectedDoc;
+    int? selectedYear;
+    List<int>? years;
+    bool isShowingEmptyModels;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            allValues = await ApiService.GetAsync<List<AeatModel>>("Aeats/WithItems");
+            availableEmps = allValues!.SelectMany(x => x.Items).Select(x => x.Emp).Distinct().ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void HandleEmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+        var currentEmpValues = allValues?.Where(x => x.Items.Any(y => y.Emp == emp)).ToList();
+        years = currentEmpValues.SelectMany(x => x.Items)
+            .Select(x => x.Fch.Year).Distinct()
+            .OrderByDescending(x => x)
+            .ToList();
+        HandleYearChanged((int)years.First());
+    }
+
+    void HandleYearChanged(int? args)
+    {
+        selectedYear = args;
+        values = allValues?.Where(x => x.Items.Any(y => y.Emp == emp && y.Fch.Year == selectedYear)).ToList();
+    }
+
+    void HandleModelChanged(AeatModel args)
+    {
+        selectedValue = args;
+        docs = selectedValue!.Items.Where(x => x.Emp == emp && x.Fch.Year == selectedYear).ToList();
+    }
+
+    void AddNewModel()
+    {
+        selectedModel = new AeatModel();
+
+    }
+
+    void AddNewDoc()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        selectedDoc = new AeatModel.Item
+            {
+                Emp = (EmpModel.EmpIds)emp,
+                Parent = selectedValue?.Guid,
+                Fch = selectedYear == today.Year ? today : DateOnly.FromDateTime(new DateTime((int)selectedYear!, 12, 31))
+            };
+    }
+
+    void HandleAfterUpdateItem(AeatModel.Item args)
+    {
+        if (args.IsNew)
+        {
+            var parent = allValues.FirstOrDefault(x => x.Guid == args.Parent);
+            parent.Items.Add(args);
+            emp = args.Emp;
+            selectedYear = args.Fch.Year;
+            selectedValue = parent;
+            selectedValue.Items = selectedValue.Items.OrderBy(x => x.Fch).ToList();
+            docs = selectedValue!.Items.Where(x => x.Emp == emp && x.Fch.Year == selectedYear).ToList();
+        }
+        else
+        {
+            var oldItem = selectedValue.Items.FirstOrDefault(x => x.Guid == args.Guid);
+        }
+        selectedDoc = null;
+    }
+
+    void HandleAfterDeleteItem(AeatModel.Item args)
+    {
+        selectedValue.Items.Remove(selectedValue.Items.FirstOrDefault(x => x.Guid == args.Guid));
+        docs = selectedValue!.Items.Where(x => x.Emp == emp && x.Fch.Year == selectedYear).ToList();
+        selectedDoc = null;
+    }
+
+    void HandleAfterUpdateMod(AeatModel args)
+    {
+        if (args.IsNew)
+            allValues.Add(args);
+        else
+        {
+            var oldValue = allValues.FirstOrDefault(x => x.Guid == args.Guid);
+            var idx = allValues.IndexOf(oldValue);
+            allValues[idx] = args;
+        }
+
+        values = allValues?
+        .Where(x => x.Items.Any(y => y.Emp == emp && y.Fch.Year == selectedYear))
+        .OrderBy(x => x.ToString())
+    .ToList();
+        selectedModel = null;
+    }
+
+    void HandleAfterDeleteMod(AeatModel args)
+    {
+        allValues.Remove(allValues.FirstOrDefault(x => x.Guid == args.Guid));
+        values = allValues?
+        .Where(x => x.Items.Any(y => y.Emp == emp && y.Fch.Year == selectedYear))
+        .OrderBy(x => x.ToString())
+    .ToList();
+        selectedModel = null;
+    }
+
+    async Task LoadDocfiles(List<DocfileModel> docfiles)
+    {
+        foreach (var doc in docs ?? new())
+        {
+            if (doc.Docfile?.Hash != null)
+            {
+                doc.Docfile.Filename = $"{emp.GetDisplayName()} {selectedYear} {selectedValue!.Id} {selectedValue.Dsc?.Trim()}  {doc.Fch.ToString().Replace("/","-")}.pdf";
+                var base64Hash = DTO.Helpers.CryptoHelper.UrlFriendlyBase64(doc.Docfile.Hash);
+                var data = await ApiService.GetAsync<Byte[]>( "Docfile",base64Hash);
+                if (data != null)
+                {
+                    doc.Docfile.Document = new Media(Media.MimeCods.Pdf, data);
+                    docfiles.Add(doc.Docfile);
+                }
+            }
+        }
+    }
+
+
+
+}

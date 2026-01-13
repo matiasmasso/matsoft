@@ -1,0 +1,49 @@
+﻿@inherits LayoutComponentBase
+
+<div class="login-layout">
+    <div class="login-container">
+        <div class="login-brand">
+            <img src="icon-192.png" alt="App Logo" class="login-logo" />
+            <h1>Els meus albums de fotos</h1>
+            <p class="login-subtitle">Welcome back</p>
+        </div>
+
+        <div class="login-content">
+            @Body
+        </div>
+    </div>
+</div>
+<ApiToggleButton />
+<style>
+    .login-layout {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+        color: white;
+    }
+
+    .login-container {
+        width: 380px;
+        padding: 2rem;
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    .login-brand {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .login-logo {
+        width: 80px;
+        margin-bottom: 1rem;
+    }
+
+    .login-content {
+        margin-top: 1rem;
+    }
+</style>

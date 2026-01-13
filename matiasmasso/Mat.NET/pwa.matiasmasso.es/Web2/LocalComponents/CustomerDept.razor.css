@@ -1,0 +1,80 @@
+﻿.Wrapper {
+    border:1px solid gray;
+    border-radius:4px;
+    box-shadow: 1px 1px;
+    padding:10px;
+    position:relative;
+}
+
+.HeaderRow{
+    display:flex;
+    justify-content:space-between;
+}
+
+.Label {
+    color:gray;
+}
+
+.Value {
+    padding:0 0 10px 15px;
+}
+
+.Value input[type="text"]{
+    width:100%;
+}
+
+.ProductsHeader {
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    grid-column-gap: 10px;
+}
+.AddProduct {
+    display:flex;
+    align-items:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.LookupProduct {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    z-index: 10;
+}
+
+.Grid {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin:20px 15px;
+}
+
+.Item {
+    display:grid;
+    grid-template-columns: 100px 1fr;
+    grid-template-areas:"thumbnail brand"
+        "thumbnail category"
+        "thumbnail sku";
+    grid-column-gap:10px;
+    align-items:baseline;
+}
+
+.Thumbnail {
+    grid-area:thumbnail;
+}
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}
+.Brand {
+    grid-area:brand;
+}
+
+.Category {
+    grid-area:category;
+}
+
+.Sku {
+    grid-area:sku;
+}

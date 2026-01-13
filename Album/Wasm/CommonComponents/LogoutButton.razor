@@ -1,0 +1,19 @@
+﻿@inject AuthService AuthService
+@inject NavigationManager Nav
+
+<a href="#" class="btn btn-reset"
+   @onclick="Logout"
+   @onclick:preventDefault="true">
+    Logout
+</a>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}
+
+
+

@@ -1,0 +1,16 @@
+﻿@inject ApiService ApiService
+
+<div class="grid">
+@foreach(var value in values ?? new())
+{
+    <div>@value.FullNomCat()</div>
+}
+</div>
+
+@code {
+    private List<PgcCtaModel>? values;
+    protected override void OnParametersSet()
+    {
+        values = ApiService.GetCurrentPgcCtas()?.OrderBy(x=>x.Id).ToList();
+    }
+}

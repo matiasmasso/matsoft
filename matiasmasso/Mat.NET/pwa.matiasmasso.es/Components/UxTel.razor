@@ -1,0 +1,47 @@
+﻿<div class="Wrapper">
+    @if (CanEdit && isEditing)
+    {
+        <input type="text" @bind-value="@_innerControlValue" @onblur="@(()=>{isEditing = false;})" />
+    }
+    else
+    {
+        <a href="#" @onclick="@(()=>{isEditing = true;})" @onclick:preventDefault="true">
+            @if (_innerControlValue == null)
+            {
+                <div>&nbsp;</div>
+            }
+            else
+            {
+                <div>@_innerControlValue</div>
+            }
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public Object Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public EventCallback<ContactModel.Telefon> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+
+
+    private string? _innerControlValue
+    {
+        get => ((ContactModel.Telefon)Value).Number;
+        set
+        {
+            if (((ContactModel.Telefon)Value).Number != value)
+            {
+                ((ContactModel.Telefon)Value).Number = value;
+
+                if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                    ObjChanged.InvokeAsync(Value);
+                else
+                    ValueChanged.InvokeAsync((ContactModel.Telefon)Value);
+            }
+        }
+    }
+
+    private bool isEditing = false;
+
+}

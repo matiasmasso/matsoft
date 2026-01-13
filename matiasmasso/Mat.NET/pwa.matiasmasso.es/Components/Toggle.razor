@@ -1,0 +1,26 @@
+﻿<a href="#" @onclick="@ItemClick" @onclick:preventDefault>
+    <img src=@((Value ?? false) ? iconOn : iconOff) />
+</a>
+
+@code {
+
+    [Parameter] public bool? Value { get; set; }
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+
+    string iconOn = "/img/toggle-large-on.svg";
+    string iconOff = "/img/toggle-large-off.svg";
+
+    private void ItemClick()
+    {
+        if (CanEdit)
+        {
+            var retval = !(Value ?? false);
+            if (ObjChanged.HasDelegate) 
+                ObjChanged.InvokeAsync(retval);
+            else
+                ValueChanged.InvokeAsync(retval);
+        }
+    }
+}

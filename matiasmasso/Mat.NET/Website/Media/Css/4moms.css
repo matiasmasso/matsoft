@@ -1,0 +1,144 @@
+﻿body {
+    font-family: 'CntryGthc', Arial, Helvetica, sans-serif;
+    max-width:1038px;
+    margin:auto;
+}
+
+.pagewrapper {
+    max-width:600px;
+    min-height:450px;
+    margin:auto;
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/*-------------------- nav ---------------------*/
+
+nav {
+    width: 100%;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-right: none;
+}
+ 
+nav ul {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+ 
+nav ul li {
+    list-style: none;
+    float: right;
+    text-align: center;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #ccc;
+    /*width: 16.6667%;  fallback for non-calc() browsers 
+    width: calc(100% / 6);
+    box-sizing: border-box;*/
+}
+ 
+nav ul li:first-child {
+    float: left;
+    border-left: none;
+    border-right: none;
+}
+ 
+nav ul li a {
+    display: block;
+    text-decoration: none;
+    color: #616161;
+    padding: 10px 10px;
+    white-space: nowrap;
+}
+nav ul li:not(:first-child) a:hover {
+    color: blue;
+}
+
+
+/*-----------------Tables -----------------------------*/
+
+.Grid {
+    display: table;
+    table-layout: auto;
+    width: 100%;
+    margin:20px auto;
+}
+.Row {
+    display: table-row;
+}
+.RowHdr {
+    display: table-row;
+    color:gray;
+}
+.CellThumbnail {
+    display: table-cell;
+    min-width:60px;
+    min-height:60px;
+}
+.CellThumbnail img {
+    width:100%;
+}
+.CellTxt {
+    display: table-cell;
+    padding:4px 7px 2px 4px;
+    width: 100%;
+    max-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align:center;
+}
+.CellMultiLineTxt {
+    display: table-cell;
+    padding:4px 7px 2px 4px;
+    width: 100%;
+    max-width: 0;
+    vertical-align:middle;
+}
+.CellQty {
+    display: table-cell;
+    text-align: right;
+    padding: 4px 7px 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 4em;
+    vertical-align:middle;
+}
+.CellPrice {
+    display: table-cell;
+    text-align: right;
+    padding: 4px 7px 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 4em;
+    vertical-align:middle;
+}
+.CellAmt {
+    display: table-cell;
+    text-align:right;
+    padding:4px 7px 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+	min-width:5em;
+    vertical-align:middle;
+}
+.CellTot {
+    display: table-cell;
+    text-align:right;
+    padding:4px 7px 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+	min-width:5em;
+    border-top:1px solid darkgray;
+    vertical-align:middle;
+}

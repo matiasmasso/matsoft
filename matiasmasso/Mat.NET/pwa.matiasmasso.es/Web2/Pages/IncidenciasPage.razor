@@ -1,0 +1,100 @@
+﻿@page "/incidencias"
+@page "/{LangSegment}/incidencias"
+@page "/{LangSegment}/incidencies"
+@page "/{LangSegment}/incidences"
+@implements IDisposable
+@layout ProLayout
+@inject CultureService culture
+@inject IncidenciasService incidenciasService
+
+<div class="PageWrapper900">
+
+    @if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else if(Values == null)
+    {
+        <h3>@culture.Localize("Incidences")</h3>
+        <Loading></Loading>
+    } else
+    {
+        <h3>@culture.Localize("Incidences")</h3>
+        <SearchBox @bind-Value="searchterm"></SearchBox>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Asin">
+                        @item.Asin
+                    </div>
+                    <div class="Fch">
+                        @($"{item.Fch:dd/MM/yy}")
+                    </div>
+                    <div class="Nom">
+                        @incidenciasService.CustomerFullNom(item)
+                    </div>
+                    <div class="Nom">
+                        @incidenciasService.ProductNom(item)
+                    </div>
+                </a>
+            }
+        </div>
+    }
+
+<Error @bind-Exception="exception"></Error>
+</div>
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+
+    List<IncidenciaModel>? Values;
+    string? searchterm;
+    SelectedValues.Collection selectedValues = new();
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        incidenciasService.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        Task.Run(async () => await LoadData());
+    }
+
+    async Task LoadData()
+    {
+        Values = await incidenciasService.GetOpenValuesAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // protected override async Task OnParametersSetAsync()
+    // {
+    // }
+
+    List<IncidenciaModel>? FilteredItems()
+    {
+        return Values?.Where(x => x.Matches(searchterm)).ToList();
+    }
+
+    async Task ItemClick(IncidenciaModel item)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(item, $"incidencia {item.Asin}"));
+    }
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        incidenciasService.OnChange -= Refresca;
+    }
+}
+

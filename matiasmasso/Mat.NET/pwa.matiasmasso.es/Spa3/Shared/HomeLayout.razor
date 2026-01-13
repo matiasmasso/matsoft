@@ -1,0 +1,76 @@
+﻿@inherits LayoutComponentBase
+@using System.Globalization
+@inject HttpClient Http
+@inject AppState AppState
+
+    <div class="MainLayout @(IsMenuVisible ? "MenuVisible" : "") @(HideMenuOnMobile ? "HiddeMenuOnMobile" : "")">
+        <header>
+            <Header ShowHamburger = "@true" 
+                    HamburgerClicked= "HamburgerClicked" />
+        </header>
+        <main>
+            <ErrorBoundary @ref="@errorBoundary">
+                <ChildContent>
+		            @Body
+	            </ChildContent>
+	            <ErrorContent>
+		            <h1 style="color: red;">Oops... error occured</h1>
+                    <p>@(AppState.ProblemDetails?.Title ?? "error title")</p>
+                    <p>@(AppState.ProblemDetails?.Detail ?? "error message")</p>
+	            </ErrorContent>
+            </ErrorBoundary>
+        </main>
+        <aside class="Menu">
+            <Nav viewModel="@viewModel"  MenuItemClicked="MenuItemClicked"></Nav>
+        </aside>
+        <aside class="Left">
+            <Gallery Boxes="@viewModel?.Model?.BlogPosts"></Gallery>
+        </aside>
+        <aside class="Right">
+            <Gallery Boxes="@viewModel?.Model?.News"></Gallery>
+        </aside>
+        <footer>
+            <Footer></Footer>
+        </footer>
+    </div>
+
+@code {
+    LayoutViewModel? viewModel;
+    private ErrorBoundary errorBoundary;
+    private bool IsMenuVisible = false;
+    private bool HideMenuOnMobile = false;
+
+    [CascadingParameter] private Task<AuthenticationState> authenticationStateTask 
+    { get =>  AppState.authenticationState;
+        set
+        {
+            if (AppState.authenticationState == value) return;
+            AppState.authenticationState = value;
+            var authState = AppState.authenticationState.Result;
+            viewModel = new LayoutViewModel(AppState);
+            viewModel.OnStateChange += StateChange;
+            viewModel.Fetch(Http);
+        } 
+    }
+
+    private void StateChange()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HamburgerClicked()
+    {
+        IsMenuVisible = !IsMenuVisible;
+        HideMenuOnMobile = !HideMenuOnMobile;
+    }
+
+    private void MenuItemClicked(MenuItemModel menuItem) {
+        HideMenuOnMobile = true;
+    }
+
+    protected override void OnParametersSet()
+    {
+        errorBoundary?.Recover();
+    }
+
+}

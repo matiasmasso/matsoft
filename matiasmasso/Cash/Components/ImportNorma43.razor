@@ -1,0 +1,130 @@
+﻿@using DTO.Integracions.Banca
+@inject ApiService ApiService
+@inject AuthenticationService AuthenticationService
+
+<div class="Wrapper">
+
+
+
+    @if (selectedApunt == null)
+    {
+        <div style="margin-bottom:20px">
+            Titular: @emp.ToString()
+        </div>
+
+        <div class="Grid">
+            <div class="ColHeaders">
+                <div>Data</div>
+                <div class="Number">Deure</div>
+                <div class="Number">Haver</div>
+                <div>Concepte</div>
+            </div>
+
+            @foreach (var apunt in Model?.Apunts ?? new())
+            {
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(apunt))" @onclick:preventDefault>
+
+                        <div>@(((DateOnly)apunt.Fch!).ToString("dd/MM/yy"))</div>
+
+                    @if (apunt.Dh == Norma43.DHs.debe)
+                    {
+                            <div class="Number">@($"{apunt.Import:N2} €")</div>
+                        <div>&nbsp;</div>
+                    }
+                    else
+                    {
+                        <div>&nbsp;</div>
+                            <div class="Number">@($"{apunt.Import:N2} €")</div>
+                    }
+
+                        <div class="Trunc">@apunt.Concept"</div>
+
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <Norma43Apunt Model="selectedApunt" 
+            Ctas="ctas"
+            Contacts="contacts"
+            Projectes="projectes"
+            Banc = "banc"
+            CloseRequest="@(()=>selectedApunt=null)"
+            AfterUpdate="AfterUpdateHandler"></Norma43Apunt>
+    }
+</div>
+
+@code {
+    [Parameter] public Norma43? Model { get; set; }
+    Norma43.Apunt? selectedApunt;
+    Norma43.Apunt? selectedRow;
+    BancModel? banc;
+    List<BancModel>? bancs;
+    List<GuidNom>? contacts;
+    List<PgcCtaModel>? ctas;
+    List<GuidNom>? projectes;
+
+    EmpModel.EmpIds? emp;
+
+    private enum MenuKeys
+    {
+        Zoom,
+        AddNew
+    }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        bancs = await ApiService.GetAsync<List<BancModel>>("bancs");
+        banc = bancs?.FirstOrDefault(x => x.Ccc != null && x.Ccc.Contains(Model?.Cabecera()?.Cuenta ?? "zz"));
+        emp = banc.Emp;
+        var emailaddress = AuthenticationService.CurrentUser?.EmailAddress;
+        var user = await ApiService.PostAsync<string, UserModel>(emailaddress!, "user/FromEmailAddress", ((int)banc.Emp).ToString());
+
+        var allProjects = await ApiService.GetAsync<List<ProjecteModel>>("projectes");
+        projectes = allProjects?.Where(x => x.Emp == emp).Select(x => x.ToGuidNom()).ToList();
+        var allCtas = await ApiService.GetAsync<List<PgcCtaModel>>("pgcctas");
+        ctas = allCtas?.Where(x => x.Plan == PgcPlanModel.Wellknown(PgcPlanModel.Wellknowns.Plan2007)!.Guid).ToList();
+        var allContacts = await ApiService.GetAsync<List<ContactModel>>("contacts");
+        contacts = allContacts?.Where(x => x.Emp == emp)?.Select(x=>x.ToGuidNom()).ToList();
+
+    }
+
+    void ItemClick(Norma43.Apunt apunt)
+    {
+        selectedApunt = apunt;
+    }
+
+
+    ContextMenuModel ContextMenu(object? item)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, item);
+        return retval;
+    }
+
+    void ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        var tag = args.Tag;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Zoom:
+                selectedApunt = (Norma43.Apunt)args.Tag;
+                break;
+            case MenuKeys.AddNew:
+                break;
+        }
+    }
+
+    void SelectRow(Norma43.Apunt args)
+    {
+
+    }
+
+    void AfterUpdateHandler()
+    {
+        Model!.Apunts.Remove(selectedApunt!);
+        selectedApunt = null;
+    }
+}

@@ -1,0 +1,23 @@
+﻿@page "/Test"
+
+<div class="FromRazorStyle">
+    Razor hard coded text, embedded razor style
+</div>
+<div class="FromCssFile">
+    Razor hard coded text, style from Css file
+</div>
+
+@((MarkupString)FromRazorStyle)
+@((MarkupString)FromCssFile)
+
+<style scoped>
+    .FromRazorStyle {
+        font-weight:600;
+        margin-bottom:20px;
+    }
+</style>
+
+@code {
+    string FromRazorStyle = "<div class='FromRazorStyle'>Markup string, embedded razor style</div>";
+    string FromCssFile = "<div class='FromCssFile'>Markup string, style from Css file</div>";
+}

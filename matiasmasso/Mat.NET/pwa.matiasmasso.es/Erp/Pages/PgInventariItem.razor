@@ -1,0 +1,87 @@
+﻿@page "/PgInventariItem/{Guid:guid}"
+@inherits _ComponentBase
+
+
+<h1>
+    @Localizer("InventoryItem")
+</h1>
+
+<TabControl>
+    <TabPage Text="@Localizer("Details")">
+
+        <PropertyGrid model="@gridModel"
+                      RequestToUpdate="SaveRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToCancel="CancelRequest"
+                      ErrorMessage="@errorMessage"
+                      GetOptions="GetOptions"></PropertyGrid>
+
+    </TabPage>
+
+    <TabPage Text="@Localizer("Downloads")">
+        <UxDocfiles Values="@value.Docfiles"></UxDocfiles>
+    </TabPage>
+
+</TabControl>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private ImmobleModel.InventariItem? value;
+    private PropertyGridModel? gridModel;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        Nom,
+        Obs
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Guid != null)
+        {
+            value = await GetAsync<ImmobleModel.InventariItem>("Immoble/InventariItem", Guid.ToString());
+            if (value != null)
+            {
+                //var model = new PropertyGridModel();
+                //model.AddString2((int)Fields.Nom, value.Nom, "Name");
+                //model.AddString2((int)Fields.Obs, value.Obs, "Obs");
+                //gridModel = model;
+                //StateHasChanged();
+            }
+        }
+    }
+
+
+    private async Task SaveRequest()
+    {
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value!.Obs = gridModel!.GetString((int)Fields.Obs);
+
+        if (await PostAsync<ImmobleModel.InventariItem, bool>(value, "Immoble/InventariItem"))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Immoble/InventariItem/delete", value!.Guid.ToString()))
+        {
+            CancelRequest();
+        }
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+        base.NavigateToPage("/Immobles");
+    }
+
+    public async Task<List<Option>> GetOptions(PropertyGridModel.Item item) => new();
+
+}
+

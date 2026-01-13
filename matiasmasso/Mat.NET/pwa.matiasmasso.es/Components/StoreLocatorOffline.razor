@@ -1,0 +1,133 @@
+﻿@inherits _Base
+
+<div class="Offline">
+
+    <h3>@Caption</h3>
+
+    <div class="GeoSelectors">
+
+        @if((Value?.Countries.Count ?? 0) > 1){
+            <select @onchange="onCountryChange">
+                @foreach (var country in Value!.Countries)
+                {
+                    <option value="@country.Guid"
+                    selected="@(country.Guid.Equals(CurrentCountry?.Guid))">
+                        @country.Nom
+                    </option>
+                }
+            </select>
+        }
+
+        <select @onchange="onZonaChange">
+            @foreach (var item in CurrentCountry!.Zonas)
+            {
+                <option selected="@(CurrentCountry.Zonas.IndexOf(item) == CurrentCountry.SelectedZona)">
+                    @item.Nom
+                </option>
+            }
+        </select>
+
+        <select @onchange="onLocationChange">
+            @foreach (var item in CurrentZona?.Locations!)
+            {
+                <option selected="@(CurrentZona.Locations.IndexOf(item) == CurrentZona.SelectedLocation)">
+                    @item.Nom
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="Distributors">
+        @foreach (StoreLocatorDTO.Distributor distributor in CurrentLocation!.Distributors)
+        {
+            <a class="Distributor" href="#"
+           @onclick="@(()=>DistributorClick(distributor))"
+           @onclick:preventDefault>
+                <div class="Truncate">@distributor.Nom</div>
+                <div class="Truncate">@distributor.Address</div>
+                <div class="Truncate">@CurrentLocation.Nom</div>
+                @if (!string.IsNullOrEmpty(distributor.Tel))
+                {
+                    <div class="Truncate">@distributor.Tel</div>
+                }
+            </a>
+        }
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public StoreLocatorDTO.OfflineClass? Value { get; set; }
+    [Parameter] public bool HideTitle { get; set; }
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public EventCallback<StoreLocatorDTO.OfflineClass> ValueChanged { get; set; }
+
+    private LangDTO? lang;
+    private string? title;
+    private string? zonaNom;
+    private string? locationNom;
+    private StoreLocatorDTO.Country? CurrentCountry;
+    private StoreLocatorDTO.Zona? CurrentZona;
+    private StoreLocatorDTO.Location? CurrentLocation;
+    private List<StoreLocatorDTO.Zona> Zonas = new();
+    private List<StoreLocatorDTO.Location> Locations = new();
+    private List<StoreLocatorDTO.Distributor> Distributors = new();
+
+
+    protected async override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        CurrentCountry = Value!.Countries[Value!.SelectedCountry];
+        CurrentZona = CurrentCountry.Zonas[CurrentCountry.SelectedZona];
+        CurrentLocation = CurrentZona.Locations[CurrentZona.SelectedLocation];
+
+        StateHasChanged();
+    }
+
+    private void onCountryChange(ChangeEventArgs args)
+    {
+        CurrentCountry = Value!.Countries.FirstOrDefault(x => x.Guid.Equals(new Guid(args.Value!.ToString()!)));
+        CurrentZona = CurrentCountry!.Zonas[CurrentCountry.SelectedZona];
+        CurrentLocation = CurrentZona.Locations[CurrentZona.SelectedLocation];
+        StateHasChanged();
+    }
+
+    private void onZonaChange(ChangeEventArgs args)
+    {
+        CurrentZona = CurrentCountry!.Zonas.FirstOrDefault(x => x.Nom == args.Value!.ToString());
+        CurrentLocation = CurrentZona!.Locations[CurrentZona.SelectedLocation];
+        StateHasChanged();
+    }
+
+    private void onLocationChange(ChangeEventArgs args)
+    {
+        CurrentLocation = CurrentZona!.Locations.FirstOrDefault(x => x.Nom == args.Value!.ToString());
+        StateHasChanged();
+    }
+
+
+    private void DistributorClick(object item)
+    {
+        var distributor = (StoreLocatorDTO.Distributor)item;
+        Value.SelectedCountry = Value.Countries.IndexOf(CurrentCountry);
+        CurrentCountry.SelectedZona = CurrentCountry.Zonas.IndexOf(CurrentZona);
+        CurrentZona.SelectedLocation = CurrentZona.Locations.IndexOf(CurrentLocation);
+        CurrentLocation.SelectedDistributor = CurrentLocation.Distributors.IndexOf(distributor);
+        ValueChanged.InvokeAsync(Value);
+
+        //if (RaffleDistributorSelected.HasDelegate)
+        //{
+        //    var item = (StoreLocatorDTO.Distributor)distributor;
+        //    var retval = new RaffleModel.Distributor()
+        //        {
+        //            Guid = item.Guid,
+        //            Nom = item.Nom,
+        //            Address = item.Address,
+        //            Location = CurrentLocation.Nom
+        //        };
+        //    RaffleDistributorSelected.InvokeAsync((RaffleModel.Distributor)retval);
+        //}
+    }
+
+}

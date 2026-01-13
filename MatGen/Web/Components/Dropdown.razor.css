@@ -1,0 +1,99 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    position: relative;
+    width:100%;
+}
+
+.Caption {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: black;
+    border: 1px solid #DDDDDD;
+    border-radius: 5px;
+    padding: 4px 7px 2px 10px;
+    cursor: pointer;
+    width: 100%;
+    max-width:100%;
+}
+
+.Dropdown {
+    position: absolute;
+    top: 1.8em;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-left: 1px solid #DDDDDD;
+    border-right: 1px solid #DDDDDD;
+    border-bottom: 1px solid #DDDDDD;
+    background-color: white;
+    min-width: 100px;
+    width: 100%;
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+    padding-top: 5px;
+}
+
+/*    .Dropdown.ContextMenu {
+        width: min-content;
+        padding: 0 10px;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+
+    .Dropdown.ContextMenu a {
+        display: block;
+        padding: 5px 7px 5px 10px;
+    }*/
+
+
+.Item {
+    display: block;
+    color: black;
+    padding: 4px 7px 2px 10px;
+}
+
+    .Item.Active {
+        padding: 4px 7px 2px 8px;
+        border-left: 2px solid blue;
+    }
+
+
+
+.Dropdown a.Item:hover {
+    color: navy;
+}
+
+.Chevron {
+    width: 0.7em;
+}
+
+.Hidden {
+    display: none;
+}
+
+a {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+input[type=text] {
+    width: 100%;
+    padding-right: 20px;
+}
+
+.Lupa {
+    position: absolute;
+    right: 5px;
+    top: 2px;
+    width: 20px;
+    z-index: 2;
+}
+
+.Navy {
+    color:navy
+}
+
+.Red {
+    color:red;
+}

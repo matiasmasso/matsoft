@@ -1,0 +1,52 @@
+{
+  "NavMenu": {
+    "Items": [
+      {
+        "Caption": "Catàleg",
+        "Url": "",
+        "Children": [
+          {
+            "Caption": "Britax Römer",
+            "Url": "/britax-roemer",
+            "Children": []
+          },
+          {
+            "Caption": "4moms",
+            "Url": "/4moms",
+            "Children": []
+          },
+          {
+            "Caption": "Tommee Tippee",
+            "Url": "/tommeetippee",
+            "Children": []
+          },
+          {
+            "Caption": "JBimbi",
+            "Url": "/jbimbi",
+            "Children": []
+          }
+        ]
+      },
+      {
+        "Caption": "Noticias",
+        "Url": "/news",
+        "Children": []
+      },
+      {
+        "Caption": "Blog",
+        "Url": "/blog",
+        "Children": []
+      },
+      {
+        "Caption": "Sorteos",
+        "Url": "/sorteos",
+        "Children": []
+      },
+      {
+        "Caption": "Contacto",
+        "Url": "/contact",
+        "Children": []
+      }
+    ]
+  }
+}

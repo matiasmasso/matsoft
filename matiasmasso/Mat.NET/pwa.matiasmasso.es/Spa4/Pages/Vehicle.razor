@@ -1,0 +1,58 @@
+﻿@page "/Vehicle"
+@page "/Vehicle/{Guid:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+@using System.Net.Http.Formatting
+
+<div class="Wrapper">
+    <h1>Vehicle</h1>
+
+    <TabControl SelectedTab="1">
+
+        <ChildContent>
+
+            <TabPage Text="General">
+                <VehicleEditor @bind-Model="@Model"></VehicleEditor>
+            </TabPage>
+
+            <TabPage Text="Documentacio">
+                @if (Guid != null)
+                {
+                    <ProductDownloads Target="@((Guid)Guid!)"></ProductDownloads>
+                }
+            </TabPage>
+
+            <TabPage Text="Multes">
+                @if (Guid != null)
+                {
+                    <Multas Target="@((Guid)Guid!)"></Multas>
+                }
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>
+
+
+
+</div>
+@code {
+    private VehicleDTO? Model = null;
+
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Guid == null)
+            Model = new VehicleDTO();
+        else
+        {
+            Model = await base.GetAsync<VehicleDTO>("vehicle", ((Guid)Guid!).ToString());
+        }
+        StateHasChanged();
+    }
+
+
+}

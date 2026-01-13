@@ -1,0 +1,54 @@
+.Wrapper {
+    max-width: 1200px;
+    margin: auto;
+    height: 100%;
+}
+
+.Header {
+    grid-area: header;
+    width: 100%;
+}
+
+.Body {
+    grid-area: body;
+    height: 100%;
+    /*    width: 100%;
+*/ max-width: 100%;
+}
+
+.Menu {
+    grid-area: menu;
+}
+
+/* ------------- desktop -----------------*/
+
+
+@media(min-width:600px) {
+    .Wrapper {
+        display: grid;
+        grid-template-columns: minmax(min-content,265px) minmax(50%,1fr);
+        grid-template-rows: max-content 1fr;
+        gap: 10px;
+        padding: 10px;
+        grid-template-areas: "header header"
+            "menu body"
+    }
+}
+
+/* ------------- mobiles -----------------*/
+
+@media(max-width:599px) {
+    .Wrapper {
+        display: flex;
+        flex-direction: column;
+        padding:10px;
+    }
+
+    .HideOnMobile {
+        display: none;
+    }
+}
+
+
+
+

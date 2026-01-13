@@ -1,0 +1,80 @@
+﻿@page "/translationsManager"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>@Localizer("Translations")</h1>
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+                <a href="#" @onclick="ShowAll" @onclick:preventDefault>
+                    @Localizer(isShowingOnlyOutdateds ? "ShowAll" : "ShowOutdateds")
+                </a>
+            </PageOptions>
+        </div>
+
+        <div class="SearchBox">
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+        </div>
+
+        <div class="Summary">
+            @string.Format(Localizer("TextResourcesFound", @FilteredItems().Count))
+        </div>
+
+        <div>
+            <div class="ColumnHeaders">
+                <div>@Localizer("Spanish")</div>
+                <div>@Localizer("Catalan")</div>
+                <div>@Localizer("English")</div>
+                <div>@Localizer("Portuguese")</div>
+                <div>&nbsp;</div>
+            </div>
+
+            <Virtualize Items="@FilteredItems()" Context="item">
+                <TranslationItem Item="item"></TranslationItem>
+            </Virtualize>
+        </div>
+    }
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+@code {
+    private List<LangTextModel> model;
+    private string searchTerm = string.Empty;
+    private bool isShowingOnlyOutdateds = true;
+    private new ProblemDetails problemDetails;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApiResponse<List<LangTextModel>> apiResponse = await HttpService.GetAsync<List<LangTextModel>>(http, "langtexts/active");
+        if (apiResponse.Success())
+            model = apiResponse.Value;
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    List<LangTextModel> FilteredItems()
+    {
+        var retval = model;
+        if (!string.IsNullOrEmpty(searchTerm))
+            retval = retval.Where(x => x.Contains(searchTerm)).ToList();
+        if (isShowingOnlyOutdateds)
+            retval = retval.Where(x => x.IsOutdated()).ToList();
+        return retval;
+    }
+
+    void ShowAll()
+    {
+        isShowingOnlyOutdateds = !isShowingOnlyOutdateds;
+    }
+
+
+}

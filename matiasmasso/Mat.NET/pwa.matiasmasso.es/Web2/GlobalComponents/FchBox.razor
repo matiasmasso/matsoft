@@ -1,0 +1,73 @@
+﻿@using System.Globalization
+@using System
+
+@if (CanEdit && IsEditing)
+{
+    <input type="date"
+           value="@FormaDateTimeAsString(Value)"
+    @onchange="@OnChange" />
+}
+else
+{
+    <a class="Display" href="#" @onclick="@(()=>{IsEditing = true;})" @onclick:preventDefault="true">
+        <div>@_value?.ToShortDateString()</div>
+    </a>
+}
+
+
+
+@code {
+    private const string DateFormat = "yyyy-MM-dd";
+    CultureInfo provider = CultureInfo.InvariantCulture;
+
+    [Parameter] public bool CanEdit { get; set; } = true;
+    [Parameter] public bool IsEditing { get; set; }
+
+    private DateTime? _value;
+    [Parameter]
+    public DateTime? Value
+    {
+        get
+        {
+            return _value?.Date;
+        }
+        set
+        {
+            if (!EqualityComparer<DateTime?>.Default.Equals(value, _value))
+            {
+                _value = value?.Date;
+                //if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                //    ObjChanged.InvokeAsync(_value);
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(_value);
+
+                IsEditing = false;
+            }
+        }
+    }
+
+    [Parameter] public EventCallback<DateTime?> ValueChanged { get; set; }
+    private void OnChange(ChangeEventArgs args)
+    {
+        try
+        {
+            Value = DateTime.ParseExact(args.Value.ToString(), DateFormat, provider);
+
+        }
+        catch
+        {
+            Value = default(DateTime); // not sure you want this
+        }
+    }
+    protected string FormaDateTimeAsString(DateTime? value)
+    {
+        switch (value)
+        {
+            case DateTime dateTimeValue:
+                var r = BindConverter.FormatValue(dateTimeValue, DateFormat, provider);
+                return r;
+            default:
+                return string.Empty;
+        }
+    }
+}

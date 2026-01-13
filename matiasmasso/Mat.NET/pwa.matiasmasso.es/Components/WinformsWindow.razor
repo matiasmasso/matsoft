@@ -1,0 +1,33 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <div class="TitleBar">
+
+        <div class="Title">
+            @(Title ?? "")
+        </div>
+
+        <a class="CloseButton" 
+            href="#"
+            title="@base.Tradueix("Cerrar","Tancar","Close")"
+           @onclick="Close"
+           @onclick:preventDefault="true">
+                <i class="fa-solid fa-xmark"></i>
+        </a>
+    </div>
+
+    <div class="Content">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private void Close() {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+}

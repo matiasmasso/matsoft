@@ -1,0 +1,27 @@
+﻿    <div class="Wrapper" hidden=@(Reason == string.Empty)>
+        <a href="#" class="Reason @(showDetails ? "" : "Compact")" @onclick="ShowDetails">@Reason</a>
+        <a class="Dismiss" @onclick="Close">🗙</a>
+    </div>
+
+@code {
+    [Parameter]
+    public string Reason { get; set; } = string.Empty;
+
+    private bool showDetails = false;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    protected void Close()
+    {
+        Reason = string.Empty;
+    }
+
+    protected void ShowDetails()
+    {
+        showDetails = !showDetails;
+    }
+
+}

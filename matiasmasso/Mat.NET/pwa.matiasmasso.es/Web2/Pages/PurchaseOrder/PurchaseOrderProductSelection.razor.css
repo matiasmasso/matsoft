@@ -1,0 +1,19 @@
+﻿.Info {
+    margin-bottom: 15px;
+}
+
+.Brands > a {
+    display:block;
+}
+
+.Categories > a {
+    display: block;
+}
+
+.Skus > a {
+    display: block;
+}
+
+.FilteredSkus > a {
+    display: block;
+}

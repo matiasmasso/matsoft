@@ -1,0 +1,97 @@
+﻿@inject CultureService culture
+@inject TransmissionsService transmissionsService
+@inject DeliveriesService deliveriesService
+
+<h3>@culture.Localize("Transmission")</h3>
+
+<div class="Details">
+    <div>@culture.Localize("Id")</div>
+    <div>@Model.Id</div>
+    <div>@culture.Localize("Fch")</div>
+    <div>
+        @($"{Model.Fch:dd/MM/yy HH:mm}")</div>
+</div>
+
+<div class="Downloads">
+    <a href="#" @onclick="DownloadData" @onclick:preventDefault>
+        @culture.Tradueix("Descargar fichero de datos", "Descarregar fitxer de dades","Download data file")
+    </a>
+    <a href="#" @onclick="DownloadDeliveries" @onclick:preventDefault>
+        @culture.Tradueix("Descargar albaranes en Pdf", "Descarregar albarans en Pdf","Download pdf delivery notes")
+    </a>
+</div>
+
+<div class="Grid">
+    <div class="ColHeaders">
+        <div>@culture.Localize("Id")</div>
+        <div>@culture.Localize("Fch")</div>
+        <div class="Nom">@culture.Localize("Destination")</div>
+        <div class="Num">@culture.Localize("Amt")</div>
+        <div class="Num">@culture.Localize("Invoice")</div>
+    </div>
+    @foreach(var item in deliveries)
+    {
+        <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+            <div>
+                @item.Id
+            </div>
+            <div>
+                @($"{item.Fch:dd/MM/yy}")
+            </div>
+            <div class="Nom">
+                @deliveriesService.Destination(item)
+            </div>
+            <div class="Num">
+                @if(item.Amt == null || item.Amt.Value == 0)
+                {
+                    <span>&nbsp;</span>
+                } else
+                {
+                    @($"{item.Amt!.Eur:N2} €")
+                }
+            </div>
+            <div class="Num">
+                @item.Invoice?.Nom
+            </div>
+        </a>
+    }
+</div>
+
+<Error Exception="exception"></Error>
+
+@code {
+    [Parameter] public TransmissionModel Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+
+    List<DeliveryModel> deliveries = new();
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            deliveries = await transmissionsService.DeliveriesAsync(Model);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    async Task ItemClick(DeliveryModel item)
+    {
+        var breadcrumb = new ModelEditor.Breadcrumb(item, item.Caption(culture.Lang()));
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    void DownloadData()
+    {
+        
+    }
+
+    void DownloadDeliveries()
+    {
+
+    }
+}

@@ -1,0 +1,280 @@
+﻿@page "/Catalog"
+@inherits _ComponentBase
+
+<div class="PageWrapper900">
+    <h1>@Localizer("Catalog")</h1>
+    @if (cache == null)
+    {
+        <Loading></Loading>
+    } else
+    {
+        <PageOptions IsShowingOptions="true">
+            <UxToggle @bind-Value="@IsShowingObsolets"
+                  TrueText="OutdatedIncluded"
+                  FalseText="OutdatedNotIncluded"></UxToggle>
+        </PageOptions>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        if (string.IsNullOrEmpty(searchTerm)){
+            <div class="Catalog">
+                <div class="BrandsWrapper">
+                    <div class="Brands">
+                        <div class="Item ColumnHeader HideOnMobile">
+                            @base.Tradueix("Marca","Marca","Brand")
+                        </div>
+                        @foreach (var item in FilteredBrands())
+                        {
+                            var isSelected = IsSelected(item);
+
+                            <a href="#"
+                   class="Item Nom
+                               @(isSelected?"Selected":"")
+                               @(item.Obsoleto ? "BgColor BgGray" : "")
+                               @(selectedBrand != null && item != selectedBrand ? "HideOnMobile":"")"
+                   @onclick="(()=>BrandClick(item))"
+                   @onclick:preventDefault="true"
+                   @oncontextmenu="(()=>ContextMenu(item))"
+                   @oncontextmenu:preventDefault="true">
+
+                                @item.Nom.Tradueix(base.Lang())
+                            </a>
+
+                            @if (isSelected & IsShowingContextMenuBrand)
+                            {
+                                <div class="ContextMenu">
+                                    <Nav nav="@item.ContextMenu()" />
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="CategoriesWrapper">
+                    <CatalogCategories Model="@FilteredCategories()" OnSelect="OnCategorySelect"></CatalogCategories>
+
+@*                    <div class="Categories">
+                        <div class="Item ColumnHeader HideOnMobile">
+                            @base.Tradueix("Categoría","Categoría","Category")
+                        </div>
+
+                            @foreach (var item in FilteredCategories())
+                            {
+                                var isSelected = IsSelected(item);
+
+                                <a href="#"
+                   class="Item Nom
+                        @(IsSelected(item)?"Selected":"")
+                        @(item.Obsoleto ? "BgColor BgGray" : "")
+                        @(HideOnMobile(item) ? "HideOnMobile":"")"
+                   @onclick="(()=>CategoryClick(item))"
+                   @onclick:preventDefault="true"
+                   @oncontextmenu="(()=>ContextMenu(item))"
+                   @oncontextmenu:preventDefault="true">
+                                    @item.Nom.Tradueix(base.Lang())
+                                </a>
+
+                                @if (isSelected & IsShowingContextMenuCategory)
+                                {
+                                    <div class="ContextMenu">
+                                        <Nav nav="@item.ContextMenu()" />
+                                    </div>
+                                }
+
+                            }
+                    </div>
+*@                </div>
+
+                <ProductSkuListExtended Model="@FilteredSkus()"></ProductSkuListExtended>
+            </div>
+
+        } else
+        {
+            <ProductSkuListExtended SearchResults="@FilteredSkus()"></ProductSkuListExtended>
+
+        }
+
+    }
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    private string searchTerm = "";
+    private bool IsShowingObsolets = false;
+    private bool IsShowingContextMenuBrand = false;
+    private bool IsShowingContextMenuCategory = false;
+    private bool IsShowingContextMenuSku = false;
+    private ProductBrandModel? selectedBrand = null;
+    private ProductCategoryModel? selectedCategory = null;
+    private ProductSkuModel? selectedSku = null;
+    private CacheDTO? cache;
+    private Guid mgz = MgzModel.Wellknown(MgzModel.Wellknowns.vivaceLliça).Guid;
+    private ProblemDetails problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (appState!.IsLoadedCache)
+        {
+            cache = AppState.DefaultCache();
+            SetDefaultSelection();
+            StateHasChanged();
+            cache = await base.Catalog();
+        }
+        else
+            appState.CacheJustLoaded += HandleCacheJustLoadedAsync;
+    }
+
+    private async Task HandleCacheJustLoadedAsync(object? sender, EventArgs e)
+    {
+        SetDefaultSelection();
+        appState!.CacheJustLoaded -= HandleCacheJustLoadedAsync;
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private void SetDefaultSelection()
+    {
+        cache = AppState.DefaultCache();
+        selectedCategory = cache.Category(ProductCategoryModel.Default());
+        if (selectedCategory != null) selectedBrand = cache.Brand(selectedCategory.Brand);
+    }
+
+
+    private List<ProductBrandModel> FilteredBrands()
+    {
+        var retval = AppState.DefaultCache().Brands.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.Obsoleto == false).ToList();
+        return retval
+        .OrderBy(x => x.Obsoleto)
+        .ThenBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+    }
+
+    private List<ProductCategoryModel> FilteredCategories()
+    {
+        var retval = new List<ProductCategoryModel>();
+        if (selectedBrand != null)
+        {
+            retval = AppState.DefaultCache().Categories.Where(x => x.Brand == selectedBrand.Guid && x.Matches(searchTerm)).ToList();
+            if (!IsShowingObsolets)
+                retval = retval.Where(x => x.Obsoleto == false).ToList();
+        }
+        return retval
+        .OrderBy(x => x.Obsoleto)
+        .ThenBy(x => x.Codi)
+        .ThenBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+    }
+
+    private List<ProductSkuModel> FilteredSkus()
+    {
+        var retval = new List<ProductSkuModel>();
+        if (!string.IsNullOrEmpty(searchTerm))
+            retval = AppState.DefaultCache().Skus
+            .Where(x => x.Matches(searchTerm))
+            .OrderBy(x => x.Obsoleto)
+            .ThenBy(x => cache.Brand(x).Nom.Tradueix(base.Lang()))
+            .ThenBy(x => cache.Category( x.Category).Nom.Tradueix(base.Lang()))
+            .ThenBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+        else if (selectedCategory != null)
+            retval = AppState.DefaultCache().Skus
+            .Where(x => x.Category == selectedCategory.Guid)
+            .OrderBy(x => x.Obsoleto)
+            .ThenBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.Obsoleto == false).ToList();
+
+        return retval;
+    }
+
+    private void BrandClick(ProductBrandModel item)
+    {
+        selectedBrand = selectedBrand == item ? null : item;
+        selectedCategory = FilteredCategories().FirstOrDefault();
+        CloseContextMenus();
+    }
+
+    private void CategoryClick(ProductCategoryModel item)
+    {
+        selectedCategory = selectedCategory == item ? null : item;
+        CloseContextMenus();
+    }
+
+    private void OnCategorySelect(ProductCategoryModel item)
+    {
+        selectedCategory = selectedCategory == item ? null : item;
+    }
+
+    private void SkuClick(ProductSkuModel item)
+    {
+        selectedSku = selectedSku == item ? null : item;
+        CloseContextMenus();
+    }
+
+    private void ContextMenu(ProductModel item)
+    {
+        if (item is ProductBrandModel)
+        {
+            selectedBrand = (ProductBrandModel)item;
+            IsShowingContextMenuBrand = true;
+        }
+        else if (item is ProductCategoryModel)
+        {
+            selectedCategory = (ProductCategoryModel)item;
+            IsShowingContextMenuCategory = true;
+        }
+        else if (item is ProductSkuModel)
+        {
+            selectedSku = (ProductSkuModel)item;
+            IsShowingContextMenuSku = true;
+        }
+    }
+
+    private bool IsSelected(ProductModel item)
+    {
+        var retval = false;
+        if (selectedBrand != null && selectedBrand.Guid == item.Guid)
+            retval = true;
+        else if (selectedCategory != null && selectedCategory.Guid == item.Guid)
+            retval = true;
+        else if (selectedSku != null && selectedSku.Guid == item.Guid)
+            retval = true;
+        return retval;
+    }
+
+    private string BgColor(ProductSkuModel sku, int stock, SkuPncDTO pnc)
+    {
+        var retval = "";
+        if (stock > 0)
+        {
+            retval = stock >= (pnc?.Clients ?? 0) ? "BgGreen" : "BgYellow";
+        }
+        else
+        {
+            retval = sku.Obsoleto ? "BgGray" : "BgSalmon";
+        }
+        return retval;
+    }
+
+
+    private bool HideOnMobile(ProductCategoryModel item)
+    {
+        return selectedCategory != null && item != selectedCategory
+        || IsShowingContextMenuBrand == true;
+    }
+
+    private bool HideOnMobile(ProductSkuModel item)
+    {
+        return selectedSku != null && item != selectedSku
+        || IsShowingContextMenuBrand == true
+        || IsShowingContextMenuCategory == true;
+    }
+
+    private void CloseContextMenus()
+    {
+        IsShowingContextMenuBrand = false;
+        IsShowingContextMenuCategory = false;
+        IsShowingContextMenuSku = false;
+    }
+
+}

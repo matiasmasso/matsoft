@@ -1,0 +1,107 @@
+﻿.Wrapper {
+    max-width: 600px;
+}
+
+.Summary {
+    margin-top: 10px;
+}
+
+.Item {
+    cursor: pointer;
+}
+
+
+
+/*------------------------ desktop ----------------------*/
+
+@media (min-width:600px) {
+
+    .Grid {
+        display: grid;
+        grid-template-columns: 100px minmax(100px,1fr) minmax(100px, min-content) min-content min-content;
+        margin-top: 15px;
+        grid-column-gap: 1px;
+    }
+
+        .Grid.HideColEmp {
+            grid-template-columns: minmax(100px,1fr) minmax(100px, min-content) min-content min-content;
+        }
+
+        .Grid.HideColFchTo {
+            grid-template-columns: 100px minmax(100px,1fr) minmax(100px, min-content) min-content ;
+        }
+
+        .Grid.HideColEmp.HideColFchTo {
+            grid-template-columns: minmax(100px,1fr) minmax(100px, min-content) min-content;
+        }
+
+    .ColumnHeaders {
+        color: gray;
+    }
+
+        .ColumnHeaders > a {
+            padding: 0 5px 7px;
+
+        }
+
+    .Item {
+        display: contents;
+    }
+
+        .Item > div {
+            padding: 0 7px;
+        }
+
+    .Obsoleto > div {
+        background-color: #DDDDDD;
+    }
+
+    .Obsoleto .GridRowDivider {
+        border-bottom-color: white;
+    }
+
+    .Nom, .Cadastre {
+        padding-right: 10px;
+    }
+
+    .FchFrom {
+        text-align: right;
+        padding-left: 10px;
+    }
+
+    .ContextMenu {
+        position: absolute;
+        box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background-color: #FEFFD5;
+        left: 20px;
+        z-index: 10;
+        width: min-content;
+        max-width: 100%;
+        border: 1px solid black;
+    }
+
+    .GridRowDivider {
+        position: relative;
+    }
+}
+
+/*------------------------ mobiles ----------------------*/
+
+@media (max-width:599px) {
+
+    .Item {
+        display: block;
+        padding: 7px;
+    }
+
+    .Cadastre, .FchFrom {
+        color: gray;
+    }
+
+    .Obsoleto {
+        color: gray;
+    }
+}

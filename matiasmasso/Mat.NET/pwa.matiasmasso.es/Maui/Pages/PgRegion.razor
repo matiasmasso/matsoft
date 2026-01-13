@@ -1,0 +1,86 @@
+﻿@inherits _ComponentBase
+
+<PropertyGrid model="@gridModel"
+              RequestToUpdate="SaveRequest"
+              RequestToDelete="DeleteRequest"
+              RequestToCancel="CancelRequest"
+              ErrorMessage="@errorMessage"
+              GetOptions="GetOptions"></PropertyGrid>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private RegionModel? value;
+    private PropertyGridModel? gridModel;
+    private AtlasModel? atlas;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        Country,
+        Nom
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Guid != null)
+        {
+            atlas = await base.Atlas();
+            value = atlas.Region((Guid)Guid);
+            if (value != null)
+            {
+                var model = new PropertyGridModel();
+                model.AddEnum((int)Fields.Country, value.Country, value.Country.ToString(), atlas.Country(value.Country)?.Nom?.Tradueix(base.Lang()), "Pais", "Pais", "Country");
+                model.AddString((int)Fields.Nom, value.Nom, "Nombre", "Nom", "Name");
+                gridModel = model;
+                StateHasChanged();
+            }
+        }
+    }
+
+
+    private async Task SaveRequest()
+    {
+        value!.Country = (Guid)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Country)?.Value;
+        value!.Nom = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Nom)?.Value?.ToString();
+
+        if (await PostAsync<RegionModel, bool>(value, "Region"))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Region/delete", value!.Guid.ToString())){
+            atlas!.Regions.Remove(value);
+            CancelRequest();
+        }
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+    public async Task<List<Option>> GetOptions(PropertyGridModel.Item item)
+    {
+        List<Option> retval = new();
+        if (item.Field == (int)Fields.Country)
+        {
+            retval = atlas!.Countries
+            .Select(x => new Option
+                {
+                    Id = x.Guid.ToString(),
+                    Nom = x.Nom?.Tradueix(base.Lang()) ?? "?",
+                    Tag = x.Guid
+                }).ToList();
+        }
+
+        return retval;
+    }
+}

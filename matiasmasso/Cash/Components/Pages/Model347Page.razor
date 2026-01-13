@@ -1,0 +1,191 @@
+﻿@page "/Model347"
+@inject ApiService ApiService
+
+<PageTitle>Model 347</PageTitle>
+
+
+<div class="PageWrapper600">
+    <h3>Assentaments comptables</h3>
+
+    <div class="PageOptions">
+        <PageOptions>
+            <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChangedAsync"></LookupEmp>
+            <LookupYears Values="years" Value="year" ValueChanged="YearChangedAsync"></LookupYears>
+        </PageOptions>
+    </div>
+
+    <div class="Searchbox">
+        <SearchBox @bind-Value="searchterm"></SearchBox>
+    </div>
+
+        @if (isLoading){
+            <Loading></Loading>
+        }else {
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Nom">@item.Contact?.RaoSocialAndNomComercial()</div>
+                    <div class="Amt">@item.T1</div>
+                </a>
+
+                @if (item == selectedItem)
+                {
+                    <div class="Grid">
+                        @foreach (var ccb in Extracte(item) ?? new())
+                        {
+                            <div class="SubItem">
+                                <div class="Fch">@ccb.Cca?.Fch</div>
+                                <div class="Nom">@ccb.Cca?.Concept</div>
+                                <div class="Amt">@ccb.Ccb?.Eur</div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+
+        </div>
+    }
+
+
+</div>
+}
+
+<Error @bind-Value="exception"></Error>
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds? emp;
+    int? year;
+    List<int>? years;
+    List<XItem>? values;
+    List<CcaModel>? ccas;
+    XItem? selectedItem;
+    string? searchterm;
+    string? title;
+    bool isLoading;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        try
+        {
+            emps = ccas?.Select(x => x.Emp).Distinct().ToList();
+            emp = ApiService.Emp;
+            years = Enumerable.Range(1985, DateTime.Now.Year - 1985 + 1).OrderByDescending(x => x).ToList();
+            year = years.First();
+            await FetchAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            isLoading = true;
+            ccas = await ApiService.GetAsync<List<CcaModel>>("Ccas", $"{emp}", $"{year}");
+            FilterCcasWithVAT(ccas);
+            ExcudeCcasWithIrpf(ccas);
+            var oCcbs = CcbsExplotacio(ccas);
+            values = oCcbs?.GroupBy(x => x.Contact).Select(x => new XItem
+                {
+                    Contact = ApiService.GetContact(x.Key),
+                    T1 = x.Sum(y => y.Eur),
+                    Items = oCcbs.Where(y => y.Contact == x.Key).ToList()
+                }).ToList();
+            isLoading = false;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            isLoading = false;
+        }
+
+    }
+
+    private void ItemClick(XItem args){
+        if (selectedItem == null)
+            selectedItem = args;
+        else
+            selectedItem = null;
+    }
+
+    private List<XItem>? FilteredItems()
+    {
+        var retval = values;
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = retval?.Where(x => x.Contact!.Matches(searchterm)).ToList();
+        return retval;
+    }
+
+    private List<XSubItem>? Extracte(XItem item){
+        var retval = item.Items?.Select(x => new XSubItem
+            {
+                Cca = ccas?.FirstOrDefault(x => x.Items.Any(y => y.Guid == x.Guid)),
+                Ccb = x
+            }).OrderBy(x => x.Cca?.Fch).ToList();
+            return retval;
+    }
+
+    private List<CcaModel.Item>? CcbsExplotacio(List<CcaModel>? oCcas){
+        var ctaGuids = ApiService.GetCurrentPgcCtas()?.Where(x => x.IsExplotacio()).Select(x=>x.Guid).ToList() ?? new();
+        var retval = oCcas?.SelectMany(x => x.Items).Where(x => ctaGuids.Contains((Guid)x.Cta!)).ToList();
+        return retval;
+    }
+    private void FilterCcasWithVAT(List<CcaModel>? oCcas){
+        var ctaCods = PgcCtaModel.VATCtaCods();
+        var ctas = ApiService.GetCurrentPgcCtas()?
+        .Where(x => ctaCods.Any(y=>x.Cod==y))
+        .Select(x=>x.Guid).ToList() ?? new();
+        oCcas = oCcas?.Where(x => x.Items.Any(y => ctas.Contains((Guid)y.Cta!))).ToList();
+    }
+
+    private void ExcudeCcasWithIrpf(List<CcaModel>? oCcas)
+    {
+        var ctaCods = PgcCtaModel.IrpfCtaCods();
+        var ctas = ApiService.GetCurrentPgcCtas()?
+        .Where(x => ctaCods.Any(y => x.Cod == y))
+        .Select(x => x.Guid).ToList() ?? new();
+        oCcas = oCcas?.Where(x => !x.Items.Any(y => ctas.Contains((Guid)y.Cta!))).ToList();
+    }
+
+    private async Task EmpChangedAsync(EmpModel.EmpIds args)
+    {
+        emp = args;
+        await FetchAsync();
+    }
+
+    private async Task YearChangedAsync(int? args)
+    {
+        year = args;
+        await FetchAsync();
+    }
+
+    private class XItem {
+        public ContactModel? Contact { get; set; }
+        public List<CcaModel.Item>? Items { get; set; }
+        public Decimal T1 { get; set; }
+        public Decimal T2 { get; set; }
+        public Decimal T3 { get; set; }
+        public Decimal T4 { get; set; }
+
+        public enum Mods {
+            Vendes,
+            Compres
+        }
+    }
+
+    private class XSubItem
+    {
+        public CcaModel? Cca { get; set; }
+        public CcaModel.Item? Ccb { get; set; }
+
+    }
+
+}

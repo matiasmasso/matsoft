@@ -1,0 +1,44 @@
+﻿@page "/"
+@using DTO
+@using Components
+@inject IAuthenticationStateProvider authStateProvider
+@inject ICookie Cookie;
+
+
+<PageTitle>Index</PageTitle>
+
+    <AuthorizeView>
+        <Authorized>
+            is authorized
+        </Authorized>
+        <Authorizing>
+            is authorizing
+        </Authorizing>
+        <NotAuthorized>
+            @if (isRendered)
+            {
+            <span>not logged</span>
+            }
+            else
+            {
+                <span>is loading</span>
+            }
+        </NotAuthorized>
+    </AuthorizeView>
+
+@code {
+    bool persist = false;
+    bool isRendered = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        //prevents rendering Login form before cookie authentication
+        isRendered = true;
+    }
+    async Task OnUserAuthenticated(UserModel userAccount)
+    {
+        await Cookie.SetValue("hash", persist ? userAccount.Hash! : "", 365);
+        await authStateProvider.UpdateAuthenticationStateAsync(userAccount);
+    }
+}

@@ -1,0 +1,13 @@
+﻿.Recipient:not(.Hidden) {
+    display:flex;
+    gap:10px;
+}
+
+.Recipient a {
+    color:blue;
+    text-decoration: underline;
+}
+
+textarea {
+    width:100%;
+}

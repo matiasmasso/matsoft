@@ -1,0 +1,53 @@
+﻿.Wrapper {
+    position:relative;
+}
+
+.Caption {
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    align-items: center;
+}
+
+
+.Textbox {
+    font-size: 1.0rem;
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 4px 0 2px 4px;
+    text-overflow: ellipsis;
+}
+
+.Nom {
+    display:block;
+    font-size: 1.0rem;
+    padding: 4px 0 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+    .Textbox :focus {
+        outline: none;
+    }
+
+.Item {
+    display: block;
+    padding: 4px 0 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid #DDDDDD;
+}
+
+.Dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+    max-height:200px;
+    background: white;
+    border-radius: 5px;
+    overflow-y:auto;
+}

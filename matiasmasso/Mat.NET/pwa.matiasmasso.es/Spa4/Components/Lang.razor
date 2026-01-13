@@ -1,0 +1,46 @@
+﻿@inherits _ComponentBase
+@*@inject ProtectedLocalStorage ProtectedLocalStore
+@inject NavigationManager NavigationManager
+*@@using System.Globalization
+@using Microsoft.AspNetCore.Localization
+
+<select value="@Tag" @onchange="LangChangedAsync">
+    <option>ESP</option>
+    <option>CAT</option>
+    <option>ENG</option>
+    <option>POR</option>
+</select>
+
+@code {
+    private string Tag;
+
+    private async void LangChangedAsync(ChangeEventArgs args)
+    {
+        Tag = args?.Value?.ToString() ?? "";
+        var lang = new LangDTO(Tag);
+        //var result = await ProtectedLocalStore.GetAsync<SessionDTO>("session");
+        //var session = result.Value;
+        //session.Lang = new LangDTO(Tag);
+        //await ProtectedLocalStore.SetAsync("session", session);
+
+        //set lang cookie
+        Thread.CurrentThread.CurrentCulture = new CultureInfo(lang.Culture());
+        Thread.CurrentThread.CurrentUICulture = new CultureInfo(lang.Culture());
+        var cookieName = CookieRequestCultureProvider.DefaultCookieName;
+        var cookieValue = CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(CultureInfo.CurrentCulture,CultureInfo.CurrentUICulture));
+        var daysDeadline = 50 * 365;
+        await base.WriteCookie(cookieName,cookieValue ,daysDeadline);
+
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender)
+        {
+            Tag = base.Lang().Id.ToString();
+            StateHasChanged();
+        }
+    }
+}

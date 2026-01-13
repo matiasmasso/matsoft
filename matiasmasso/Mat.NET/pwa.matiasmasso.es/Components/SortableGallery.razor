@@ -1,0 +1,54 @@
+﻿@typeparam TItem
+
+
+@foreach (TItem item in Items ?? new())
+{
+    <div draggable="@CanSort"
+         ondragover="event.preventDefault();"
+         ondragstart="@(()=>HandleDragStart(item))"
+         ondrop="@(()=>HandleDrop(item))">
+        @ChildContent!(item)
+    </div>
+}
+
+
+@code {
+    [Parameter] public List<TItem>? Items { get; set; }
+    [Parameter] public RenderFragment<TItem>? ChildContent { get; set; }
+    [Parameter] public bool CanSort { get; set; }
+    [Parameter] public EventCallback<List<TItem>> SortChanged { get; set; }
+
+    TItem? dragged;
+
+
+    void HandleDragStart(TItem item)
+    {
+        dragged = item;
+    }
+
+    void HandleDrop(TItem target)
+    {
+        //sets dragged item after target item
+        var ixDragged = Items!.IndexOf(dragged!);
+        var ixTarget = Items.IndexOf(target);
+        if (ixTarget > ixDragged)
+        {
+            for (var i = ixDragged; i < ixTarget; i++)
+            {
+                Items[i] = Items[i + 1];
+            }
+            Items[ixTarget] = dragged!;
+        }
+        else if (ixTarget < ixDragged)
+        {
+            for (var i = ixDragged; i > ixTarget + 1; i--)
+            {
+                Items[i] = Items[i - 1];
+            }
+            Items[ixTarget + 1] = dragged!;
+        }
+        dragged = default;
+        SortChanged.InvokeAsync(Items);
+        StateHasChanged();
+    }
+}

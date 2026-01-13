@@ -1,0 +1,45 @@
+﻿@using System.Globalization
+
+<input type="text" pattern="[0-9]+([,][0-9]{1,2})?"
+       placeholder="@Placeholder"
+       class="Textbox Int @(string.IsNullOrEmpty(warningMessage) ? "" : "Warning")"
+       value="@Value" @oninput="ValueChangeHandler" @onchange="ValueChangeHandler" />
+
+@code {
+    [Parameter] public decimal? Value { get; set; }
+    [Parameter] public EventCallback<decimal?> ValueChanged { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private CultureInfo culture = new CultureInfo("es-ES");
+    private string? warningMessage;
+
+    private string? Placeholder =>
+    AdditionalAttributes != null &&
+    AdditionalAttributes.TryGetValue("placeholder", out var value)
+        ? Convert.ToString(value)
+        : null;
+
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        //value = Value;
+    }
+
+    void ValueChangeHandler(ChangeEventArgs args)
+    {
+        var src = args.Value?.ToString();
+        decimal retval;
+        if (decimal.TryParse(src, NumberStyles.Float, culture, out retval))
+        {
+            ValueChanged.InvokeAsync(retval);
+            return;
+        }
+
+        warningMessage = $"'{src}' no es un valor valid per un import en Euros";
+        ValueChanged.InvokeAsync();
+    }
+
+}

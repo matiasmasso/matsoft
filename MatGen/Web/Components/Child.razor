@@ -1,0 +1,171 @@
+﻿@inject ApiService ApiService
+
+<div class="Wrapper @(IsRoot ? "IsRoot" : "")">
+    <div class="Value">
+        @if (enlaces.Count == 0)
+        {
+            <div>&nbsp;</div>
+        }
+        else
+        {
+            <a href="#" class="Ico" @onclick="@(() => isExpanded = !isExpanded)" @onclick:preventDefault>
+                <Icon Id="@(isExpanded? Icon.Ids.Minus : Icon.Ids.Plus)"></Icon>
+            </a>
+        }
+
+        @if (IsRoot)
+        {
+            <div class="Truncate @(IsAncestor(Value) ? "Ancestor" : "")">
+                @Value?.FullNom()
+            </div>
+        }
+        else
+        {
+            <a href="#"
+               class="Truncate @(IsAncestor(Value) ? "Ancestor" : "")"
+               @onclick="@(() => ItemSelectedHandler(Value))" @onclick:preventDefault>
+                @Value?.FullNom()
+            </a>
+        }
+
+    </div>
+
+    @if (isExpanded && enlaces.Count > 0)
+    {
+        <div class="Enlaces">
+            @foreach (var enlace in enlaces)
+            {
+                <div class="Enlace">
+                    <a href="#" @onclick="@(() => ItemSelectedHandler(enlace))" @onclick:preventDefault>
+                        <Icon Id="Icon.Ids.Link"></Icon>
+                    </a>
+
+                    <ListItem Title="@($"({enlace.Year()})")"
+                              ContextMenu="@ContextMenu(enlace)"
+                              Tag="@enlace"
+                              MenuClick="ContextMenuClick"
+                              OnClick="@(()=>ItemSelectedHandler(enlace))"></ListItem>
+
+                    <a href="#" class="Truncate @(IsAncestor(enlace) ? "Ancestor" : "")" @onclick="@(() => ItemSelectedHandler(Conjuge(enlace)))" @onclick:preventDefault>
+                        @Conjuge(enlace)?.FullNom()
+                    </a>
+                </div>
+
+                @foreach (var child in ApiService.Children(enlace) ?? new())
+                {
+                    <div>
+                        <Child Value="child"
+                               RootAncestorGuids="RootAncestorGuids"
+                               ItemSelected="ItemSelectedHandler"></Child>
+                    </div>
+                }
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public PersonModel? Value { get; set; }
+    [Parameter] public List<Guid>? RootAncestorGuids { get; set; }
+    [Parameter] public bool IsRoot { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+    // [Parameter] public EventCallback<PersonModel> PersonSelected { get; set; }
+    // [Parameter] public EventCallback<EnlaceModel> EnlaceSelected { get; set; }
+
+    bool isExpanded;
+    List<EnlaceModel> enlaces = new();
+
+    private enum MenuKeys
+    {
+        Zoom,
+        AddSon,
+        AddDaughter,
+        AddActaParroq,
+        AddCCMM
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        isExpanded = IsRoot;
+        enlaces = ApiService.Enlaces(Value)?.ToList() ?? new();
+    }
+
+    PersonModel? Conjuge(EnlaceModel enlace)
+    {
+        var conjugeGuid = enlace.Conjuge(Value);
+        var retval = ApiService.Person(conjugeGuid);
+        return retval;
+    }
+
+    void ItemSelectedHandler(IModel? args)
+    {
+        if (args != null)
+            ItemSelected.InvokeAsync(args);
+    }
+
+
+    // void EnlaceClick(EnlaceModel? args)
+    // {
+    //     if (args != null)
+    //         EnlaceSelected.InvokeAsync(args);
+    // }
+
+    // void PersonClick(PersonModel? args)
+    // {
+    //     if (args != null)
+    //         PersonSelected.InvokeAsync(args);
+    // }
+
+    bool IsAncestor(PersonModel? args)
+    {
+        var retval = args == null ? false : RootAncestorGuids?.Contains(args.Guid) ?? false;
+        return retval;
+    }
+
+    bool IsAncestor(EnlaceModel? args)
+    {
+        bool retval = false;
+        if (args != null)
+        {
+            var conjugeGuid = args.Conjuge(Value);
+            retval = conjugeGuid == null ? false : RootAncestorGuids?.Contains((Guid)conjugeGuid) ?? false;
+        }
+
+        return retval;
+    }
+
+
+    ContextMenuModel ContextMenu(object? item)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, item);
+        retval.AddItem("Afegir fill", (int)MenuKeys.AddSon, item);
+        retval.AddItem("Afegir filla", (int)MenuKeys.AddDaughter, item);
+        retval.AddItem("Afegir acta parroquial", (int)MenuKeys.AddActaParroq, item);
+        retval.AddItem("Afegir Capitols", (int)MenuKeys.AddCCMM, item);
+        return retval;
+    }
+
+    void ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        var tag = args.Tag;
+        var enlace = (EnlaceModel?)tag;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Zoom:
+                ItemSelectedHandler(enlace);
+                break;
+            case MenuKeys.AddSon:
+                var son = ApiService.NewChild(enlace, PersonModel.Sexs.Male);
+                ItemSelected.InvokeAsync(son);
+                break;
+            case MenuKeys.AddDaughter:
+                var daughter = ApiService.NewChild(enlace, PersonModel.Sexs.Female);
+                ItemSelected.InvokeAsync(daughter);
+                break;
+        }
+    }
+
+}

@@ -1,0 +1,162 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject ProductsService productsService
+@inject SessionStateService session
+
+<div class="Wrapper">
+    <a href="#" class="CloseButton" @onclick="RequestToClose" @onclick:preventDefault>
+        <Icon Id="Icon.Ids.XmarkCircle" Width="24px"></Icon>
+    </a>
+
+    <SearchBox @bind-Value="@searchterm"></SearchBox>
+
+    @if (!string.IsNullOrEmpty(searchterm))
+    {
+        <div class="SearchResults">
+            <Virtualize Items="FilteredItems()" Context="item">
+                <a class="Item" href="@Url(item)" @ondragstart="@(()=>session.DragData(item))">
+                    @item.NomLlarg?.Tradueix(culture.Lang())
+                </a>
+            </Virtualize>
+        </div>
+    }
+    else
+    {
+        <div class="Catalog">
+            <div class="Brands @(selectedBrand != null ? "HasSelection":"")">
+                @foreach (var brand in Brands())
+                {
+                    <a href="#" 
+                    draggable="true"  @ondragstart="@(() => session.DragData(brand))"
+                       class="Brand @(brand == selectedBrand ? "Active":"")"
+               @onclick="@(()=>BrandClick(brand))"
+                    @onclick:preventDefault>
+                        @brand.Nom?.Tradueix(culture.Lang())
+                    </a>
+                }
+            </div>
+            <div class="Categories @(selectedCategory != null ? "HasSelection":"")">
+                @foreach (var category in Categories())
+                {
+                    <a href="#"
+                       draggable="true" @ondragstart="@(() => session.DragData(category))"
+                       class="Category @(category == selectedCategory ? "Active":"")"
+               @onclick="@(()=>CategoryClick(category))"
+                    @onclick:preventDefault>
+                        @category.Nom?.Tradueix(culture.Lang())
+                    </a>
+                }
+            </div>
+            <div class="Skus @(selectedSku != null ? "HasSelection":"")">
+                @foreach (var sku in Skus())
+                {
+                    <a href="#"
+                       draggable="true" @ondragstart="@(() => session.DragData(sku))"
+                       class="Sku @(sku == selectedSku ? "Active":"")"
+               @onclick="@(()=>SkuClick(sku))"
+                    @onclick:preventDefault>
+                        @sku.Nom?.Tradueix(culture.Lang())
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+
+</div>
+
+@code {
+    [Parameter] public Modes Mode { get; set; }
+    [Parameter] public EventCallback<ProductModel> ItemSelected { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    public enum Modes
+    {
+        Browse,
+        SelectBrand,
+        SelectCategory,
+        SelectSku,
+        SelectAny
+    }
+
+    private string? searchterm;
+    private bool hideObsolets = true;
+    ProductBrandModel? selectedBrand;
+    ProductCategoryModel? selectedCategory;
+    ProductSkuModel? selectedSku;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        productsService.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<ProductSkuModel> FilteredItems()
+    {
+        var retval = productsService.Skus(searchterm) ?? new();
+        if (hideObsolets)
+            retval = retval.Where(x => !x.Obsoleto).ToList();
+        return retval;
+    }
+
+    List<ProductBrandModel> Brands()
+    {
+        var retval = productsService.Brands() ?? new();
+        if (hideObsolets)
+            retval = retval.Where(x => !x.Obsoleto).ToList();
+        return retval;
+    }
+
+    List<ProductCategoryModel> Categories()
+    {
+        var retval = productsService.Categories(selectedBrand, hideObsolets) ?? new();
+        if (hideObsolets)
+            retval = retval.Where(x => !x.Obsoleto).ToList();
+        return retval;
+    }
+
+    List<ProductSkuModel> Skus()
+    {
+        var retval = productsService.Skus(selectedCategory, hideObsolets) ?? new();
+        if (hideObsolets)
+            retval = retval.Where(x => !x.Obsoleto).ToList();
+        return retval;
+    }
+
+    string Url(ProductSkuModel item) => culture.RelativeUrl("/sku/" + item.Guid.ToString())!;
+
+    void BrandClick(ProductBrandModel brand)
+    {
+        selectedBrand = (brand == selectedBrand) ? null : brand;
+        selectedCategory = null;
+        selectedSku = null;
+    }
+
+    void CategoryClick(ProductCategoryModel category)
+    {
+        selectedCategory = (category == selectedCategory) ? null : category;
+        selectedSku = null;
+    }
+
+    void SkuClick(ProductSkuModel sku)
+    {
+        selectedSku = (sku == selectedSku) ? null : sku;
+    }
+
+    async Task RequestToClose()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        productsService.OnChange -= Refresca;
+    }
+
+}

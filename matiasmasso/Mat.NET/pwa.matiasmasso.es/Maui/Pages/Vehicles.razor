@@ -1,0 +1,72 @@
+﻿@page "/Vehicles"
+@inherits _ComponentBase
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Flota de vehiculos","Flota de vehicles","Vehicles fleet")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="ShowObsolets">
+            <Toggle Label="@base.Tradueix("Incluir obsoletos","Inclou obsolets","Include outdated")"
+                @bind-Value="@IsShowingObsolets"></Toggle>
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems())
+            {
+                <a href="@item.Url()" class='Item @(item.Baixa != null ? "Obsoleto" : "")'>
+                    <div class="Label">@base.Tradueix("Modelo","Model","Model")</div>
+                    <div class="Truncate">
+                        @item.MarcaiModel
+                    </div>
+
+                    <div class="Label">@base.Tradueix("Matricula","Matricula","Plate")</div>
+                    <div class="Truncate">
+                        @item.Matricula
+                    </div>
+
+                    <div class="Label">@base.Tradueix("Conductor","Conductor","Driver")</div>
+                    <div class="Truncate">
+                        @(item.Conductor?.Nom ?? "")
+                    </div>
+                </a>
+            }
+
+        </div>
+    }
+
+</div>
+
+
+
+
+@code {
+    private VehicleListDTO? model;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = await base.GetAsync<VehicleListDTO>("Vehicles");
+            StateHasChanged();
+        };
+    }
+
+    private List<VehicleListDTO.Item> FilteredItems()
+    {
+        var retval = model.Items.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.Baixa == null).ToList();
+        return retval;
+    }
+
+
+}

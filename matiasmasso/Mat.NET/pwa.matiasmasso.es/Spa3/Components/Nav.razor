@@ -1,0 +1,137 @@
+﻿@using System.Web;
+@using DTO;
+
+@inject AppState AppState;
+
+    <TabControl SelectedTab = "@SelectedTab">
+
+        <ChildContent>
+
+            <TabPage Text="Público">
+                <div class="MenuWrapper">
+                        <div class="CustomMenu">
+
+                            <NavItems MenuItems="@Model?.PublicMenuCustomItems" 
+                                      ItemClicked="ItemClicked"/>
+                        </div>
+
+                        <NavItems MenuItems="@Model?.PublicMenuItems" 
+                              ItemClicked="ItemClicked"/>
+
+                    <div>
+                        <!--<LanguageSelection></LanguageSelection>-->
+                    </div>
+
+                    <div>&nbsp;</div>
+                    <div>
+                    <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                        <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off")/>
+                        @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+                    </a>
+                    </div>
+
+                </div>
+
+            </TabPage>
+
+            <TabPage Text="Privado">
+                <div class="Wrapper">
+                    <AuthorizeView>
+                        <Authorized>
+                            <a href="/logout?returnUrl=/">Logout</a>
+
+                            <div class="MenuWrapper">
+                                 <div class="CustomMenu">
+
+                                    <NavItems MenuItems="@Model.PrivateMenuCustomItems" 
+                                              ItemClicked="ItemClicked"/>
+                                </div>
+
+                                <NavItems MenuItems="@Model.PrivateMenuItems" 
+                                          ItemClicked="ItemClicked"/>
+                            </div>
+
+                        </Authorized>
+                        <NotAuthorized>
+ <form method="post" action = "/login">
+    <input type="email" name="emailaddress"> 
+    <input type="submit">
+</form>
+                            <!--
+                            <div class="LoginForm">
+                                <div>
+                                    <input type="text"
+                                           placeholder="User Name"
+                                           @bind="@Username" />
+                               </div>
+                               <div>
+                                    <input type="password"
+                                           placeholder="Password"
+                                           @bind="@Password" />
+                               </div>
+                               <div class="LoginButton">
+                                    <a class="btn btn-primary"
+                                       href="/login?paramUsername=@encode(@Username)&paramPassword=@encode(@Password)">
+                                       Login
+                                   </a>
+                                </div>
+                            </div>
+                            -->
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>  
+
+@code {
+    [Parameter]
+    public int SelectedTab { get; set; } = 1;
+
+    [Parameter]
+    public bool HiddeMenuOnMobile { get; set; }
+
+    [Parameter]
+    public LayoutViewModel viewModel  { get; set; }
+
+    [Parameter]
+    public LayoutDTO? Model { get; set; }
+
+    [Parameter]
+    public EventCallback<MenuItemModel> MenuItemClicked { get; set; }
+
+
+
+    string Username = "";
+    string Password = "";
+    private string encode(string param)
+    {
+        return HttpUtility.UrlEncode(param);
+    }
+
+    private void UseLocalApi()
+    {
+        Globals.UseLocalApi = !Globals.UseLocalApi;
+    }
+
+    protected override void OnParametersSet()
+    {
+        viewModel.OnStateChange += StateChange;
+        base.OnParametersSet();
+    }
+
+    private void StateChange()
+    {
+        Model = viewModel?.Model;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ItemClicked(MenuItemModel item)
+    {
+        MenuItemClicked.InvokeAsync(item);
+    }
+
+
+}

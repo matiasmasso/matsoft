@@ -1,0 +1,39 @@
+﻿.Wrapper2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    overflow: hidden;
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0 0 20px 0;
+}
+
+    .Wrapper2 > *:last-child {
+        color: darkgray;
+    }
+
+
+a:hover {
+    color: #167ac6;
+}
+
+.Wrapper2 > *:first-child {
+    padding-right: 20px;
+}
+
+.Wrapper2 > *:not(:first-child) {
+    padding-right: 10px;
+    padding-left: 10px;
+    transform: translateX(-10px);
+    position: relative;
+}
+
+    .Wrapper2 > *:not(:first-child)::before {
+        content: "";
+        width: 2px;
+        height: 100%;
+        background: #c8c0d5;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }

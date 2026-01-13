@@ -1,0 +1,47 @@
+﻿@page "/CertificatsIrpf"
+@page "/{LangSegment}/CertificatsIrpf"
+@implements IDisposable
+@inject SessionStateService session;
+@inject CultureService culture
+
+<div class="PageWrapper600">
+    <h3>@culture.Localize("IrpfCertificates")</h3>
+
+    <CertificatsIrpf Model="staff"></CertificatsIrpf>
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    ContactModel? staff;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        var user = session.User;
+        if (user?.DefaultContact != null)
+            staff = new ContactModel((Guid)user.DefaultContact);
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+    }
+}

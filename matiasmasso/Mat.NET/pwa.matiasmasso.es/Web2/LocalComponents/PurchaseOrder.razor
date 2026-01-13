@@ -1,0 +1,163 @@
+﻿@inject AppStateService appstate
+@inject CultureService culture
+@inject ProductsService productsService
+
+<div class="PageWrapper">
+
+    <h3>@culture.Localize("PurchaseOrder")</h3>
+
+
+    @if (value == null && exception == null)
+    {
+        <Loading >
+        </Loading>
+    }
+    else
+    {
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("Details")">
+                <ChildContent>
+
+                    <div class="Truncate">
+                        @culture.Localize("OrderIdFromFch",value?.Id.ToString(),string.Format("{0:dd/MM/yy}",value?.Fch))
+                    </div>
+                    <div class="Truncate">
+                        @value?.Contact?.Nom
+                    </div>
+                    <div class="Truncate">
+                        @value?.Concept
+                    </div>
+                    <div class="UsrLog Truncate">
+                        @value?.UsrLog?.Caption(culture.Lang())
+                    </div>
+
+                    <div class="Grid">
+                        @foreach (var item in ControlItems)
+                        {
+                            <div class="Item">
+                                <div class="Thumbnail">
+                                    <UxImg Src="@item.ThumbnailUrl" />
+                                </div>
+                                <div>
+                                    <div class="Truncate">
+                                        @item.BrandNom
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(item.DeptNom))
+                                    {
+                                        <div class="Truncate">
+                                            @item.DeptNom
+                                        </div>
+                                    }
+                                    <div class="Truncate">
+                                        @item.CategoryNom
+                                    </div>
+                                    <div class="Truncate">
+                                        @item.SkuNom
+                                    </div>
+                                    <div class="Amount">
+                                        @item.Amount
+                                    </div>
+                                </div>
+                            </div>
+
+                        }
+
+                    </div>
+                </ChildContent>
+            </TabPage>
+
+            <TabPage Text="@culture.Localize("Document")">
+                <ChildContent>
+@*                    <Docfile  model="@(new DocfileModel(value.Hash ?? ""))"></Docfile>
+*@                </ChildContent>
+            </TabPage>
+        </TabControl>
+
+    }
+
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public PurchaseOrderModel? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private PurchaseOrderModel? value;
+    private List<ControlItem> ControlItems = new();
+    private Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if(Model != null)
+            {
+            value = await appstate.GetAsync<PurchaseOrderModel>("purchaseOrder", Model.Guid.ToString());
+            ControlItems = value?.Items.Select(x => new ControlItem(x, productsService, culture)).ToList() ?? new();
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        StateHasChanged();
+    }
+
+    private void RequestToClose()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    public class ControlItem
+    {
+        public string? ThumbnailUrl { get; set; }
+        public string? BrandNom { get; set; }
+        public string? DeptNom { get; set; }
+        public string? CategoryNom { get; set; }
+        public string? SkuNom { get; set; }
+        public string? Amount { get; set; }
+        public ProductSkuModel? Sku { get; set; }
+        public ProductCategoryModel? Category { get; set; }
+        public ProductDeptModel? Dept { get; set; }
+        public ProductBrandModel? Brand { get; set; }
+
+        public ControlItem(PurchaseOrderModel.Item item, ProductsService productsService, CultureService culture)
+        {
+            ThumbnailUrl = Globals.ApiUrl("productSku/thumbnail", item.Sku.ToString() + ".jpg");
+            Sku = productsService.Sku(item.Sku);
+            if (Sku != null)
+            {
+                SkuNom = Sku.Nom?.Tradueix(culture.Lang()) ?? "sku?";
+                Category = productsService.Category(Sku.Category);
+                if (Category != null)
+                {
+                    CategoryNom = Category.Nom?.Tradueix(culture.Lang()) ?? "category?";
+                    //if (Category.Dept != null)
+                    //{
+                    //    Dept = cache.Dept((Guid)Category.Dept!);
+                    //    if (Dept != null)
+                    //        DeptNom = Dept.Nom.Tradueix(lang) ?? "dept?";
+                    //}
+
+                    Brand = productsService.Brand(Category.Brand);
+                    if (Brand != null)
+                        BrandNom = Brand.Nom?.Tradueix(culture.Lang()) ?? "brand?";
+                }
+            }
+
+            if (item.Dto == 0)
+            {
+                Amount = string.Format("{0} x {1:N2}€ = {2:N2}€", item.Qty, item.Price, item.Amt());
+            }
+            else
+            {
+                Amount = string.Format("{0} x {1:N2}€ - {2}% = {3:N2}€", item.Qty, item.Price, item.Dto, item.Amt());
+            }
+        }
+    }
+}
+

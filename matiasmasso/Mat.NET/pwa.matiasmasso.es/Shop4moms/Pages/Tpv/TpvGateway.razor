@@ -1,0 +1,86 @@
+﻿@page "/tpv/Gateway"
+@page "/tpv/Gateway/Ok/{basketGuid}"
+@inject TpvService tpvService
+@inherits _PageBase
+@inject AppStateService appState
+
+@if (request != null)
+{
+    <div class="Wrapper">
+        <div>url: <input type="text" @bind="@url" /></div>
+
+        <form action="@url" method="Post">
+            <div class="Label">Ds_MerchantParameters</div>
+            <div><textarea rows="5" name="Ds_MerchantParameters" value="@request.Ds_MerchantParameters" /></div>
+            <div class="Label">Ds_Signature</div>
+            <div><input type="text" name="Ds_Signature" value="@request.Ds_Signature" /></div>
+            <div class="Label">Ds_SignatureVersion</div>
+            <div><input type="text" name="Ds_SignatureVersion" value="@request.Ds_SignatureVersion" /></div>
+            <div><input type="submit" value="submit" /></div>
+        </form>
+    </div>
+
+}
+
+<Error Exception="exception"></Error>
+
+@code {
+    [Parameter] public string? basketGuid { get; set; }
+    [Parameter] public Guid? tpvLogGuid { get; set; }
+    private bool isLoading;
+    private DTO.Integracions.Redsys.Request? request;
+    private string url = "/tpv/feed";
+    private Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(basketGuid))
+        {
+            request = new DTO.Integracions.Redsys.Request
+                {
+                    Ds_SignatureVersion = "HMAC_SHA256_V1",
+                    Ds_MerchantParameters = "eyJEc19NZXJjaGFudENvZGUiOiIzNTc1OTI5MjIiLCJEc19UZXJtaW5hbCI6IjAwMSIsIkRzX09yZGVyIjoiOTk5OUEwMDA2ODczIiwiRHNfQW1vdW50IjoiMzc5MDAiLCJEc19DdXJyZW5jeSI6Ijk3OCIsIkRzX0RhdGUiOiIzMFwvMDhcLzIwMjMiLCJEc19Ib3VyIjoiMTA6MzMiLCJEc19TZWN1cmVQYXltZW50IjoiMSIsIkRzX0NhcmRfVHlwZSI6IkMiLCJEc19DYXJkX0NvdW50cnkiOiI3MjQiLCJEc19SZXNwb25zZSI6IjAwMDAiLCJEc19NZXJjaGFudERhdGEiOiIiLCJEc19UcmFuc2FjdGlvblR5cGUiOiIwIiwiRHNfQ29uc3VtZXJMYW5ndWFnZSI6IjEiLCJEc19BdXRob3Jpc2F0aW9uQ29kZSI6IjMwNDg2OSIsIkRzX0NhcmRfQnJhbmQiOiIxIiwiRHNfUHJvY2Vzc2VkUGF5TWV0aG9kIjoiNzgifQ==",
+                    Ds_Signature = "3cMiNkgMYGx_1d7MTgef9dFuzt6BUhb9s_sV_bw6rT4="
+                };
+        }
+        else if (tpvLogGuid != null)
+        {
+            isLoading = true;
+            try
+            {
+                var tpvLog = await appState.GetAsync<DTO.Integracions.Redsys.TpvLog>("TpvLog", tpvLogGuid.ToString()!);
+                request = new DTO.Integracions.Redsys.Request
+                {
+                    Ds_SignatureVersion = "HMAC_SHA256_V1",
+                    Ds_MerchantParameters = tpvLog?.Ds_MerchantParameters,
+                    Ds_Signature = tpvLog?.Ds_SignatureReceived
+                };
+
+            } catch(Exception ex)
+            {
+                exception = ex;
+            }
+            isLoading = false;
+        }
+        else
+        {
+            isLoading = true;
+            try
+            {
+                var tpvLog = await appState.GetAsync<DTO.Integracions.Redsys.TpvLog>("tpvlog", basketGuid); //To Do: get tpvlog from basket
+                request = new DTO.Integracions.Redsys.Request
+                    {
+                        Ds_SignatureVersion = "HMAC_SHA256_V1",
+                        Ds_MerchantParameters = tpvLog.Ds_MerchantParameters,
+                        Ds_Signature = tpvLog.Ds_SignatureReceived
+                    };
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+            isLoading = false;
+        }
+    }
+
+}

@@ -1,0 +1,39 @@
+﻿.Years {
+    display: grid;
+    grid-template-rows: repeat(auto-fill, min-content);
+    grid-template-columns: repeat(5,min-content );
+    column-gap: 10px;
+    grid-auto-flow: row;
+}
+
+.Years a {
+    display:block;
+}
+
+.LookuÈmps {
+    position: relative;
+}
+
+.Item {
+    display:grid;
+    grid-template-columns: 60px 1fr 100px;
+    grid-column-gap:10px;
+}
+
+
+
+/*.Fch {
+    width: 60px;
+}
+
+.Nom {
+    width: 1fr;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.Num {
+    width: 60px;
+}*/
+

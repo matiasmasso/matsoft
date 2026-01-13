@@ -1,0 +1,101 @@
+﻿@page "/Regions_Page"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("Regions")</h1>
+
+    <PageOptions IsShowingOptions>
+        <CountryLookup HideEllipsis
+                       Value="@country"
+                       ValueChanged="CountryChanged">
+        </CountryLookup>
+        <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+    </PageOptions>
+
+    @if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("Regions.Found",model.Count(), CountryRegions().Count(), country.Nom.Tradueix(base.Lang()))
+        </div>
+
+        <Regions_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></Regions_List>
+
+    }
+    else
+    {
+        <Region Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></Region>
+    }
+
+
+
+</div>
+
+@code {
+    List<RegionModel> model;
+    CacheDTO cache;
+    string searchTerm;
+    CountryModel country;
+    RegionModel selectedItem = null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        country = cache.Country(CountryModel.Wellknown(CountryModel.Wellknowns.Spain).Guid);
+        model = cache.Regions;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Country, CacheDTO.Table.TableIds.Regio);
+        model = cache.Regions;
+    }
+
+    List<RegionModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+            return CountryRegions();
+        else
+            return CountryRegions().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<RegionModel> CountryRegions() => model.Where(x => x.Country == country.Guid).ToList();
+
+    private void ItemClick(RegionModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new RegionModel()
+            {
+                Country = country.Guid,
+            };
+    }
+
+    private void OnUpdate(RegionModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.Nom).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(RegionModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void CountryChanged(CountryModel args)
+    {
+        country = args;
+    }
+
+}

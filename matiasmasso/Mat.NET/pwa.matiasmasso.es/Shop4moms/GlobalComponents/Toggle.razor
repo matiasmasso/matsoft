@@ -1,0 +1,40 @@
+﻿
+<a href="#" @onclick="Clicked" @onclick:preventDefault>
+    <img src=@(_value ? iconOn : iconOff) />
+</a>
+
+@code {
+
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public string TrueText { get; set; } = "Yes";
+    [Parameter] public string FalseText { get; set; } = "No";
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+
+    [Parameter]
+    public Object Value
+    {
+        get => _value;
+        set
+        {
+            _value = (bool)value;
+        }
+    }
+
+    string iconOn = "/img/toggle-large-on.svg";
+    string iconOff = "/img/toggle-large-off.svg";
+    bool _value = false;
+
+
+    private void Clicked()
+    {
+        if (CanEdit)
+        {
+            _value = !_value;
+            if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                ObjChanged.InvokeAsync(_value);
+            else
+                ValueChanged.InvokeAsync(_value);
+        }
+    }
+}

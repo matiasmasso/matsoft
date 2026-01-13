@@ -1,0 +1,91 @@
+﻿@using DTO
+
+@inject AppState AppState
+@inject IJSRuntime Js
+
+@foreach(var item in viewModel.Items){
+    <div class='ExpandableItem @viewModel.ExpandClass(item) @(viewModel.IsSelected(item) ? "SelectedItem":"")'>
+
+        <a href="#" @onclick="() => ItemClicked(item)" @onclick:preventDefault="true">
+            <img src="/img/Expand-9.png" class="Collapsed" alt="expandeix" width="9" height="9"/>   
+            <img src="/img/Collapse-9.png" class="Expanded" alt="colapsa" width="9" height="9"/>   
+        </a>                      
+
+        @if(viewModel.HasLink(item))
+        {
+            <NavLink href="@viewModel.Link(item)" @onclick="() => NavigateRequest(item)">
+                <i class="@item.FontAwesome" aria-hidden="true"></i>
+                @item.Nom
+            </NavLink>
+        } 
+        else if (viewModel.IsToggle(item))
+        {
+            <a href="#" @onclick="() => CheckedChanged(item)" 
+                        @onclick:preventDefault="true">
+                <i class=@(item.IsChecked()?"fa-solid fa-toggle-on":"fa-solid fa-toggle-off")/>
+            </a>
+
+            <!--
+            <input type="checkbox" 
+                        checked="@item.IsChecked()" 
+                        @oninput="() => CheckedChanged(item)"/>
+            -->
+
+            <a href="#" @onclick="() => CheckedChanged(item)" 
+                        @onclick:preventDefault="true">
+                @item.Nom
+            </a>                      
+        }
+        else
+            {
+                <a href="#" @onclick="() => ItemClicked(item)" @onclick:preventDefault="true">
+                <i class="@item.FontAwesome" aria-hidden="true"></i>
+                    @item.Nom
+                </a>                      
+            }
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public List<MenuItemModel> MenuItems { get; set; }
+
+    [Parameter]
+    public EventCallback RequestToNavigate { get; set; }
+
+    [Parameter]
+    public EventCallback RequestForAction { get; set; }
+
+    private NavItemsViewModel viewModel;
+
+
+    protected override void OnParametersSet()
+    {
+        viewModel = new NavItemsViewModel(AppState, MenuItems);
+        base.OnParametersSet();
+    }
+
+
+    private async void ItemClicked(ExpandableItem item)
+    {
+            viewModel.ItemClicked(item);
+    }
+
+    private void NavigateRequest(ExpandableItem item)
+    {
+        //AppState.IsMenuVisible = false;
+        //RequestToNavigate.InvokeAsync(item);
+    }
+
+
+    private void CheckedChanged(ExpandableItem item)
+    {
+        item.CheckState = item.CheckState == ExpandableItem.CheckStates.Checked ? ExpandableItem.CheckStates.Unchecked : ExpandableItem.CheckStates.Checked;
+        StateHasChanged();
+        MenuItemModel menuItem = (MenuItemModel)item.Tag!;
+        AppState.NotifyMenuToggleRequest(menuItem.Action ?? "");
+    }
+
+
+}

@@ -1,0 +1,85 @@
+﻿@inherits _Base
+@inject CultureService culture
+
+<div class="Wrapper600">
+    @if (isThanksGiving)
+    {
+        <div class="Thanks">
+            @((MarkupString)thanksText!)
+        </div>
+    }
+    else if (isSubmitting)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="TextArea">
+            <textarea @oninput="TextChanged" rows="10"></textarea>
+        </div>
+
+        <div class="ButtonsBar">
+            <button class="Button ButtonOk" @onclick="Submit">@culture.Localize("Submit")</button>
+        </div>
+    }
+
+    <Error Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public Guid? Referencia { get; set; }
+    ContentModel.Comment model = new();
+
+
+    bool isThanksGiving = false;
+    bool isSubmitting = false;
+    string? thanksText;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        model = new ContentModel.Comment();
+        model.ContentSrc = ContentModel.Comment.Srcs.Contact4moms;
+        base.OnInitialized();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Referencia != null)
+        {
+
+        }
+    }
+
+    void TextChanged(ChangeEventArgs args)
+    {
+        model.Text = args.Value?.ToString();
+    }
+
+    private async Task Submit()
+    {
+        isSubmitting = true;
+        var user = await base.GetUser();
+        model.User = user!;
+        model.Answering = Referencia;
+        model.Lang = base.Lang();
+
+        try
+        {
+            await base.Post2Async<ContentModel.Comment, bool>(model, "Comment");
+            thanksText = culture.Localize("ContactRequest.Thanks", user!.EmailAddress);
+            isThanksGiving = true;
+            var subject = base.Tradueix("Tu consulta a 4moms", "La teva consulta a 4moms", "Your 4moms inquiry", "Tu consulta a 4moms");
+            var body = culture.Localize("ContactRequest.ConfirmationMailBody", model.Text?.Html());
+            var templatedBody = Shop4moms.Services.MailService.TemplatedBody(body);
+            await base.MailUserAsync(subject, templatedBody, true);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        isSubmitting = false;
+    }
+
+}

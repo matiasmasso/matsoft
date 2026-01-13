@@ -1,0 +1,204 @@
+﻿@inject ApiService ApiService
+
+@if (selectedDoc != null)
+{
+    <DocfileSrc Value="selectedDoc"
+                CloseRequest="@(()=>selectedDoc=null)"
+                AfterUpdate="HandleAfterDocUpdate"></DocfileSrc>
+}
+else
+{
+
+    <div class="PageWrapper600">
+        <Title Value="@Title()" CloseRequest="HandleCloseRequest"></Title>
+
+        <Tabs Captions="Detall, Documents" ValueChanged="HandleTabChanged" Value="selectedTab"></Tabs>
+
+        @if (selectedTab == (int)Tabs.Docs)
+        {
+            <PageOptions>
+                <a href="#" @onclick:preventDefault @onclick="AddNewDoc">Afegir</a>
+            </PageOptions>
+
+            <DocfileSrcs Values="value?.Docfiles"></DocfileSrcs>
+        }
+        else
+        {
+            <PropertyGrid Model="propertyGrid"
+                          UpdateRequest="HandleUpdateRequest"
+                          CancelRequest="HandleCloseRequest"
+                          DeleteRequest="HandleDeleteRequest"
+                          UpdateState="updateState"
+                          DeleteState="deleteState">
+            </PropertyGrid>
+        }
+    </div>
+
+    <Error @bind-Value="exception"></Error>
+}
+
+@code {
+    [Parameter] public MultaModel? Value { get; set; }
+    [Parameter] public EventCallback<MultaModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<MultaModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    MultaModel? value;
+    EmpModel.EmpIds? emp;
+    int selectedTab = 0;
+    List<VehicleModel>? vehicles;
+    List<ContactModel>? contacts;
+    DocfileSrcModel? selectedDoc;
+
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+
+    Exception? exception;
+
+
+    enum Tabs
+    {
+        Detall,
+        Docs
+    }
+
+    enum Fields
+    {
+        Vehicle,
+        Emisor,
+        Fch,
+        Exp,
+        Vto,
+        Amt,
+        Pagat
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value?.IsNew ?? true)
+                value = Value;
+            else
+                value = await ApiService.GetAsync<MultaModel>("Multa", Value!.Guid.ToString());
+
+            vehicles = await ApiService.GetAsync<List<VehicleModel>>("Vehicles");
+            var vehicle = vehicles!.FirstOrDefault(x => x.Guid == value?.Subjecte);
+            emp = vehicle?.Emp;
+            contacts = ApiService.GetContacts();
+            if (emp != null)
+            {
+                vehicles = vehicles!.Where(x => x.Emp == emp).ToList();
+                contacts = contacts!.Where(x => x.Emp == emp).ToList();
+            }
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    string Title()
+    {
+        if (Value?.IsNew ?? true)
+            return "Registrar nova multa";
+        else
+            return $"Multa {Value.Expedient}";
+    }
+
+    void HandleTabChanged(int args)
+    {
+        selectedTab = args;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddGuidnom("Vehicle", value?.Subjecte, vehicles);
+        retval.AddGuidnom("Emisor", value?.Emisor, contacts);
+        retval.AddDateOnly("Data", value?.Fch);
+        retval.AddString("Expedient", value?.Expedient);
+        retval.AddDateOnly("Venciment", value?.Vto);
+        retval.AddEur("Import", value?.Amt);
+        retval.AddDateOnly("Pagat", value?.Pagat);
+        return retval;
+    }
+
+    async Task HandleCloseRequest()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task HandleUpdateRequest()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Subjecte = propertyGrid!.GetGuid((int)Fields.Vehicle);
+            value!.Emisor = propertyGrid!.GetGuid((int)Fields.Emisor);
+            value.Fch = propertyGrid.GetDateOnly((int)Fields.Fch);
+            value.Expedient = propertyGrid!.GetString((int)Fields.Exp);
+            value.Vto = propertyGrid.GetDateOnly((int)Fields.Vto);
+            value.Amt = propertyGrid.GetEur((int)Fields.Amt);
+            value.Pagat = propertyGrid.GetDateOnly((int)Fields.Pagat);
+            await ApiService.PostAsync<MultaModel, bool>(value, "Multa");
+            await AfterUpdate.InvokeAsync(value);
+            await CloseRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task HandleDeleteRequest()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Multa/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+            await CloseRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void AddNewDoc()
+    {
+        selectedDoc = new DocfileSrcModel
+            {
+                Target = value!.Guid,
+                Cod = DocfileModel.Cods.download
+            };
+    }
+
+    void HandleAfterDocUpdate(DocfileSrcModel args)
+    {
+        if (value!.Docfiles.Any(x => x.Docfile?.Hash == args.Docfile?.Hash))
+        {
+            var doc = value!.Docfiles.First(x => x.Docfile!.Hash == args.Docfile!.Hash);
+            var idx = value.Docfiles.IndexOf(doc);
+            value.Docfiles[idx] = args;
+        }
+        else
+            value.Docfiles.Add(args);
+
+        value.Docfiles = value.Docfiles.OrderByDescending(x => x.Docfile?.FchCreated).ToList();
+        selectedDoc = null;
+    }
+}

@@ -1,0 +1,210 @@
+﻿<div class="Grid">
+    <div class="ColHeaders HideOnMobile">
+        <div class="Concept">Concepte</div>
+        <div class="Price">Import</div>
+    </div>
+
+    @foreach (var item in value?.Items ?? new())
+    {
+        <div class="Item">
+            <ListItem Title="@(item.Concept ?? " ")"
+                      Tooltip="clic aquí per editar la linia o amb la dreta per menú contextual"
+                      OnClick="@(() => ItemClick(item))"
+                      ContextMenu="@ContextMenu(item)"
+                      MenuClick="ContextMenuClick"></ListItem>
+
+            @if (item.Price == null || item.Price == 0)
+            {
+                <div>&nbsp;</div>
+            }
+            else
+            {
+                <div class="Price">@($"{item.Price:N2} €")</div>
+            }
+        </div>
+    }
+
+    @if (value?.ShouldShowBaseImponible() ?? false)
+    {
+        <div class="Item">
+            <div class="Concept">
+                @(value?.Lang?.Tradueix("Base imponible","Base imposable","Tax base"))
+            </div>
+            <div class="Price">@($"{value?.BaseImponible:N2} €")</div>
+        </div>
+    }
+    @if (value?.ShouldShowIVA() ?? false)
+    {
+        <div class="Item">
+            <div class="Concept">
+                IVA @(value?.IVApct)%
+            </div>
+            <div class="Price">@($"{value?.IVA:N2} €")</div>
+        </div>
+    }
+    @if (value?.ShouldShowIRPF() ?? false)
+    {
+        <div class="Item">
+            <div class="Concept">
+                IRPF @(value?.IRPFpct)%
+            </div>
+            <div class="Price">-@($"{value?.IRPF:N2} €")</div>
+        </div>
+    }
+    @if (value?.ShouldShowTotal() ?? false)
+    {
+        <div class="Item">
+            <div class="Concept">
+                Total
+            </div>
+            <div class="Price">@($"{value?.Total:N2} €")</div>
+        </div>
+    }
+
+    @if (value?.Notas.Count > 0)
+    {
+        <div>&nbsp;</div>
+    
+        <div>&nbsp;</div>
+        <div>@(value?.Lang.Tradueix("Notas:","Notes:","Notes:"))</div>
+        <div>&nbsp;</div>
+    }
+
+    @foreach (var item in value?.Notas ?? new())
+    {
+        <div class="Item">
+            <ListItem Title="@item.Concept"
+                      Tooltip="clic aquí per editar la linia o amb la dreta per menú contextual"
+                      OnClick="@(() => ItemClick(item))"
+                      ContextMenu="@ContextMenu(item)"
+                      MenuClick="ContextMenuNotaClick"></ListItem>
+
+            <div>&nbsp;</div>
+        </div>
+    }
+
+
+</div>
+
+
+@code {
+    [Parameter] public CustomerInvoiceBaseModel? Value { get; set; }
+    [Parameter] public EventCallback<CustomerInvoiceModel.Item> EditRequest { get; set; }
+    [Parameter] public EventCallback<List<CustomerInvoiceModel.Item>> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<CustomerInvoiceModel.Item> OnDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    CustomerInvoiceBaseModel? value;
+    private CustomerInvoiceModel.Item? selectedItem;
+
+    private enum MenuKeys
+    {
+        Zoom,
+        Up,
+        Down,
+        AddNew,
+        Delete
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        value = Value;
+    }
+
+    void ItemClick(CustomerInvoiceModel.Item args)
+    {
+        EditRequest.InvokeAsync(args);
+    }
+
+    ContextMenuModel ContextMenu(CustomerInvoiceModel.Item args)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, args);
+        var goUp = retval.AddItem("Up", (int)MenuKeys.Up, args);
+        var goDown = retval.AddItem("Down", (int)MenuKeys.Down, args);
+        retval.AddItem("AddNew", (int)MenuKeys.AddNew, args);
+        var delete = retval.AddItem("Delete", (int)MenuKeys.Delete, args);
+        if (args.Cod == CustomerInvoiceModel.Item.Cods.Linia)
+        {
+            goUp.Disabled = value!.Items.IndexOf(args) == 0;
+            goDown.Disabled = value.Items.IndexOf(args) == value.Items.Count - 1;
+        }
+        else
+        {
+            goUp.Disabled = value!.Notas.IndexOf(args) == 0;
+            goDown.Disabled = value.Notas.IndexOf(args) == value.Notas.Count - 1;
+        }
+        return retval;
+    }
+
+    async Task ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        int idx = -1;
+        var item = (CustomerInvoiceModel.Item)args.Tag!;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Zoom:
+                await EditRequest.InvokeAsync(item);
+                break;
+            case MenuKeys.Up:
+                    idx = value!.Items.IndexOf(item);
+                    value.Items[idx] = value.Items[idx - 1];
+                    value.Items[idx - 1] = item;
+                await AfterUpdateRequest();
+                break;
+            case MenuKeys.Down:
+                    idx = value!.Items.IndexOf(item);
+                    value.Items[idx] = value.Items[idx + 1];
+                    value.Items[idx + 1] = item;
+                await AfterUpdateRequest();
+                break;
+            case MenuKeys.AddNew:
+                item = new CustomerInvoiceModel.Item( CustomerInvoiceModel.Item.Cods.Linia);
+                await EditRequest.InvokeAsync(item);
+                break;
+            case MenuKeys.Delete:
+                await OnDelete.InvokeAsync(item);
+                //value!.Items.Remove(item);
+                break;
+        }
+    }
+
+    async Task ContextMenuNotaClick(ContextMenuModel.ClickEventArgs args)
+    {
+        int idx = -1;
+        var item = (CustomerInvoiceModel.Item)args.Tag!;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Zoom:
+                await EditRequest.InvokeAsync(item);
+                break;
+            case MenuKeys.Up:
+                idx = value!.Notas.IndexOf(item);
+                value.Notas[idx] = value.Notas[idx - 1];
+                value.Notas[idx - 1] = item;
+                await AfterUpdateRequest();
+                break;
+            case MenuKeys.Down:
+                idx = value!.Notas.IndexOf(item);
+                value.Notas[idx] = value.Notas[idx + 1];
+                value.Notas[idx + 1] = item;
+                await AfterUpdateRequest();
+                break;
+            case MenuKeys.AddNew:
+                item = new CustomerInvoiceModel.Item(CustomerInvoiceModel.Item.Cods.Nota);
+                await EditRequest.InvokeAsync(item);
+                break;
+            case MenuKeys.Delete:
+                await OnDelete.InvokeAsync(item);
+                //value!.Items.Remove(item);
+                break;
+        }
+    }
+
+    async Task AfterUpdateRequest()
+    {
+        await AfterUpdate.InvokeAsync(value!.Items);
+    }
+
+
+}

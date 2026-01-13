@@ -1,0 +1,18 @@
+﻿<a class="@Class" href="@(Model?.Url ?? "#")" >
+
+    @if(!string.IsNullOrEmpty(Model?.ImageUrl ?? ""))
+    {
+        <img src="@Model!.ImageUrl" title="@(Model.Caption ?? "")"/>
+    }
+
+    @if(!string.IsNullOrEmpty(Model?.Caption ?? ""))
+    {
+        <span>@Model!.Caption</span>
+    }
+
+</a>
+
+@code {
+    [Parameter] public DTO.Box? Model { get; set; }
+    [Parameter] public string Class { get; set; }
+}

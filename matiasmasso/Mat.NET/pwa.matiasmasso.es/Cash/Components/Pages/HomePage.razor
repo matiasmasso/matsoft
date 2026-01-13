@@ -1,0 +1,84 @@
+﻿@page "/"
+
+<SumasySaldosPage></SumasySaldosPage>
+
+@code {
+    // Exception? exception;
+
+    // protected override void OnInitialized()
+    // {
+    //     ApiService.OnChange += Refresca;
+    //     base.OnInitialized();
+    //     Refresca();
+    // }
+
+    // void Refresca(Exception? ex = null)
+    // {
+    //     InvokeAsync(StateHasChanged);
+    // }
+
+    // bool IsExcelReady() => ApiService.GetPgcCtas() != null;
+
+    // async Task HandleExcelLoadRequestAsync(DTO.Excel.Book book)
+    // {
+    //     var values = await ApiService.GetAsync<List<CcaModel>>("Ccas/10/2022");
+    //     var ccbs = Ccbs(values).OrderBy(x => x.Cta?.Id).ThenBy(x => x.Cca?.Fch).ToList();
+    //     book.Filename="my excel book.xlsx";
+    //     var sheet = book.AddSheet("my first sheet");
+    //     int rowIdx = 0;
+    //     int ctaRow = 0;
+    //     PgcCtaModel? lastCta = null;
+    //     foreach(var ccb in ccbs)
+    //     {
+    //         rowIdx += 1;
+    //         if(ccb.Cta != lastCta)
+    //         {
+    //             if(ctaRow>0)
+    //                 sheet.AddRowGroup(ctaRow, rowIdx-1);
+    //             lastCta = ccb.Cta;
+    //             ctaRow = rowIdx;
+    //         }
+    //         var row = sheet.AddRow();
+    //         row.AddCell(ccb.Cta?.ToString());
+    //         row.AddCell((int?)ccb.Cca?.Id);
+    //         row.AddCell((DateOnly?)ccb.Cca?.Fch);
+    //         row.AddCell(ccb.Cca?.Concept);
+    //         row.AddEur(ccb.Amt());
+    //     }
+    // }
+
+    // List<Ccb> Ccbs(List<CcaModel>? ccas)
+    // {
+    //     var retval = new List<Ccb>();
+    //     if(ccas != null)
+    //     {
+    //         foreach (var cca in ccas)
+    //         {
+    //             foreach (var item in cca.Items)
+    //             {
+    //                 retval.Add(new Ccb
+    //                     {
+    //                         Cca = cca,
+    //                         Item = item,
+    //                         Cta = ApiService.GetPgcCta(item.Cta)
+    //                     });
+    //             }
+    //         }
+    //     }
+    //     return retval;
+    // }
+
+    // public void Dispose()
+    // {
+    //     ApiService.OnChange -= Refresca;
+    // }
+
+    // private class Ccb
+    // {
+    //     public CcaModel? Cca { get; set; }
+    //     public CcaModel.Item? Item { get; set; }
+    //     public PgcCtaModel? Cta { get; set; }
+    //     public decimal? Amt() => Item?.Amt(Cta);
+    // }
+
+}

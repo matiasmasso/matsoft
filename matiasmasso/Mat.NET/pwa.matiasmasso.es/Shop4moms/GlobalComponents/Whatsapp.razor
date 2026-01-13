@@ -1,0 +1,36 @@
+﻿@inherits _Base
+
+@if (allowedToDisplay)
+{
+    <a href="https://wa.me/34932541522" title="WhatsApp a (+34) 932541522">
+        <img src="/img/whatsapp-logo38.png" alt="WhatsApp a (+34) 932541522" />
+    </a>
+}
+
+
+@code {
+    bool allowedToDisplay;
+
+    protected override void OnInitialized()
+    {
+        var fch = DateTime.Now;
+        if (fch.DayOfWeek == DayOfWeek.Friday)
+            allowedToDisplay = fch.Hour < 13;
+        else if (fch.DayOfWeek == DayOfWeek.Saturday)
+            allowedToDisplay = false;
+        else if (fch.DayOfWeek == DayOfWeek.Sunday)
+            allowedToDisplay = false;
+        else
+            allowedToDisplay = true;
+
+    }
+    //protected override async Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    if (firstRender)
+    //    {
+    //        var user = await base.GetUser();
+    //        allowedToDisplay = user?.isStaff() ?? false;
+    //        StateHasChanged();
+    //    }
+    //}
+}

@@ -1,0 +1,83 @@
+﻿@page "/register"
+@layout AuthLayout
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<h3 class="mb-3 text-center">Create an Account</h3>
+
+@if (error != null)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (success != null)
+{
+    <div class="alert alert-success">@success</div>
+}
+
+<EditForm Model="@model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+
+    <div class="mb-3">
+        <label>Email</label>
+        <InputText @bind-Value="model.Email" class="form-control" />
+        <ValidationMessage For="@(() => model.Email)" />
+    </div>
+
+    <div class="mb-3">
+        <label>Password</label>
+        <InputText @bind-Value="model.Password" type="password" class="form-control" />
+        <ValidationMessage For="@(() => model.Password)" />
+    </div>
+
+    <div class="mb-3">
+        <label>Confirm Password</label>
+        <InputText @bind-Value="confirmPassword" type="password" class="form-control" />
+        <ValidationMessage For="@(() => confirmPassword)" />
+    </div>
+
+    <button class="btn btn-primary w-100" disabled="@isSubmitting">
+        @(isSubmitting ? "Creating account..." : "Register")
+    </button>
+</EditForm>
+
+<div class="text-center mt-3">
+    <a href="/login">Already have an account? Log in</a>
+</div>
+
+@code {
+    RegisterRequest model = new();
+    string confirmPassword;
+    string error;
+    string success;
+    bool isSubmitting = false;
+
+    async Task Submit()
+    {
+        error = null;
+        success = null;
+
+        if (model.Password != confirmPassword)
+        {
+            error = "Passwords do not match.";
+            return;
+        }
+
+        isSubmitting = true;
+
+        var response = await Http.PostAsJsonAsync("api/auth/register", model);
+
+        isSubmitting = false;
+
+        if (!response.IsSuccessStatusCode)
+        {
+            error = await response.Content.ReadAsStringAsync();
+            return;
+        }
+
+        success = "Your account has been created.";
+
+        await Task.Delay(2000);
+        Nav.NavigateTo("/login");
+    }
+}

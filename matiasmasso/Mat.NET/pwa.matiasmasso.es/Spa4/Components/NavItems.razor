@@ -1,0 +1,81 @@
+﻿@using DTO
+@using Spa4.Shared
+@using Spa4.ViewModels
+@inject AppState AppState
+@inject NavigationManager NavigationManager
+
+@foreach(var item in viewModel.Items){
+    <div 
+        class='ExpandableItem 
+        @viewModel.ExpandClass(item) @(viewModel.IsSelected(item) ? "SelectedItem":"")
+        '>
+
+        <!-- expand/collapse icons -->
+        <a href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+            <img src="/img/Expand-9.png" class="Collapsed" alt="expandeix" width="9" height="9"/>   
+            <img src="/img/Collapse-9.png" class="Expanded" alt="colapsa" width="9" height="9"/>   
+        </a>  
+
+        <!-- toggle icon -->
+        <a href="#" class="Toggle @(viewModel.IsToggle(item) ? "" : "Hidden")"
+                    @onclick="() => ItemClick(item)" 
+                    @onclick:preventDefault="true">
+            <i class=@(item.IsChecked()?"fa-solid fa-toggle-on":"fa-solid fa-toggle-off")/>
+        </a>
+        
+        <!-- standard icon and caption -->
+        <a href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+            <i class="@item.FontAwesome" aria-hidden="true"></i>
+            <span>@item.Nom</span>
+
+            <!--This ensures a spacer with no text will respect line height-->
+            &nbsp;
+        </a>                 
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public List<MenuItemModel> MenuItems { get; set; }
+
+    [Parameter]
+    public EventCallback<MenuItemModel> ItemClicked { get; set; }
+
+    private NavItemsViewModel viewModel;
+
+
+    protected override void OnParametersSet()
+    {
+        viewModel = new NavItemsViewModel(AppState, MenuItems);
+        base.OnParametersSet();
+    }
+
+    private void ItemClick(ExpandableItem item)
+    {
+        //selects and expands or collapses
+        viewModel.ItemClicked(item); 
+
+        //item specific actions
+        var menuItem = ((MenuItemModel)item!.Tag!);
+        switch(menuItem.Mode)
+        {
+            case MenuItemModel.Modes.Navigation:
+                var url = ((MenuItemModel?)item.Tag)?.Action;
+                if(url != null) NavigationManager.NavigateTo(url);
+                ItemClicked.InvokeAsync(menuItem);
+                break;
+            case MenuItemModel.Modes.Toggle:
+                item.CheckState = item.IsChecked() ? ExpandableItem.CheckStates.Unchecked : ExpandableItem.CheckStates.Checked;
+                ItemClicked.InvokeAsync(menuItem);
+                break;
+            case MenuItemModel.Modes.Action:
+                ItemClicked.InvokeAsync(menuItem);
+                break;
+            default:
+                //cases spacer, caption...
+                break;
+        }
+    }
+
+}

@@ -1,0 +1,295 @@
+﻿@page "/bookfras"
+@inject ApiService ApiService
+@using System.Text.RegularExpressions;
+
+
+<div class="PageWrapper900">
+    @if (selectedValue == null)
+    {
+
+        <h3>Factures rebudes</h3>
+
+        <PageOptions>
+            <LookupEmp Values="userEmps" Value="emp" ValueChanged="EmpChangedAsync"></LookupEmp>
+            <LookupYears Values="years" Value="year" ValueChanged="YearChangedAsync"></LookupYears>
+            <Dropdown Value="periode" Values="@periodes" ValueChanged="HandlePeriodeChanged"></Dropdown>
+            <ButtonExcel LoadRequest="LoadExcel" IsReady="@(ApiService.GetPgcCtas() != null)"></ButtonExcel>
+        </PageOptions>
+
+        @if (missingValues != null)
+        {
+            if (missingValues.Count > 0)
+            {
+                <div class="Error">
+                    <h4>Falta registrar els següents càrrecs amb Iva soportat:</h4>
+                    <div class="MissingValuesGrid">
+                        @foreach (var item in missingValues)
+                        {
+                            <a href="#" @onclick:preventDefault @onclick="@(() => MissingValueClick(item))">
+                                @($"{item.Fch:dd/MM/yyyy}")
+                            </a>
+                            <a href="#" @onclick:preventDefault @onclick="@(() => MissingValueClick(item))">@item.Concept</a>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="Success">
+                    <h4>Tots els càrrecs amb Iva estan registrats com a factures rebudes</h4>
+                </div>
+            }
+        }
+
+
+
+        <div class="Grid">
+            <div class="Fch">data</div>
+            <div class="Nom Truncate">Factura</div>
+            <div class="Nom Truncate">Emisor</div>
+            <div class="Nif">Nif</div>
+            <div class="Number">Base imponible</div>
+            <div class="Number">Tipus mig</div>
+            <div class="Number">Quota</div>
+            <div class="Number">Liquid</div>
+
+            <div class="Fch">&nbsp;</div>
+            <div class="Nom Truncate">&nbsp;</div>
+            <div class="Nom Truncate">Totals</div>
+            <div class="Nif">&nbsp;</div>
+            <div class="Number">@($"{TotalBases():#,###.00} €")</div>
+            <div class="Number">@($"{TipusMig():#.00} %")</div>
+            <div class="Number">@($"{TotalQuotes():#,###.00} €")</div>
+            <div class="Number">@($"{TotalLiquids():#,###.00} €")</div>
+
+            @foreach (var item in FilteredValues())
+            {
+                <div class="Fch">@item.FraFch</div>
+                <div class="Nom Truncate">@item.FraNum</div>
+                <a href="#" @onclick:preventDefault @onclick="@(() => selectedValue = item)" class="Nom Truncate">@item.RaoSocial</a>
+                <div class="Nif">@item.NIF</div>
+                <div class="Number">@($"{item.TotalBases:#,###.00} €")</div>
+                <div class="Number">@($"{item.TipusMig:#.00} %")</div>
+                <div class="Number">@($"{item.TotalQuotas:#,###.00} %")</div>
+                <div class="Number">@($"{item.TotalLiquid:#,###.00} €")</div>
+            }
+        </div>
+    }
+    else
+    {
+        <Model Value="selectedValue"
+               AfterUpdate="HandleAfterUpdate"
+               AfterDelete="HandleAfterDelete"
+               CloseRequest="@(()=>selectedValue=null)"></Model>
+    }
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+@code {
+    List<EmpModel.EmpIds>? userEmps;
+    EmpModel.EmpIds? emp;
+    List<int>? years;
+    int? year;
+    List<CcaModel>? missingValues;
+    BookfraModel? selectedValue;
+    List<BookfraModel>? values;
+    string[]? periodes; // = new List<string>("Tot","T1","T2","T3","T4");
+    string? periode;
+    Exception? exception;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            year = DateTime.Today.Year;
+            periodes = new[] { "Tot", "T1", "T2", "T3", "T4" };
+            periode = periodes[0];
+            emp = ApiService.DefaultEmp();
+            years = Enumerable.Range(1985, DateTime.Now.Year - 1985 + 1).OrderByDescending(x => x).ToList();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private List<BookfraModel> FilteredValues()
+    {
+        List<BookfraModel>? retval;
+        switch (periode)
+        {
+            case "T1":
+                var maxFch = (new DateTime((int)year!, 4, 1)).ToDateOnly();
+                retval = values?.Where(x => x.FraFch < maxFch).ToList();
+                break;
+            case "T2":
+                maxFch = (new DateTime((int)year!, 7, 1)).ToDateOnly();
+                retval = values?.Where(x => x.FraFch < maxFch).ToList();
+                break;
+            case "T3":
+                maxFch = (new DateTime((int)year!, 10, 1)).ToDateOnly();
+                retval = values?.Where(x => x.FraFch < maxFch).ToList();
+                break;
+            case "T4":
+                maxFch = (new DateTime((int)year!, 4, 1)).ToDateOnly();
+                retval = values?.Where(x => x.FraFch < maxFch).ToList();
+                break;
+            default:
+                retval = values;
+                break;
+        }
+        return (retval ?? new());
+    }
+
+    private decimal TotalBases()
+    {
+        return FilteredValues()?.Sum(x => x.Ivas.Sum(y => y.Base)) ?? 0;
+    }
+
+    private decimal? TipusMig()
+    {
+        var totalBases = TotalBases();
+        return totalBases == 0 ? 0 : 100 * TotalQuotes() / totalBases;
+    }
+
+    private decimal TotalQuotes()
+    {
+        return FilteredValues()?.Sum(x => x.Ivas.Sum(y => y.Quota)) ?? 0;
+    }
+
+    private decimal TotalLiquids()
+    {
+        return FilteredValues()?.Sum(x => x.Ivas.Sum(y => y.Total)) ?? 0;
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            selectedValue = null;
+            missingValues = await ApiService.GetAsync<List<CcaModel>?>("bookfras/missingValues", ((int)emp!).ToString(), year!.ToString()!);
+            values = await ApiService.GetAsync<List<BookfraModel>?>("bookfras", ((int)emp!).ToString(), year!.ToString()!);
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void HandleAfterUpdate(IModel args)
+    {
+        if (args is BookfraModel)
+        {
+            var value = (BookfraModel)args;
+            var previous = values!.Where(x => x.CcaGuid == value.CcaGuid).FirstOrDefault();
+            if (previous == null)
+            {
+                values!.Add(value);
+                values = values.OrderBy(x => x.FraFch).ToList();
+
+                var missing = missingValues!.Where(x => x.Guid == value.CcaGuid).FirstOrDefault();
+                if (missing != null)
+                    missingValues!.Remove(missing);
+            }
+            else
+            {
+                var idx = values!.IndexOf(previous);
+                values[idx] = value;
+            }
+        }
+        selectedValue = null;
+    }
+
+    private void HandleAfterDelete(IModel args)
+    {
+        if (args is BookfraModel)
+        {
+            var value = (BookfraModel)args;
+            var previous = values!.Where(x => x.CcaGuid == value.CcaGuid).FirstOrDefault();
+            if (previous != null)
+                values!.RemoveAll(x => x.CcaGuid == value.CcaGuid);
+        }
+        selectedValue = null;
+    }
+
+    private async Task EmpChangedAsync(EmpModel.EmpIds args)
+    {
+        emp = args;
+        await LoadAsync();
+    }
+
+    private async Task YearChangedAsync(int? args)
+    {
+        year = args;
+        await LoadAsync();
+    }
+
+    private void HandlePeriodeChanged(object args)
+    {
+        periode = args.ToString();
+    }
+
+    private async Task MissingValueClick(CcaModel args)
+    {
+        var cca = await ApiService.GetAsync<CcaModel>("cca", args.Guid.ToString());
+        var carrec = cca!.Items.Where(x => ApiService.GetPgcCta(x.Cta)!.Id!.StartsWith("6") || ApiService.GetPgcCta(x.Cta)!.Id!.StartsWith("2"))
+        .OrderByDescending(x => x.Eur).FirstOrDefault();
+        var ivaSoportat = cca.Items.Where(x => ApiService.GetPgcCta(x.Cta)!.Cod == PgcCtaModel.Cods.IvaSoportatNacional).FirstOrDefault();
+        var ivas = new List<BaseQuotaModel>();
+        if (ivaSoportat != null)
+        {
+            ivas.Add(new BaseQuotaModel()
+            {
+                Base = carrec.Eur,
+                Quota = ivaSoportat.Eur,
+                Tipo = Math.Round(100 * ivaSoportat.Eur / carrec.Eur, 0)
+            });
+        }
+
+        selectedValue = new BookfraModel()
+        {
+            CcaGuid = cca.Guid,
+            ContactGuid = carrec!.Contact,
+            CtaGuid = carrec.Cta,
+            FraFch = cca.Fch,
+            FraNum = cca.FraNum(),
+            RaoSocial = ApiService.GetContact(carrec.Contact)?.FullNom,
+            NIF = ApiService.GetContact(carrec.Contact)?.Nifs.FirstOrDefault()?.Value,
+            Ivas = ivas
+        };
+    }
+
+    void LoadExcel(DTO.Excel.Book book)
+    {
+        book.Filename = $"Llibre factures emeses.xlsx";
+        DTO.Excel.Sheet sheet = book.AddSheet("Llibre factures emeses");
+        sheet.FontSize = 8;
+        sheet.AddColumn("Data", DTO.Excel.Cell.NumberFormats.DDMMYY);
+        sheet.AddColumn("Factura");
+        sheet.AddColumn("Nom");
+        sheet.AddColumn("Nif");
+        sheet.AddColumn("Base", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("Tipo", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("Quota", DTO.Excel.Cell.NumberFormats.Euro);
+
+        foreach (var item in FilteredValues())
+        {
+            foreach (var iva in item.Ivas)
+            {
+                var row = sheet.AddRow();
+                row.AddFch(item.FraFch);
+                row.AddCell(item.FraNum);
+                row.AddCell(item.RaoSocial);
+                row.AddCell(item.NIF);
+                row.AddEur(iva.Base);
+                row.AddEur(iva.Tipo);
+                row.AddEur(iva.Quota);
+            }
+        }
+    }
+
+}

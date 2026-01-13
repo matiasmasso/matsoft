@@ -1,0 +1,49 @@
+﻿@using System.Globalization
+@using Microsoft.AspNetCore.Http;
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+<p>
+    <label>
+        <select value="@culture" @onchange="CultureChange">
+            @foreach (var item in supportedCultures)
+            {
+                <option value="@item">@item.DisplayName</option>
+            }
+        </select>
+    </label>
+</p>
+
+@code
+{
+    CultureInfo? culture;
+
+    protected override void OnInitialized()
+    {
+        var cookie = HttpContextAccessor.HttpContext?.Request.Cookies[".AspNetCore.Culture"]; //Microsoft.AspNetCore.Localization.CookieRequestCultureProvider.DefaultCookieName];
+        var cc = cookie == null ? "es" : cookie?.Split("|").First().Split("=")[1] ?? "es";
+        culture = new CultureInfo(cc);
+    }
+
+    void CultureChange(ChangeEventArgs e)
+    {
+        var cc = e.Value!.ToString()!;
+        var uri = new Uri(Navigation.Uri)
+            .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+        var cultureEscaped = Uri.EscapeDataString(cc);
+        var uriEscaped = Uri.EscapeDataString(uri);
+
+        Navigation.NavigateTo(
+            $"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}",
+            forceLoad: true);
+    }
+
+    private CultureInfo[] supportedCultures = new[]
+    {
+        new CultureInfo("es"),
+        new CultureInfo("ca"),
+        new CultureInfo("en"),
+        new CultureInfo("pt")
+    };
+}

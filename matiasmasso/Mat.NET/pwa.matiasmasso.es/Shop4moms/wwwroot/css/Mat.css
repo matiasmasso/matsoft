@@ -1,0 +1,185 @@
+﻿body {
+    font-family: "CntryGthc","Century Gothic",CenturyGothic,Helvetica,sans-serif;
+    font-size:.8em;
+}
+
+h1 {
+    font-size: 30px;
+    font-weight: 400;
+    color: #555555;
+}
+
+h1:focus {
+    outline: none; /*prevents blazor selecting and outlining h1s*/
+}
+
+h2 {
+    font-size: 30px;
+    font-weight: 400;
+    color: #555555;
+}
+
+
+input {
+    box-sizing: border-box;
+}
+
+    input[type=text], input[type=tel], input[type=num], input[type=email], input[type=password] {
+        padding: 6px 2px 5px 3px;
+        max-height:30px;
+    }
+
+.Hidden {
+    display: none !important;
+}
+
+.video-responsive {
+    height: 0;
+    overflow: hidden;
+    padding-bottom: 56.25%;
+    /* padding-top: 30px; */
+    position: relative;
+}
+
+    .video-responsive iframe, .video-responsive object, .video-responsive embed {
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+    }
+
+@media (min-width:599px) {
+    .HideOnDesktop {
+        display: none;
+    }
+}
+
+@media (max-width:599px) {
+    .HideOnMobile {
+        display: none;
+    }
+}
+
+    .Wrapper600 {
+        width: 100%;
+        max-width: 600px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 10px;
+        margin: auto;
+    }
+
+.Wrapper900 {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+}
+
+.WrapperFullWidth {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+}
+
+
+    .Truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .RightAlign {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .ButtonsBar {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .Button {
+        display: inline-block;
+        font-weight: 400;
+        line-height: 1.5;
+        border-color: #198754;
+        text-align: center;
+        text-decoration: none;
+        vertical-align: middle;
+        border: 1px solid transparent;
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        border-radius: .25rem;
+        transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        -webkit-appearance: button;
+    }
+
+    .ButtonOk {
+        color: #fff;
+        background-color: #198754;
+    }
+
+    .ButtonLemon {
+        background-color: lemonchiffon;
+    }
+
+        .ButtonLemon:hover {
+            color: white;
+        }
+
+    .Button:disabled {
+        color: gray !important;
+        background-color: #DDDDDD !important;
+    }
+
+    .Button:not(:disabled):hover {
+        background-color: #5a95f5 !important;
+        color: white !important;
+    }
+
+    .Content h1 {
+        display: block;
+        padding: 0 0 10px 0;
+        font-size: 1.3em;
+        margin-block-start: 0;
+        margin-block-end: 0;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        font-weight: bold;
+        color: #a9a9a9;
+    }
+
+    .Content h2 {
+        display: block;
+        font-size: 1.2em;
+        margin-block-start: .53em;
+        margin-block-end: .33em;
+        margin-inline-start: 0;
+        margin-inline-end: 0;
+        font-weight: bold;
+        color: #666;
+    }
+
+    .Content h3 {
+        display: block;
+        font-size: 1.1em;
+        margin-block-start: 0.53em;
+        margin-block-end: 0.33em;
+        margin-inline-start: 0px;
+        margin-inline-end: 0px;
+        font-weight: bold;
+        color: black;
+    }
+
+    .Content img {
+        padding: 20px 0;
+    }
+

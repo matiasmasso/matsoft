@@ -1,0 +1,174 @@
+﻿@inherits _Base
+
+
+<div class="PageWrapper600">
+    <h1>Atlas</h1>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    @if (Cache != null)
+    {
+        @if(string.IsNullOrEmpty(searchTerm))
+        {
+            <div class="Grid">
+                <div class="Countries">
+
+                    @if (selectedCountry == null)
+                    {
+                        @foreach (var item in (isShowingAllCountries ? Cache.Countries : Cache.FavoriteCountries()))
+                        {
+                            <a class="Item" href="#" @onclick="@(()=>ItemClicked(item))" @onclick:preventDefault="true">
+                                @(item?.Nom?.Tradueix(base.Lang()) ?? "?")
+                            </a>
+                        }
+                        <a class="Item" href="#" @onclick="@(()=>{isShowingAllCountries = !isShowingAllCountries;})" @onclick:preventDefault="true">
+                            @(isShowingAllCountries ? base.Tradueix("(ver favoritos)", "(veure favorits)", "(show favourites)") : base.Tradueix("(todos los paises)", "(tots els països)", "(all countries)"))
+                        </a>
+
+                    }
+                    else
+                    {
+                        <a class="Item SelectedCountry" href="#" @onclick="@(()=>ItemClicked(selectedCountry))" @onclick:preventDefault="true">
+                            @selectedCountry.Nom
+                        </a>
+
+                        @if (selectedZona == null)
+                        {
+                            @foreach (var item in Zonas())
+                            {
+                                <a class="Item" href="#" @onclick="@(()=>ItemClicked(item))" @onclick:preventDefault="true">
+                                    @item.Nom
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <a class="Item SelectedZona" href="#" @onclick="@(()=>ItemClicked(selectedZona))" @onclick:preventDefault="true">
+                                @selectedZona.Nom
+                            </a>
+
+                            @if (selectedLocation == null)
+                            {
+                                @foreach (var item in Locations())
+                                {
+                                    <a class="Item" href="#" @onclick="@(()=>ItemClicked(item))" @onclick:preventDefault="true">
+                                        @item.Nom
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                <a class="Item SelectedLocation" href="#" @onclick="@(()=>ItemClicked(selectedLocation))" @onclick:preventDefault="true">
+                                    @selectedLocation.Nom
+                                </a>
+
+                                @foreach (var contact in contacts)
+                                {
+                                    <a class="Item" href="#" @onclick="@(()=>ContactClick(contact.Guid))" @onclick:preventDefault="true">
+                                        @contact.FullNom
+                                    </a>
+                                }
+                            }
+                        }
+                    }
+
+                </div>
+            </div>
+        }
+        else
+        {
+            foreach(var contact in Cache!.Contacts
+            .Where(x=>x.Nom.Contains(searchTerm, StringComparison.CurrentCultureIgnoreCase))
+            .OrderBy(x=>x.Nom)
+            .ToList())
+            {
+                <a class="Item" href="#" @onclick="@(()=>ContactClick(contact.Guid))" @onclick:preventDefault="true">
+                    @contact.Nom
+                </a>
+            }
+        }
+    }
+    else
+    {
+        <Loading></Loading>
+    }
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    private string? searchTerm;
+    private CountryModel? selectedCountry;
+    private ZonaModel? selectedZona;
+    private LocationModel? selectedLocation;
+    private ZipModel? selectedZip;
+    private List<ContactModel> contacts = new();
+    private bool isLoaded = false;
+    private bool isShowingAllCountries = false;
+    private ProblemDetails? problemDetails;
+
+    private List<ZonaModel> Zonas() => Cache!.Zonas.Where(x => x.Country == selectedCountry?.Guid).ToList();
+    private List<LocationModel> Locations() => Cache!.Locations.Where(x => x.Zona == selectedZona?.Guid).ToList();
+    private List<ZipModel> Zips() => Cache!.Zips.Where(x => x.Location == selectedLocation?.Guid).ToList();
+
+    private async Task ItemClicked(BaseGuid? item)
+    {
+        if (item is CountryModel)
+        {
+            if (selectedCountry == null)
+                selectedCountry = (CountryModel)item;
+            else
+            {
+                selectedCountry = selectedCountry == item ? null : (CountryModel)item;
+                selectedZona = null;
+                selectedLocation = null;
+                selectedZip = null;
+            }
+        }
+        else if (item is ZonaModel)
+        {
+            if (selectedZona == null)
+                selectedZona = (ZonaModel)item;
+            else
+            {
+                selectedZona = selectedZona == item ? null : (ZonaModel)item;
+                selectedLocation = null;
+                selectedZip = null;
+            }
+        }
+        else if (item is LocationModel)
+        {
+            if (selectedLocation == null)
+                selectedLocation = (LocationModel)item;
+            else
+            {
+                selectedLocation = selectedLocation == item ? null : (LocationModel)item;
+            }
+
+            if (selectedLocation == null)
+                contacts = new();
+            else
+            {
+                var apiResponse = await GetAsync<List<Guid>>("Location/contacts", selectedLocation.Guid.ToString());
+                if (apiResponse.Success())
+                    contacts = (apiResponse.Value ?? new())
+                    .Select(x => new ContactModel(x)
+                        {
+                            FullNom = Cache?.Contacts.FirstOrDefault(y => y.Guid == x)?.Nom ?? "?"
+                        })
+                    .ToList();
+                else
+                    problemDetails = apiResponse.ProblemDetails;
+
+
+            }
+        }
+
+    }
+
+    void ContactClick(Guid guid)
+    {
+
+    }
+}

@@ -1,0 +1,65 @@
+﻿@page "/CertificatsIrpf"
+@page "/CertificatsIrpf/{Contact:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+<h1>@base.Tradueix("Certificados Irpf","Certificats Irpf","Tax certificates")</h1>
+
+@if (model == null)
+{
+    <div>
+        <img src="/img/Spinner-24.gif" alt="loading..." />
+    </div>
+}
+else
+{
+    <div class="Summary">
+        @string.Format(base.Tradueix("Se han encontrado {0} certificados",
+        "S'han trobat {0} certificats",
+        "{0} tax certificates found"
+        ),model.Count())
+    </div>
+
+    <div class="Grid">
+        @if (model != null)
+        {
+            foreach (var item in model)
+            {
+                <a href="@(Globals.ApiUrl("certificatIrpf/pdf",item.Guid.ToString()))" target="_blank" class="Item">
+                    <div class="Ico">
+                        <img src="img/pdf-36.png" alt="nómina" height="36" width="36" />
+                    </div>
+
+                    <div class="Caption">
+                        @item.Year
+                    </div>
+                </a>
+            }
+        }
+        else
+        {
+            <div>loading...</div>
+        }
+    </div>
+
+
+}
+@code {
+    [Parameter] public Guid? Contact { get; set; }
+
+    private List<CertificatIrpfDTO>? model;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (model == null)
+        {
+            if (Contact is null)
+                model = await base.GetAsync<List<CertificatIrpfDTO>>("CertificatsIrpf");
+            else
+                model = await base.GetAsync<List<CertificatIrpfDTO>>("CertificatsIrpf", Contact!.ToString());
+            StateHasChanged();
+        }
+    }
+
+
+}

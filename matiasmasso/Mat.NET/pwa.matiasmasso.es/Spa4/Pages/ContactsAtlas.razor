@@ -1,0 +1,221 @@
+﻿@page "/contactsAtlas"
+@inherits _ComponentBase
+@layout ProLayout
+@using System.Linq;
+
+<div class="Wrapper">
+    <h1>Atlas de contactes</h1>
+    @if (model == null)
+    {
+        <div>
+            <img src="/img/Spinner-24.gif" alt="loading..." />
+        </div>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        @if (HasSearchTerm())
+        {
+            foreach (var item in model.FilteredContacts(searchTerm))
+            {
+                <a href="#" @onclick="@(()=>Expand(item))" @onclick:preventDefault="true" class="Item">
+                    @item.Nom
+                </a>
+            }
+        }
+        else
+        {
+            foreach (var item in selectedItems)
+            {
+                <a href="#" @onclick="@(()=>Collapse(item))" @onclick:preventDefault="true" class="Item Selected">
+                    @item.Nom
+                </a>
+            }
+
+            foreach (var item in items)
+            {
+                @if (item.Cod == AtlasDTO.DisplayItem.Cods.Telefon)
+                {
+                    <a href="@item.Value" class="Item">
+                        <i class="fa-solid fa-phone"></i>
+                        <span>@item.Nom</span>
+                    </a>
+                }
+                else if (item.Cod == AtlasDTO.DisplayItem.Cods.Email)
+                {
+                    <a href="@item.Value" class="Item">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>@item.Nom</span>
+                    </a>
+                }
+                else if (item.Cod == AtlasDTO.DisplayItem.Cods.ContactDetails)
+                {
+                    <ContactPropertyGrid Guid="@ContactGuid(item)"></ContactPropertyGrid>
+                }
+                else if (item.Cod == AtlasDTO.DisplayItem.Cods.Cta)
+                {
+                }
+                else
+                {
+                    <a href="#" @onclick="@(()=>Expand(item))" @onclick:preventDefault="true" class="Item">
+                        @item.Nom
+                    </a>
+                }
+
+            }
+        }
+
+    }
+</div>
+@code {
+    private AtlasDTO? model = null;
+    private List<AtlasDTO.DisplayItem> selectedItems { get; set; } = new();
+    private List<AtlasDTO.DisplayItem> items { get; set; } = new();
+    private string? searchTerm;
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = await GetAsync<AtlasDTO>("atlas/Contacts");
+            var oDefaulCountry = CountryDTO.Wellknown(CountryDTO.Wellknowns.Spain);
+            var selectedItem = model.Countries().First(x => x.Guid == oDefaulCountry!.Guid);
+            selectedItems.Add(selectedItem);
+            items = model.Zonas(selectedItem.Guid);
+            StateHasChanged();
+        }
+    }
+
+    private async Task Collapse(AtlasDTO.DisplayItem selectedItem)
+    {
+        var idx = selectedItems.IndexOf(selectedItem);
+        selectedItems = selectedItems.Take(idx).ToList();
+        StateHasChanged();    // to be sure, probably not needed
+        await Task.Delay(1);  // allow time for the rendering
+
+        var parent = selectedItems.Count == 0 ? null : selectedItems.Last();
+        await Expand(parent);
+        StateHasChanged();
+    }
+
+    private bool HasSearchTerm() => (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 3);
+
+    private async Task Expand(AtlasDTO.DisplayItem item)
+    {
+        if (HasSearchTerm())
+        {
+            searchTerm = string.Empty;
+            selectedItems = model!.ParentItems(item);
+        }
+
+        if (!(item == selectedItems.Last()))
+            selectedItems.Add(item);
+
+        items = new List<AtlasDTO.DisplayItem>();
+        StateHasChanged();
+        await Task.Delay(1);  // allow time for the rendering
+
+        switch (item.Cod)
+        {
+            case AtlasDTO.DisplayItem.Cods.Country:
+                items = model!.Zonas(item.Guid);
+                break;
+            case AtlasDTO.DisplayItem.Cods.Zona:
+                items = model!.Locations(item.Guid);
+                break;
+            case AtlasDTO.DisplayItem.Cods.Location:
+                items = model!.Contacts(item.Guid);
+                break;
+            case AtlasDTO.DisplayItem.Cods.Contact:
+                items = model!.MenuItems(item.Guid, base.Lang());
+                break;
+            case AtlasDTO.DisplayItem.Cods.MenuItem:
+                switch (item.Action)
+                {
+                    case AtlasDTO.DisplayItem.Actions.Fitxa:
+                        items = await ContactDetails(item.Guid);
+                        break;
+                    case AtlasDTO.DisplayItem.Actions.Telefons:
+                        items = await Telefons(item.Guid);
+                        break;
+                    case AtlasDTO.DisplayItem.Actions.Emails:
+                        items = await Emails(item.Guid);
+                        break;
+                    case AtlasDTO.DisplayItem.Actions.Ctas:
+                        NavigationManager.NavigateTo("/PgcCtaSdos/" + item.Guid.ToString());
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        }
+
+        StateHasChanged();
+
+    }
+
+    private async Task<List<AtlasDTO.DisplayItem>> ContactDetails(Guid contact)
+    {
+        var retval = new List<AtlasDTO.DisplayItem>();
+        var src = await base.GetAsync<ContactDTO>("contact", contact.ToString());
+        if (src != null)
+        {
+            retval.Add(new AtlasDTO.DisplayItem
+                {
+                    Cod = AtlasDTO.DisplayItem.Cods.ContactDetails,
+                    Tag = src
+                });
+        }
+        return retval;
+    }
+
+    private async Task<List<AtlasDTO.DisplayItem>> Telefons(Guid contact)
+    {
+        var retval = new List<AtlasDTO.DisplayItem>();
+        var srcs = await base.GetAsync<List<ContactModel.Telefon>>("contact/telefons", contact.ToString());
+        if (srcs != null)
+        {
+            retval = srcs.Select(x => new AtlasDTO.DisplayItem
+                {
+                    Cod = AtlasDTO.DisplayItem.Cods.Telefon,
+                    Nom = x.Caption(),
+                    Value = string.Format("tel:{0}", x.Value())
+                }).ToList();
+            return retval;
+        }
+        return retval;
+    }
+
+    private async Task<List<AtlasDTO.DisplayItem>> Emails(Guid contact)
+    {
+        var retval = new List<AtlasDTO.DisplayItem>();
+        var srcs = await base.GetAsync<List<ContactModel.Email>>("contact/emails", contact.ToString());
+        if (srcs != null)
+        {
+            retval = srcs.Select(x => new AtlasDTO.DisplayItem
+                {
+                    Cod = AtlasDTO.DisplayItem.Cods.Email,
+                    Nom = x.Caption(),
+                    Value = string.Format("mailto:{0}", x.EmailAddress ?? "?")
+                }).ToList();
+            return retval;
+        }
+        return retval;
+    }
+
+    private async Task<List<AtlasDTO.DisplayItem>> Ctas(Guid contact)
+    {
+        var retval = new List<AtlasDTO.DisplayItem>();
+        return retval;
+    }
+
+    private Guid ContactGuid(AtlasDTO.DisplayItem item)
+    {
+        ContactDTO dto = (ContactDTO)item.Tag;
+        return dto.Contact.Guid;
+    }
+
+
+    }

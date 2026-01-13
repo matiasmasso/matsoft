@@ -1,0 +1,113 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject ProductsService productsService
+
+<div class="Grid">
+    <div class="ColHeaders">
+        <div class="Id">
+            @culture.Localize("Ref")
+        </div>
+        <div class="Nom">
+            @culture.Localize("Nom")
+        </div>
+        <div class="Icon">
+            &nbsp;
+        </div>
+        <div class="Stock">
+            @culture.Localize("Stock")
+        </div>
+        <div class="Clients">
+            @culture.Localize("Clients")
+        </div>
+        <div class="Prog">
+            @culture.Localize("Prog")
+        </div>
+        <div class="Pvp">
+            @culture.Localize("Pvp")
+        </div>
+        <div class="HasImg">
+            &nbsp;
+        </div>
+        <div class="Proveidor">
+            @culture.Localize("Prov")
+        </div>
+
+    </div>
+    @foreach (var item in Items() ?? new())
+    {
+        <div class="Item">
+            <div class="Id">
+                @item.Id.ToString()
+            </div>
+            <div class="Nom" @onclick="@(()=>ItemClick(item))">
+                @item.Nom?.Tradueix(culture.Lang())
+            </div>
+            <div class="Icon">
+                &nbsp;
+            </div>
+            <div class="Stock">
+                @Stock(item)?.ToString("N0")
+            </div>
+            <div class="Clients">
+                @Pnc(item)?.Clients.ToString("N0")
+            </div>
+            <div class="Prog">
+                @Pnc(item)?.EnProgramacio.ToString("N0")
+            </div>
+            <div class="Pvp">
+                @RetailPrice(item)?.ToString("N2")
+            </div>
+            <div class="HasImg">
+                <Icon Id="@(@item.HasImage ? Icon.Ids.Eye : Icon.Ids.EyeSlash)"></Icon>
+            </div>
+            <div class="Proveidor">
+                @Pnc(item)?.Proveidors.ToString("N0")
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ProductCategoryModel? Category { get; set; }
+    [Parameter] public EventCallback<ProductSkuModel> ItemSelected { get; set; }
+    [Parameter] public bool ShowObsoletos { get; set; }
+    [Parameter] public MgzModel? Mgz { get; set; } = MgzModel.Default();
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        productsService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca(null);
+    }
+
+    List<ProductSkuModel>? Items()
+    {
+        var skus = productsService.Skus(Category, true);
+        return skus?.OrderBy(x => x.Nom?.Tradueix(culture.Lang())).ToList();
+    }
+
+    int? Stock(ProductSkuModel sku) => productsService.Stock(sku.Guid, Mgz.Guid)?.Stock;
+    SkuPncModel? Pnc(ProductSkuModel sku) => productsService.Pnc(sku.Guid);
+    Decimal? RetailPrice(ProductSkuModel sku) => productsService.RetailPrice(sku.Guid);
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ItemClick(ProductSkuModel sku)
+    {
+        await ItemSelected.InvokeAsync(sku);
+    }
+
+    public void Dispose()
+    {
+        productsService.OnChange -= Refresca;
+    }
+}

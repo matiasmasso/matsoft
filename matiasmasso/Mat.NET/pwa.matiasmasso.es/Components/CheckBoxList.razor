@@ -1,0 +1,86 @@
+﻿@typeparam TItem
+
+@if (AllItems != null)
+{
+    <div class="Item">
+        <input type="checkbox" checked=@(AllItems.Count == SelectedItems.Count)
+           @onchange="(e) => CheckAll(e.Value)" />
+        Check all
+    </div>
+
+    foreach (TItem item in AllItems)
+    {
+        var Text = TextField?.Invoke(item);
+        var Value = ValueField?.Invoke(item).ToString();
+        bool Checked = SelectedItems.Contains(item);
+
+        <div class="Item">
+            <input type="checkbox" checked=@Checked
+                @onchange="(e) => CheckboxClicked(item, e.Value)" />
+            @Text
+        </div>
+    }
+}
+
+@code {
+
+    [Parameter] public List<TItem> AllItems { get; set; } = new();
+    [Parameter] public Func<TItem, string>? TextField { get; set; }
+    [Parameter] public Func<TItem, object>? ValueField { get; set; }
+
+    [Parameter] public List<TItem> SelectedItems { get; set; } = new();
+    [Parameter] public EventCallback<List<TItem>> SelectedItemsChanged { get; set; }
+    [Parameter] public EventCallback<List<int>> SelectedValuesChanged { get; set; }
+
+
+
+    [Parameter] public List<int> SelectedValues
+    {
+        get
+        {
+            var retval = SelectedItems.Select(x => int.Parse(ValueField?.Invoke(x).ToString())).ToList();
+            return retval;
+        }
+        set
+        {
+            SelectedItems = AllItems.Where(x => value.Any(y => int.Parse(ValueField?.Invoke(x).ToString()) == y)).ToList();
+        }
+    }
+
+    public async Task CheckboxClicked(TItem item, object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            if (!SelectedItems.Contains(item))  SelectedItems.Add(item);
+        }
+        else
+        {
+            if (SelectedItems.Contains(item)) SelectedItems.Remove(item);
+        }
+
+        if (SelectedItemsChanged.HasDelegate)
+            await SelectedItemsChanged.InvokeAsync(SelectedItems);
+
+        if (SelectedValuesChanged.HasDelegate)
+            await SelectedValuesChanged.InvokeAsync(SelectedValues);
+    }
+
+    public async Task CheckAll(object isChecked)
+    {
+        if ((bool)isChecked)
+        {
+            SelectedItems = new List<TItem>();
+            foreach(var item in AllItems){
+                SelectedItems.Add(item);
+            }
+
+            if (SelectedItemsChanged.HasDelegate)
+                await SelectedItemsChanged.InvokeAsync(SelectedItems);
+
+            if (SelectedValuesChanged.HasDelegate)
+                await SelectedValuesChanged.InvokeAsync(SelectedValues);
+        }
+
+    }
+
+}

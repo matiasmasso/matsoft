@@ -1,0 +1,117 @@
+﻿@page "/{LangSegment}/BackOffice/TpvLogs"
+@page "/BackOffice/TpvLogs"
+@inherits _PageBase
+@inject TpvService tpvService
+@inject CultureService culture
+<div class="Wrapper900">
+
+    @if (selectedItem != null)
+    {
+        <TpvLog Value="selectedItem" RequestToCancel="@(()=>selectedItem = null)"></TpvLog>
+    }
+    else
+    {
+        <h2>Tpv logs</h2>
+
+        @if (items == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <div class="Grid">
+                <div class="ColHeaders">
+                    <div class="Ico">&nbsp;</div>
+                    <div class="Fch">@culture.Localize("Fch")</div>
+                    <div class="Order">@culture.Localize("Order")</div>
+                    <div class="Eur RightAlign">@culture.Localize("Amt")</div>
+                    <div class="Eur RightAlign">@culture.Localize("Result")</div>
+                    <div class="Nom">@culture.Localize("Concept")</div>
+                </div>
+
+                @foreach (var item in items)
+                {
+                    <a class="Item" href="#" @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                        <div class="Ico">
+                            @if (item.Success())
+                            {
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                    <path d="M440.1 103C450.3 112.4 450.3 127.6 440.1 136.1L176.1 400.1C167.6 410.3 152.4 410.3 143 400.1L7.029 264.1C-2.343 255.6-2.343 240.4 7.029 231C16.4 221.7 31.6 221.7 40.97 231L160 350.1L407 103C416.4 93.66 431.6 93.66 440.1 103V103z" />
+                                </svg>
+                            }
+                            else
+                            {
+                                <span>&nbsp;</span>
+                            }
+                        </div>
+
+                        <div class="Fch">@String.Format("{0:dd/MM/yy HH:mm}",item.FchCreated)</div>
+                        <ContextMenuTrigger MenuId="myMenu" Data="item">
+                            <div class="Order">@item.Ds_Order</div>
+                        </ContextMenuTrigger>
+                        <div class="Eur RightAlign">@String.Format("{0:N2} €",Convert.ToDecimal(item.Ds_Amount)/100)</div>
+                        <div class="Response">@item.Ds_Response</div>
+                        <div class="Nom Truncate">@item.Ds_ProductDescription</div>
+                    </a>
+                }
+            </div>
+        }
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+<PageTitle>4moms Backoffice | Tpv logs</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+<ContextMenu Id="myMenu">
+    <Item Key="Delete" OnClick="@MenuItemClick">Eliminar</Item>
+    <Item Key="TpvOk" OnClick="@MenuItemClick">Enviar a TpvOk</Item>
+    <Item Key="TpvFeed" OnClick="@MenuItemClick">Enviar a Tpv Feed</Item>
+</ContextMenu>
+
+@code {
+    private List<DTO.Integracions.Redsys.TpvLog>? items;
+    DTO.Integracions.Redsys.TpvLog? selectedItem = null;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresca();
+    }
+
+    async Task Refresca()
+    {
+        var apiResponse = await GetAsync<List<DTO.Integracions.Redsys.TpvLog>>("Redsys/logs", tpvService.Tpv(base.Lang()).MerchantCode ?? "");
+        if (apiResponse.Success())
+            items = apiResponse.Value;
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    async Task MenuItemClick(ItemClickEventArgs e)
+    {
+        var item = (DTO.Integracions.Redsys.TpvLog)e.Data;
+        var key = e.MenuItem.Attributes["Key"].ToString();
+        switch (key)
+        {
+            case "Delete":
+                var apiResponse = await base.GetAsync<bool>("TpvLog/delete", item.Guid.ToString());
+                if (apiResponse.Success())
+                    await Refresca();
+                else
+                    problemDetails = apiResponse.ProblemDetails;
+                break;
+            case "TpvOk":
+                navigationManager?.NavigateTo("/tpv/gateway/Ok/" + item.Guid.ToString());
+                break;
+            case "TpvFeed":
+                navigationManager?.NavigateTo("/tpv/gateway/Ok/" + item.Guid.ToString());
+                break;
+        }
+        Console.WriteLine($"Item Clicked => Menu: {e.ContextMenuId}, MenuTarget: {e.ContextMenuTargetId}, IsCanceled: {e.IsCanceled}, MenuItem: {e.MenuItemElement}, MouseEvent: {e.MouseEvent}");
+    }
+}

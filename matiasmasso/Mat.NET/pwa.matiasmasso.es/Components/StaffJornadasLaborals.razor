@@ -1,0 +1,54 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Grid">
+            <div class="Item ColumnHeaders">
+                <div class="FchFrom">@Localizer("Day")</div>
+                <div class="FchFrom">@Localizer("Entry")</div>
+                <div class="FchTo">@Localizer("Exit")</div>
+            </div>
+            @foreach (var item in model)
+            {
+                <a class="Item" href="#" @onclick:preventDefault="true">
+                    <div class="Day">@item.DayFullName(base.Lang())</div>
+                    <div class="HourFrom">@item.FchFrom.ToString("HH:mm")</div>
+                    <div class="HourTo">@(item.FchTo?.ToString("HH:mm") ?? "")</div>
+                </a>
+                <div class="Line"></div>
+            }
+        </div>
+    }
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    List<JornadaLaboralModel>? model;
+    private ProblemDetails problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ApiResponse<List<JornadaLaboralModel>> apiResponse;
+
+        if (Guid == null)
+        {
+            apiResponse = await base.GetAsync<List<JornadaLaboralModel>>("staff/JornadasLaborals");
+        }
+        else
+        {
+            apiResponse = await base.GetAsync<List<JornadaLaboralModel>>("staff/JornadasLaborals", Guid.ToString());
+        }
+
+        model = apiResponse.Value;
+        problemDetails = apiResponse.ProblemDetails;
+    }
+
+}

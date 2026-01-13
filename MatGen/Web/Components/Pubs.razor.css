@@ -1,0 +1,18 @@
+﻿/*issues found?*/
+
+
+.Item > a {
+    display:block;
+}
+
+
+@media(min-width:600px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content 1fr;
+        grid-column-gap: 10px;
+    }
+    .Item {
+        display:contents;
+    }
+}

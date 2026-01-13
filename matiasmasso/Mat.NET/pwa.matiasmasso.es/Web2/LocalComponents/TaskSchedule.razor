@@ -1,0 +1,144 @@
+﻿@inject CultureService culture
+@inject TasksService tasksService
+
+<div class="PageWrapper600">
+    <h3>@culture.Localize("Schedule")</h3>
+
+    <div>@culture.Localize("Task"): @Model?.Task?.Nom</div>
+
+
+
+    <div class="Modes">
+        <div class="Ico">
+            <Toggle Value="Model?.Enabled" ValueChanged="EnabledChange"></Toggle>
+        </div>
+        <div class="Nom">
+            @culture.Localize("Enabled")
+        </div>
+        <div>&nbsp;</div>
+
+        <div class="Ico">
+            <input type="radio" checked="@(Model?.Mode == TaskModel.Schedule.Modes.Interval)"
+                   name="Mode" @onchange="@(() => ToggleMode( TaskModel.Schedule.Modes.Interval))" />
+        </div>
+        <div class="Nom">@culture.Localize("TaskSchedule.Interval")</div>
+        <div class="InputNums @(Model?.Mode == TaskModel.Schedule.Modes.GivenTime ? "Disabled" : "")">
+            <PeriodOfTime Value="@intervalPT" ValueChanged="IntervalPTChanged"></PeriodOfTime>
+        </div>
+
+        <div class="Ico">
+            <input type="radio" checked="@(Model?.Mode == TaskModel.Schedule.Modes.GivenTime)"
+                   name="Mode" @onchange="@(() => ToggleMode( TaskModel.Schedule.Modes.GivenTime))" />
+        </div>
+        <div class="Nom">@culture.Localize("TaskSchedule.GivenTime")</div>
+        <div class="InputNums @(Model?.Mode == TaskModel.Schedule.Modes.GivenTime ? "" : "Disabled")">
+            <PeriodOfTime Value="@givenTimePT" ValueChanged="GivenTimePTChanged"></PeriodOfTime>
+        </div>
+
+    </div>
+
+    <div class="Weekdays">
+        <div class="Info">@culture.Localize("Weekdays")</div>
+        <Weekdays Value="@Model?.WeekDays" ValueChange="WeekdaysChange"></Weekdays>
+    </div>
+
+    <div class="ButtonsBar">
+        <ButtonsBar CanEdit="@true"
+                    State="state"
+                    CanDelete="@(!(Model?.IsNew ?? false))"
+                    RequestToCancel="CancelRequest"
+                    RequestToUpdate="UpdateRequestAsync"
+                    RequestToDelete="DeleteRequestAsync"></ButtonsBar>
+    </div>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+@code {
+    [Parameter] public TaskModel.Schedule? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    bool enabled;
+    string? intervalPT;
+    string? givenTimePT;
+    private DbState state;
+    Exception? exception;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Model != null)
+        {
+            enabled = Model.Enabled;
+            if (Model.Mode == TaskModel.Schedule.Modes.Interval)
+                intervalPT = Model.TimeInterval;
+            else
+                givenTimePT = Model.TimeInterval;
+        }
+    }
+
+    void ToggleMode(TaskModel.Schedule.Modes args)
+    {
+        Model!.Mode = args;
+    }
+
+    void EnabledChange(bool args)
+    {
+        Model!.Enabled = args;
+    }
+
+    void IntervalPTChanged(string value)
+    {
+        intervalPT = value;
+        state = DbState.IsDirty;
+    }
+
+    void GivenTimePTChanged(string value)
+    {
+        intervalPT = value;
+        state = DbState.IsDirty;
+    }
+
+    void WeekdaysChange(string value)
+    {
+        Model!.WeekDays = value;
+        state = DbState.IsDirty;
+    }
+
+    async Task UpdateRequestAsync()
+    {
+        state = DbState.IsUpdating;
+        try
+        {
+            Model!.TimeInterval = Model.Mode == TaskModel.Schedule.Modes.Interval ? intervalPT : givenTimePT;
+
+            await tasksService.UpdateScheduleAsync(Model!);
+            await RequestToCancel.InvokeAsync();
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task DeleteRequestAsync()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await tasksService.DeleteScheduleAsync(Model!);
+            await RequestToCancel.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+
+}

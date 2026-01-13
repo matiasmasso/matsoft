@@ -1,0 +1,288 @@
+﻿@page "/sumasysaldos2"
+@* @implements IDisposable*@
+@inject ApiService ApiService
+
+<div class="PageWrapper900">
+    <h3>Sumas y Saldos</h3>
+
+    @if (values == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <PageOptions>
+            <LookupEmp Value="emp" ValueChanged="HandleEmpChanged"></LookupEmp>
+            <LookupYears Value="year" Values="years" ValueChanged="HandleYearChanged"></LookupYears>
+            <LookupMonths Value="month" ValueChanged="HandleMonthChanged"></LookupMonths>
+            <ButtonExcel LoadRequest="LoadExcel" IsReady="@(ApiService.GetPgcCtas() != null)"></ButtonExcel>
+            <ButtonExcel LoadRequest="LoadExcel4Digits" IsReady="@(ApiService.GetPgcCtas() != null)" Caption="Excel4d"></ButtonExcel>
+        </PageOptions>
+        <div class="Grid">
+            <div class="Item">
+                <div class="Truncate">
+                    Compte
+                </div>
+                <div class="Truncate">
+                    Subcompte
+                </div>
+                <div class="Number">
+                    Deure
+                </div>
+                <div class="Number">
+                    Haver
+                </div>
+                <div class="Number">
+                    Sdo.Deutor
+                </div>
+                <div class="Number">
+                    Sdo.Creditor
+                </div>
+            </div>
+
+            @foreach (var item in items ?? new())
+            {
+                <a href="#" class="Item">
+                    <div class="Truncate">
+                        @item.Cta?.ToString()
+                    </div>
+                    <div class="Truncate">
+                        @item.Contact?.ToString()
+                    </div>
+                    <div class="Number">
+                        @if (item.Debe == 0)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            @($"{item.Debe:N2}€")
+                        }
+                    </div>
+                    <div class="Number">
+                        @if (item.Haber == 0)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            @($"{item.Haber:N2}€")
+                        }
+                    </div>
+                    <div class="Number">
+                        @if (item.SdoDeutor() == null || item.SdoDeutor() == 0)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            @($"{item.SdoDeutor():N2}€")
+                        }
+                    </div>
+                    <div class="Number">
+                        @if (item.SdoCreditor() == null || item.SdoCreditor() == 0)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            @($"{item.SdoCreditor():N2}€")
+                        }
+                    </div>
+                </a>
+            }
+        </div>
+    }
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+@code {
+    EmpModel.EmpIds? emp;
+    int year;
+    int month = 12;
+    List<PgcCtaSdoModel>? values;
+    List<XItem>? items;
+    List<int> years;
+    Exception? exception;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var endYear = DateTime.Today.Year;
+        var startYear = 1985;
+        years = Enumerable.Range(startYear, endYear - startYear + 1).Reverse().ToList();
+        year = endYear - 1;
+        emp = ApiService.Emp;
+        await LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task LoadData()
+    {
+        try
+        {
+            if (month == 0)
+                values = await ApiService.GetAsync<List<PgcCtaSdoModel>>("PgcCtaSdos", ((int)emp!).ToString(), year.ToString());
+            else 
+                values = await ApiService.GetAsync<List<PgcCtaSdoModel>>("PgcCtaSdos", ((int)emp!).ToString(), year.ToString(), month.ToString());
+
+            items = values?
+            .Select(x => new XItem
+            {
+                Value = x,
+                Cta = ApiService.GetPgcCta(x.Cta),
+                Contact = ApiService.GetContact(x.Contact),
+                Debe = x.Deb,
+                Haber = x.Hab
+            })
+                .OrderBy(x => x.Cta?.ToString())
+                .ThenBy(x => x.Contact?.ToString())
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    async Task HandleEmpChanged(EmpModel.EmpIds value)
+    {
+        values = null;
+        StateHasChanged();
+        emp = value;
+        await LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task HandleYearChanged(int? value)
+    {
+        values = null;
+        StateHasChanged();
+        year = value ?? 0;
+        await LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task HandleMonthChanged(int? value)
+    {
+        month = value ?? 0;
+        await LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void LoadExcel(DTO.Excel.Book book)
+    {
+        book.Filename = $"Comptes {emp!.GetDisplayName()} {year}.{month}.xlsx";
+        var sheet = book.AddSheet("Sumes i saldos");
+
+        sheet.AddColumn("Compte");
+        sheet.AddColumn("Subcompte");
+        sheet.AddColumn("deure", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("haver", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("sdo.deutor", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("sdo.creditor", DTO.Excel.Cell.NumberFormats.Euro);
+
+
+        foreach (var item in items ?? new())
+        {
+            var row = sheet.AddRow();
+            row.AddCell(item.Cta?.ToString());
+            row.AddCell(item.Contact?.ToString());
+            row.AddEur(item.Debe);
+            row.AddEur(item.Haber);
+            row.AddEur(item.SdoDeutor());
+            row.AddEur(item.SdoCreditor());
+
+        }
+
+
+    }
+
+    void LoadExcel4Digits(DTO.Excel.Book book)
+    {
+        book.Filename = $"Comptes {emp!.GetDisplayName()} {year}.{month} 4 digits.xlsx";
+        var sheet = book.AddSheet("Sumes i saldos");
+
+        sheet.AddColumn("Compte");
+        sheet.AddColumn("deure", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("haver", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("sdo.deutor", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("sdo.creditor", DTO.Excel.Cell.NumberFormats.Euro);
+
+
+
+        var items4d = new List<Cta4Digits>();
+        Cta4Digits? item4d = null;
+        string id = string.Empty;
+        foreach (var item in items ?? new())
+        {
+            if(item.Cta!.Id!.Substring(0,4) != id)
+            {
+                id = item.Cta.Id!.Substring(0, 4);
+                item4d = new Cta4Digits
+                {
+                    Id = id,
+                    Debe = item.Debe,
+                    Haber = item.Haber
+                };
+                items4d.Add(item4d);
+            }else
+            {
+                item4d!.Debe = item4d.Debe + item.Debe;
+                item4d.Haber = item4d.Haber + item.Haber;
+            }
+
+        }
+
+        var totalsRow = sheet.AddRow();
+        totalsRow.AddCell("Totals");
+        totalsRow.AddCell();
+        totalsRow.AddFormula($"SUM(R[1]C:R[{items4d.Count}]C)");
+        totalsRow.AddFormula($"SUM(R[1]C:R[{items4d.Count}]C)");
+        totalsRow.AddFormula($"SUM(R[1]C:R[{items4d.Count}]C)");
+        totalsRow.AddFormula($"SUM(R[1]C:R[{items4d.Count}]C)");
+
+
+        foreach (var itm in items4d ?? new())
+        {
+
+            var row = sheet.AddRow();
+            row.AddCell(itm.Id);
+            row.AddEur(itm.Debe);
+            row.AddEur(itm.Haber);
+            if (itm.Debe > itm.Haber)
+                row.AddEur(itm.Debe - itm.Haber);
+            else
+                row.AddEur(null);
+            if (itm.Haber > itm.Debe)
+                row.AddEur(itm.Haber - itm.Debe);
+            else
+                row.AddEur(null);
+        }
+    }
+
+    private class Cta4Digits
+    {
+        public string? Id { get; set; }
+        public decimal Debe { get; set; }
+        public decimal Haber { get; set; }
+    }
+    // public void Dispose()
+    // {
+    //     ApiService.OnChange -= Refresca;
+    // }
+
+    private class XItem
+    {
+        public PgcCtaSdoModel? Value { get; set; }
+        public PgcCtaModel? Cta { get; set; }
+        public ContactModel? Contact { get; set; }
+        public decimal Debe { get; set; }
+        public decimal Haber { get; set; }
+
+        public decimal? SdoDeutor() => Cta?.IsDeutora() ?? false ? Debe - Haber : null;
+        public decimal? SdoCreditor() => Cta?.IsCreditora() ?? false ? Haber - Debe : null;
+    }
+}

@@ -1,0 +1,58 @@
+﻿@inject CultureService culture
+@inject AtlasService atlas
+@inject BancTransfersService bancTransfersService
+@inject IJSRuntime JSRuntime
+
+<div class="PageWrapper600">
+    <h3>@culture.Localize("BankTransfer")</h3>
+
+    <div>
+    <div>@($"{culture.Localize("Cca")} {Model.Cca.Id} {Model.Cca.Fch:dd/MM/yy}")</div>
+    <div>@($"{Model.Cca.Concept}")</div>
+    <div>@($"total {Model.Items.Sum(x=>x.Amount?.Eur):N2} €")</div>
+    </div>
+
+    <PageOptions>
+        @if (isDownloading)
+        {
+            <Loading></Loading>
+        } else
+        {
+        <a href="#" @onclick="Download" @onclick:preventDefault>
+            Descargar fitxer
+        </a>
+            
+        }
+    </PageOptions>
+
+    <div class="Grid">
+        @foreach (var item in Model.Items)
+        {
+            <div class="Item">
+                <div>
+                    @atlas.Contact(item.Beneficiari)?.FullNom
+                </div>
+                <CellAmt Amt="item.Amount"></CellAmt>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public BancModel.Transfer Model { get; set; }
+    bool isDownloading;
+
+    async Task Download()
+    {
+        isDownloading = true;
+        var doc = bancTransfersService.SepaDoc(Model);
+        byte[] bytes = System.Text.Encoding.ASCII.GetBytes(doc);
+        var fileStream = new MemoryStream(bytes);
+        var fileName = $"SepaCreditTransfer {Model.Fch():yyyyMMdd} {bancTransfersService.Emp(Model.Emp())}.xml";
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        isDownloading = false;
+        await InvokeAsync(StateHasChanged);
+
+    }
+}

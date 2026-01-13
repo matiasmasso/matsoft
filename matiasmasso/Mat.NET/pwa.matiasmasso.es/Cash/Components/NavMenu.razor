@@ -1,0 +1,125 @@
+﻿@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+
+<div class="Wrapper">
+    <AuthorizeView>
+        <Authorized>
+            @foreach (var parent in parents)
+            {
+                <div class="Parent">
+                    <a href="#" @onclick="@(()=>ParentClick(parent))" @onclick:preventDefault>
+                        @parent.Nom
+                    </a>
+                </div>
+            }
+            @foreach (var item in Children() ?? new())
+            {
+                <div class="Item">
+                    <a href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        @item.Nom
+                    </a>
+                </div>
+            }
+
+            @if (parents?.Count == 0)
+            {
+                <div class="Item">
+                    <BusyAction Caption="Reset" OnClick="ResetAsync" IsBusy="isResetting"></BusyAction>
+                </div>
+                <div class="Item">
+                    <LogoutButton></LogoutButton>
+                </div>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <div>
+                <LoginButton></LoginButton>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    [Parameter] public EventCallback<NavigationArgs> NavigationRequest { get; set; }
+    [Parameter] public EventCallback<NavigationArgs> MenuClicked { get; set; }
+    private NavModel? model;
+    private List<NavModel.Item> parents = new();
+    bool isResetting;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        model = NavModel.Factory();
+    }
+
+    List<NavModel.Item>? Children()
+    {
+        NavModel.Item? parent = parents.LastOrDefault();
+        if (parent == null)
+            return model?.Items;
+        else
+            return parent.Children;
+    }
+
+    void ParentClick(NavModel.Item parent)
+    {
+        var idx = parents.IndexOf(parent);
+        parents.RemoveRange(idx, parents.Count - idx);
+    }
+
+    void ItemClick(NavModel.Item? item)
+    {
+        if (item?.Children.Count > 0)
+        {
+            parents.Add(item);
+        }
+        else
+        {
+            switch (item?.Mode)
+            {
+                case NavModel.Item.Modes.Navigate:
+                    if (!string.IsNullOrEmpty(item.Value))
+                        NavigationManager.NavigateTo(item.Value);
+                    break;
+                case NavModel.Item.Modes.Action:
+                    switch (item.Value)
+                    {
+                        case "ToggleLocalApi":
+                            ApiService.UseLocalApi = !ApiService.UseLocalApi;
+                            item.Nom = ApiService.UseLocalApi ? "Api local" : "Api remota";
+                            break;
+                    }
+                    break;
+            }
+            MenuClicked.InvokeAsync(); // amaga el menu al mobil despres de clicar 
+            NavigationRequest.InvokeAsync(null); // restaura el body del layout
+
+        }
+    }
+
+    async Task ResetAsync()
+    {
+        isResetting = true;
+        ApiService.Reset();
+        await Task.Yield();
+        await Task.Delay(500);
+        isResetting = false;
+    }
+
+    void NavigationRequestHandler(NavigationArgs args)
+    {
+        // NavModel.Item? item=null;
+        // if(args.Codi == NavigationArgs.Codis.ImportNorma43)
+        // {
+        //     item = new NavModel.Item
+        //         {
+        //             Mode = NavModel.Item.Modes.Navigate,
+        //             Value = "/Norma43"
+        //         };
+        // } else
+        // {
+             NavigationRequest.InvokeAsync(args);
+        // }
+        // ItemClick(item);
+    }
+}

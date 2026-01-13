@@ -1,0 +1,191 @@
+﻿@page "/User/{Guid:guid}"
+@page "/User"
+
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>
+        @Localizer("User")
+    </h1>
+
+
+    <TabControl TabChanged="TabChanged">
+        <TabPage Text="@Localizer("Details")">
+
+            <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          RequestToLoadOptions="LoadOptionsRequest"
+                          CanEdit="true"></PropertyGrid>
+
+        </TabPage>
+
+        <TabPage Text="@Localizer("Raffles")">
+            <RaffleParticipations Values="@raffleparticipations"></RaffleParticipations>
+        </TabPage>
+
+        <TabPage Text="@Localizer("Comments")">
+            <UserComments Values="@comments"></UserComments>
+        </TabPage>
+
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <UxButtonsBar CanEdit="true"
+                      IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(value != null && !value.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></UxButtonsBar>
+    </div>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private UserModel value;
+    private List<RaffleModel.Participant> raffleparticipations = new();
+    private List<ContentModel.Comment> comments = new();
+    private PropertyGridModel gridModel;
+    private Media media;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    new ProblemDetails problemDetails;
+
+    private enum Fields : int
+    {
+        EmailAddress,
+        Nickname,
+        Nom,
+        Cognoms
+    }
+
+    private enum Tabs
+    {
+        General,
+        Raffles,
+        Comments
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Guid == null)
+            value = new UserModel { Emp = Globals.DefaultEmp };
+        else
+        {
+            ApiResponse<UserModel> apiResponse = await HttpService.GetAsync<UserModel>(http, "User", Guid.ToString());
+            if (apiResponse.Success())
+                value = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+
+        if (value != null)
+        {
+            var model = new PropertyGridModel(value);
+            model.AddString((int)Fields.EmailAddress, value.EmailAddress, Localizer("EmailAddress"));
+            model.AddString((int)Fields.Nickname, value.Nickname, Localizer("Nickname"));
+            model.AddString((int)Fields.Nom, value.Nom, Localizer("Firstname"));
+            model.AddString((int)Fields.Cognoms, value.Cognoms, Localizer("Surnames"));
+            gridModel = model;
+            StateHasChanged();
+        }
+
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        isUpdating = true;
+        value.EmailAddress = gridModel.GetString((int)Fields.EmailAddress);
+        value.Nickname = gridModel.GetString((int)Fields.Nickname);
+        value.Nom = gridModel.GetString((int)Fields.Nom);
+        value.Cognoms = gridModel.GetString((int)Fields.Cognoms);
+        var apiResponse = await HttpService.PostAsync<UserModel, bool>(http, value, "user");
+        if (apiResponse.Value)
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        isUpdating = false;
+    }
+
+
+    private async Task LoadOptionsRequest(PropertyGridModel.Item item)
+    {
+        ApiResponse<GuidNom[]> apiResponse = null;
+        switch ((Fields)item.Field)
+        {
+            default:
+                break;
+        }
+
+        if (apiResponse != null)
+        {
+            if (apiResponse.Fail())
+                problemDetails = apiResponse.ProblemDetails;
+            else
+            {
+                List<IModel> values = apiResponse.Value.OrderBy(x => x.Nom).ToList<IModel>();
+                gridModel.Items.First(x => x.Field == item.Field).Values = values;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await HttpService.GetAsync<ApiResponse<bool>>(http, "user/delete", value!.Guid.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        base.BackToLastPage();
+    }
+
+
+
+    private void AddNewDocfile()
+    {
+        problemDetails = new ProblemDetails { Title = "Not implemented yet" };
+    }
+
+    private async Task TabChanged(int idx)
+    {
+
+        switch ((Tabs)idx)
+        {
+            case Tabs.Raffles:
+                ApiResponse<List<RaffleModel.Participant>> ar1 = await HttpService.GetAsync<List<RaffleModel.Participant>>(http, "RaffleParticipants/fromUser", value!.Guid.ToString());
+                if (ar1.Fail())
+                {
+                    problemDetails = ar1.ProblemDetails;
+                }
+                else
+                    raffleparticipations = ar1.Value;
+                break;
+            case Tabs.Comments:
+                ApiResponse<List<ContentModel.Comment>> ar2 = await HttpService.GetAsync<List<ContentModel.Comment>>(http, "Comments/fromUser", value!.Guid.ToString());
+                if (ar2.Fail())
+                {
+                    problemDetails = ar2.ProblemDetails;
+                }
+                else
+                    comments = ar2.Value;
+                break;
+            default:
+                break;
+
+        }
+    }
+
+}
+

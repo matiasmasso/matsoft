@@ -1,0 +1,25 @@
+﻿.Wrapper {
+    max-width: 300px;
+    margin: 30px auto;
+}
+
+.Label {
+    color: green;
+    font-size: smaller;
+    margin-bottom:5px;
+}
+
+.Value input {
+    width: 100%;
+    margin-bottom: 12px;
+    font-size:1rem;
+    padding:4px 7px 2px 4px;
+}
+
+.Submit {
+    margin-top: 10px;
+}
+
+    .Submit button {
+        width: 100%;
+    }

@@ -1,0 +1,212 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject StaffsService staffsService
+@inject EmpsService empsService
+
+<div class="Wrapper">
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+
+        <PageOptions IsShowingOptions="true">
+            <ChildContent>
+                <ToggleObsolets @bind-Value="IsShowingObsolets"></ToggleObsolets>
+            </ChildContent>
+        </PageOptions>
+        
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} empleats, {1} en actiu",model.Count(), model.Where(x => x.FchTo == null).Count())
+        </div>
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders HideOnMobile">
+                <a class="Nom" href="#"
+                @onclick="@(()=>SortColumn(Cols.Nom))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("Name")
+                </a>
+                <a class="Position" href="#"
+                @onclick="@(()=>SortColumn(Cols.Position))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("StaffPosition")
+                </a>
+                <a class="Age" href="#"
+                @onclick="@(()=>SortColumn(Cols.Age))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("Age")
+                </a>
+                <a class="Seniority" href="#"
+                @onclick="@(()=>SortColumn(Cols.Seniority))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("StaffSeniority")
+                </a>
+            </div>
+
+            <div class="GridRowDivider"></div>
+
+            @foreach(var emp in Emps() ?? new())
+            {
+                if(Emps()?.Count > 1)
+                {
+                    <div class="Emp">
+                        <span class="Nom">@emp.Abr</span>
+                        @string.Format("({0} {1})",FilteredItems(emp).Count, culture.Localize("employees"))
+                        </div>
+                }
+                @foreach (var item in FilteredItems(emp))
+                {
+                    <div class='Item
+                    @(item.FchTo == null ? "" : "Obsoleto" )
+                    '
+                    @onclick="@(()=>ItemClick(item))"
+                    @onclick:preventDefault="true">
+
+                        <div class="Abr Truncate">@item.Abr</div>
+
+                        <div class="Position Truncate HideOnMobile">
+                            @(item.Position?.Nom?.Tradueix(culture.Lang()) ?? "")
+                        </div>
+
+                        <div class="Age Truncate HideOnMobile">
+                            @item.Age()
+                        </div>
+
+                        <div class="Seniority Truncate HideOnMobile">
+                            @item.Seniority()
+                        </div>
+
+                        @* On mobiles, show position only if declared *@
+                        @if (item.Position != null)
+                        {
+                            <div class="Position Truncate HideOnDesktop">
+                                @(item.Position.Nom?.Tradueix(culture.Lang()) ?? "")
+                            </div>
+                        }
+
+                        @*On mobiles, merge age and seniority on a single line *@
+                        <div class="Age HideOnDesktop">
+                            @(string.Format("{0} anys, {1} en actiu", item.Age(), item.Seniority()))
+                        </div>
+
+                        <div class="GridRowDivider">
+                        </div>
+                    </div>
+                }
+
+            }
+
+
+        </div>
+    }
+
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public EmpModel? Emp { get; set; }
+    [Parameter] public EventCallback<StaffModel> ItemSelected { get; set; }
+    private List<StaffModel>? model;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+    private Cols? sortedColumn = Cols.Nom;
+    private bool isDescendingOrder = false;
+    private Exception? exception;
+
+    private enum Cols
+    {
+        Nom,
+        Position,
+        Age,
+        Seniority
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        culture.OnChange += Refresca;
+        staffsService.OnChange += Refresca;
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        if (Emp == null)
+            model = staffsService.Values;
+        else
+            model = staffsService.Values?.Where(x => x.Emp == Emp.Id).ToList();
+        model = model?.OrderBy(x => x.Emp).ThenBy(x => x.Abr).ToList();
+
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        model = staffsService.Values;
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<StaffModel> FilteredItems(EmpModel emp)
+    {
+        var retval = model!.Where(x =>x.Emp == emp.Id && x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.Emp == emp.Id && x.FchTo == null).ToList();
+        return retval;
+    }
+
+    private async Task ItemClick(StaffModel item)
+    {
+        await ItemSelected.InvokeAsync(item);
+    }
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            case Cols.Nom:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Abr).ToList() : model!.OrderBy(x => x.Abr).ToList();
+                break;
+            case Cols.Position:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Position?.Nom.Tradueix(culture.Lang()) ?? "").ToList() : model!.OrderBy(x => x.Position?.Nom.Tradueix(culture.Lang()) ?? "").ToList();
+                break;
+            case Cols.Age:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Age()).ToList() : model!.OrderBy(x => x.Age()).ToList();
+                break;
+            case Cols.Seniority:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Seniority()).ToList() : model!.OrderBy(x => x.Seniority()).ToList();
+                break;
+        }
+    }
+
+    List<EmpModel>? Emps()
+    {
+        if (Emp == null)
+            return model?.Where(x => x != null)
+            .GroupBy(x => x.Emp)
+            .Select(x => empsService.GetValue((EmpModel.EmpIds)x.First().Emp!)!)
+            .Where(x=>FilteredItems(x).Count > 0)
+            .ToList();
+        else
+            return new List<EmpModel>{ Emp };
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        staffsService.OnChange -= Refresca;
+    }
+}

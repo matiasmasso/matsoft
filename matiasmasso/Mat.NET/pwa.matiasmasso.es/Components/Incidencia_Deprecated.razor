@@ -1,0 +1,123 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+
+    @if (value is null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <TabControl>
+            <TabPage Text="@Localizer("General")">
+                <ChildContent>
+                    <PropertyGrid model="@gridModel"
+                              SetDirty="@(()=>isDirty=true)"></PropertyGrid>
+                </ChildContent>
+            </TabPage>
+        </TabControl>
+
+        <div class="ButtonsBar">
+            <ButtonsBar IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(value != null && !value.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></ButtonsBar>
+        </div>
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private IncidenciaModel? value;
+    private PropertyGridModel? gridModel;
+    private bool isUpdating { get; set; }
+    private bool isDirty = false;
+    private ProblemDetails? problemDetails;
+
+    private enum Fields : int
+    {
+        Id,
+        Fch
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Guid == null)
+            value = new IncidenciaModel();
+        else
+        {
+            var apiResponse = await GetAsync<IncidenciaModel>("Incidencia", Guid.ToString());
+            value = apiResponse.Value;
+            problemDetails = apiResponse.ProblemDetails;
+        }
+
+        if (value != null)
+        {
+            var model = new PropertyGridModel(value);
+            model.AddString((int)Fields.Id, value?.Id.ToString(), "Id");
+            model.AddFch((int)Fields.Fch, value.Fch, Localizer("Date"));
+            gridModel = model;
+        }
+        //StateHasChanged();
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        value!.Id = (int)(gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Id)?.Value);
+        value!.Fch = DateTime.ParseExact(gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Fch)?.Value?.ToString(), "dd/MM/yy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+
+        var apiResponse = await PostAsync<IncidenciaModel, bool>(value, "Incidencia");
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<bool>("Incidencia/delete", value!.Guid.ToString());
+        if (apiResponse.Success())
+        {
+            CancelRequest();
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+
+    private async Task LoadOptionsRequest(PropertyGridModel.Item item)
+    {
+        ApiResponse<GuidNom[]> apiResponse = null;
+        switch ((Fields)item.Field)
+        {
+            default:
+                break;
+        }
+
+        if (apiResponse != null)
+        {
+            if (apiResponse.Fail())
+                problemDetails = apiResponse.ProblemDetails;
+            else
+            {
+                List<IModel> values = apiResponse.Value.OrderBy(x => x.Nom).ToList<IModel>();
+                gridModel.Items.First(x => x.Field == item.Field).Values = values;
+                StateHasChanged();
+            }
+        }
+    }
+}

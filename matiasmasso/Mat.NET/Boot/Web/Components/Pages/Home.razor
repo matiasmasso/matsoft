@@ -1,0 +1,53 @@
+﻿@page "/Home"
+@inject CatalogService CatalogService
+@inject ApiService ApiService
+
+<PageTitle>Home</PageTitle>
+
+<SectionContent SectionName="HeaderCaption">
+    <LookupBoat Value="value" ValueChanged="HandleBoatChanged"></LookupBoat>
+</SectionContent>
+
+<div class="Emulator">
+    <SailingBoat Value="value"></SailingBoat>
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    BoatModel? value;
+    Exception? exception;
+
+    void HandleBoatChanged(BoatModel args)
+    {
+        value = args;
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataIfNeededAsync();
+
+    }
+
+    public async Task LoadDataIfNeededAsync()
+    {
+        if (CatalogService.State == CatalogService.States.NotSet)
+        {
+            CatalogService.State = CatalogService.States.IsLoading;
+            try
+            {
+                CatalogService.Boats = await ApiService.GetAsync<List<BoatModel>>("Boats");
+                CatalogService.Sensors = await ApiService.GetAsync<List<SensorModel>>("Sensors") ?? new();
+                CatalogService.Users = await ApiService.GetAsync<List<UserModel>>("Users") ?? new();
+                CatalogService.State = CatalogService.States.IsLoaded;
+                CatalogService.NotifyChange();
+            }
+            catch (Exception ex)
+            {
+                CatalogService.State = CatalogService.States.Failed;
+                exception = ex; ;
+            }
+        }
+    }
+}

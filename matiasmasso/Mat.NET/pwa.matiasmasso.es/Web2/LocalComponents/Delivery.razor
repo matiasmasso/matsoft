@@ -1,0 +1,252 @@
+﻿@inject CultureService culture
+@inject DeliveriesService deliveriesService
+@inject ProductsService productsService
+@inject IJSRuntime JSRuntime
+
+<div class="PageWrapper600">
+    <h3>@culture.Localize("Delivery") @delivery?.Id</h3>
+
+    @if (delivery == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Details">
+            <div>@culture.Localize("Destination")</div>
+            <div>@delivery.Nom</div>
+            <div>@culture.Localize("Address")</div>
+            <div>@delivery.Address?.Text</div>
+            <div>@culture.Localize("Location")</div>
+            <div>@deliveriesService.LocationNom(delivery)</div>
+            <div>@culture.Localize("Transmission")</div>
+            <div>
+                @if (delivery.Transmission == null)
+                {
+                    <span>
+                        @culture.Localize("Pending")
+                    </span>
+                    <a href="#" @onclick="TransmitIt" @onclick:preventDefault>
+                        [@culture.Localize("TransmitIt.Now")]
+                    </a>
+                } else
+                {
+                    <a href="#" @onclick="TransmClick" @onclick:preventDefault>
+                        @delivery.Transmission?.Nom
+                    </a>
+                }
+            </div>
+            <div>@culture.Localize("Invoice")</div>
+            <div>
+                @if(delivery.Invoice == null)
+                {
+                    <span>
+                        @culture.Localize("Pending")
+                    </span>
+                    <a href="#" @onclick="InvoiceIt" @onclick:preventDefault>
+                        [@culture.Localize("InvoiceIt.Now")]
+                    </a>
+                } else
+                {
+                    <a href="#" @onclick="InvoiceClick" @onclick:preventDefault>
+                        @delivery.Invoice?.Nom
+                    </a>
+                }
+            </div>
+        </div>
+
+        @if (deliveriesService.MayPrintLabels(delivery))
+        {
+            @if (isPrintingLabels)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <a href="#" @onclick="PrintLabelsRequest" @onclick:preventDefault>
+                    @culture.Tradueix("Imprimir etiquetas",
+        "Imprimir etiquetes",
+        "Print labels")
+                </a>
+            }
+
+        }
+
+        <div class="Items @(delivery.HasDiscount() ? "" : "NoDiscount")">
+            <div class="ColHeaders">
+                <div class="Nom">@culture.Localize("Ref")</div>
+                <div class="Nom">@culture.Localize("Sku")</div>
+                <div class="Num">@culture.Localize("Qty")</div>
+                <div class="Num">@culture.Localize("Price")</div>
+                @if (delivery.HasDiscount())
+                {
+                <div class="Num">@culture.Localize("Dto")</div>
+                }
+                <div class="Num">@culture.Localize("Amt")</div>
+            </div>
+
+
+            @foreach (var item in @delivery.Items)
+            {
+                @if (HasChangedPurchaseOrder(item))
+                {
+                    <a href="#" class="Item Pdc" @onclick="@(()=>PdcClick(item))" @onclick:preventDefault>
+                        <div>
+                            @delivery.PurchaseOrder(item)?.FullConcept(culture.Lang())
+                        </div>
+                    </a>
+                }
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Nom">@productsService.Sku(item.Sku)?.Id</div>
+                    <div class="Nom">@productsService.Sku(item.Sku)?.NomLlarg?.Tradueix(culture.Lang())</div>
+                    <div class="Num">@item.Qty</div>
+                    <div class="Num">@($"{item.Price ?? 0} €")</div>
+                    @if (delivery.HasDiscount())
+                    {
+                        <div class="Num">@($"{item.Dto ?? 0} %")</div>
+                    }
+                    <div class="Num">@($"{item.Amt()} €")</div>
+                </a>
+            }
+        </div>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public DeliveryModel? Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    DeliveryModel? delivery;
+    bool isPrintingLabels;
+    Guid? lastPdcGuid = Guid.NewGuid();
+
+    //-----temp
+    byte[]? bytes;
+    //---------
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        deliveriesService.OnChange += Refresca;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+        try
+        {
+            delivery = await deliveriesService.FindAsync(Model!.Guid);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task ItemClick(DeliveryModel.Item item)
+    {
+        item.Parent = Model;
+        var breadcrumb = new ModelEditor.Breadcrumb(item, $"Lin.{item.Lin}");
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+
+    private bool HasChangedPurchaseOrder(DeliveryModel.Item item)
+    {
+        bool retval = false;
+        if(item.PdcGuid != lastPdcGuid)
+        {
+            lastPdcGuid = item.PdcGuid;
+            retval = true;
+        }
+        return retval;
+    }
+
+
+
+    void PrintLabelsRequest()
+    {
+
+        isPrintingLabels = true;
+        _ = Task.Run(async () => await PrintLabelsAsync());
+
+    }
+
+    async Task PrintLabelsAsync()
+    {
+        try
+        {
+            bytes = deliveriesService.ShippingLabels(delivery);
+            if (bytes == null)
+                throw new Exception("No shipment labels available for this customer");
+            else
+            {
+                var fileStream = new MemoryStream(bytes);
+                var fileName = string.Format("Etiquetas alb.{0} {1}.pdf", delivery?.Formatted(), delivery?.Nom);
+                using var streamRef = new DotNetStreamReference(stream: fileStream);
+                await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+                isPrintingLabels = false;
+                await InvokeAsync(StateHasChanged);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    async Task PdcClick(DeliveryModel.Item item)
+    {
+        var purchaseOrder = delivery?.PurchaseOrder(item);
+        if(purchaseOrder != null)
+        {
+            var po = new PurchaseOrderModel(purchaseOrder.Guid);
+            var caption = purchaseOrder.FullConcept(culture.Lang());
+            var breadcrumb = new ModelEditor.Breadcrumb(po, caption);
+            await EditorRequest.InvokeAsync(breadcrumb);
+        }
+    }
+
+    async Task TransmClick()
+    {
+        var value = new TransmissionModel(delivery!.Transmission!.Guid);
+        var breadcrumb = new ModelEditor.Breadcrumb(value, delivery!.Transmission!.Nom ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    async Task InvoiceClick()
+    {
+        var value = new InvoiceSentModel(delivery!.Invoice!.Guid);
+        var breadcrumb = new ModelEditor.Breadcrumb(value, delivery!.Transmission!.Nom ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    async Task TransmitIt()
+    {
+        
+    }
+
+    async Task InvoiceIt()
+    {
+
+    }
+
+
+    public void Dispose()
+    {
+        deliveriesService.OnChange -= Refresca;
+    }
+
+}

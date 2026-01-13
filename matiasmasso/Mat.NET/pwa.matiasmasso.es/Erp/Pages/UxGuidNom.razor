@@ -1,0 +1,23 @@
+﻿@inherits _ComponentBase
+
+<div class="Wrapper">
+    @if(CanEdit && isEditing)
+    {
+        //show UxSelector
+    }
+    else
+    {
+        @Caption()
+    }
+</div>
+
+@code {
+    [Parameter] public Object Obj { get; set; }
+    [Parameter] public GuidNom Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+    [Parameter] public EventCallback<GuidNom> ValueChanged { get; set; }
+
+    private bool isEditing;
+    string Caption() => Value == null ? ((GuidNom)Obj)?.Nom : Value?.Nom;
+}

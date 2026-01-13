@@ -1,0 +1,64 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject NoticiasService noticiasService
+
+<div class="Wrapper">
+    @*
+    <div class="Content">
+    <div class="Header">
+    <h1>@Model?.Caption.Tradueix(culture.Lang())</h1>
+    <CloseButton CloseRequest="CloseRequestHandler"></CloseButton>
+    </div>
+    </div>*@
+
+    <div class="Content">
+        <h1>@Model?.Caption.Tradueix(culture.Lang())</h1>
+
+        @((MarkupString)(content ?? ""))
+
+        <div class="OtherNews HideOnDesktop">
+            @culture.Localize("News.OtherNews")
+        </div>
+
+        <div class="Boxes">
+            <NoticiasGallery VisibleCount="4" HideThis="Model?.Guid"></NoticiasGallery>
+        </div>
+    </div>
+
+
+</div>
+
+
+
+@code {
+    [Parameter] public NoticiaModel? Model { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    private string? content;
+
+    protected override void OnInitialized()
+    {
+        noticiasService.OnChange += Refresca;
+    }
+    protected override void OnParametersSet()
+    {
+        Refresca();        
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        content = noticiasService.Content(Model?.Guid, culture.Lang());
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CancelRequest.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        noticiasService.OnChange -= Refresca;
+
+    }
+
+
+}

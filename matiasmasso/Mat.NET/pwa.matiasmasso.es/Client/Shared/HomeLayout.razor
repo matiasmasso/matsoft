@@ -1,0 +1,50 @@
+﻿@inherits LayoutComponentBase
+@using System.Globalization
+@using Client.Shared
+@using Client.Components
+@using DTO
+@inject AppState AppState
+@inject HttpClient Http
+@inject NavigationManager _navigation
+@inject IJSRuntime Js
+
+    <div class="MainLayout @(AppState.IsMenuVisible ? "MenuVisible" : "")">
+        <header>
+            <Header ShowHamburger = "@true"></Header>
+        </header>
+        <main>
+            <ErrorBoundary>
+                @Body
+            </ErrorBoundary>
+        </main>
+        <aside class="Menu">
+            <NavMenu></NavMenu>
+        </aside>
+        <aside class="Left">
+            <Gallery Boxes="@AppState.Layout.News" ></Gallery>
+        </aside>
+        <aside class="Right">
+            <Gallery Boxes="@AppState.Layout.BlogPosts"></Gallery>
+        </aside>
+        <footer>
+            <Footer></Footer>
+        </footer>
+    </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var localStorage = new LocalStorage(Js);
+        var userToken = await localStorage.GetAsync<Guid?>("Token");
+        var lang = LangDTO.FromCultureInfo(CultureInfo.CurrentCulture.Name);
+        AppState.Init(Http, userToken, lang);
+        AppState.OnStateChange += StateHasChanged;
+        AppState.Fetch();
+    }
+
+
+}

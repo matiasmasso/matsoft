@@ -1,0 +1,16 @@
+﻿.Busy {
+    display: flex;
+    justify-content: space-between;
+}
+
+.Item {
+    display: block;
+    padding: 4px 7px 2px 4px;
+    border-bottom: 1px solid #DDDDDD;
+    min-width: 150px;
+}
+
+.Loader {
+    height:24px;
+}
+

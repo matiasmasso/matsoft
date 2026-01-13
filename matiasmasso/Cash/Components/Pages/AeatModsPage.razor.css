@@ -1,0 +1,59 @@
+﻿.Grid {
+    display:grid;
+    grid-template-columns:min-content 1fr;
+}
+
+.Item {
+    display:contents;
+}
+
+.Nom {
+    white-space:nowrap;
+}
+
+.DocsGallery {
+    display: flex;
+    gap: 10px;
+    flex-wrap:wrap;
+}
+
+.DocThumbnail {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:140px;
+    border:1px solid gray;
+}
+
+.DocThumbnail img {
+    max-width:100%;
+    height:auto;
+}
+
+.Item > *:not(:first-child) {
+    padding-left: 10px;
+}
+
+
+
+@media(max-width:599px){
+
+    .Item > * {
+        padding:10px 0;
+    }
+
+    .Item:not(:last-child) > * {
+        border-bottom: 1px solid gray;
+    }
+}
+
+@media(min-width:600px){
+    .Item > * {
+        padding: 4px 0 2px;
+    }
+
+    .Item:not(:last-child) > * {
+        border-bottom: 1px solid #DDDDDD;
+    }
+
+}

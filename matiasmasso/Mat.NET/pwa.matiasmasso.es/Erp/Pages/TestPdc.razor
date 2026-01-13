@@ -1,0 +1,274 @@
+﻿@page "/testPdc"
+@inherits _ComponentBase
+
+
+
+<div class="Wrapper">
+    @if (data == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>Comanda de Bitti</h1>
+
+        @if (data.Destination == null)
+        {
+            <div class="Destinations">
+                <div>@Localizer("Basket.DestinationSelection"):</div>
+                @foreach (var destination in data.Destinations)
+                {
+                    <a href="#" class="Destination" @onclick="@(()=>data.Destination = destination)" @onclick:preventDefault>
+                        <div>@destination.Nom</div>
+                        <div>@destination.Adr</div>
+                        <div>@destination.Location</div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="Destination">
+                <div>@Localizer("Basket.Destination"):</div>
+                <a href="#" class="Destination" @onclick="DestinationClick" @onclick:preventDefault>
+                    <div>@data.Destination.Nom</div>
+                    <div>@data.Destination.Adr</div>
+                    <div>@data.Destination.Location</div>
+                </a>
+            </div>
+
+            <div class="ProductSelection">
+                @Localizer("Basket.ProductSelection"):
+
+                @if (selectedBrand == null)
+                {
+                    <div>
+                        @foreach (var brand in Brands())
+                        {
+                            <a class="Item" href="#" @onclick="@(()=>selectedBrand = brand)" @onclick:preventDefault>
+                                <div>@brand.Nom.Tradueix(base.Lang())</div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <a class="Item Selected" href="#" @onclick="@(()=>{selectedBrand = null; selectedCategory=null; selectedSku=null;})" @onclick:preventDefault>
+                        <div>@selectedBrand.Nom.Tradueix(base.Lang())</div>
+                    </a>
+
+                    @if (selectedCategory == null)
+                    {
+                        <div>
+                            @foreach (var category in Categories())
+                            {
+                                <a class="Item" href="#" @onclick="@(()=>selectedCategory = category)" @onclick:preventDefault>
+                                    <div>@category.Nom.Tradueix(base.Lang())</div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <a class="Item Selected" href="#" @onclick="@(()=>{selectedCategory=null; selectedSku=null;})" @onclick:preventDefault>
+                            <div>@selectedCategory.Nom.Tradueix(base.Lang())</div>
+                        </a>
+
+                        @if (selectedSku == null)
+                        {
+                            <div class="SkuGallery">
+                                @foreach (var sku in Skus())
+                                {
+                                    <a class="Item Sku" href="#" @onclick="@(()=>SkuSelected(sku))" @onclick:preventDefault>
+                                        <div class="Thumbnail">
+                                            <UxImg Src="@sku.ThumbnailUrl()" Width="ProductSkuModel.THUMBNAIL_WIDTH" Height="ProductSkuModel.THUMBNAIL_HEIGHT" />
+                                        </div>
+                                        <div class="Nom">@sku.Nom.Tradueix(base.Lang())</div>
+                                        <div class="Rrpp">@string.Format("{0:N2} €",cache.SkuPrice(sku.Guid))</div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="Form">
+                                <a class="Item Sku" href="#" @onclick="@(()=>selectedSku = null)" @onclick:preventDefault>
+                                    <div class="Thumbnail">
+                                        <UxImg Src="@selectedSku.ThumbnailUrl()" Width="ProductSkuModel.THUMBNAIL_WIDTH" Height="ProductSkuModel.THUMBNAIL_HEIGHT" />
+                                    </div>
+                                    <div class="Nom">@selectedSku.Nom.Tradueix(base.Lang())</div>
+                                    <div class="Rrpp">@string.Format("{0:N2} €",item.Price)</div>
+                                </a>
+                                <div class="Details">
+                                    <div class="NomLlarg">@selectedSku.NomLlarg.Tradueix(base.Lang())</div>
+                                    <div class="Imports">
+                                        <div class="Qty">
+                                            <div class="Label Truncate">
+                                                @Localizer("Quantity")
+                                            </div>
+                                            <input type="number" min="0" @bind-value="qty" @bind-value:event="oninput" />
+                                        </div>
+                                        <div class="Price">
+                                            <div class="Label Truncate">
+                                                @Localizer("UnitPrice")
+                                            </div>
+                                            <input type="text" value="@string.Format("{0:N2} €",item.Price)" disabled />
+                                        </div>
+                                        <div class="Amt">
+                                            <div class="Label Truncate">
+                                                @Localizer("Amount")
+                                            </div>
+                                            <input type="text" value="@string.Format("{0:N2} €",item.Amt())" disabled />
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        }
+
+                        <UxError Value="problemDetails"></UxError>
+                    }
+                }
+            </div>
+
+            <div class="Basket">
+                <div class="BasketNom">@Localizer("Product")</div>
+                <div class="BasketQty">@Localizer("Qty")</div>
+                <div class="BasketPrice">@Localizer("Price")</div>
+                <div class="BasketAmt">@Localizer("Amt")</div>
+                @foreach (var item in model.Items)
+                {
+                    <a class="BasketRow" href="#" onclick="@(()=>BasketRowClick(item))" @onclick:preventDefault>
+                        <div class="BasketNom">@(cache.Sku(item.Sku)?.NomLlarg.Tradueix(base.Lang()) ?? "")</div>
+                        <div class="BasketQty">@item.Qty</div>
+                        <div class="BasketPrice">@string.Format("{0:N2} €",item.Price)</div>
+                        <div class="BasketAmt">@string.Format("{0:N2} €",item.Amt())</div>
+                    </a>
+                }
+                <div class="BasketSum">@string.Format("{0:N2} €",model.Sum())</div>
+            </div>
+
+            <div class="ButtonOk">
+                <button class="Button ButtonOk" @onclick="Submit">@Localizer("Submit")</button>
+            </div>
+
+        }
+    }
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    private PurchaseOrderModel model;
+    private PurchaseOrderModel.Item item;
+    private ProBasketDTO data;
+    private CacheDTO cache;
+    private ProductBrandModel selectedBrand = null;
+    private ProductCategoryModel selectedCategory = null;
+    private ProductSkuModel selectedSku = null;
+    private ProblemDetails problemDetails;
+
+    private int qty
+    {
+        get => item.Qty;
+        set
+        {
+            item = CurrentItem();
+            item.Qty = value;
+            if (value == 0)
+                model.Items.RemoveAll(x => x.Sku == selectedSku.Guid);
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //cache = await base.Cache(CacheDTO.Table.TableIds.CliGral);
+        cache = await base.Catalog();
+        data = await GetAsync<ProBasketDTO>("ProBasket", "1E912135-AA51-4676-B87E-985F53827001");
+        model = new PurchaseOrderModel();
+        base.OnInitialized();
+    }
+
+    void DestinationClick()
+    {
+        if (data.Destinations.Count > 1)
+        {
+            data.Destination = null;
+        }
+    }
+
+    List<ProductBrandModel> Brands()
+    {
+        return data.Brands(cache)
+        .OrderBy(x => x.Nom.Tradueix(base.Lang()))
+        .ToList();
+    }
+    List<ProductCategoryModel> Categories()
+    {
+        return cache.Categories
+        .Where(x => x.Brand == selectedBrand.Guid)
+        .OrderBy(x => x.Nom.Tradueix(base.Lang()))
+        .ToList();
+    }
+
+    List<ProductSkuModel> Skus()
+    {
+        return cache.Skus
+        .Where(x => x.Category == selectedCategory.Guid)
+        .OrderBy(x => x.Nom.Tradueix(base.Lang()))
+        .ToList();
+    }
+
+    void SkuSelected(ProductSkuModel sku)
+    {
+        selectedSku = sku;
+        item = CurrentItem();
+    }
+
+    PurchaseOrderModel.Item CurrentItem()
+    {
+        var retval = model.Items.FirstOrDefault(x => x.Sku == selectedSku.Guid);
+        if (retval == null)
+        {
+            retval = new PurchaseOrderModel.Item
+                {
+                    Sku = selectedSku.Guid,
+                    Price = cache.SkuPrice(selectedSku.Guid),
+                    Qty = 1 // change to Moq
+                };
+            model.Items.Add(retval);
+        }
+        return retval;
+    }
+
+    Decimal? Price(ProductSkuModel sku)
+    {
+        return cache.RetailPrices.FirstOrDefault(x => x.Guid == sku.Guid)?.Value;
+    }
+
+    //void AddToBasket()
+    //{
+    //    var existingItem = model.Items.FirstOrDefault(x => x.Sku == selectedSku.Guid);
+    //    if (existingItem == null)
+    //        model.Items.Add(item);
+    //    else
+    //    {
+    //        var idx = model.Items.IndexOf(existingItem);
+    //        model.Items[idx] = item;
+    //    }
+    //    selectedSku = null;
+    //}
+
+    void BasketRowClick(PurchaseOrderModel.Item itm)
+    {
+        selectedSku = cache.Sku(itm.Sku);
+        selectedCategory = cache.Category(selectedSku.Category);
+        selectedBrand = cache.Brand(selectedCategory.Brand);
+        item = itm;
+        StateHasChanged();
+    }
+
+    void Submit() {
+
+    }
+}

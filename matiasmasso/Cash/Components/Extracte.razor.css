@@ -1,0 +1,119 @@
+﻿.Years {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+}
+
+    .Years > * {
+        display: inline-block;
+    }
+
+    .Nom {
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+.Deb, .Hab, .Sdo, .Eur {
+    display:flex;
+    justify-content:flex-end;
+    white-space:nowrap;
+}
+
+.SearchAmount {
+    width: 100%;
+}
+
+
+
+@media(max-width:599px) {
+    .HideOnMobile {
+        display:none;
+    }
+
+    .Grid {
+        display:flex;
+        flex-direction:column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 24px min-content 1fr minmax(100px,min-content) minmax(100px,min-content);
+        grid-template-areas: "ico fch eur eur sdo" "ico txt txt txt txt";
+        grid-column-gap: 10px;
+        grid-row-gap: 5px;
+        padding: 10px 0;
+    }
+
+    .Fch {
+        grid-area:fch;
+    }
+
+    .Ico {
+        grid-area:ico;
+    }
+
+        .Ico ::deep .Svg {
+            width: 24px;
+            min-width: 24px;
+        }
+
+    .Nom {
+        grid-area:txt;
+    }
+
+    .Eur {
+        grid-area:eur;
+    }
+
+    .Sdo {
+        color: gray;
+        grid-area: sdo;
+    }
+
+    .RowDivider {
+        grid-column: 1/-1;
+    }
+
+    .RowDivider:not(:last-child) {
+        border-bottom: 1px solid gray;
+    }
+
+}
+@media(min-width:600px) {
+    .HideOnDesktop {
+        display:none;
+    }
+
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content 16px 1fr minmax(100px,min-content) minmax(100px,min-content) minmax(100px,min-content);
+        font-size: .8em;
+    }
+
+    .ColHeaders, .Item {
+        display: contents;
+    }
+
+        .ColHeaders > * {
+            padding-bottom: 10px;
+        }
+
+        .Item > * {
+            border-bottom:1px solid #DDDDDD;
+        }
+        
+        .Deb, .Hab, .Sdo {
+            padding-left:5px;
+        }
+
+        .Ico {
+            display:flex;
+            justify-content:center;
+        }
+    .Ico ::deep .Svg {
+        width: 8px;
+        min-width: 8px;
+    }
+
+}

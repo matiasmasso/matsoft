@@ -1,0 +1,68 @@
+﻿.ProLayout {
+    max-width: 1200px;
+    margin: auto;
+    height: 100%;
+    display: grid;
+    grid-template-areas: "header header"
+        "menu main"
+        "footer footer";
+    grid-template-columns: minmax(min-content,265px) minmax(min-content,1fr);
+    grid-template-rows: max-content 1fr max-content;
+    gap: 10px;
+    padding: 10px;
+}
+
+header {
+    grid-area: header;
+    width: 100%;
+}
+
+main {
+    grid-area: main;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+}
+
+aside {
+    max-width: 265px;
+    grid-area: menu;
+}
+
+footer {
+    grid-area: footer;
+}
+
+
+
+/* ------------- movils -----------------*/
+
+@media screen and (max-width:600px) {
+    .ProLayout {
+        grid-template-areas: "header"
+            "main"
+            "footer";
+        grid-template-columns: 1fr;
+    }
+
+        .ProLayout.MenuVisible {
+            grid-template-areas: "header"
+                "menu"
+                "footer";
+            grid-template-columns: 1fr;
+        }
+
+    aside {
+       display:none;
+    }
+
+    .ProLayout.MenuVisible aside {
+        display: block;
+        max-width: 100%;
+    }
+
+    .ProLayout.MenuVisible main {
+        display: none;
+    }
+
+}

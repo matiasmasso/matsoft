@@ -1,0 +1,31 @@
+﻿@if (hasValue)
+{
+    <div class="Num">@value</div>
+}
+else
+{
+    <div>&nbsp;</div>
+}
+
+
+@code {
+    [Parameter] public decimal? Value { get; set; }
+    [Parameter] public Amt? Amt { get; set; }
+    string? value;
+    bool hasValue;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Value != null && Value != 0)
+        {
+            hasValue = true;
+            value = new Amt((decimal)Value).CurFormatted();
+        }
+        else if (Amt != null && Amt.HasValue())
+        {
+            hasValue = true;
+            value = Amt.CurFormatted();
+        }
+    }
+}

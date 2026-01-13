@@ -1,0 +1,121 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    @if(selectedCita != null)
+    {
+        <Cita Value="selectedCita" UpdateRequest="RequestToUpdateCita"></Cita>
+    } else
+    {
+        <h1>@Model?.Nom</h1>
+
+        <TabControl>
+            <TabPage Text="General">
+                @if (dbState == DbState.IsLoading)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <PropertyGrid Model="@gridModel"
+                                  SetDirty="@(()=>dbState = DbState.IsDirty)"
+                                  CanEdit="true"></PropertyGrid>
+
+                    <div class="ButtonsBar">
+                        <ButtonsBar CanEdit="true"
+                                    State="dbState"
+                                    CanDelete="@(!(Model?.IsNew ?? false))"
+                                    RequestToCancel="CancelRequestHandler"
+                                    RequestToDelete="DeleteRequest"
+                                    RequestToUpdate="UpdateRequest"></ButtonsBar>
+                    </div>
+                }
+            </TabPage>
+
+            <TabPage Text="Cites bibliogràfiques">
+                <PubCites Values="ApiService.Citas(Model?.Guid)" ItemSelected="SelectCita" RequestToAddNew="AddNewCita"></PubCites>
+            </TabPage>
+
+        </TabControl>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public PubModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+    private PubModel? value;
+    CitaModel? selectedCita;
+    private PropertyGridModel? gridModel;
+    private DbState dbState;
+    // private int selectedTab = 1;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Nom,
+        Docfile
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddString((int)Fields.Nom, value?.Nom, "Nom");
+        gridModel.AddDocfile((int)Fields.Docfile, value?.Docfile);
+    }
+
+    private async Task UpdateRequest()
+    {
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value!.Docfile = gridModel!.GetValue<DocfileModel>((int)Fields.Docfile);
+        dbState = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        dbState = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    void SelectCita(CitaModel item)
+    {
+        selectedCita = item;
+    }
+
+    void AddNewCita()
+    {
+        selectedCita = new CitaModel { Pub = Model?.Guid };
+    }
+
+    void RequestToUpdateCita(CitaModel item)
+    {
+        
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+}

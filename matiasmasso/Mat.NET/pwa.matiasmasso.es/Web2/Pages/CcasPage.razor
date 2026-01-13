@@ -1,0 +1,201 @@
+﻿@page "/ccas"
+@page "/{LangSegment}/ccas"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject CcasService ccasService
+
+<div class="PageWrapper900">
+
+
+    @if (selectedValues == null && exception == null && ccasService.Values == null)
+    {
+        <h3>@culture.Localize("Ccas")</h3>
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else if (SelectedEmp() == null)
+    {
+        <h3>@culture.Localize("Ccas")</h3>
+        <div class="Emps">
+            @foreach (var emp in session.Emps ?? new())
+            {
+                <a href="#" @onclick="@(()=>EmpClick(emp))" @onclick:preventDefault>
+                    @emp.Abr
+                </a>
+            }
+        </div>
+    }
+    else if (SelectedYear() == null)
+    {
+        <h3>@culture.Localize("Ccas")</h3>
+        <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+
+        <div class="Summary">
+            @culture.Tradueix("Selecciona un ejercicio:","Tria un exercici:","Select a year:")
+        </div>
+
+        <div class="Years">
+            @foreach (var year in Years())
+            {
+                <a href="#" @onclick="@(()=>YearClick(year))" @onclick:preventDefault>
+                    @year.ToString()
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <h3>@culture.Localize("Ccas")</h3>
+
+        <SelectedValues @bind-Values="selectedValues"></SelectedValues>
+
+        @if (ccasService == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+
+            <div class="Grid">
+
+                <Virtualize Items="@FilteredItems()" Context="item">
+                    <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        <div>@item.Id</div>
+                        <div>@($"{item.Fch:dd/MM/yy}")</div>
+                        <div class="Ico">
+                            @if (item.Docfile == null)
+                            {
+                                <span>&nbsp;</span>
+                            }
+                            else
+                            {
+                                <Icon Id="Icon.Ids.Doc"></Icon>
+                            }
+                        </div>
+                        <div class="Nom">@item.Concept</div>
+                        <div class="Num">@($"{item.Amount:N2} €")</div>
+                        <div class="Nom">@(item.UsrCreated?.Nom ?? "")</div>
+                    </a>
+                </Virtualize>
+            </div>
+        }
+
+    }
+
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    string? searchterm;
+    SelectedValues.Collection? selectedValues;
+    List<CcaModel>? Values;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    int? valuesCount = null;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+        ccasService.OnChange += Refresca;
+    }
+
+    EmpModel? SelectedEmp() => (EmpModel?)selectedValues?.FirstOrDefault()?.Value;
+    int? SelectedYear() => selectedValues?.Count > 1 ? (int)selectedValues[1].Value : null;
+
+    private void Refresca(Exception? ex = null)
+    {
+        if (selectedValues == null && session.Emps != null)
+        {
+            var emp = session.Emps.First();
+            var year = DateTime.Today.Year;
+            selectedValues = new SelectedValues.Collection();
+            selectedValues.Add(emp, emp.Abr);
+            selectedValues.Add(year, year.ToString());
+        }
+
+        if (SelectedEmp() != null && SelectedYear() != null && ccasService.Values == null)
+        {
+            _ = Task.Run(async () => await ccasService.FetchAsync(SelectedEmp()!, (int)SelectedYear()!));
+        }
+
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<CcaModel> FilteredItems()
+    {
+        List<CcaModel>? retval = new();
+        if (string.IsNullOrEmpty(searchterm))
+            retval = ccasService.Values;
+        else
+            retval = ccasService.Values?.Where(x => x.Matches(searchterm)).ToList();
+        return retval ?? new();
+    }
+
+
+    private async Task SelectedValuesChanged(SelectedValues.Collection values)
+    {
+        selectedValues = values;
+        await ccasService.FetchAsync(SelectedEmp()!, (int)SelectedYear()!);
+    }
+
+    private List<int> Years()
+    {
+        var yearFrom = 1985; //TO DO: replace by Emp.FchFrom.Year
+        var yearTo = DateTime.Today.Year;
+        var asc = Enumerable.Range(yearFrom, yearTo - yearFrom).ToList();
+        var retval = asc.OrderByDescending(x => x).ToList();
+        return retval;
+    }
+
+    private void YearClick(int year)
+    {
+        selectedValues?.Add(year, year.ToString());
+        if (SelectedEmp() != null && SelectedYear() != null)
+        {
+            ccasService.Values = null;
+            _ = Task.Run(async () => await ccasService.FetchAsync(SelectedEmp()!, year));
+        }
+
+    }
+
+    private void EmpClick(EmpModel emp)
+    {
+        var year = DateTime.Today.Year;
+        selectedValues?.Add(emp, emp.Abr);
+        selectedValues?.Add(year, year.ToString());
+        if (SelectedEmp() != null && SelectedYear() != null && ccasService.Values == null)
+        {
+            _ = Task.Run(async () => await ccasService.FetchAsync(SelectedEmp()!, (int)SelectedYear()!));
+        }
+    }
+
+
+    private void ItemClick(CcaModel value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value?.ToString() ?? "?"));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        ccasService.OnChange -= Refresca;
+    }
+}

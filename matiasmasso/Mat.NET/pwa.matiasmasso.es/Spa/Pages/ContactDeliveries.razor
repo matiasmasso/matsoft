@@ -1,0 +1,57 @@
+﻿@page "/ContactDeliveries/{ContactGuid:guid}"
+
+@using Spa.Shared
+@using Spa.ViewModels
+@layout ProLayout
+@inject HttpClient Http
+@inject AppState AppState
+<!--
+@@inject Microsoft.Extensions.Localization.IStringLocalizer<ContactDeliveries> Loc
+    -->
+
+
+@if (viewModel!.LoadStatus == Globals.LoadStatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <h3>Title</h3>
+        <SearchBox @bind-Value="@viewModel.SearchTerm"></SearchBox>
+
+        <div class="Grid">
+            <Virtualize Items="@viewModel.Items()" Context="item">
+                <a class="Item" href="#" target="_blank">
+                    <div class="Id">
+                        @string.Format("{0:00000}",item.Id)
+                    </div>
+                    <div class="Fch">
+                        @string.Format("{0:dd/MM/yy}",item.Fch)
+                    </div>
+                    <div class="Amt">
+                        @item.Amt?.CurFormatted()
+                    </div>
+                </a>
+            </Virtualize>
+        </div>
+    </div>
+}
+
+
+
+
+@code {
+
+    [Parameter]
+    public Guid ContactGuid { get; set; }
+
+    private ContactDeliveriesViewModel? viewModel;
+
+    protected override void OnParametersSet()
+    {
+        viewModel = new ContactDeliveriesViewModel( AppState, ContactGuid);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch(Http);
+        base.OnParametersSet();
+    }
+
+}

@@ -1,0 +1,217 @@
+﻿@inject CultureService culture
+@inject CcasService ccasService
+
+<div class="PageWrapper900">
+
+    <h3>Assentament</h3>
+
+    <PageOptions>
+        @if(value != null)
+        {
+            <div class="LookupEmps">
+        <LookupEmps @bind-Value="emp" ></LookupEmps>
+            </div>
+        }
+    </PageOptions>
+
+    <div class="Header @((value?.IsNew ?? true) ? "IsNew":"")">
+        @if (!value?.IsNew ?? true)
+        {
+            <div class="Id">@culture.Localize("Id")</div>
+        }
+        <div class="Fch">
+            @culture.Localize("Fch")
+        </div>
+        <div class="Concept">@culture.Localize("Concept")</div>
+        @if (!value?.IsNew ?? true)
+        {
+            <div class="Id">@value?.Id</div>
+        }
+        <div class="Fch">
+            <input type="date" value="@($"{value?.Fch:yyyy-MM-dd}")" @onchange="FchChanged" @oninput="@(()=>state=DbState.IsDirty)" />
+        </div>
+        <div class="Concept">
+            <input type="text" @bind-value="@value.Concept" @oninput="@(()=>state=DbState.IsDirty)" />
+        </div>
+
+    </div>
+
+    <div class="Grid">
+        <div class="ColsHeader">
+            <div class="Nom">
+                @culture.Localize("Cta")
+            </div>
+            <div class="Nom">
+                @culture.Localize("SubCta")
+            </div>
+            <div class="Num">
+                @culture.Localize("Deb")
+            </div>
+            <div class="Num">
+                @culture.Localize("Hab")
+            </div>
+        </div>
+        @foreach (var item in value?.Items ?? new())
+        {
+            <div class="Item">
+                <div class="Nom">
+                    <LookupPgcCta @bind-Value="item.Cta"></LookupPgcCta>
+                </div>
+                <div class="Nom">
+                    <LookupContact Emp="emp" @bind-Value="item.Contact"></LookupContact>
+                </div>
+                <div class="Num">
+                    <input type="Num" value="@item.Debit()" @onchange="@((ChangeEventArgs args) => DebitChange(args, item))" />
+                </div>
+                <div class="Num">
+                    <input type="Num" value="@item.Credit()" 
+                    @onchange="@((ChangeEventArgs args) => CreditChange(args, item))"
+                    @onblur="@((FocusEventArgs args) => ItemExit(args, item))" />
+                </div>
+            </div>
+        }
+    </div>
+
+@*     <div>
+        <a href="#" class="Nom" @onclick="AddItem" @onclick:preventDefault>
+            [afegir partida]
+        </a>
+    </div> *@
+
+
+    <div class="ButtonsBar">
+        <ButtonsBar CanEdit="true"
+                    State="state"
+                    CanDelete="@(!(Model?.IsNew ?? false))"
+                    RequestToCancel="CancelRequestHandler"
+                    RequestToDelete="DeleteRequestHandler"
+                    RequestToUpdate="UpdateRequestHandler"></ButtonsBar>
+    </div>
+
+    <div class="Docfile" width="350" height="400">
+        <img src="@Model?.Docfile?.ThumbnailDataUrl()" />
+    </div>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public CcaModel? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    CcaModel? value;
+    EmpModel? emp;
+    DbState state;
+
+    Exception? exception;
+
+    DateTime? fch;
+    string? concept;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ccasService.OnChange += Refresca;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Model != null)
+            {
+                value = Model.IsNew ? Model : await ccasService.Find(Model.Guid);
+                Model.Items.Add(new CcaModel.Item());
+            }
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void AddItem()
+    {
+        value!.Items.Add(new CcaModel.Item());
+    }
+
+    private void ItemExit(FocusEventArgs args, CcaModel.Item tmp)
+    {
+        var isLastItem = tmp == value!.Items.Last();
+        if (isLastItem) AddItem();
+    }
+
+    private void DebitChange(ChangeEventArgs args, CcaModel.Item tmp)
+    {
+        tmp.Dh = CcaModel.Item.DhEnum.Deb;
+        tmp.Eur = decimal.Parse(args.Value?.ToString() ?? "0");
+    }
+
+    private void CreditChange(ChangeEventArgs args, CcaModel.Item tmp)
+    {
+        tmp.Dh = CcaModel.Item.DhEnum.Hab;
+        tmp.Eur = decimal.Parse(args.Value?.ToString() ?? "0");
+    }
+
+    private void SelectValueChange(ChangeEventArgs args, string selectName)
+    {
+        var selectedName = args.Value?.ToString();
+    }
+
+    void FchChanged(ChangeEventArgs args)
+    {
+        if (args.Value != null)
+        {
+        value!.Fch = DateTime.Parse(args.Value!.ToString()!);
+        }
+    }
+
+    void CancelRequestHandler()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await ccasService.DeleteAsync(value);
+            CancelRequestHandler();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        state = DbState.IsUpdating;
+        try
+        {
+            value!.Emp = emp!.Id;
+            value!.Items.RemoveAll(x => x.IsEmpty());
+            await ccasService.UpdateAsync(value);
+            CancelRequestHandler();
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    public void Disable()
+    {
+        ccasService.OnChange -= Refresca;
+    }
+}

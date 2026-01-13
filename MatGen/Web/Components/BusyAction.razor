@@ -1,0 +1,22 @@
+﻿@if (IsBusy)
+{
+    <Loading></Loading>
+}
+else
+{
+    <a href="#" @onclick:preventDefault @onclick="HandleOnClick">
+        @Caption
+    </a>
+}
+
+
+@code {
+    [Parameter] public string? Caption { get; set; } = "Click me";
+    [Parameter] public bool IsBusy { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    void HandleOnClick()
+    {
+        OnClick.InvokeAsync();
+    }
+}

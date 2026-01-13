@@ -1,0 +1,24 @@
+﻿@page "/staff/Nominas"
+@page "/{LangSegment}/staff/Nominas"
+@inject CultureService culture
+@inject SessionStateService session
+
+<div class="PageWrapper600">
+    <h3>@culture.Localize("Nominas")</h3>
+
+    <StaffNominas Model="staff"></StaffNominas>
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    StaffModel? staff;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        var user = session.User;
+        if (user?.DefaultContact != null)
+            staff = new StaffModel((Guid)user.DefaultContact);
+
+    }
+}

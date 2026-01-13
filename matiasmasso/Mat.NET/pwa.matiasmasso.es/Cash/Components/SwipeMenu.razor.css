@@ -1,0 +1,28 @@
+﻿
+@media (max-width:599px) {
+    .Wrapper {
+        display: flex;
+        gap: 1px;
+        border-bottom: 1px solid gray;
+    }
+
+    .Cell {
+        overflow-x: scroll;
+        width: 100%;
+        padding:7px 0;
+        /*border-bottom: 1px solid gray;*/
+    }
+
+        .Cell.LeftMenuOn {
+            padding-left:10px;
+        }
+
+
+
+}
+
+@media (min-width:599px) {
+    .Wrapper {
+        display:contents;
+    }
+}

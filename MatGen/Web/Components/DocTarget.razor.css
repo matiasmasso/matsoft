@@ -1,0 +1,8 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    max-width:600px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}

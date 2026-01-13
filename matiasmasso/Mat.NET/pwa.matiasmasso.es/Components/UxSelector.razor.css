@@ -1,0 +1,35 @@
+﻿.Wrapper {
+    display: inline-block;
+    min-width: 150px;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
+    box-shadow: 10px 10px 5px #DDDDDD;
+    background-color: white;
+}
+
+
+.ButtonsBar {
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    gap:10px;
+    flex-wrap:nowrap;
+    padding: 10px 5px 0 30px;
+}
+
+
+.MenuButton {
+    position: relative;
+}
+
+.Option {
+    display: flex;
+    padding: 4px 7px 2px 4px;
+    border-bottom: 1px solid #DDDDDD;
+    gap: 10px;
+}
+
+.Ico {
+    width:20px;
+}
+

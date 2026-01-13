@@ -1,0 +1,180 @@
+﻿@page "/ImportMedia"
+@inject NavigationManager NavigationManager
+
+@inject ApiService ApiService
+
+@if (selectedOption == Item.Options.Factura)
+{
+    <FacturaProveidor Value="@FacturaProveidorModel.Factory((EmpModel.EmpIds)ApiService.Emp!,docfile!)"
+                      AfterUpdate="HandleAfterUpdate"
+                      RequestToClose="@(()=>selectedOption=null)"></FacturaProveidor>
+}
+else if (selectedOption == Item.Options.Nomina)
+{
+    <h3>Entrar nómina de empleat</h3>
+
+    <Nomina Docfile="docfile"
+            AfterUpdate="HandleAfterUpdate"
+            RequestToClose="@(()=>selectedOption=null)"></Nomina>
+}
+else if (selectedOption == Item.Options.Immoble)
+{
+
+    <ImmobleDocSrc Value="docfileSrc"
+                   AfterUpdate="HandleAfterUpdate"
+                   CloseRequest="@(()=>selectedOption=null)"></ImmobleDocSrc>
+}
+else if (selectedOption == Item.Options.Visa)
+{
+    <Cca Value="@GetDespesaVisaCca()"
+         CloseRequest="@(()=>selectedOption = null)" AfterUpdate="HandleAfterUpdate"></Cca>
+}
+else if (selectedOption == Item.Options.Correspondencia)
+{
+    <Correspondencia Value="GetCorrespondencia()"
+                     AfterUpdate="HandleAfterUpdate"
+                     CloseRequest="@(()=>selectedOption=null)"></Correspondencia>
+}
+else if (selectedOption == Item.Options.CertificatIrpf)
+{
+    <CertificatIrpf Value="GetCertificatIrpf()"
+                     AfterUpdate="HandleAfterUpdate"
+                    CloseRequest="@(()=>selectedOption=null)"></CertificatIrpf>
+}
+else
+{
+
+
+    <h3>Importar fitxer</h3>
+
+    <div class="Wrapper">
+
+        <Filedrop Value="docfile" ValueChanged="FileChangedAsync"></Filedrop>
+
+        @if (docfile != null)
+        {
+            <div class="Options">
+
+                <h3>Qué vols fer amb aquest fitxer?</h3>
+
+                @foreach (var item in items)
+                {
+                    <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>selectedOption=item.Option)">
+                        @item.Caption
+                    </a>
+                }
+
+            </div>
+        }
+    </div>
+
+    <Error @bind-Value="exception"></Error>
+}
+
+@code {
+    [Parameter] public Media? Value { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    private DocfileModel? docfile;
+    private DocfileSrcModel? docfileSrc;
+    private Item.Options? selectedOption;
+
+    private Exception? exception;
+
+    protected override void OnParametersSet()
+    {
+        if (Value != null)
+        {
+            docfile = DocfileHelper.CreateDocfile(Value, 350, 400);
+            docfileSrc = new DocfileSrcModel { Docfile = docfile };
+        }
+    }
+
+    List<Item> items = new List<Item>
+    {
+        new Item{Option=Item.Options.Factura, Caption = "entrar una factura"},
+        new Item{Option=Item.Options.Nomina, Caption = "entrar una nómina"},
+        new Item{Option=Item.Options.Visa, Caption = "despesa targeta de crèdit"},
+        new Item{Option=Item.Options.Immoble, Caption = "assignar el document a un immoble"},
+        new Item{Option=Item.Options.Correspondencia, Caption = "assignar el document a un contacte"},
+        new Item{Option=Item.Options.CertificatIrpf, Caption = "pujar certificat irpf"}
+    };
+
+
+    // async Task CloseRequestHandler()
+    // {
+    //     await CloseRequest.InvokeAsync();
+    // }
+
+
+    async Task FileChangedAsync(DocfileModel args)
+    {
+        docfile = args;
+        if (docfile.Document?.Mime == Media.MimeCods.Txt && DTO.Integracions.Banca.Norma43.Validate(docfile.Document.Data))
+            await UploadNorma43Async();
+        else
+            docfileSrc = new DocfileSrcModel { Docfile = docfile };
+    }
+
+    void HandleAfterUpdate(object args)
+    {
+        selectedOption = null;
+        docfile = null;
+    }
+
+    async Task UploadNorma43Async()
+    {
+        try
+        {
+            var bytes = docfile!.Document!.Data!;
+            var src = System.Text.Encoding.UTF7.GetString(bytes);
+            await ApiService.PostAsync<string, bool>(src, "Norma43");
+            NavigationManager.NavigateTo("Norma43");
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    CertificatIrpfModel GetCertificatIrpf() => new CertificatIrpfModel
+        {
+            Year = DateTime.Today.Year-1,
+            Docfile = docfile
+        };
+
+    CorrespondenciaModel GetCorrespondencia() => new CorrespondenciaModel
+        {
+            Emp = (EmpModel.EmpIds)ApiService.DefaultEmp()!,
+            Fch = DateOnly.FromDateTime(DateTime.Today),
+            UsrLog = UsrLogModel.Factory(ApiService.CurrentUser()),
+            Docfile = docfile
+        };
+
+    CcaModel GetDespesaVisaCca()
+    {
+        var retval = CcaModel.Factory(ApiService.DefaultEmp(), ApiService.CurrentUser()!, CcaModel.CcdEnum.Pagament);
+        retval.Concept = "(pagament amb Visa)";
+        retval.AddCredit(0, ApiService.GetPgcCta(PgcCtaModel.Cods.VisasPagadas)!);
+        retval.Docfile = docfile;
+        return retval;
+    }
+
+    protected class Item
+    {
+        public string? Caption { get; set; }
+        public Options Option { get; set; }
+
+        public enum Options
+        {
+            Factura,
+            Nomina,
+            Visa,
+            Immoble,
+            Correspondencia,
+            CertificatIrpf
+        }
+    }
+
+}
+

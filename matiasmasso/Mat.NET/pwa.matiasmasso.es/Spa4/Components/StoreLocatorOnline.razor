@@ -1,0 +1,68 @@
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage ProtectedLocalStore
+@inject NavigationManager NavManager
+
+<div class="Online">
+
+    <h3>@title</h3>
+
+    @foreach (StoreLocatorDTO.LandingPage item in Model!.LandingPages)
+    {
+        <a href="#" class="Item" onclick = "@(() => Navigate(item))">
+            <div class="Nom">@item.Nom</div>
+            <div class="Website">@item.Web</div>
+            <div class="InStock" hidden=@(item.InStock == false)>(en stock para entrega inmediata)</div>
+        </a>
+    }
+</div>
+
+
+
+<style scoped>
+
+    .Online {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        padding:10px 0 5px 0;
+    }
+
+    .Nom {
+        font-weight: 600;
+    }
+
+
+
+</style>
+
+@code {
+    [Parameter]
+    public StoreLocatorDTO.OnlineClass? Model { get; set; }
+
+    private LangDTO? lang;
+    private string? title;
+
+
+    protected async override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        await SetTitle();
+        StateHasChanged();
+    }
+
+
+    protected void Navigate(StoreLocatorDTO.LandingPage item)
+    {
+        NavManager.NavigateTo(item.Url);
+    }
+
+    private async Task SetTitle()
+    {
+        var result = await ProtectedLocalStore.GetAsync<SessionDTO>("session");
+        var session = result.Value;
+        lang = session!.Lang;
+        title = lang.Tradueix("Comprar ahora en...", "Comprar ara a...", "Buy now at...");
+    }
+}

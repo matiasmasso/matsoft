@@ -1,0 +1,52 @@
+﻿.Wrapper {
+    margin:30px auto;
+    max-width:500px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding: 0 10px;
+}
+
+.Wrapper input[type=text]{
+    width:100%;
+}
+
+.NomICognoms {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.LastName {
+    width: 100%;
+}
+
+.Country select {
+    width: 90px; /* igual que Zip input*/
+    height: 30px;
+}
+
+.ZipLocation {
+    display:flex;
+    flex-direction:row;
+    gap:10px;
+}
+.Zip input[type=text] {
+    width: 90px;
+}
+.Location {
+    width: 100%;
+}
+.TextButton {
+    display: flex;
+}
+    .TextButton input[type=text], .TextButton input[type=password] {
+        width: 100%;
+    }
+    .TextButton > div:last-child {
+        width: 120px;
+        text-align: center;
+    }
+    .TextButton button {
+        width: 100%;
+    }

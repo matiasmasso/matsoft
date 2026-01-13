@@ -1,0 +1,100 @@
+﻿@inject AppState AppState
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+@using DTO
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+
+    <TabControl SelectedTab = "@SelectedTab">
+
+        <ChildContent>
+
+            <TabPage Text="Público">
+
+
+                <div class="MenuWrapper">
+                         <div class="CustomMenu">
+
+                            @if (!string.IsNullOrEmpty(AppState.Layout.PublicMenuCustomTitle))
+                            {
+                                <div class="CustomMenuTitle Truncate">
+                                    @AppState.Layout.PublicMenuCustomTitle
+                                </div>
+                            }
+
+                            <NavItems MenuItems="@AppState.Layout.PublicMenuCustomItems" RequestToNavigate="NavigateRequest"/>
+                        </div>
+
+                    <NavItems MenuItems="@AppState.Layout.PublicMenuItems" RequestToNavigate="NavigateRequest"/>
+
+                    <div>
+                        <LanguageSelection></LanguageSelection>
+                    </div>
+
+                                        <div>
+                    <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                        @(AppState.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+                    </a>
+                    </div>
+
+                </div>
+            </TabPage>
+
+            <TabPage Text="Privado">
+                @if(AppState.Layout.User == null)
+                {
+                    <Login></Login>
+                } else
+                {
+                <div class="MenuWrapper">
+                         <div class="CustomMenu">
+
+                            @if (!string.IsNullOrEmpty(AppState.Layout.PrivateMenuCustomTitle))
+                            {
+                                <div class="CustomMenuTitle Truncate">
+                                    @AppState.Layout.PrivateMenuCustomTitle
+                                </div>
+                            }
+
+                            <NavItems MenuItems="@AppState.Layout.PrivateMenuCustomItems" RequestToNavigate="NavigateRequest"/>
+                        </div>
+
+                    <NavItems MenuItems="@AppState.Layout.PrivateMenuItems" RequestToNavigate="NavigateRequest"/>
+                </div>
+                }
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>  
+
+@code {
+
+    [Parameter]
+    public EventCallback<ExpandableItem> OnNavigate { get; set; }
+
+    [Parameter]
+    public int SelectedTab { get; set; } = 1;
+
+    protected override void OnInitialized()
+    {
+        AppState.OnStateChange += StateHasChanged;
+        base.OnInitialized();
+    }
+
+    protected void UseLocalApi()
+    {
+        AppState.UseLocalApi = !AppState.UseLocalApi;
+        //StateHasChanged();
+    }
+
+    async Task NavigateRequest()
+    {
+        await OnNavigate.InvokeAsync();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+    }
+
+}

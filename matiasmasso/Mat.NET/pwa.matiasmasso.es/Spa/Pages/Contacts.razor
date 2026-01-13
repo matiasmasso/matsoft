@@ -1,0 +1,42 @@
+﻿@page "/contacts"
+
+@using Spa.Shared
+@using Spa.ViewModels
+@layout ProLayout
+@inject AppState AppState
+@inject HttpClient Http
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Contacts> Loc
+
+
+@if (viewModel!.LoadStatus == Globals.LoadStatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <h1>@Loc["Title"]</h1>
+
+        <SearchBox @bind-Value="@viewModel.SearchTerm"></SearchBox>
+
+        <Virtualize Items="@viewModel.Items()" Context="item">
+            <a class="Item" href="@item.EditorUrl()">
+                @item.FullNom
+            </a>
+        </Virtualize>
+    </div>
+}
+
+
+
+
+@code {
+
+    private ContactsViewModel? viewModel;
+
+    protected override  Task OnInitializedAsync()
+    {
+        viewModel = new ContactsViewModel(AppState);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch(Http);
+        return base.OnInitializedAsync();
+    }
+}

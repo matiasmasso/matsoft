@@ -1,0 +1,49 @@
+﻿@inject IJSRuntime JSRuntime
+
+@if (ChildContent == null)
+{
+    <a href="#"
+    title="@Title"
+    tabindex="-1"
+    @onclick:preventDefault
+    onclick="var el = this;
+            el.className = el.classList.contains('Copying2') ? 'Copying1' : 'Copying2';
+            navigator.clipboard.writeText('@Value');">
+        <div class="CopyToClipboard">
+            <Icon Id="Icon.Ids.Copy"></Icon>
+        </div>
+    </a>
+}
+else
+{
+    @if(isCopyingToClipboard)
+    {
+        <Loading></Loading>
+    } else
+    {
+        <a href="#" title="@Title" class="CopyToClipboard @Class" @onclick="HandleOnClickAsync" @onclick:preventDefault>
+            @ChildContent
+        </a>
+    }
+}
+
+
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string Title { get; set; } = "Click aquí per copiar";
+
+    bool isCopyingToClipboard;
+
+    async Task HandleOnClickAsync()
+    {
+        isCopyingToClipboard = true;
+        await Task.Yield();
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Value);
+        await Task.Delay(500);
+        isCopyingToClipboard = false;
+    }
+
+}

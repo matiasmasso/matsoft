@@ -1,0 +1,153 @@
+﻿@inject ApiService ApiService
+
+<div class="RightAlign">
+    <a class="CloseButton" @onclick="Close" @onclick:preventDefault>
+        <Icon Id="Icon.Ids.Xmark"></Icon>
+    </a>
+</div>
+
+@if (selectedItem != null)
+{
+    <ModelEditor Model="selectedItem"
+                 AfterUpdate="NotifyUpdate"
+                 CancelRequest="RequestToCancel"></ModelEditor>
+}
+else if (Model is FirstnomModel)
+{
+    <Firstnom Model="(FirstnomModel)Model"
+              ItemSelected="SelectItem"
+              AfterUpdate="NotifyUpdate"
+              CancelRequest="RequestToCancel"></Firstnom>
+}
+else if (Model is CognomModel)
+{
+    <Cognom Model="(CognomModel)Model"
+            ItemSelected="SelectItem"
+            AfterUpdate="NotifyUpdate"
+            CancelRequest="RequestToCancel"></Cognom>
+}
+else if (Model is ProfessionModel)
+{
+    <Profession Model="(ProfessionModel)Model"
+                ItemSelected="SelectItem"
+                AfterUpdate="NotifyUpdate"
+                CancelRequest="RequestToCancel"></Profession>
+}
+else if (Model is PersonModel)
+{
+    <Person Model="(PersonModel)Model"
+            ItemSelected="SelectItem"
+            AfterUpdate="NotifyUpdate"
+            CancelRequest="RequestToCancel"></Person>
+}
+else if (Model is LocationModel)
+{
+    <Location Model="(LocationModel)Model"
+              ItemSelected="SelectItem"
+              AfterUpdate="NotifyUpdate"
+              CancelRequest="RequestToCancel"></Location>
+}
+else if (Model is FchLocationModel)
+{
+    <Location Model="((FchLocationModel)Model).Location"
+              ItemSelected="SelectItem"
+              AfterUpdate="NotifyUpdate"
+              CancelRequest="RequestToCancel"></Location>
+}
+else if (Model is EnlaceModel)
+{
+    <Enlace Model="(EnlaceModel)Model"
+            ItemSelected="SelectItem"
+            AfterUpdate="NotifyUpdate"
+            CancelRequest="RequestToCancel"></Enlace>
+}
+else if (Model is DocModel)
+{
+    <Doc Model="(DocModel)Model"
+         ItemSelected="SelectItem"
+         AfterUpdate="NotifyUpdate"
+         CancelRequest="RequestToCancel"></Doc>
+}
+else if (Model is DocSrcModel)
+{
+    <DocSrc Model="(DocSrcModel)Model"
+            ItemSelected="SelectItem"
+            AfterUpdate="NotifyUpdate"
+            CancelRequest="RequestToCancel"></DocSrc>
+}
+else if (Model is DocTargetModel)
+{
+    <DocTarget Value="(DocTargetModel)Model"
+               ItemSelected="SelectItem"
+               AfterUpdate="NotifyUpdate"
+               CancelRequest="RequestToCancel"></DocTarget>
+}
+else if (Model is DocCodModel)
+{
+    <DocCod Model="(DocCodModel)Model"
+            ItemSelected="SelectItem"
+            AfterUpdate="NotifyUpdate"
+            CancelRequest="RequestToCancel"></DocCod>
+}
+else if (Model is DocRelModel)
+{
+    <DocRel Model="(DocRelModel)Model"
+            ItemSelected="SelectItem"
+            AfterUpdate="NotifyUpdate"
+            CancelRequest="RequestToCancel"></DocRel>
+}
+else if (Model is PubModel)
+{
+    <Pub Model="(PubModel)Model"
+         ItemSelected="SelectItem"
+         AfterUpdate="NotifyUpdate"
+         CancelRequest="RequestToCancel"></Pub>
+}
+else if (Model is RepoModel)
+{
+    <Repo Model="(RepoModel)Model"
+         ItemSelected="SelectItem"
+         AfterUpdate="NotifyUpdate"
+         CancelRequest="RequestToCancel"></Repo>
+}
+
+@code {
+    [Parameter] public Object? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<Object?> CancelRequest { get; set; }
+
+    private object? selectedItem;
+    //private IModel? selectedItem;
+
+    // void SelectItem(IModel item)
+    // {
+    //     selectedItem = item;
+    // }
+    void SelectItem(object item)
+    {
+        selectedItem = item;
+    }
+
+    void Close()
+    {
+        ApiService.CurrentModels.RemoveAll(x => x.Guid == ((IModel)Model!).Guid);
+        CancelRequest.InvokeAsync();
+    }
+
+    async Task NotifyUpdate(Object args)
+    {
+        await AfterUpdate.InvokeAsync(Model);
+        //await CancelRequest.InvokeAsync();
+    }
+
+
+
+    void RequestToCancel(Object? args)
+    {
+        selectedItem = null;
+        if (args == null)
+            StateHasChanged();
+        else
+            CancelRequest.InvokeAsync();
+    }
+}

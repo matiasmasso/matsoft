@@ -1,0 +1,52 @@
+﻿@page "/contact/{Guid:guid}"
+@page "/{LangSegment}/contact/{Guid:guid}"
+
+@implements IDisposable
+@inject CultureService culture
+@inject AtlasService atlasService
+
+<div class="PageWrapper600">
+    <h3>@model?.FullNom</h3>
+    <TabControl>
+        <TabPage Text="@culture.Localize("General")">
+
+            <div>
+                <a href="@CustomerDeptsUrl()">
+                    Custom departments
+                </a>
+            </div>
+        </TabPage>
+    </TabControl>
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    ContactModel? model;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        atlasService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        model = atlasService.Contact(guid);
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    string? CustomerDeptsUrl() => culture.RelativeUrl("CustomerDepts", model?.Guid.ToString());
+
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        atlasService.OnChange -= Refresca;
+    }
+}

@@ -1,0 +1,28 @@
+﻿@inherits _ComponentBase
+
+<div class="Wrapper">
+
+    <a href="#" class="Membrete" @onclick="LogoClicked" @onclick:preventDefault="true">
+        <img src="img/Membrete-553x48.jpg" height=48 width=553 />
+    </a>
+
+    <div class="Misc">
+        <a href="#" class="Hamburger"
+           @onclick="ToggleMenu"
+           @onclick:preventDefault>
+            <img src="img/Hamburger-32.png" height=32 width=32 />
+        </a>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback ToggleMenu { get; set; }
+
+    void LogoClicked() {
+        base.NavigateToPage("/");
+    }
+
+    void ShowAbout() {
+        AppInfo.Current.ShowSettingsUI();
+    }
+}

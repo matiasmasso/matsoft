@@ -1,0 +1,48 @@
+﻿<div class="Wrapper">
+    <a href="#" @onclick:preventDefault @onclick="@(()=>isEditing=!isEditing)">
+        @DisplayValue()
+    </a>
+
+    @if (isEditing)
+    {
+
+        <div class="Dropdown">
+            @foreach (var item in items ?? new())
+            {
+                <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>OnClick(item))">
+                    @item
+                </a>
+            }
+        </div>
+    }
+
+</div>
+
+
+@code {
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+
+    bool isEditing;
+    private int? value;
+    private List<string> items = new List<string> { "(Mes)","Gen", "Feb", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Des" };
+
+    protected override void OnParametersSet()
+    {
+        value = Value;
+        base.OnParametersSet();
+    }
+
+    string DisplayValue()
+    {
+        return (Value == null || Value > 12) ? items[0] : items[(int)Value];
+    }
+
+    void OnClick(string args)
+    {
+        var mes = items.IndexOf(args);
+        if (value != mes)
+            ValueChanged.InvokeAsync(mes);
+        isEditing = false;
+    }
+}

@@ -1,0 +1,170 @@
+﻿@inject ApiService ApiService
+@implements IDisposable
+
+<div class="PageWrapper600">
+    <Title Value="Contracte" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (value == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="UpdateRequestHandler"
+                      CancelRequest="CloseRequestHandler"
+                      DeleteRequest="DeleteRequestHandler"
+                      ItemChanged="HandleItemChanged"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    }
+    <Error @bind-Value="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public ContractModel? Value { get; set; }
+    [Parameter] public List<ContractModel.CodiClass>? Codis { get; set; }
+    [Parameter] public EventCallback<ContractModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<ContractModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    ContractModel? value;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+
+    enum Fields
+    {
+        Emp,
+        Codi,
+        Nom,
+        Num,
+        Contact,
+        FchFrom,
+        FchTo,
+        Docfile
+    }
+
+
+    protected override void OnInitialized()
+    {
+        ApiService.OnChange += Refresca;
+        _ = Task.Run(async () => await FetchAsync());
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            //contractCodis = await ApiService.GetAsync<List<ContractModel.CodiClass>>("Contract/codis");
+            Refresca();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value?.IsNew ?? false)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+                value = await ApiService.GetAsync<ContractModel>("Contract", Value.Guid.ToString());
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var contacts =ApiService.GetContacts()?.Where(x => x.Emp == value?.Emp).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value?.Emp);
+        retval.AddGuidnom("Codi", value?.Codi, Codis);
+        retval.AddString("Nom", value?.Nom);
+        retval.AddString("Num", value?.Num);
+        retval.AddGuidnom("Contacte", value?.Contact, contacts);
+        retval.AddDateOnly("Des de", value?.FchFrom);
+        retval.AddDateOnly("Caduca", value?.FchTo);
+        retval.AddDocfile(value?.Docfile);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            value.Codi = propertyGrid.GetGuid((int)Fields.Codi);
+            value.Nom = propertyGrid!.GetString((int)Fields.Nom);
+            value.Num = propertyGrid!.GetString((int)Fields.Num);
+            value.Contact = propertyGrid!.GetGuid((int)Fields.Contact);
+            value.FchFrom = propertyGrid!.GetDateOnly((int)Fields.FchFrom);
+            value.FchTo = propertyGrid!.GetDateOnly((int)Fields.FchTo);
+            value.Docfile = propertyGrid.GetDocfile((int)Fields.Docfile);
+            await ApiService.PostMultipartAsync<ContractModel, bool>(value.Docfile, value, "Contract");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Contract/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            value!.Emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

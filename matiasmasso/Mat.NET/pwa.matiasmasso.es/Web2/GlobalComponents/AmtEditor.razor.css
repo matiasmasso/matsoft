@@ -1,0 +1,15 @@
+﻿.Wrapper {
+    max-width:100%;
+}
+
+a {
+    display:block;
+}
+input {
+    max-width:100%;
+    text-align: right;
+}
+
+.NotValid {
+    color:red;
+}

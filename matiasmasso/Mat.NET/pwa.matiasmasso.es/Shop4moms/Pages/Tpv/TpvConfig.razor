@@ -1,0 +1,115 @@
+﻿@page "/{LangSegment}/tpv/config"
+@page "/tpv/config"
+
+@inherits _PageBase
+
+@inject TpvService tpvService
+@inject HttpClient http
+@inject CultureService culture
+<h1>Tpv</h1>
+            <PageOptions IsShowingOptions>
+                
+                <a href="@tpvService.Tpv(base.Lang())." >Redsys</a>
+            </PageOptions>
+
+            <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          CanEdit="@true"></PropertyGrid>
+
+            <div class="ButtonsBar">
+                <ButtonsBar CanEdit="@true"
+                              IsDirty="isDirty"
+                              IsUpdating="isUpdating"
+                              CanDelete="@(!(value?.IsNew ?? false))"
+                              RequestToCancel="CancelRequest"
+                              RequestToUpdate="UpdateRequest"></ButtonsBar>
+            </div>
+
+<Error ProblemDetails="problemDetails"></Error>
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private DTO.Integracions.Redsys.Tpv? value;
+    private PropertyGridModel? gridModel;
+    private bool isDirty;
+    private bool isUpdating;
+    private ProblemDetails? problemDetails;
+
+    private enum Fields : int
+    {
+        Emp,
+        GatewayUrlDevelopment,
+        GatewayUrlProduction,
+        PrivateKeyDevelopment,
+        PrivateKeyProduction,
+        SignatureVersion,
+        MerchantCode,
+        MerchantTerminal,
+        TransactionType,
+        MerchantUrl,
+        UrlOk,
+        UrlKo,
+        Banc,
+        Environment
+    }
+
+
+    protected override void OnParametersSet()
+    {
+
+            value = tpvService.Tpv(base.Lang());
+            var model = new PropertyGridModel(value);
+            model.AddInt((int)Fields.Emp, (int)value.Emp, culture.Localize("Company"));
+            model.AddString((int)Fields.GatewayUrlDevelopment, value.GatewayUrlDevelopment, culture.Localize("GatewayUrlDevelopment"));
+            model.AddString((int)Fields.GatewayUrlProduction, value.GatewayUrlProduction, culture.Localize("GatewayUrlProduction"));
+            model.AddString((int)Fields.PrivateKeyDevelopment, value.PrivateKeyDevelopment, culture.Localize("PrivateKeyDevelopment"));
+            model.AddString((int)Fields.PrivateKeyProduction, value.PrivateKeyProduction, culture.Localize("PrivateKeyProduction"));
+            model.AddString((int)Fields.SignatureVersion, value.SignatureVersion, culture.Localize("SignatureVersion"));
+            model.AddString((int)Fields.MerchantCode, value.MerchantCode, culture.Localize("MerchantCode"));
+            model.AddInt((int)Fields.MerchantTerminal, value.MerchantTerminal ?? 1, culture.Localize("MerchantTerminal"));
+            model.AddInt((int)Fields.TransactionType, value.TransactionType ?? 0, culture.Localize("TransactionType"));
+            model.AddString((int)Fields.MerchantUrl, value.MerchantUrl, culture.Localize("MerchantUrl"));
+            model.AddString((int)Fields.UrlOk, value.UrlOk, culture.Localize("UrlOk"));
+            model.AddString((int)Fields.UrlKo, value.UrlKo, culture.Localize("UrlKo"));
+            //model.AddDropdown<GuidNom>((int)Fields.Banc, Bancs(), value.Banc == null ? null : new GuidNom(value.Banc.Guid, value.Banc.Abr), culture.Localize("Banc"));
+            model.AddEnum((int)Fields.Environment, new DTO.Integracions.Redsys.Common.Environments(), (int)value.Environment, culture.Localize("Environment"));
+            gridModel = model;
+            StateHasChanged();
+    }
+
+
+
+    private async Task UpdateRequest()
+    {
+        value!.Emp = (DTO.EmpModel.EmpIds)gridModel!.GetEnum((int)Fields.Emp);
+        value!.GatewayUrlDevelopment = gridModel!.GetString((int)Fields.GatewayUrlDevelopment);
+        value!.GatewayUrlProduction = gridModel!.GetString((int)Fields.GatewayUrlProduction);
+        value!.PrivateKeyDevelopment = gridModel!.GetString((int)Fields.PrivateKeyDevelopment);
+        value!.PrivateKeyProduction = gridModel!.GetString((int)Fields.PrivateKeyProduction);
+        value!.SignatureVersion = gridModel!.GetString((int)Fields.SignatureVersion) ?? "HMAC_SHA256_V1";
+        value!.MerchantCode = gridModel!.GetString((int)Fields.MerchantCode);
+        value!.MerchantTerminal = gridModel!.GetInt((int)Fields.MerchantTerminal);
+        value!.TransactionType = gridModel!.GetInt((int)Fields.TransactionType);
+        value!.MerchantUrl = gridModel!.GetString((int)Fields.MerchantUrl);
+        value!.UrlOk = gridModel!.GetString((int)Fields.UrlOk);
+        value!.UrlKo = gridModel!.GetString((int)Fields.UrlKo);
+        value!.Banc = gridModel.GetModelGuid((int)Fields.Banc) == null ? null : new BancModel((Guid)gridModel.GetModelGuid((int)Fields.Banc)!);
+        value!.Environment = (DTO.Integracions.Redsys.Common.Environments)gridModel!.GetEnum((int)Fields.Environment);
+
+        var apiResponse = await HttpService.PostAsync<DTO.Integracions.Redsys.Tpv, bool>(http, value!, "Tpv");
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+ 
+    private void CancelRequest()
+    {
+        //base.BackToLastPage();
+    }
+
+}
+

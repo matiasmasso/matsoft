@@ -1,0 +1,26 @@
+﻿@inject GravatarService gravatar
+
+@if (isLoaded)
+{
+    <div class="Avatar" style="@(style)" />
+}
+
+@code {
+    [Parameter] public UserModel? User { get; set; }
+    [Parameter] public int Size { get; set; } = 150;
+
+    string url = "";
+    string? style;
+    bool isLoaded = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (User != null)
+        {
+            url = await gravatar.Url(User, Size);
+            style = $"background-image: url('{url}');width:{Size}px;height:{Size}px;";
+            isLoaded = true;
+        }
+    }
+
+}

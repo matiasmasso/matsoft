@@ -1,0 +1,69 @@
+﻿.Item {
+    display: grid;
+    grid-template-columns: 178px min-content 1fr;
+    grid-template-areas: "thumb caption caption"
+        "thumb fchfromlabel fchfromvalue"
+        "thumb fchtolabel fchtovalue"
+        "thumb winnerlabel winnervalue";
+    grid-column-gap:10px;
+    grid-template-rows: min-content min-content min-content 1fr;
+
+}
+
+.Thumbnail {
+    grid-area:thumb;
+    width:178px;
+}
+
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}
+
+.Caption {
+    grid-area: caption;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.FchFromLabel {
+    grid-area: fchfromlabel;
+    white-space: nowrap;
+}
+
+.FchFromValue {
+    grid-area: fchfromvalue;
+    white-space: nowrap;
+}
+
+.FchToLabel {
+    grid-area: fchtolabel;
+    white-space: nowrap;
+}
+
+.FchToValue {
+    grid-area: fchtovalue;
+    white-space: nowrap;
+}
+.WinnerLabel {
+    grid-area: winnerlabel;
+    white-space: nowrap;
+}
+
+.WinnerValue {
+    grid-area: winnervalue;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.CallToAction {
+
+}
+
+.SeeMore {
+    display: block;
+    text-align: right;
+}

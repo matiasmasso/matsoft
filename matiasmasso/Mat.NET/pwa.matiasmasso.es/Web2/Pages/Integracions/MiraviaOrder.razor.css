@@ -1,0 +1,51 @@
+﻿.Header {
+    margin-bottom:15px;
+}
+
+.PageOptions {
+    margin:15px 0;
+}
+
+.RegisterStatus a {
+    display: flex;
+    border: 1px solid gray;
+    border-radius: 4px;
+    padding: 5px 10px;
+    gap: 10px;
+    margin-bottom: 15px;
+    background-color: aliceblue;
+}
+
+    .RegisterStatus a.NoStock {
+        background-color: salmon;
+        color:white;
+    }
+
+    .FurtherDetails {
+        display: grid;
+        grid-template-columns: min-content 1fr;
+    }
+
+.Zip {
+    display:flex;
+    gap:10px;
+    margin:10px 0;
+}
+
+.Item{
+    display:flex;
+}
+
+.Thumbnail {
+    width:70px;
+}
+
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}
+
+
+.OutOfStock {
+    color: red;
+}

@@ -1,0 +1,67 @@
+﻿.Wrapper {
+    position:relative;
+    margin-left: 20px;
+}
+
+.Parent, .Enlace {
+    display:flex;
+    gap:10px;
+    align-items: baseline;
+}
+
+
+    .Parent > .Ico, .Enlace > .Ico {
+        flex-shrink: 0;
+    }
+
+    .Parent > .Nom, .Enlace > .Nom {
+        flex-shrink: 1;
+    }
+
+
+.Descendants {
+    margin-left:15px;
+}
+
+.Ico {
+    width: 15px;
+}
+
+.Ico img {
+    width:100%;
+}
+
+.Nom a {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.Ancestor {
+    color:firebrick
+}
+
+.Dropdown {
+    position: absolute;
+    top: 20px;
+    left:20px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-left: 1px solid #DDDDDD;
+    border-right: 1px solid #DDDDDD;
+    border-bottom: 1px solid #DDDDDD;
+    background-color: white;
+    min-width: 100px;
+    width: min-content;
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+    padding-top: 5px;
+}
+
+    .Dropdown a {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 4px 10px 2px;
+        white-space:nowrap;
+    }

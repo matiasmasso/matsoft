@@ -1,0 +1,369 @@
+﻿@typeparam T
+@using System.Globalization
+
+<div class="Wrapper">
+    @if (item != null)
+    {
+        @if (item.Format == PropertyGridModel.Formats.String)
+        {
+            <input type="text" class="Textbox @(item.IsOverLength() ? "Warning" : "")" value="@item.Value" @oninput="ValueChangeHandler" />
+
+            @if (!string.IsNullOrEmpty(item.Value?.ToString()))
+            {
+                <div class="ButtonsBar">
+                    <CopyButton Value="@item.Value.ToString()"></CopyButton>
+                </div>
+            }
+        }
+        else if (item.Format == PropertyGridModel.Formats.TextArea)
+        {
+            <textarea class="Textbox" rows="5" value="@item.Value" @onchange="ValueChangeHandler" />
+        }
+        else if (item.Format == PropertyGridModel.Formats.Password)
+        {
+            <input type="@(isShowingPassword ? "text" : "password")" class="Textbox" value="@item.Value" @onchange="ValueChangeHandler" />
+
+            @if (!string.IsNullOrEmpty(item.Value?.ToString()))
+            {
+                <div class="ButtonsBar">
+                    <a href="#" tabindex="-1" @onclick="@(() => isShowingPassword = !isShowingPassword)" @onclick:preventDefault>
+                        <Icon Id="@(isShowingPassword? Icon.Ids.EyeSlash:Icon.Ids.Eye)"></Icon>
+                    </a>
+
+                    <CopyButton Value="@item.Value.ToString()"></CopyButton>
+                </div>
+            }
+        }
+        else if (item.Format == PropertyGridModel.Formats.Bool)
+        {
+            <Toggle Value="@((bool)(object)item.Value!)" ValueChanged="ToggleChangeHandler" />
+        }
+        else if (item.Format == PropertyGridModel.Formats.Integer)
+        {
+            <input type="number" class="Textbox Int" value="@item.Value" @onchange="ValueChangeHandler" />
+        }
+        else if (item.Format == PropertyGridModel.Formats.Decimal)
+        {
+            <input type="text" pattern="[0-9]+([,][0-9]{1,@item.Decimals})?"
+                   class="Textbox Int @(string.IsNullOrEmpty(item.WarningMessage) ? "" : "Warning")"
+                   value="@item.Value" @oninput="ValueChangeHandler" />
+        }
+        else if (item.Format == PropertyGridModel.Formats.Eur)
+        {
+            if (item.ReadOnly)
+            {
+                <span>@($"{item.Value:N2} €")</span>
+            }
+            else
+            {
+                <input type="text" pattern="[0-9]+([,][0-9]{1,2})?"
+                       class="Textbox Int @(string.IsNullOrEmpty(item.WarningMessage) ? "" : "Warning")"
+                       value="@item.Value" @oninput="ValueChangeHandler" @onchange="ValueUpdatedHandler" />
+            }
+        } else if(item.Format == PropertyGridModel.Formats.BaseTipusQuota)
+        {
+            <BaseTipusQuota Value="(BaseQuotaModel?)(object?)item.Value" 
+                            ValueChanged="SetBaseTipusQuota"></BaseTipusQuota>
+        }
+        else if (item.Format == PropertyGridModel.Formats.DateOnly)
+        {
+            <input type="@(string.IsNullOrEmpty(GetValue()) ? "text" : "date")"
+                   class="Textbox Fch"
+                   onfocus="(this.type='date')"
+                   onblur="if(!this.value)this.type='text'"
+                   value="@GetValue()"
+                   @onchange="ValueChangeHandler" />
+        }
+        else if (item.Format == PropertyGridModel.Formats.DateTime)
+        {
+            <input type="@(string.IsNullOrEmpty(GetValue()) ? "text" : "date")"
+                   class="Textbox Fch"
+                   onfocus="(this.type='date')"
+                   onblur="if(!this.value)this.type='text'"
+                   value="@GetValue()"
+                   @onchange="ValueChangeHandler" />
+        }
+        else if (item.Format == PropertyGridModel.Formats.IModel)
+        {
+            <Dropdown Value="@((IModel?)item.Value)"
+                      Values="GetValues()"
+                      ValueChanged="SetObjValue"
+                      ZoomRequest="ZoomRequestHandler"
+                      RequestToAdd="@item.AddNewRequest"></Dropdown>
+
+        }
+        else if (item.Format == PropertyGridModel.Formats.Guidnom)
+        {
+            @* <LookupModel Value="((IModel?)item.Value)?.Guid"
+                             Values="GetValues()"
+                             ValueChanged="SetValue"
+                             AddNewRequest="item.AddNewRequest"></LookupModel> *@
+            <Dropdown Value="@((Object?)item.Value)"
+                      Values="GetValues()"
+                      ValueChanged="SetObjValue"
+                      RequestToAdd="@item.AddNewRequest"></Dropdown>
+
+        }
+        else if (item.Format == PropertyGridModel.Formats.Object)
+        {
+            <Dropdown Value="@((Object?)item.Value)"
+                      Values="GetValues()"
+                      ValueChanged="SetObjValue"
+                      RequestToAdd="@item.AddNewRequest"></Dropdown>
+
+        }
+        else if (item.Format == PropertyGridModel.Formats.IModelList)
+        {
+            <LookupIModels SelectedValues="item.SelectedValues"
+                           AvailableValues="item.AvailableValues"
+                           AddNewRequest="@item.AddNewRequest"
+                           ZoomRequest="ZoomRequestHandler"
+                           SelectedValuesChanged="SetObjValue"></LookupIModels>
+        }
+        else if (item.Format == PropertyGridModel.Formats.IdNom)
+        {
+            <LookupIdNom Value="@((((IdNom?)(object?)item.Value)?.Id))"
+                         Values="GetIdNoms()"
+                         ValueChanged="SetValue"></LookupIdNom>
+
+        }
+        else if (item.Format == PropertyGridModel.Formats.IdNomList)
+        {
+            <LookupIdNoms SelectedValues="item.SelectedIdNoms"
+                          AvailableValues="item.AvailableIdNoms"
+                          SelectedValuesChanged="SetObjValue"></LookupIdNoms>
+        }
+        else if (item.Format == PropertyGridModel.Formats.EmpId)
+        {
+            <div class="LookupEmp">
+                <LookupEmp Value="(EmpModel.EmpIds?)(object?)item.Value" ValueChanged="SetEmp"></LookupEmp>
+            </div>
+        }
+        else if (item.Format == PropertyGridModel.Formats.Docfile)
+        {
+            <Filedrop Value="(DocfileModel?)(object?)item.Value" ValueChanged="SetDocfile"></Filedrop>
+        } 
+    }
+</div>
+
+@code {
+    [Parameter] public PropertyGridModel.Item? Item { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item<T>> ItemChanged { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item<T>> ItemUpdated { get; set; }
+    [Parameter] public EventCallback<IModel> ZoomRequest { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+    PropertyGridModel.Item<T>? item;
+    T? value;
+    private CultureInfo culture = new CultureInfo("es-ES");
+    bool isEditing;
+    bool isCopying;
+    bool isShowingPassword;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Item != null)
+        {
+            // if (Item is PropertyGridModel.Item<String>)
+            //     item = (PropertyGridModel.Item<Object>)Item;
+            // else
+            item = (PropertyGridModel.Item<T>)Item;
+            value = item.Value;
+        }
+    }
+
+    void ToggleChangeHandler(bool args)
+    {
+        item!.Value = (T)(object)(args);
+        item.IsDirty = true;
+        ItemChanged.InvokeAsync(item);
+    }
+    void ValueChangeHandler(ChangeEventArgs args)
+    {
+        item!.WarningMessage = null;
+        item.Value = default(T);
+        var src = args.Value?.ToString();
+        if (!string.IsNullOrEmpty(src))
+        {
+            switch (item.Format)
+            {
+                case PropertyGridModel.Formats.Eur:
+                    if (decimal.TryParse(src, NumberStyles.Float, culture, out _))
+                        item.Value = (T?)args.Value;
+                    else
+                        item.WarningMessage = $"'{src}' no es un valor valid per un import en Euros";
+                    break;
+
+                default:
+                    item.Value = (T?)args.Value;
+                    break;
+            }
+        }
+        item.IsDirty = true;
+        ItemChanged.InvokeAsync(item);
+    }
+
+    void ValueUpdatedHandler(ChangeEventArgs args)
+    {
+        item!.WarningMessage = null;
+        item.Value = default(T);
+        var src = args.Value?.ToString();
+        if (!string.IsNullOrEmpty(src))
+        {
+            switch (item.Format)
+            {
+                case PropertyGridModel.Formats.Eur:
+                    if (decimal.TryParse(src, NumberStyles.Float, culture, out _))
+                        item.Value = (T?)args.Value;
+                    else
+                        item.WarningMessage = $"'{src}' no es un valor valid per un import en Euros";
+                    break;
+
+                default:
+                    item.Value = (T?)args.Value;
+                    break;
+            }
+        }
+        item.IsDirty = true;
+        ItemUpdated.InvokeAsync(item);
+    }
+
+    void ZoomRequestHandler(IModel args)
+    {
+        ZoomRequest.InvokeAsync(args);
+    }
+
+    string? GetValue()
+    {
+        string? retval = null;
+
+        if ((item!.Format == PropertyGridModel.Formats.DateOnly
+            | item!.Format == PropertyGridModel.Formats.DateTime
+            | item!.Format == PropertyGridModel.Formats.Bool
+        ) && item.Value != null)
+            retval = item.Value!.ToString()!;
+
+        return retval;
+    }
+
+    // List<IModel>? GetValues() => ((IEnumerable<IModel>?)(object?)item!.Values)?.ToList();
+    object[] GetValues() => item?.Values?.Where(x => x != null).Select(x => (object)x).ToArray();
+
+    List<IdNom>? GetIdNoms()
+    {
+        var retval = ((IEnumerable<IdNom>?)(object?)item!.Values)?.ToList();
+        return retval;
+    }
+
+    void SetObjValue(object? args)
+    {
+        item!.Value = default(T);
+        item.WarningMessage = null;
+
+        if (args != null)
+        {
+            if (item.Values == null)
+                item.WarningMessage = "no hi han valors d'on triar";
+            else
+            {
+                item.Value = (T)args;
+            }
+        }
+        item.IsDirty = true;
+        ItemChanged.InvokeAsync(item);
+    }
+
+    // void SetModelValue(IModel? args)
+    // {
+    //     item.WarningMessage = null;
+
+    //     if (args != null)
+    //     {
+    //         if (item.Values == null)
+    //             item.WarningMessage = "no hi han valors d'on triar";
+    //         else
+    //         {
+    //             PropertyGridModel.Item<IModel> modelItem = (PropertyGridModel.Item<IModel>)item;
+    //             ((PropertyGridModel.Item<IModel>)item).Value = args;
+    //         }
+    //     }
+    //     item.IsDirty = true;
+    //     ItemChanged.InvokeAsync(item);
+    // }
+
+    void SetValue(IModel? args)
+    {
+        item!.Value = default(T);
+        item.WarningMessage = null;
+
+        if (args != null)
+        {
+            if (item.Values == null)
+                item.WarningMessage = "no hi han valors d'on triar";
+            else
+            {
+                var value = item.Values
+                .Select(x => (GuidNom?)Convert.ChangeType(x, typeof(GuidNom)))
+                .FirstOrDefault(x => x?.Guid == args.Guid);
+                if (value == null)
+                    item.WarningMessage = "no hi han valors d'on triar";
+                else
+                    item.Value = (T)Convert.ChangeType(args, typeof(T));
+            }
+        }
+        item.IsDirty = true;
+        ItemChanged.InvokeAsync(item);
+    }
+
+    void SetValue(IdNom? args)
+    {
+        item!.Value = default(T);
+        item.WarningMessage = null;
+
+        if (args != null)
+        {
+            if (item.Values == null)
+                item.WarningMessage = "no hi han valors d'on triar";
+            else
+            {
+                var value = item.Values
+                .Select(x => (IdNom?)Convert.ChangeType(x, typeof(IdNom)))
+                .FirstOrDefault(x => x?.Id == args.Id);
+                if (value == null)
+                    item.WarningMessage = "no hi han valors d'on triar";
+                else
+                    item.Value = (T)Convert.ChangeType(args, typeof(T));
+            }
+        }
+        item.IsDirty = true;
+        ItemChanged.InvokeAsync(item);
+    }
+
+    void SetEmp(EmpModel.EmpIds args)
+    {
+        item!.Value = (T)Convert.ChangeType(args, typeof(T));
+        item.IsDirty = true;
+        ItemChanged.InvokeAsync(item);
+    }
+
+    void SetBaseTipusQuota(BaseQuotaModel? args)
+    {
+        item!.Value = (T)Convert.ChangeType(args, typeof(T));
+        item.IsDirty = true;
+        ItemChanged.InvokeAsync(item);
+    }
+
+    void SetDocfile(DocfileModel args)
+    {
+        item!.Value = (T)Convert.ChangeType(args, typeof(T));
+        item.IsDirty = true;
+        ItemChanged.InvokeAsync(item);
+    }
+
+    void ZoomRequestHandler(object args)
+    {
+        //to do...
+    }
+
+}

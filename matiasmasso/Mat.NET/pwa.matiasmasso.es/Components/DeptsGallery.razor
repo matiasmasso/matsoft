@@ -1,0 +1,32 @@
+﻿@inherits _Base
+@inject NavigationManager NavigationManager
+
+<div class="Grid">
+    @foreach (var item in Model)
+    {
+        <a class="Item"
+       href="#"
+       @onclick="@(()=>ItemClick(item))"
+       @onclick:preventDefault="true">
+            <div class="Label">
+                @item.Nom?.Tradueix(base.Lang())
+            </div>
+            <div class="Thumbnail">
+                <img src="@item.ThumbnailUrl()"
+                 width="@ProductDeptModel.THUMBNAIL_WIDTH"
+                 height="@ProductDeptModel.THUMBNAIL_HEIGHT" />
+            </div>
+        </a>
+    }
+    <div class="clearfix"></div>
+</div>
+
+
+@code {
+    [Parameter] public List<ProductDeptModel> Model { get; set; } = new();
+
+    private void ItemClick(ProductDeptModel item)
+    {
+        NavigationManager.NavigateTo(Globals.PageUrl("ConsumerDept", item.Guid.ToString()));
+    }
+}

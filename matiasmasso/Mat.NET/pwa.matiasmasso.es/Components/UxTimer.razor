@@ -1,0 +1,74 @@
+﻿@inherits _Base
+
+    <div class="Wrapper">
+        @Text()
+    </div>
+
+@code {
+    [Parameter] public DateTime? FchTo { get; set; }
+    [Parameter] public EventCallback FchReached { get; set; }
+
+    private System.Threading.Timer? timer;
+    private int seconds = 0;
+
+    protected override void OnParametersSet()
+    {
+        if (FchTo != null && timer == null)
+        {
+            timer = new System.Threading.Timer(_ => { InvokeAsync(StateHasChanged); }, null, 1000, 1000);
+        }
+        base.OnParametersSet();
+    }
+
+    private TimeSpan TimeLeft() => (TimeSpan)(FchTo - DateTime.Now);
+
+
+    string Text() {
+        var timeLeft = TimeLeft();
+        if(timeLeft.TotalSeconds <=0){
+            if (FchReached.HasDelegate)
+                FchReached.InvokeAsync();
+        }
+
+        var sb = new System.Text.StringBuilder();
+
+        if (timeLeft.Days > 1)
+        {
+            sb.AppendFormat("{0:00} {1} ", timeLeft.Days, Localizer("days"));
+        }
+        else if (timeLeft.Days > 0){
+            sb.AppendFormat("1 {0} ",Localizer("day"));
+        }
+
+        if (timeLeft.Hours > 1)
+        {
+            sb.AppendFormat("{0:00} {1} ", timeLeft.Hours, Localizer("hours"));
+        }
+        else if (timeLeft.Hours > 0)
+        {
+            sb.AppendFormat("1 {0} ",Localizer("hour"));
+        }
+
+        if (timeLeft.Minutes > 1)
+        {
+            sb.AppendFormat("{0:00} {1} ", timeLeft.Minutes, Localizer("minutes"));
+        }
+        else if (timeLeft.Minutes > 0)
+        {
+            sb.AppendFormat("1 {0} ", Localizer("minute"));
+        }
+
+        if (timeLeft.Seconds > 1)
+        {
+            sb.AppendFormat("{0:00} {1} ", timeLeft.Seconds, Localizer("seconds"));
+        }
+        else if (timeLeft.Seconds > 0)
+        {
+            sb.AppendFormat("1 {0} ", Localizer("seconds"));
+        }
+
+        return sb.ToString();
+
+    }
+
+}

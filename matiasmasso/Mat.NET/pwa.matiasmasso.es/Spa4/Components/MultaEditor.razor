@@ -1,0 +1,75 @@
+﻿@inherits _ComponentBase
+@using System.Net.Http.Formatting
+
+<div>
+
+    @if (Model != null)
+    {
+
+        <EditForm Model="@Model" OnValidSubmit=@ValidFormSubmitted >
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                Expedient: <InputText @bind-Value="Model.Expedient" class="form-control" />
+            </div>
+            <div class="form-group">
+                Import: <InputNumber @bind-Value="Model.Amt" class="form-control" />
+            </div>
+
+            <br />
+
+            <div class="Buttons">
+                <!--<button type="submit" form="my-form-ref" class="btn btn-success" value="Update"/>-->
+                <button type="submit" class="btn btn-success">Update</button>
+                <input type="button" class="btn btn-secondary" value="Delete" />
+                <input type="button" class="btn btn-secondary" value="Cancel" />
+            </div>
+
+        </EditForm>
+    }
+
+</div>
+@code {
+
+    private MultaModel? _model;
+
+    [Parameter]
+    public MultaModel? Model
+    {
+        get => _model;
+        set
+        {
+            if (_model == value ) return;
+            _model = value;
+            ModelChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<MultaModel> ModelChanged { get; set; }   
+
+    [Parameter]
+    public EventCallback<MultaModel> SaveRequest { get; set; }   
+
+
+
+    async void ValidFormSubmitted(EditContext editContext)
+    {
+        if(editContext.IsModified())
+        {
+            MultaModel model = (MultaModel)editContext.Model;
+            var url = Globals.ApiUrl("Multa");
+
+            var content = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+            var response = await base.http.PostAsync(url, content, new JsonMediaTypeFormatter());
+            if ((int)response.StatusCode == 200)
+                NavigationManager.NavigateTo("Vehicles");
+            else
+                throw new Exception("error on updating multa");
+        }
+    }
+
+
+
+}

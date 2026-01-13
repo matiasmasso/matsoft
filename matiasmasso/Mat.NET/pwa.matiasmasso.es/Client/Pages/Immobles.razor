@@ -1,0 +1,47 @@
+﻿@page "/Immobles"
+
+
+@layout ProLayout
+@using Client.Shared
+@using Client.ViewModels
+
+@inject AppState AppState
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Immobles> Loc
+
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <h1>@Loc["Title"]</h1>
+        <SearchBox @bind-Value="@viewModel.SearchTerm"></SearchBox>
+
+        <Virtualize Items="@viewModel.Items()" Context="item">
+            <a class="Item" href="@item.Url()">
+                <div class="Nom Truncate">
+                    @string.Format("{0:dd/MM/yyyy} {1}", item.FchFrom, item.Nom ?? "")
+                </div>
+                <div class="Details Truncate">
+                    @item.Emp!.GetDisplayName()
+                </div>
+            </a>
+        </Virtualize>
+    </div>
+}
+
+
+
+
+@code {
+
+    private ImmoblesViewModel? viewModel;
+
+    protected override  Task OnInitializedAsync()
+    {
+        viewModel = new ImmoblesViewModel( AppState);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+        return base.OnInitializedAsync();
+    }
+}

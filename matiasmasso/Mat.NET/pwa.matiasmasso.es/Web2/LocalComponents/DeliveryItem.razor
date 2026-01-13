@@ -1,0 +1,60 @@
+﻿@inject CultureService culture
+@inject ProductsService productsService
+@inject DeliveriesService deliveriesService
+
+<div class="PageWrapper600">
+    <div class="Details">
+        <div>@culture.Localize("Delivery")</div>
+        <div>@Model?.Parent?.Id</div>
+        <div>@culture.Localize("Fch")</div>
+        <div>@Model?.Parent?.Fch.ToShortDateString()</div>
+        <div>@culture.Localize("Destination")</div>
+        <div>@deliveriesService.Destination(Model?.Parent)</div>
+        <div>@culture.Localize("Lin")</div>
+        <div>@Model?.Lin.ToString()</div>
+    </div>
+
+    <div class="DeliveryItem">
+        <a href="#" class="Thumbnail" @onclick="SkuClick" @onclick:preventDefault>
+            <img src="@productsService.ThumbnailUrl(Model?.Sku)" />
+        </a>
+        <div class="Details">
+            <div>ref M+O</div>
+            <div class="Nom">@sku?.Id</div>
+            <div>@culture.Localize("Ref")</div>
+            <div class="Nom">@sku?.Ref</div>
+            <div>@culture.Localize("Nom")</div>
+            <div class="Nom">@sku?.NomLlarg?.Tradueix(culture.Lang())</div>
+            <div>@culture.Localize("Qty")</div>
+            <div class="Nom">@($"{Model?.Qty}")</div>
+            <div>@culture.Localize("Price")</div>
+            <div class="Nom">@($"{Model?.Price:N2} €")</div>
+            @if(Model?.Dto != null && Model.Dto != 0)
+            {
+                <div>@culture.Localize("Dto")</div>
+                <div class="Nom">@($"{Model.Dto} %")</div>
+            }
+            <div>@culture.Localize("Amt")</div>
+            <div class="Nom">@($"{Model?.Amt():N2} %")</div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DeliveryModel.Item? Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    ProductSkuModel? sku;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        sku = productsService.Sku(Model?.Sku);
+    }
+
+    async Task SkuClick()
+    {
+            var breadcrumb = new ModelEditor.Breadcrumb(sku, sku?.NomLlarg?.Tradueix(culture.Lang()) ?? "?");
+            await EditorRequest.InvokeAsync(breadcrumb);
+    }
+}

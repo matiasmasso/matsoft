@@ -1,0 +1,59 @@
+﻿.Wrapper {
+    width:100%;
+    max-width:600px;
+}
+.Year {
+    display:block;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: 1fr min-content min-content min-content;
+    grid-column-gap:10px;
+    width:100%;
+}
+
+.Cta {
+}
+
+.Deb, .Hab, .Sdo {
+    text-align:right;
+    white-space:nowrap;
+}
+
+.Deb, .Hab {
+    color:gray;
+}
+
+.Line {
+    display:none;
+    grid-column: 1/-1;
+    height: 1px;
+    border-bottom: 1px solid gray;
+}
+
+@media only screen and (max-width: 600px) {
+
+    .Year {
+        display: block;
+        padding:10px 0;
+        border-bottom:1px solid gray;
+    }
+
+
+    .Grid {
+        display: grid;
+        grid-template-columns: minmax(min-content,1fr) 0 0 min-content;
+        grid-column-gap: 10px;
+        grid-row-gap: 10px;
+        max-width:100%;
+    }
+
+    .Deb, .Hab {
+        overflow: hidden;
+    }
+
+    .Line {
+        display:block;
+    }
+}

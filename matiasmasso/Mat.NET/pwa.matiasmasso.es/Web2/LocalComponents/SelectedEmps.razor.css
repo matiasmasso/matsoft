@@ -1,0 +1,16 @@
+﻿.Wrapper {
+    display:flex;
+    gap:10px;
+}
+
+    .Wrapper a {
+        display: inline-flex;
+        padding: 4px 7px 2px 4px;
+        border-radius: 5px;
+        border: 1px solid gray;
+/*        margin: 0 10px 10px 0;
+*/    }
+
+        .Wrapper a.Selected {
+            background-color: aliceblue;
+        }

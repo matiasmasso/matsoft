@@ -1,0 +1,35 @@
+﻿.Wrapper {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.Wrapper > div {
+    vertical-align:middle;
+}
+
+.Country {
+    max-width: 150px;
+    width: 100%;
+}
+
+.Zip {
+    width: 120px;
+}
+.Zip input {
+    width:100%;
+}
+
+.EditIcon .ShowOnHover, .EditIcon:hover .HideOnHover {
+    display: none;
+}
+
+.EditIcon:hover .ShowOnHover {
+    display: inline-block;
+}
+
+.Err {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}

@@ -1,0 +1,228 @@
+﻿@page "/balance"
+@page "/{LangSegment}/balance"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject PgcCtaSdosService pgcCtaSdosService
+@inject IJSRuntime JSRuntime
+
+<div class="PageWrapper600">
+    @if (pl == null)
+    {
+        <h3>@culture.Localize("Balance")</h3>
+        <Loading></Loading>
+    }
+    else
+    {
+        <h3>@culture.Localize("Balance")</h3>
+
+        <PageOptions>
+            <div class="Relative">
+                <LookupEmps Value="emp" ValueChanged="EmpChanged"></LookupEmps>
+            </div>
+
+            <input type="date" value="@(((DateTime)fch!).ToString("yyyy-MM-dd"))" @onchange="FchChanged" />
+            @if (isWritingExcel)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <div class="Relative">
+                    <a href="#" @onclick="@(()=>isShowingExcelContextMenu = !isShowingExcelContextMenu)" @onclick:preventDefault>
+                        Excel
+                    </a>
+                    <div class="ContextMenu @(isShowingExcelContextMenu ? "" : "Hidden")">
+                        <a href="#" class="Item Nom" @onclick="DownloadExcelMensual" @onclick:preventDefault>
+                            mensual
+                        </a>
+                        <a href="#" class="Item Nom" @onclick="DownloadExcelTrimestral" @onclick:preventDefault>
+                            trimestral
+                        </a>
+                    </div>
+                </div>
+            }
+        </PageOptions>
+
+        <TabControl SelectedTab="3">
+            <TabPage Text="@culture.Localize("Assets")">
+                <BalanceSheet Model="assets"></BalanceSheet>
+            </TabPage>
+            <TabPage Text="@culture.Localize("Liabilities")">
+                <BalanceSheet Model="liabilities"></BalanceSheet>
+            </TabPage>
+            <TabPage Text="@culture.Localize("ProfitAndLoss")">
+                <BalanceSheet Model="pl"></BalanceSheet>
+            </TabPage>
+        </TabControl>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    BalanceModel? assets, liabilities, pl;
+    EmpModel? emp;
+    int year;
+    DateTime fch = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddDays(-1); // last day past month
+    bool isWritingExcel;
+    bool isShowingExcelContextMenu;
+
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        pgcCtaSdosService.OnChange += Refresca;
+        session.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        if (emp == null) emp = session.Emps?.FirstOrDefault();
+        if (year == 0) year = DateTime.Today.Year;
+        _ = Task.Run(async () => await LoadData(emp, fch));
+
+        exception = ex;
+    }
+
+    private async Task LoadData(EmpModel? emp, DateTime fch)
+    {
+        try
+        {
+            assets = await pgcCtaSdosService.Balance(emp, fch, BalanceModel.Modes.Assets);
+            liabilities = await pgcCtaSdosService.Balance(emp, fch, BalanceModel.Modes.Liabilities);
+            pl = await pgcCtaSdosService.Balance(emp, fch, BalanceModel.Modes.PL);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void EmpChanged(EmpModel arg)
+    {
+        emp = arg;
+        if (year < emp.YearsDescendingRange().LastOrDefault())
+            year = DateTime.Today.Year;
+        Refresca();
+    }
+
+    private void FchChanged(ChangeEventArgs args)
+    {
+        fch = DateTime.Parse(args.Value!.ToString()!);
+        year = ((DateTime)fch).Year;
+        Refresca();
+    }
+
+    private async Task DownloadExcelTrimestral()
+    {
+        var fchs = Last3YearsQuartersLastDay();
+        var years = $"{fchs.First().Year}-{fchs.Last().Year}";
+        var title = years;
+        var filename = $"{emp?.Abr} - PL quarterly {years}.xlsx";
+        await DownloadExcel(fchs, title, filename);
+    }
+
+    private async Task DownloadExcelMensual()
+    {
+        var fchs = Last3YearsMonthsLastDay();
+        var years = $"{fchs.First().Year}-{fchs.Last().Year}";
+        var title = years;
+        var filename = $"{emp?.Abr} - PL monthly {years}.xlsx";
+        await DownloadExcel(fchs, title, filename);
+    }
+
+    private List<DateTime> Last3YearsMonthsLastDay()
+    {
+        List<DateTime> retval = new();
+        for (var year = DateTime.Today.Year - 3; year <= DateTime.Today.Year; year++)
+        {
+            for (var month = 1; month <= 12; month++)
+            {
+                DateTime monthFirstFch = new DateTime(year, month, 1);
+                DateTime monthLastFch = monthFirstFch.AddMonths(1).AddDays(-1);
+                retval.Add(monthLastFch);
+            }
+        }
+        return retval;
+    }
+
+    private List<DateTime> Last3YearsQuartersLastDay()
+    {
+        List<DateTime> retval = Last3YearsMonthsLastDay()
+        .Where(x => x.Month % 3 == 0)
+        .ToList();
+        return retval;
+    }
+
+    async Task DownloadExcel(List<DateTime> fchs, string title, string filename)
+    {
+        isWritingExcel = true;
+
+        try
+        {
+            var sheet = new DTO.Excel.Sheet(title, filename);
+            var pls = new List<BalanceModel>();
+            int col = 0;
+            DTO.Excel.Row? row = null;
+
+            foreach (var fch in fchs)
+            {
+                    var pl = await pgcCtaSdosService.Balance(emp!, fch, BalanceModel.Modes.PL);
+                    var items = pl!.Items.Where(x => x.Tag is PgcClassModel).ToList();
+                    if (col == 0)
+                    {
+                        sheet.AddColumn("Concepte");
+                        foreach (var item in items)
+                        {
+                            row = sheet.AddRow();
+                            row.AddCell(item.ExcelPadding() + item.Nom?.Tradueix(culture.Lang()));
+                        }
+                        col += 1;
+                    }
+
+                    sheet.AddColumn(fch.ToShortDateString());
+                    for (var idx = 0; idx < items.Count; idx++)
+                    {
+                        row = sheet.Rows[idx];
+                        var sdo = pl.Saldo(items[idx]);
+                        if (sdo == 0)
+                            row.AddCell();
+                        else
+                            row.AddCell(sdo, "", DTO.Excel.Cell.NumberFormats.Euro);
+                    }
+
+                col += 1;
+            }
+
+            var bytes = DTO.Excel.ClosedXml.Bytes(sheet);
+            var fileStream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", sheet.Filename, streamRef);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        isWritingExcel = false;
+        isShowingExcelContextMenu = false;
+    }
+
+
+    public void Dispose()
+    {
+        pgcCtaSdosService.OnChange -= Refresca;
+        session.OnChange -= Refresca;
+    }
+}

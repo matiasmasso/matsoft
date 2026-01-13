@@ -1,0 +1,84 @@
+﻿@page "/videos"
+@page "/{LangSegment}/videos"
+@inherits _PageBase
+@inject CultureService culture
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@base.CanonicalUrl()" />
+
+        @foreach (var lang in LangDTO.All())
+        {
+            <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@base.CanonicalUrl(lang,new LangTextModel("videos"))" />
+        }
+    <meta name="description" content="@base.Tradueix("Galería de videos disponibles sobre los productos de 4moms",
+    "Galeria de videos disponibles sobre els productes de 4moms",
+    "4moms products video gallery",
+    "Galeria de vídeos disponíveis nos produtos 4moms")">
+
+    @*
+
+    <meta property="og:title" content="@model.Nom?.Tradueix(base.Lang())" />
+    <meta property="og:description" content="@model?.Excerpt?.Tradueix(base.Lang())" />
+    <meta property="og:image" content="@model?.ImageUrl()" />
+    <meta property="og:image:alt" content="@model.Nom?.Tradueix(base.Lang())" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@base.CanonicalUrl()" />
+    <meta property="og:site_name" content="4moms" />
+    <meta name="twitter:title" content="@model.Nom?.Tradueix(base.Lang())" />
+    <meta name="twitter:description" content="@model.Excerpt?.Tradueix(base.Lang())" />
+    <meta name="twitter:image" content="@Cache?.ImageUrl(model)" />
+    <meta name="twitter:image:alt" content="@model?.Nom?.Tradueix(base.Lang())" />
+    *@
+</HeadContent>
+
+<div class="Wrapper600">
+    <h1>@culture.Localize("Videos")</h1>
+
+    @if (Items == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+            <div class="Grid">
+                <div class="ColHeaders">
+                    <div>@culture.Localize("Fch")</div>
+                    <div>@culture.Localize("Duration")</div>
+                    <div class="Text">@culture.Localize("Title")</div>
+                </div>
+                @foreach (var item in Items)
+                {
+                    <a class="Item" href="@Url(item)">
+                        <div>@string.Format("{0:dd/MM/yy}",item.FchCreated)</div>
+                        <div>@(item.Duration == null ? "" : string.Format("{0:c}", item.Duration))</div>
+                        <div class="Text">@item.Nom.Tradueix(base.Lang())</div>
+                    </a>
+                }
+            </div>
+    }
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+@code {
+    [Parameter] public string? Segment { get; set; }
+    List<YouTubeMovieModel>? Items;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var lang = base.Lang();
+        var apiResponse = await GetAsync<List<YouTubeMovieModel>>("Shop4moms/Videos");
+        Items = apiResponse.Value?
+        .Where(x => !x.Obsoleto
+            && !string.IsNullOrEmpty(x.Nom.Tradueix(base.Lang()))
+            && (x.LangSet?.HasLang(lang) ?? false)
+            && (x.FchTo == null || x.FchTo < DateTime.Today))?.ToList() ?? new();
+        problemDetails = apiResponse.ProblemDetails;
+
+    }
+
+    string Url(YouTubeMovieModel item) => Culture.RelativeUrl(base.Lang(), item.LandingPageUrl(base.Lang()));
+    string Duration(YouTubeMovieModel item) => Culture.RelativeUrl(base.Lang(), item.LandingPageUrl(base.Lang()));
+
+
+}

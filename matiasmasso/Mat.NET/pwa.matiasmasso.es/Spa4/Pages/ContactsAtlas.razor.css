@@ -1,0 +1,50 @@
+﻿.Item {
+    display: flex;
+    justify-content:flex-start;
+    align-items:center;
+}
+
+    .Item.Selected {
+        display: flex;
+        justify-content: space-between;
+        background-color:rgb(240,240,240);
+        border: 1px solid gray;
+    }
+
+    .Item:not(:first-child) {
+        border-top: 1px solid gray;
+    }
+
+    .Item i {
+        padding:0 10px 0 0;
+    }
+
+.ContactDetails {
+    display:grid;
+    grid-template-columns:minmax(min-content,150px) 1fr;
+    grid-column-gap:10px;
+    margin-top:15px;
+}
+    .ContactDetails > div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .Sdos {
+        display:flex;
+        justify-content: space-evenly;
+        justify-items:flex-end;
+    }
+
+@media (min-width:600px) {
+    .Item {
+        padding: 4px 7px 2px 4px;
+    }
+}
+
+@media (max-width:599px) {
+    .Item {
+        padding: 10px;
+    }
+}

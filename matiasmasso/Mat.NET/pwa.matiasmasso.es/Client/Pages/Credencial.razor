@@ -1,0 +1,74 @@
+﻿@page "/credencial/{Guid:guid}"
+@using Client.Shared
+@using Client.ViewModels
+@layout ProLayout
+@inject AppState AppState
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <EditForm Model="@viewModel" OnValidSubmit="@Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            Referencia: <InputText id="nom" @bind-Value="viewModel!.Model!.Referencia" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Url: <InputText id="nom" @bind-Value="viewModel!.Model!.Url" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Usuari: <InputText id="nom" @bind-Value="viewModel!.Model.Usuari" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Password: <InputText id="nom" @bind-Value="viewModel!.Model.Password" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Observacions: <InputText id="nom" @bind-Value="viewModel!.Model.Obs" class="form-control" />
+        </div>
+
+        <br />
+
+      <div class="Buttons">
+          <button type="submit" class="btn btn-success">Update</button>
+          <input type="button" form="my-form-ref" class="btn btn-secondary" @onclick=Delete value="Delete"/>
+          <input type="button" form="my-form-ref" class="btn btn-secondary" @onclick=Cancel value="Cancel"/>
+      </div>
+      </EditForm>
+}
+
+@code {
+    [Parameter]
+    public Guid Guid { get; set; }
+
+    private CredencialViewModel? viewModel;
+
+
+    protected override Task OnParametersSetAsync()
+    {
+        viewModel = new CredencialViewModel(AppState, Guid);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+        return base.OnParametersSetAsync();
+    }
+
+    private void Submit()
+    {
+        
+    }
+
+    private void Delete()
+    {
+        
+    }
+
+    private void Cancel()
+    {
+        
+    }
+
+}

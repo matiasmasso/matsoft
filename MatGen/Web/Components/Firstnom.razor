@@ -1,0 +1,113 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper">
+    <h1>@Model?.Nom</h1>
+
+    <TabControl>
+        <TabPage Text="General">
+            @if (dbState == DbState.IsLoading)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>dbState = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="dbState"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequestHandler"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+        </TabPage>
+
+        <TabPage Text="Persones">
+            <Persons Model="persons"
+                     ItemSelected="ItemSelectedHandler"></Persons>
+        </TabPage>
+
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public FirstnomModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+
+    //private IModel? selectedItem;
+    private FirstnomModel? value;
+    private PropertyGridModel? gridModel;
+    private List<PersonModel>? persons;
+    private DbState dbState;
+    // private int selectedTab = 1;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Nom,
+        Sex
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddString((int)Fields.Nom, value?.Nom, "Nom", 50);
+        gridModel.AddEnum((int)Fields.Sex, new PersonModel.Sexs(), (int?)value?.Sex, "Sexe");
+
+        persons = ApiService.Persons()?.Where(x => x.Firstnom == Model?.Guid).ToList();
+    }
+
+    private async Task UpdateRequest()
+    {
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value.Sex = (PersonModel.Sexs)gridModel.GetEnum((int)Fields.Sex);
+
+        dbState = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value);
+            await AfterUpdate.InvokeAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        dbState = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    async Task ItemSelectedHandler(IModel value)
+    {
+        await ItemSelected.InvokeAsync(value);
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+
+}

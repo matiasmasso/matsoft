@@ -1,0 +1,91 @@
+﻿@page "/template/{Guid:guid}"
+@page "/{LangSegment}/template/{Guid:guid}"
+
+@implements IDisposable
+@inject CultureService culture
+@inject TemplatesService templatesService
+
+<div class="PageWrapper600">
+
+    <PropertyGrid Model="@gridModel"
+                  SetDirty="@(()=>state = DbState.IsDirty)"
+                  CanEdit="true"></PropertyGrid>
+
+    <div class="ButtonsBar">
+        <ButtonsBar CanEdit="true"
+                    State="state"
+                    CanDelete="@(!(model?.IsNew ?? false))"
+                    RequestToDelete="DeleteRequest"
+                    RequestToUpdate="UpdateRequest"></ButtonsBar>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    TemplateModel model;
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    private enum Fields
+    {
+        Nom
+    }
+
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        model = templatesService?.GetValue(guid);
+        gridModel = new PropertyGridModel(model);
+        gridModel.AddString((int)Fields.Nom, model?.Nom, culture.Localize("Nom"));
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateRequest()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            model!.Nom = gridModel!.GetString((int)Fields.Nom);
+            await templatesService.UpdateAsync(model);
+            state = DbState.StandBy;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            state = DbState.Failed;
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            model!.Nom = gridModel!.GetString((int)Fields.Nom);
+            await templatesService.DeleteAsync(model);
+            state = DbState.StandBy;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            state = DbState.Failed;
+        }
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+    }
+}

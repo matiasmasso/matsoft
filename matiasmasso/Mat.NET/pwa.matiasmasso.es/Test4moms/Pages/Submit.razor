@@ -1,0 +1,154 @@
+﻿@page "/submit"
+@inherits _ComponentBase
+@    using DTO.Integracions;
+    using DTO.Integracions.Redsys.Redsys
+@inject AuthenticationStateProvider authStateProvider
+@inject IStringLocalizer<AppResource> Localizer
+@inject NavigationManager NavigationManager
+@inject AppState AppState
+
+
+<div class="Wrapper">
+
+
+    <AuthorizeView>
+        <Authorized>
+
+            <div class="NomICognoms">
+                <div class="FirstName">
+                    <div>@Localizer["Nom"]</div>
+                    <div>
+                        <input type="text" @bind-value="basket.FirstName" @onblur="LookupLocation" />
+                    </div>
+                </div>
+
+                <div class="LastName">
+                    <div>@Localizer["Cognoms"]</div>
+                    <div>
+                        <input type="text" @bind-value="basket.LastName" />
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="ZipLocation">
+                <div class="Country">
+                    <div>@Localizer["Country"]</div>
+                    <div>
+                        <select @bind="basket.Country">
+                            <option value="@CountryModel.Wellknown(CountryModel.Wellknowns.Spain)!.Guid">@Localizer["Spain"]</option>
+                            <option value="@CountryModel.Wellknown(CountryModel.Wellknowns.Portugal)!.Guid">@Localizer["Portugal"]</option>
+                            <option value="@CountryModel.Wellknown(CountryModel.Wellknowns.Andorra)!.Guid">@Localizer["Andorra"]</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="Zip">
+                    <div>@Localizer["ZipCod"]</div>
+                    <div>
+                        <input type="text" @bind-value="basket.ZipCod" @onblur="LookupLocation" />
+                    </div>
+                </div>
+
+                <div class="Location">
+                    <div>@Localizer["Location"]</div>
+                    <div>
+                        <input type="text" @bind-value="basket.Location" />
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div>@Localizer["Address"]</div>
+                <div>
+                    <input type="text" @bind-value="basket.Address" />
+                </div>
+            </div>
+
+            <div>
+                <div>@Localizer["TrpObs"]</div>
+                <div>
+                    <input type="text" @bind-value="basket.TrpObs" />
+                </div>
+            </div>
+
+            @if (request != null)
+            {
+                <form action="@request.GatewayUrl" method="post">
+                    <input type="hidden" name="Ds_MerchantParameters" value="@request.Ds_MerchantParameters" />
+                    <input type="hidden" name="Ds_Signature" value="@request.Ds_Signature" />
+                    <input type="hidden" name="Ds_SignatureVersion" value="@request.Ds_SignatureVersion" />
+                    <div class="RightAlign">
+                        <input type="submit" class="Button" value="@Localizer["Submit"]" />
+                    </div>
+                </form>
+            }
+        </Authorized>
+
+        <NotAuthorized>
+            <div class="SignIn">
+                <SignIn Success="SignInSuccess" Fail="SignInFail"></SignIn>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    private ShoppingBasketModel? basket;
+    //public string? email { get; set; }
+    //public string? password { get; set; }
+    public CountryModel country { get; set; } = CountryModel.Wellknown(CountryModel.Wellknowns.Spain)!;
+
+    private bool isCheckingEmail = false;
+    private bool emailChecked = false;
+    private bool emailExists = false;
+    private bool isCheckingPwd = false;
+    private bool wrongPwd = false;
+    private string? verificationCode;
+    private string? address;
+    private ProblemDetails? problemDetails;
+
+    private Redsys.Request? request = null;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        basket = base.SessionProvider?.Session?.Basket ?? new();
+        basket!.Lang = base.Lang();
+        if (basket != null)
+        {
+            request = Redsys.Request.Factory(basket);
+        }
+    }
+
+    void SignInSuccess(UserModel user)
+    {
+        SessionProvider?.AuthenticationStateChanged(user);
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+    }
+
+    void SignInFail(ProblemDetails args)
+    {
+        problemDetails = args;
+    }
+
+    async Task LookupLocation()
+    {
+        var oCountry = CountryModel.Favorites().FirstOrDefault(x => x.Guid == basket.Country);
+        if (oCountry != null)
+        {
+            //var apiResponse = await GetAsync<Google.Geonames.request>(Google.Geonames.postalCodesUrl(oCountry.ISO, basket.ZipCod));
+            //if (apiResponse.Success())
+            //{
+            //    var postalCodes = apiResponse.Value!.postalCodes;
+            //    if (postalCodes.Count() > 0)
+            //    {
+            //        Google.Geonames.postalCodeClass postalCode = postalCodes.First();
+            //        basket.Location = postalCode.placeName;
+            //    }
+            //}
+
+        }
+    }
+
+}

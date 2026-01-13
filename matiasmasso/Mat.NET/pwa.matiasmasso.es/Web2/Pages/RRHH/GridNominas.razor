@@ -1,0 +1,145 @@
+﻿@inject StaffsService staffsService
+@inject EmpsService empsService
+@inject CultureService culture
+
+@if (selectedNomina != null)
+{
+    <a href="#" @onclick="@(()=>selectedNomina = null)" @onclick:preventDefault>[close]</a>
+    <embed src="@Url(selectedNomina)" visible="false" width="1500" height="2000" />
+
+    @*<img src="@(selectedNomina?.Cca?.Docfile?.Thumbnail?.DataUrl())" />*@
+
+}
+else
+{
+    <div class="Grid @colsClass">
+        <div class="ColHeaders">
+            <div class="Icon">
+                &nbsp;
+            </div>
+            <div class="Fch">
+                @culture.Localize("Fch")
+            </div>
+            <div class="Nom">
+                @culture.Localize("Staff")
+            </div>
+            <div class="Amt">
+                @culture.Localize("Devengado")
+            </div>
+            @if (!hiddenCols.Contains(Cols.Dietas))
+            {
+                <div class="Amt">
+                    @culture.Localize("Dietas")
+                </div>
+            }
+            <div class="Amt">
+                @culture.Localize("Seg.Social")
+            </div>
+            <div class="Amt">
+                @culture.Localize("Irpf")
+            </div>
+            @if (!hiddenCols.Contains(Cols.Deutes))
+            {
+                <div class="Amt">
+                    @culture.Localize("Deutes")
+                </div>
+            }
+            <div class="Amt">
+                @culture.Localize("Liquido")
+            </div>
+        </div>
+        @foreach (var emp in emps ?? new())
+        {
+            <div class="Emp">@emp.Nom</div>
+            @foreach (var nomina in Values?.Where(x => x.Cca?.Emp == emp.Id)?.ToList() ?? new())
+            {
+                <a class="Item" @onclick="@(()=>selectedNomina = nomina)" @onclick:preventDefault>
+                    <a class="Icon" href="#" @onclick="@(()=>ShowPdfHandler(nomina))" @onclick:preventDefault target="_blank">
+                        <Icon Id="@(nomina.Cca?.Cuadra() ?? false ? Icon.Ids.Doc : Icon.Ids.Warning)"></Icon>
+                    </a>
+                    <div class="Fch">
+                        @nomina.Cca?.Fch?.ToString("dd/MM/yy")
+                    </div>
+                    <div class="Nom">
+                        @staffsService.GetValue(nomina.Staff)?.Abr
+                    </div>
+                    <CellAmt Value="nomina.Devengat"></CellAmt>
+
+                    @if (!hiddenCols.Contains(Cols.Dietas))
+                    {
+                        <CellAmt Value="nomina.Dietes"></CellAmt>
+                    }
+
+                    <CellAmt Value="nomina.SegSocial"></CellAmt>
+                    <CellAmt Value="nomina.Irpf"></CellAmt>
+
+                    @if (!hiddenCols.Contains(Cols.Deutes))
+                    {
+                        <CellAmt Value="nomina.Deutes"></CellAmt>
+                    }
+
+                    <CellAmt Value="nomina.Liquid"></CellAmt>
+                </a>
+            }
+        }
+    </div>
+
+    <Error @bind-Exception="exception"></Error>
+}
+
+
+
+
+@code {
+    [Parameter] public List<NominaModel>? Values { get; set; }
+    [Parameter] public EventCallback<byte[]> ShowPdf { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+
+    List<NominaModel>? values;
+    List<EmpModel>? emps;
+    NominaModel? selectedNomina;
+    List<Cols> hiddenCols = new();
+    string colsClass = "Cols6";
+    byte[]? selectedPdf;
+    Exception? exception;
+
+    private enum Cols
+    {
+        Ico,
+        Fch,
+        Staff,
+        Devengat,
+        Dietas,
+        SegSocial,
+        Irpf,
+        Deutes,
+        Liquid
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        values = Values?.OrderBy(x => (int?)x.Cca?.Emp ?? 0).ToList();
+        emps = values?.GroupBy(x => x.Cca.Emp)?.Select(x => empsService.GetValue((EmpModel.EmpIds)x.First().Cca!.Emp))?.ToList();
+        
+        if (values?.All(x => x.Dietes == 0) ?? true) hiddenCols.Add(Cols.Dietas);
+        if (values?.All(x => x.Deutes == 0) ?? true) hiddenCols.Add(Cols.Deutes);
+
+        colsClass = "Cols6";
+        if (hiddenCols.Count == 1) colsClass = "Cols5";
+        if (hiddenCols.Count >= 2) colsClass = "Cols4";
+    }
+
+    void ShowPdfHandler(NominaModel nomina)
+    {
+        //ShowPdf.InvokeAsync( nomina.Cca?.Docfile?.Document?.Data);
+        ItemSelected.InvokeAsync((IModel)nomina);
+
+    }
+
+    public string Url(NominaModel nomina)
+    {
+        return $"data:application/pdf;base64,{Convert.ToBase64String(nomina.Cca?.Docfile?.Document?.Data)}";
+    }
+
+}

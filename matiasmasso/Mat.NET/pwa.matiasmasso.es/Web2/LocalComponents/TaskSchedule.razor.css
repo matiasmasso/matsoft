@@ -1,0 +1,52 @@
+﻿.Modes {
+    display:inline-grid;
+    grid-template-columns: min-content 1fr min-content;
+    grid-column-gap:10px;
+    grid-row-gap:10px;
+    align-items: baseline;
+    width:max-content;
+}
+
+.SpaceBetween {
+    display:flex;
+    justify-content: space-between;
+    gap:10px;
+}
+
+.InputNums {
+    display:flex;
+    justify-content: flex-end;
+    gap:10px;
+}
+
+.Flex {
+    display: flex;
+    gap: 10px;
+}
+
+.Ico {
+    display:flex;
+    justify-content: center;
+}
+
+.Nom {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+
+.Time {
+    width:60px;
+    max-width:100%;
+    text-align: right;
+}
+
+.Disabled  {
+    opacity: .5;
+}
+
+.Toggle {
+    display:flex;
+    gap:10px;
+}

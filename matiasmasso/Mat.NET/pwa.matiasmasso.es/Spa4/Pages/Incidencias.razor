@@ -1,0 +1,63 @@
+﻿@page "/Incidencias"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Incidencias","Incidencies","Support incidences")</h1>
+
+    <SearchBox @bind-Value="@searchTerm" ></SearchBox>
+
+    <div class="Grid">
+@*        @if (base.IsLoaded)
+        {
+            foreach (var item in model.Items.Where(x => x.Matches(searchTerm)))
+            {
+                <a href="@item.Url()" class='Row @(item.Baixa != null ? "Obsoleto" : "")'>
+
+                    <div>
+                        @item.Fch.ToString("dd/MM/yy")
+                    </div>
+
+                    <div>
+                        @base.Lang().Tradueix("Id:")
+                        @item.Id
+                    </div>
+
+                    <div>
+                        @base.Lang().Tradueix("Cliente: ","Client:","Customer:")
+                        @(item.Customer)
+                    </div>
+                </a>
+            }
+        }
+        else
+        {
+            <div>loading...</div>
+        }
+*@    </div>
+</div>
+
+
+
+
+@code {
+    private IncidenciasDTO? model;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            await Fetch();
+            StateHasChanged();
+        };
+    }
+
+
+    private async Task Fetch()
+    {
+        model = await base.GetAsync<IncidenciasDTO>("Incidencias");
+    }
+
+}

@@ -1,0 +1,21 @@
+﻿.Wrapper {
+    display:grid;
+    grid-template-areas:"header header"
+        "aside main"
+        "footer footer";
+    grid-template-columns: 150px 1fr;
+    min-width:100%;
+}
+
+header {
+    grid-area: header;
+}
+aside {
+    grid-area: aside;
+}
+main {
+    grid-area: main;
+}
+footer {
+    grid-area: footer;
+}

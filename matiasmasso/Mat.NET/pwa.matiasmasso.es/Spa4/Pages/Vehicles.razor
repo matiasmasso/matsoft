@@ -1,0 +1,64 @@
+﻿@page "/Vehicles"
+@inherits _ComponentBase
+@layout ProLayout
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Flota de vehiculos","Flota de vehicles","Vehicles fleet")</h1>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Grid">
+        @if (base.IsLoaded)
+        {
+            foreach (var item in model.Items.Where(x => x.Matches(searchTerm)))
+            {
+                <a href="@item.Url()" class='Row @(item.Baixa != null ? "Obsoleto" : "")'>
+
+                    <div>
+                        @item.MarcaiModel
+                    </div>
+
+                    <div>
+                        @base.Lang().Tradueix("Matricula: ","Matricula:","Plate:")
+                        @item.Matricula
+                    </div>
+
+                    <div>
+                        @base.Lang().Tradueix("Conductor: ","Conductor:","Driver:")
+                        @(item.Conductor?.Nom ?? "")
+                    </div>
+                </a>
+            }
+        }
+        else
+        {
+            <div>loading...</div>
+        }
+    </div>
+</div>
+
+
+
+
+@code {
+    private VehicleListDTO? model;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            await Fetch();
+            StateHasChanged();
+        };
+    }
+
+
+    private async Task Fetch()
+    {
+        model = await base.GetAsync<VehicleListDTO>("Vehicles");
+    }
+
+}

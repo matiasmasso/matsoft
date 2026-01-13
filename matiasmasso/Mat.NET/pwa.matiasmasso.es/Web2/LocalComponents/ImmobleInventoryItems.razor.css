@@ -1,0 +1,12 @@
+﻿.Item {
+    display:block;
+}
+
+@media(max-width:599px){
+    .Item {
+        padding: 10px;
+    }
+    .Item:not(:last-child) {
+        border-bottom: 1px solid gray;
+    }
+}

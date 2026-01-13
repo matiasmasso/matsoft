@@ -1,0 +1,79 @@
+﻿@using DTO
+@inject AppState AppState
+
+<div class="Wrapper">
+
+    <Input type="text" 
+           value=@InternalValue
+           placeholder="Search..."
+           @oninput="Search" />
+
+    <a href="#" @onclick="ClearText" 
+                @onclick:preventDefault 
+                class="ClearTextButton" >
+
+        <div hidden=@HideClearTextButton>x</div>
+    </a>
+
+    @if(candidates.Count<20)
+    {
+        @foreach(var item in candidates)
+        {
+            <a href="#" @onclick=@(() => SelectItem(item)) @onclick:preventDefault >
+                <div class="Item">
+                    @item.ToString()
+                </div>
+            </a>
+        }    
+    }
+</div>
+
+
+@code {
+    private bool HideClearTextButton;
+    private string? InternalValue
+    {
+        get { 
+            return Value?.ToString() ?? ""; 
+        }
+    }
+
+    private List<Box> candidates = new List<Box>();
+
+    [Parameter]
+    public Box? Value { get; set; }
+
+
+    [Parameter]
+    public List<Box> Items { get; set; }
+
+    [Parameter]
+    public EventCallback<Box> ValueChanged { get; set; }
+
+
+    protected override void OnParametersSet()
+    {
+        HideClearTextButton = this.Value == null;
+        base.OnParametersSet();
+    }
+
+    public void Search(ChangeEventArgs args)
+    {
+        var searchterm = args.Value?.ToString() ?? "";
+        //candidates = Items.Where(x => ((Box)x).Matches(searchterm)).ToList();
+    }
+
+    public void SelectItem(Box item)
+    {
+        candidates = new List<Box>();
+        HideClearTextButton = false;
+        ValueChanged.InvokeAsync(item);
+    }
+
+    private async void ClearText()
+    {
+        candidates = new List<Box>();
+        await ValueChanged.InvokeAsync(default(Box));
+        HideClearTextButton = true;
+    }
+}

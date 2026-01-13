@@ -1,0 +1,13 @@
+﻿@* @rendermode InteractiveServer *@
+
+@inject AuthenticationService AuthenticationService
+
+<a href="#" @onclick="LogoutAsync" @onclick:preventDefault>Logout</a>
+
+@code {
+
+    private async Task LogoutAsync()
+    {
+        await AuthenticationService.LogoutAsync();
+    }
+}

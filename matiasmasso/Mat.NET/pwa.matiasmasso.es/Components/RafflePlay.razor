@@ -1,0 +1,252 @@
+﻿@inherits _Base
+
+@if (player == null)
+{
+    <Loading></Loading>
+}
+else if (player.Duplicated != null)
+{
+
+    <ModalDialog Visible
+             Mode="ModalDialog.Modes.Warning"
+             Title="@Localizer("RafflePlay.DuplicatedPlayerTitle")"
+             Body="@Localizer("RafflePlay.DuplicatedPlayerBody", player.Duplicated.Ticket.ToString(), string.Format("{0:dd/MM/yy} {1:HH:mm}", player.Duplicated.Fch))"
+             OnClose="@(()=>{navigationManager.NavigateTo("Sorteos");})"></ModalDialog>
+
+}
+else
+{
+
+    <div class="Wrapper">
+        <div class="Banner">
+            <img src="@model.ImgBanner600Url()" alt="@model.Title" width="@RaffleModel.BANNER600WIDTH" height="@RaffleModel.BANNER600HEIGHT" />
+        </div>
+
+        @if (isShowingThanks)
+        {
+            <div class="Thanks">
+                <p>
+                    @Localizer("RafflePlay.Thanks", player.Lead.Nom)
+                </p>
+                <p>
+                    <i class="fa-light fa-circle-info"></i>
+                    &nbsp;
+                    @Localizer("RafflePlay.ConfirmationEmailJustSent", player.Lead.EmailAddress)
+                </p>
+                <p>
+                    @Localizer("RafflePlay.GoodLuck")
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="Stepper">
+                <UxStepper @bind-SelectedStep="@selectedStep">
+                    <UxStep Title="@Localizer("RafflePlay.StepPlayerDetails.Title")"
+                    Caption="@player.Caption()">
+
+                        <UxRafflePlayer Value="player" ValueChanged="PlayerChanged"></UxRafflePlayer>
+
+                    </UxStep>
+                    <UxStep Title="@Localizer("RafflePlay.StepQuestion.Title")"
+                    Caption="@(player.HasAnswered() ? player.FormattedAnswer() : Localizer("RafflePlay.StepQuestion.Caption"))">
+
+                        <div class="Question">
+                            @((MarkupString)model.Question)
+                        </div>
+
+                        <div class="Answers">
+                            @foreach (var answer in model.AnswerList())
+                            {
+                                <div class="Answer">
+                                    <UxRadioButton name="Answer"
+                                       Value="@(model.AnswerList().IndexOf(answer)+1)"
+                                       SelectedValue="player.Answer"
+                                       SelectedValueChanged="AnswerChanged" />
+                                    @answer
+                                </div>
+                            }
+                        </div>
+
+                    </UxStep>
+
+                    <UxStep Title="@Localizer("RafflePlay.StepDistributor.Title")"
+                    Caption="@(player.HasDistributor() ? player.FormattedDistributor() : Localizer("RafflePlay.StepDistributor.Caption"))">
+
+                        <StoreLocatorOffline HideTitle="true"
+                                     Value="@player.StoreLocator" ValueChanged="StoreLocatorChanged"></StoreLocatorOffline>
+
+                    </UxStep>
+
+                    <UxStep Title="@Localizer("RafflePlay.StepAcceptAndSubmit.Title")"
+                    Caption="@Localizer("RafflePlay.StepAcceptAndSubmit.Caption")">
+                        <div class="Bases">
+                            @((MarkupString)model.Bases)
+                        </div>
+
+                        <div class="AcceptAndSubmit">
+                            <div>
+                                <input type="checkbox" @bind=basesAccepted />
+                                @Localizer("RafflePlay.HaveReadBasis")
+                            </div>
+
+
+
+                            @if (isSubmitting)
+                            {
+                                @if (Errors().Count == 0)
+                                {
+                                    <Loading></Loading>
+                                }
+                                else
+                                {
+                                    <ModalDialog Visible
+                                 Mode="ModalDialog.Modes.Warning"
+                                 Title="@Localizer("Raffle.Participation")"
+                                 Body="@string.Join("<br/>",Errors())"
+                                 OnClose="@(()=>{isSubmitting = false;})">
+                                    </ModalDialog>
+                                }
+                            }
+                            else
+                            {
+                                <button class="Submit" @onclick="Submit">
+                                    @Localizer("Submit")
+                                </button>
+                            }
+                        </div>
+
+                    </UxStep>
+                </UxStepper>
+            </div>
+        }
+    </div>
+
+}
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    [Parameter] public Guid raffle { get; set; }
+    private RaffleModel.Player player;
+    private RaffleModel model;
+    private int selectedStep = 1;
+    private bool basesAccepted = false;
+    private bool isSubmitting = false;
+    private bool isShowingMustAcceptDialog = false;
+    private bool isShowingThanks = false;
+    private RaffleModel.Player duplicatedPlayer = null;
+    private CacheDTO cache;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (await base.IsAuthenticated())
+        {
+            var apiResponse = await GetAsync<RaffleModel.Player>("Raffle/Player", raffle.ToString());
+            if (apiResponse.Value != null)
+            {
+                player = apiResponse.Value;
+                if (player.Duplicated == null)
+                {
+                    model = player.Raffle;
+                }
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+
+        }
+        else
+        {
+            var apiResponse = await GetAsync<RaffleModel>("Raffle", raffle.ToString());
+            model = apiResponse.Value;
+            problemDetails = apiResponse.ProblemDetails;
+        }
+
+    }
+
+
+    void PlayerChanged(RaffleModel.Player arg)
+    {
+        player.Lead = arg.Lead;
+        selectedStep += 1;
+        StateHasChanged();
+    }
+
+    void AnswerChanged(int? arg)
+    {
+        player.Answer = arg;
+        selectedStep += 1;
+        StateHasChanged();
+    }
+
+    void StoreLocatorChanged(StoreLocatorDTO.OfflineClass arg)
+    {
+        player.StoreLocator = arg;
+        var selectedCountry = player.StoreLocator.Countries[player.StoreLocator.SelectedCountry];
+        var selectedZona = selectedCountry.Zonas[selectedCountry.SelectedZona];
+        var selectedLocation = selectedZona.Locations[selectedZona.SelectedLocation];
+        var selectedDistributor = selectedLocation.Distributors[selectedLocation.SelectedDistributor];
+        player.Distributor = new RaffleModel.Distributor()
+            {
+                Guid = selectedDistributor.Guid,
+                Nom = selectedDistributor.Nom,
+                Address = selectedDistributor.Address,
+                Location = selectedLocation.Nom
+            };
+        selectedStep += 1;
+        StateHasChanged();
+    }
+
+    async Task Submit()
+    {
+        isSubmitting = true;
+        player.Fch = DateTime.Now;
+        if (basesAccepted)
+        {
+            var apiResponse = await base.PostAsync<RaffleModel.Player, RaffleModel.Player?>(player.Trimmed(), "Raffle/participant");
+            if (apiResponse.Value != null)
+            {
+                var result = apiResponse.Value;
+                var subject = Localizer("RafflePlay.ConfirmationEmailSubject");
+                var content = result.ConfirmationEmailBody(Localizer("RafflePlay.ConfirmationEmailBody"), base.Lang());
+                var htmlBody = EmpModel.MailBody(EmpModel.EmpIds.MatiasMasso, content);
+                await MailService.SendEmailAsync(player.Lead.EmailAddress, subject, htmlBody, false);
+                isShowingThanks = true;
+                isSubmitting = false;
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+        else
+        {
+            isShowingMustAcceptDialog = true;
+        }
+    }
+
+    List<string> Errors()
+    {
+        var retval = new List<string>();
+        if (string.IsNullOrEmpty(player.Lead.Nom) || string.IsNullOrEmpty(player.Lead.Cognoms))
+            retval.Add(Localizer("RafflePlay.Error.MissingNom"));
+        if (player.Lead.BirthYea < 1920)
+            retval.Add(Localizer("RafflePlay.Error.WrongBirthYear"));
+        if (player.Lead.BirthYea > DateTime.Today.Year - 18)
+            retval.Add(Localizer("RafflePlay.Error.18YearsOldMin"));
+        if (player.Lead.Residence == null)
+            retval.Add(Localizer("RafflePlay.Error.MissingResidence"));
+        if (player.Answer == null)
+            retval.Add(Localizer("RafflePlay.Error.MissingAnswer"));
+        if (player.Distributor == null)
+            retval.Add(Localizer("RafflePlay.Error.MissingDistributor"));
+        if (!basesAccepted)
+            retval.Add(Localizer("RafflePlay.Error.MissingBasesAcceptance"));
+        if (retval.Count > 0)
+            retval.Insert(0, Localizer("Errors.PleaseFixFollowingErrors"));
+        return retval;
+    }
+
+
+}
+

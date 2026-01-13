@@ -1,0 +1,99 @@
+﻿@implements IDisposable
+@inject SessionStateService session
+@inject CultureService culture
+@inject NavigationManager navigationManager
+
+<div class="Wrapper">
+    <div class="Grid">
+
+        <div class="Label">@culture.Localize("Email")</div>
+        <div class="Value">
+            <input type="text" value="@email" @oninput="EmailChangeHandler" />
+        </div>
+
+        <div class="Label">@culture.Localize("Password")</div>
+        <div class="Value">
+            <input type="password" value="@password" @oninput="PasswordChangeHandler" />
+        </div>
+
+        <div class="ButtonRow">
+            <button class="Button ButtonOk"
+                    disabled="@(!IsButtonEnabled())"
+                    @onclick="Submit">
+                @culture.Localize("Submit")
+            </button>
+        </div>
+    </div>
+
+    <div class="WarningMessage @(string.IsNullOrEmpty(warningMessage) ? "Hidden":"" )">
+        <Icon Id="Icon.Ids.Warning" Width="24px"></Icon>
+        <span>@warningMessage</span>
+    </div>
+
+    <Error @bind-Exception="exception" ></Error>
+</div>
+
+@code {
+    string? email;
+    string? password;
+    string? warningMessage;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task Submit()
+    {
+        try
+        {
+            await session.LoginAsync(email, password);
+            navigationManager.NavigateTo(navigationManager.Uri);
+
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void EmailChangeHandler(ChangeEventArgs args)
+    {
+        email = args.Value?.ToString();
+    }
+
+    void PasswordChangeHandler(ChangeEventArgs args)
+    {
+        password = args.Value?.ToString();
+    }
+
+    bool IsButtonEnabled() => IsValidEmail() && IsValidPassword();
+
+    bool IsValidEmail()
+    {
+        bool retval = true;
+        if (string.IsNullOrEmpty(email))
+            retval = false;
+        else
+        {
+            var arroba = email?.IndexOf("@");
+            var lastDot = email?.LastIndexOf(".");
+            if (arroba <= 0) retval = false;
+            if (lastDot < arroba) retval = false;
+            if (email?.Length < lastDot + 2) retval = false;
+        }
+        return retval;
+    }
+
+    bool IsValidPassword() => string.IsNullOrEmpty(password) ? false : password?.Length > 3;
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+    }
+}

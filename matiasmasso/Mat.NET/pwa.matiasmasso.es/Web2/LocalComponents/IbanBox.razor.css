@@ -1,0 +1,27 @@
+﻿.Display {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 3px 10px 0 4px;
+}
+
+input.Ccc {
+    width:100%;
+}
+
+div.Ccc {
+    display:flex;
+    gap:10px;
+}
+
+div.Ccc a {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ButtonsBar {
+    display:flex;
+    gap:10px;
+}

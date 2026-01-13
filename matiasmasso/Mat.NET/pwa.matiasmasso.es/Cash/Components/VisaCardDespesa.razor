@@ -1,0 +1,182 @@
+﻿@inject ApiService ApiService
+@implements IDisposable
+
+<h3>Registre de despesa amb targeta de crèdit</h3>
+
+<PageOptions>
+    <LookupEmp Value="emp" ValueChanged="HandleEmpChanged"></LookupEmp>
+    <a href="#" @onclick:preventDefault @onclick="ToggleAdvance">Avançat</a>
+</PageOptions>
+
+@if(Docfile != null)
+{
+    <Docfile Model="Docfile"></Docfile>
+}
+
+<div class="PropertyGrid">
+    <PropertyGrid Model="propertyGrid"
+                  ItemChanged="HandleItemChanged"
+                  UpdateRequest="SubmitAsync"
+                  CancelRequest="CloseRequestHandler"
+                  UpdateState="updateState">
+    </PropertyGrid>
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+
+    [Parameter] public VisaCardModel? Visa { get; set; }
+    [Parameter] public DocfileModel? Docfile { get; set; }
+    [Parameter] public int? Year { get; set; }
+    [Parameter] public EventCallback<CcaModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    Despesa value = new();
+    EmpModel.EmpIds? emp;
+    List<PgcCtaModel>? ctas;
+    bool isAdvanced;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    Exception? exception;
+
+
+
+    enum Fields
+    {
+        Fch,
+        Import,
+        Concepte,
+        Cta,
+        Contact,
+        Projecte
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+        ApiService.OnChange += Refresca;
+
+    }
+
+    protected override void OnParametersSet()
+    {
+        var fch = DateTime.Today;
+        int year = Year ?? fch.Year;
+        if (fch.Year != year) fch = new DateTime(year, 12, 31);
+        value.Fch = DateOnly.FromDateTime(fch);
+        if (Visa != null)
+        {
+            emp = Visa.Emp;
+            value.Contact = Visa.Titular;
+        }
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        ctas = ApiService.GetCurrentPgcCtas();
+        propertyGrid = PropertyGrid();
+        updateState = CurrentValue().UpdateState();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddDateOnly("Data", value.Fch);
+        retval.AddEur("Import", value.Eur);
+        retval.AddString("Concepte", value.Concepte, 62);
+        retval.AddGuidnom("Compte", value.Cta, ctas);
+        if (isAdvanced)
+        {
+            var contacts = ApiService.GetContacts(emp);
+            var projectes = ApiService.GetProjectes(emp);
+            retval.AddGuidnom("Subcompte", value.Contact, contacts);
+            retval.AddGuidnom("Projecte", value.Projecte, projectes);
+        }
+        return retval;
+    }
+
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    Despesa CurrentValue()
+    {
+        Despesa retval = new();
+        retval.Fch = propertyGrid?.GetDateOnly((int)Fields.Fch);
+        retval.Eur = propertyGrid?.GetEur((int)Fields.Import) ?? 0;
+        retval.Concepte = propertyGrid?.Value<string>((int)Fields.Concepte);
+        retval.Cta = propertyGrid?.GetGuidNom((int)Fields.Cta)?.Guid;
+
+        if (isAdvanced)
+        {
+            retval.Contact = propertyGrid?.GetGuidNom((int)Fields.Contact)?.Guid;
+            retval.Projecte = propertyGrid?.GetGuidNom((int)Fields.Projecte)?.Guid;
+        }
+        return retval;
+    }
+
+    async Task SubmitAsync()
+    {
+        updateState = CrudButton.States.Loading;
+        var value = CurrentValue();
+
+        var cca = CcaModel.Factory(Visa!.Emp, ApiService.CurrentUser()!, CcaModel.CcdEnum.Pagament, value.Fch);
+        cca.Projecte = value.Projecte;
+        cca.Concept = value.Concepte;
+        cca.AddDebit(value.Eur ?? 0, new PgcCtaModel((Guid)value.Cta!), value.Contact);
+        cca.AddSaldo(ctas!.FirstOrDefault(x => x.Id == "41003")!, Visa.Titular);
+
+        try
+        {
+            await ApiService.PostMultipartAsync<CcaModel, bool>(cca, "Cca");
+            await AfterUpdate.InvokeAsync(cca);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            updateState = CrudButton.States.StandBy;
+        }
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        updateState = CurrentValue().UpdateState();
+    }
+
+    void ToggleAdvance()
+    {
+        value = CurrentValue();
+        isAdvanced = !isAdvanced;
+        propertyGrid = PropertyGrid();
+        //updateState = CurrentValue().UpdateState();
+    }
+
+    void HandleEmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+
+    public class Despesa
+    {
+        public DateOnly? Fch { get; set; }
+        public decimal? Eur { get; set; }
+        public string? Concepte { get; set; }
+        public Guid? Cta { get; set; }
+        public Guid? Contact { get; set; }
+        public Guid? Projecte { get; set; }
+
+        public CrudButton.States UpdateState() => (Eur != 0 && Cta != null && !string.IsNullOrEmpty(Concepte)) ? CrudButton.States.StandBy : CrudButton.States.Disabled;
+
+    }
+}

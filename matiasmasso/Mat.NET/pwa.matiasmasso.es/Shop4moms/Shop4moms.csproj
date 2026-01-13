@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Deprecated\CustomAuthenticationStateProvider.cs" />
+    <Compile Remove="Pages\_ComponentBase.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="LocalComponents\Filedrop.razor" />
+    <Content Remove="Pages\Tpv\TpvFeed.razor" />
+    <Content Remove="Pages\Tpv\TpvFeedAsync.razor" />
+    <Content Remove="Pages\Tpv\TpvTestFeed.razor" />
+    <Content Remove="Pages\Tpv\TpvTestGateway.razor" />
+    <Content Remove="Pages\Tpv\TpvTestGateway2.razor" />
+    <Content Remove="Pages\_Host - Copy.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Pages\Tpv\TpvTestFeed.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazor-Analytics" Version="3.12.0" />
+    <PackageReference Include="Blazor.ContextMenu" Version="1.16.0" />
+    <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="13.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.8.14" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DTO\DTO.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Deprecated\" />
+    <Folder Include="Views\Tpv\" />
+  </ItemGroup>
+
+</Project>

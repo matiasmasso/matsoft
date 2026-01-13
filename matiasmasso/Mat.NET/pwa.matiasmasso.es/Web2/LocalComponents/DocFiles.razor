@@ -1,0 +1,53 @@
+﻿@inject CultureService culture
+
+<div class="PageWrapper600">
+
+ <PageOptions>
+        <a href="#" @onclick="AddNewRequest" @onclick:preventDefault>
+            @culture.Localize("AddNew")
+        </a>
+    </PageOptions>
+
+<div class="Grid">
+    @foreach (var item in Model ?? new())
+    {
+        <div class='Item'>
+
+            <div class="Icon">
+                <a href="@item.DownloadUrl()" target="_blank" title="@item.Features()">
+                    <Icon Id="Icon.Ids.Doc"></Icon>
+                </a>
+            </div>
+
+            <a href="#" class='Fch' @onclick="@(()=>Zoom(item))" @onclick:preventDefault>
+                @string.Format("{0:dd/MM/yy}",item.Fch)
+            </a>
+
+                <a href="#" class='Nom Truncate' @onclick="@(()=>Zoom(item))" @onclick:preventDefault>
+                @item.Nom
+            </a>
+
+        </div>
+    }
+</div>
+
+</div>
+@code {
+    [Parameter] public List<DocfileModel>? Model { get; set; }
+    [Parameter] public EventCallback RequestToAddNew { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+
+    DocfileModel? selectedItem;
+    string? searchterm;
+
+    void AddNewRequest()
+    {
+        RequestToAddNew.InvokeAsync();
+    }
+
+    async Task Zoom(DocfileModel item)
+    {
+        var breadcrumb = new ModelEditor.Breadcrumb(item, item.Nom ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+}

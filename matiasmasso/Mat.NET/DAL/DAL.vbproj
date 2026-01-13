@@ -1,0 +1,490 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.SqlServer.Types.160.1000.6\build\net462\Microsoft.SqlServer.Types.props" Condition="Exists('..\packages\Microsoft.SqlServer.Types.160.1000.6\build\net462\Microsoft.SqlServer.Types.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{57EC6C6F-A320-4D9F-AFDB-7643E97DC0F7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DAL</RootNamespace>
+    <AssemblyName>DAL</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>Windows</MyType>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>DAL.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>DAL.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="C1.C1Pdf.4, Version=4.1.20142.269, Culture=neutral, PublicKeyToken=79882d576c6336da, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\ComponentOne\Studio for WinForms\bin\v4\C1.C1Pdf.4.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.Types, Version=16.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.SqlServer.Types.160.1000.6\lib\net462\Microsoft.SqlServer.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.0\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.1\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.0\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.1\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encoding.CodePages, Version=9.0.0.3, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encoding.CodePages.9.0.3\lib\net462\System.Text.Encoding.CodePages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="DTO" />
+    <Import Include="MatHelperStd" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Data.SqlClient" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AddressLoader.vb" />
+    <Compile Include="AeatDocLoader.vb" />
+    <Compile Include="AeatMod347Loader.vb" />
+    <Compile Include="AeatModelLoader.vb" />
+    <Compile Include="AECOCLoader.vb" />
+    <Compile Include="AmortizationLoader.vb" />
+    <Compile Include="ApiLogLoader.vb" />
+    <Compile Include="AppLoader.vb" />
+    <Compile Include="AppUsrLogLoader.vb" />
+    <Compile Include="AreaLoader.vb" />
+    <Compile Include="AreaProvinciaLoader.vb" />
+    <Compile Include="AreaRegioLoader.vb" />
+    <Compile Include="ArtCustRefsLoader.vb" />
+    <Compile Include="AtlasLoader.vb" />
+    <Compile Include="AuditStockLoader.vb" />
+    <Compile Include="BalanceLoader.vb" />
+    <Compile Include="BalanceSaldosLoader.vb" />
+    <Compile Include="BancLoader.vb" />
+    <Compile Include="BancSdoLoader.vb" />
+    <Compile Include="BancTermLoader.vb" />
+    <Compile Include="BancTransferBeneficiariLoader.vb" />
+    <Compile Include="BancTransferPoolLoader.vb" />
+    <Compile Include="BankLoader.vb" />
+    <Compile Include="BannerLoader.vb" />
+    <Compile Include="AlbBloqueigLoader.vb" />
+    <Compile Include="Blog2PostLoader.vb" />
+    <Compile Include="BoxItemsLoader.vb" />
+    <Compile Include="CatalogLoader.vb" />
+    <Compile Include="CategoriaDeNoticiasLoader.vb" />
+    <Compile Include="CertificatIrpfLoader.vb" />
+    <Compile Include="CertLoader.vb" />
+    <Compile Include="CliCreditLoader.vb" />
+    <Compile Include="CliReturnLoader.vb" />
+    <Compile Include="CnapLoader.vb" />
+    <Compile Include="CobramentLoader.vb" />
+    <Compile Include="CodiMercanciaLoader.vb" />
+    <Compile Include="CodLoader.vb" />
+    <Compile Include="ComarcaLoader.vb" />
+    <Compile Include="CompactDiariLoader.vb" />
+    <Compile Include="ComputerLoader.vb" />
+    <Compile Include="CondicioCapitolLoader.vb" />
+    <Compile Include="CondicioLoader.vb" />
+    <Compile Include="ConsumerTicketLoader.vb" />
+    <Compile Include="ContactDocLoader.vb" />
+    <Compile Include="ContactMenuLoader.vb" />
+    <Compile Include="ContactMessageLoader.vb" />
+    <Compile Include="ContentLoader.vb" />
+    <Compile Include="ContractCodiLoader.vb" />
+    <Compile Include="ContractLoader.vb" />
+    <Compile Include="CsbLoader.vb" />
+    <Compile Include="CustomerBrandDtoLoader.vb" />
+    <Compile Include="ContactClassLoader.vb" />
+    <Compile Include="CustomerClusterLoader.vb" />
+    <Compile Include="EdiversaRecadvLoader.vb" />
+    <Compile Include="Extensions\ImageExtensions.vb" />
+    <Compile Include="Integracions\Edi\InvRptsLoader.vb" />
+    <Compile Include="Integracions\ElCorteIngles\AlineamientoDeDisponibilidadLoader.vb" />
+    <Compile Include="Integracions\ElCorteIngles\ElCorteInglesDeptLoader.vb" />
+    <Compile Include="Integracions\Promofarma\PromofarmaFeedLoader.vb" />
+    <Compile Include="JornadaLaboralLoader.vb" />
+    <Compile Include="MarginsLoader.vb" />
+    <Compile Include="MarketPlaceLoader.vb" />
+    <Compile Include="Mods145Loader.vb" />
+    <Compile Include="PlantillaLoader.vb" />
+    <Compile Include="DeliveryTraspasLoader.vb" />
+    <Compile Include="DeptLoader.vb" />
+    <Compile Include="DistributionChannelLoader.vb" />
+    <Compile Include="DocfileSrcLoader.vb" />
+    <Compile Include="Integracions\ElCorteIngles\ElCorteInglesLoader.vb" />
+    <Compile Include="ECITransmGroupLoader.vb" />
+    <Compile Include="EdiOrderLoader.vb" />
+    <Compile Include="EdiversaDesadvLoader.vb" />
+    <Compile Include="EdiversaExceptionLoader.vb" />
+    <Compile Include="EdiversaGenralLoader.vb" />
+    <Compile Include="EdiversaInterlocutorLoader.vb" />
+    <Compile Include="EdiversaOrderItemLoader.vb" />
+    <Compile Include="EdiversaOrdrSpLoader.vb" />
+    <Compile Include="EdiversaRemadvLoader.vb" />
+    <Compile Include="EdiversaSalesReportLoader.vb" />
+    <Compile Include="EventoLoader.vb" />
+    <Compile Include="Extensions\DatetimeOffsetExtensions.vb" />
+    <Compile Include="FeedbackLoader.vb" />
+    <Compile Include="FilterLoader.vb" />
+    <Compile Include="FilterTargetsLoader.vb" />
+    <Compile Include="ForecastLoader.vb" />
+    <Compile Include="FtpServerLoader.vb" />
+    <Compile Include="HoldingsLoader.vb" />
+    <Compile Include="imatLoader.vb" />
+    <Compile Include="ImatLogLoader.vb" />
+    <Compile Include="ImmobleLoader.vb" />
+    <Compile Include="ImportacioLoader.vb" />
+    <Compile Include="ImportPrevisioLoader.vb" />
+    <Compile Include="BloggerLoader.vb" />
+    <Compile Include="BookFraLoader.vb" />
+    <Compile Include="BrandAreaLoader.vb" />
+    <Compile Include="CcaLoader.vb" />
+    <Compile Include="CcbLoader.vb" />
+    <Compile Include="CcdLoader.vb" />
+    <Compile Include="CliAperturaLoader.vb" />
+    <Compile Include="CliCreditLogLoader.vb" />
+    <Compile Include="CliProductBlockedLoader.vb" />
+    <Compile Include="CliProductDtoLoader.vb" />
+    <Compile Include="ContactLoader.vb" />
+    <Compile Include="ContactTelLoader.vb" />
+    <Compile Include="CountryLoader.vb" />
+    <Compile Include="CredencialLoader.vb" />
+    <Compile Include="CsaLoader.vb" />
+    <Compile Include="CurExchangeRateLoader.vb" />
+    <Compile Include="CurLoader.vb" />
+    <Compile Include="CustomerPlatformloader.vb" />
+    <Compile Include="CustomerProductLoader.vb" />
+    <Compile Include="CustomerRankingLoader.vb" />
+    <Compile Include="CustomerTarifaDtoLoader.vb" />
+    <Compile Include="CustomerLoader.vb" />
+    <Compile Include="CustomerTarifaLoader.vb" />
+    <Compile Include="DefaultImageLoader.vb" />
+    <Compile Include="DefaultLoader.vb" />
+    <Compile Include="DeliveryItemsloader.vb" />
+    <Compile Include="DeliveryLoader.vb" />
+    <Compile Include="DiariLoader.vb" />
+    <Compile Include="DocFileLoader.vb" />
+    <Compile Include="EdiversaFileLoader.vb" />
+    <Compile Include="EdiversaOrderLoader.vb" />
+    <Compile Include="EmailLoader.vb" />
+    <Compile Include="EmpLoader.vb" />
+    <Compile Include="EscripturaLoader.vb" />
+    <Compile Include="ExerciciLoader.vb" />
+    <Compile Include="ExtracteLoader.vb" />
+    <Compile Include="FourMomsLoader.vb" />
+    <Compile Include="GalleryItemLoader.vb" />
+    <Compile Include="GrfMesValueLoader.vb" />
+    <Compile Include="Helpers\Defaults.vb" />
+    <Compile Include="Helpers\SQLHelper.vb" />
+    <Compile Include="IbanLoader.vb" />
+    <Compile Include="IbanStructureLoader.vb" />
+    <Compile Include="ImpagatLoader.vb" />
+    <Compile Include="IncentiuLoader.vb" />
+    <Compile Include="IncidenciaCodLoader.vb" />
+    <Compile Include="IncidenciaLoader.vb" />
+    <Compile Include="IncotermLoader.vb" />
+    <Compile Include="InemCompresProductRankingLoader.vb" />
+    <Compile Include="InsolvenciaLoader.vb" />
+    <Compile Include="Integracions\Vivace\ShipmentsReportLoader.vb" />
+    <Compile Include="Integracions\Vivace\DeliveryTrackingLoader.vb" />
+    <Compile Include="IntrastatLoader.vb" />
+    <Compile Include="InventariItemLoader.vb" />
+    <Compile Include="InvoiceLoader.vb" />
+    <Compile Include="InvoiceReceivedLoader.vb" />
+    <Compile Include="IrpfLoader.vb" />
+    <Compile Include="JsonLogLoader.vb" />
+    <Compile Include="JsonSchemaLoader.vb" />
+    <Compile Include="KeywordLoader.vb" />
+    <Compile Include="LangTextLoader.vb" />
+    <Compile Include="LeadAreaLoader.vb" />
+    <Compile Include="LiniaTelefonLoader.vb" />
+    <Compile Include="LlibreDiariLoader.vb" />
+    <Compile Include="LlibreMajorLoader.vb" />
+    <Compile Include="LocalizedStringsLoader.vb" />
+    <Compile Include="LocationLoader.vb" />
+    <Compile Include="CorrespondenciaLoader.vb" />
+    <Compile Include="MailingLoader.vb" />
+    <Compile Include="MailingLogsLoader.vb" />
+    <Compile Include="MaybornLoader.vb" />
+    <Compile Include="MediaResourceLoader.vb" />
+    <Compile Include="MemLoader.vb" />
+    <Compile Include="MgzLoader.vb" />
+    <Compile Include="MsgLoader.vb" />
+    <Compile Include="MultaLoader.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="NeighboursLoader.vb" />
+    <Compile Include="NewsletterLoader.vb" />
+    <Compile Include="NominaConcepteLoader.vb" />
+    <Compile Include="NominaLoader.vb" />
+    <Compile Include="Noticia2Loader.vb" />
+    <Compile Include="NoticiaDestacadaLoader.vb" />
+    <Compile Include="OutletLoader.vb" />
+    <Compile Include="PaymentTermsLoader.vb" />
+    <Compile Include="PortadaImgLoader.vb" />
+    <Compile Include="ProductSparesLoader.vb" />
+    <Compile Include="PurchaseOrderConceptShortcutLoader.vb" />
+    <Compile Include="PgcClassLoader.vb" />
+    <Compile Include="PgcCtaLoader.vb" />
+    <Compile Include="PgcGeoLoader.vb" />
+    <Compile Include="PgcPlanLoader.vb" />
+    <Compile Include="PgcRatioLoader.vb" />
+    <Compile Include="PgcSaldoLoader.vb" />
+    <Compile Include="PndLoader.vb" />
+    <Compile Include="PortsCondicioLoader.vb" />
+    <Compile Include="PostCommentLoader.vb" />
+    <Compile Include="PremiumCustomerLoader.vb" />
+    <Compile Include="PremiumLineLoader.vb" />
+    <Compile Include="PriceListCustomerLoader.vb" />
+    <Compile Include="PriceListSupplierLoader.vb" />
+    <Compile Include="ProductAccessoriesLoader.vb" />
+    <Compile Include="ProductBrandLoader.vb" />
+    <Compile Include="ProductCatalogLoader.vb" />
+    <Compile Include="ProductCategoryLoader.vb" />
+    <Compile Include="ProductChannelLoader.vb" />
+    <Compile Include="ProductDistributorLoader.vb" />
+    <Compile Include="ProductDownloadLoader.vb" />
+    <Compile Include="ProductLoader.vb" />
+    <Compile Include="ProductPluginLoader.vb" />
+    <Compile Include="ProductPluginItemLoader.vb" />
+    <Compile Include="ProductRankLoader.vb" />
+    <Compile Include="ProductSkuBundlesLoader.vb" />
+    <Compile Include="ProductSkuForecastLoader.vb" />
+    <Compile Include="ProductSkuLoader.vb" />
+    <Compile Include="ProductStatLoader.vb" />
+    <Compile Include="ProductStockLoader.vb" />
+    <Compile Include="ProductUrlLoader.vb" />
+    <Compile Include="ProjecteLoader.vb" />
+    <Compile Include="ProveidorLoader.vb" />
+    <Compile Include="PrvCliNumsLoader.vb" />
+    <Compile Include="PurchaseOrderItemLoader.vb" />
+    <Compile Include="PurchaseOrderLoader.vb" />
+    <Compile Include="QualityDistributionLoader.vb" />
+    <Compile Include="RecallCliLoader.vb" />
+    <Compile Include="RecallLoader.vb" />
+    <Compile Include="RemittanceAdviceLoader.vb" />
+    <Compile Include="RepCliComLoader.vb" />
+    <Compile Include="RepCustomersLoader.vb" />
+    <Compile Include="SabiasQueLoader.vb" />
+    <Compile Include="SatRecallLoader.vb" />
+    <Compile Include="SegSocialGrupLoader.vb" />
+    <Compile Include="SepaMeLoader.vb" />
+    <Compile Include="SiteMapLoader.vb" />
+    <Compile Include="SocialMediaBrandLoader.vb" />
+    <Compile Include="SQLLoader.vb" />
+    <Compile Include="StaffCategoryLoader.vb" />
+    <Compile Include="StaffHolidayLoader.vb" />
+    <Compile Include="StaffJornadasLoader.vb" />
+    <Compile Include="StaffPosLoader.vb" />
+    <Compile Include="StaffSchedLoader.vb" />
+    <Compile Include="RaffleLoader.vb" />
+    <Compile Include="RankingLoader.vb" />
+    <Compile Include="RepComLiquidableLoader.vb" />
+    <Compile Include="RepcomLoader.vb" />
+    <Compile Include="RepeticionsLoader.vb" />
+    <Compile Include="RepLiqLoader.vb" />
+    <Compile Include="RepLoader.vb" />
+    <Compile Include="RepProductLoader.vb" />
+    <Compile Include="RolLoader.vb" />
+    <Compile Include="SearchRequestLoader.vb" />
+    <Compile Include="SelloutLoader.vb" />
+    <Compile Include="SepaTextLoader.vb" />
+    <Compile Include="PaymentGatewayLoader.vb" />
+    <Compile Include="SessionLoader.vb" />
+    <Compile Include="SkuStocksLoader.vb" />
+    <Compile Include="SkuWithLoader.vb" />
+    <Compile Include="SpvInLoader.vb" />
+    <Compile Include="SpvLoader.vb" />
+    <Compile Include="StaffLoader.vb" />
+    <Compile Include="StatementLoader.vb" />
+    <Compile Include="StatQuotaOnlineLoader.vb" />
+    <Compile Include="StockLoader.vb" />
+    <Compile Include="StoreLocatorLoader.vb" />
+    <Compile Include="SubscriptionLoader.vb" />
+    <Compile Include="SubscriptorLoader.vb" />
+    <Compile Include="SumasYSaldosLoader.vb" />
+    <Compile Include="TamariuLoader.vb" />
+    <Compile Include="TaskLoader.vb" />
+    <Compile Include="TaskLogLoader.vb" />
+    <Compile Include="TaskScheduleLoader.vb" />
+    <Compile Include="TaxLoader.vb" />
+    <Compile Include="Templates\TemplateLoader.vb" />
+    <Compile Include="TestLoader.vb" />
+    <Compile Include="TpvLogLoader.vb" />
+    <Compile Include="TpvRedsysLogLoader.vb" />
+    <Compile Include="TrackingLoader.vb" />
+    <Compile Include="TransmisioLoader.vb" />
+    <Compile Include="TransportistaLoader.vb" />
+    <Compile Include="TxtLoader.vb" />
+    <Compile Include="UrlSegmentsLoader.vb" />
+    <Compile Include="UserDefaultLoader.vb" />
+    <Compile Include="UserLoader.vb" />
+    <Compile Include="VehicleLoader.vb" />
+    <Compile Include="VehicleMarcaLoader.vb" />
+    <Compile Include="VehicleModelLoader.vb" />
+    <Compile Include="VisaCardLoader.vb" />
+    <Compile Include="VisaEmisorLoader.vb" />
+    <Compile Include="VivaceLoader.vb" />
+    <Compile Include="VivaceStockLoader.vb" />
+    <Compile Include="Web2SyncLoader.vb" />
+    <Compile Include="WebAtlasLoader.vb" />
+    <Compile Include="WebErrLoader.vb" />
+    <Compile Include="WebLogBrowseLoader.vb" />
+    <Compile Include="WebMenuLoader.vb" />
+    <Compile Include="WebPageAliasLoader.vb" />
+    <Compile Include="WinBugLoader.vb" />
+    <Compile Include="WinMenuItemLoader.vb" />
+    <Compile Include="WtbolBasketLoader.vb" />
+    <Compile Include="WtbolCtrLoader.vb" />
+    <Compile Include="WtbolLandingPageLoader.vb" />
+    <Compile Include="WtbolLoader.vb" />
+    <Compile Include="WtbolLogLoader.vb" />
+    <Compile Include="WtbolSerpLoader.vb" />
+    <Compile Include="WtbolSiteLoader.vb" />
+    <Compile Include="WtbolStocksLoader.vb" />
+    <Compile Include="XecLoader.vb" />
+    <Compile Include="XecsPresentacioLoader.vb" />
+    <Compile Include="YearMonthLoader.vb" />
+    <Compile Include="YouTubeMoviesLoader.vb" />
+    <Compile Include="ZipLoader.vb" />
+    <Compile Include="ZonaLoader.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\licenses.licx" />
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DTO\DTO.csproj">
+      <Project>{c2f49505-452b-4856-b8a0-c504df10cdf2}</Project>
+      <Name>DTO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LegacyHelper\LegacyHelper.vbproj">
+      <Project>{d0841f63-fe98-4bc0-bf84-7a9a9608b920}</Project>
+      <Name>LegacyHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelperStd\MatHelperStd.vbproj">
+      <Project>{6FEDA739-79F5-459F-9967-553095F23816}</Project>
+      <Name>MatHelperStd</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelper\MatHelper.csproj">
+      <Project>{d6ab48f7-36e9-4ce3-8850-1ca00a508141}</Project>
+      <Name>MatHelper</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Integracions\Britax\" />
+    <Folder Include="SqlServerTypes\x64\" />
+    <Folder Include="SqlServerTypes\x86\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="SqlServerTypes\Loader.cs" />
+    <Content Include="SqlServerTypes\readme.htm" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.SqlServer.Types.160.1000.6\build\net462\Microsoft.SqlServer.Types.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.SqlServer.Types.160.1000.6\build\net462\Microsoft.SqlServer.Types.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

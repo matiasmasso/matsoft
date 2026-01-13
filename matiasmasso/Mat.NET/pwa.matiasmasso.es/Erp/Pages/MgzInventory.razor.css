@@ -1,0 +1,49 @@
+﻿.Wrapper {
+
+}
+.Loading {
+    max-width:300px;
+    margin-top:20px;
+}
+
+.Grid {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: 1fr min-content min-content 32px;
+    grid-column-gap: 10px;
+    grid-row-gap: 10px;
+    padding: 5px;
+}
+
+.ColumnHeaders {
+    display: contents;
+    background-color: lightgray;
+}
+
+.Line {
+    grid-column: 1/-1;
+    height: 1px;
+    border-bottom: 1px solid gray;
+}
+
+.Item {
+    display: contents;
+}
+
+.Caption {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Qty, .Eur {
+    text-align: right;
+}
+
+.Eur {
+    white-space: nowrap;
+}
+
+.Selected {
+    background-color: #CCCCCC;
+}

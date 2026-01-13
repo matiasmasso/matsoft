@@ -1,0 +1,16 @@
+﻿<input type="radio" name="@Name" value="@Value" 
+       checked="@(Value.Equals(SelectedValue))" @onchange="OnChange" />
+
+@code {
+    [Parameter] public string Name { get; set; }
+    [Parameter] public int Value { get; set; }
+    [Parameter] public int? SelectedValue { get; set; }
+    [Parameter] public EventCallback<int?> SelectedValueChanged { get; set; }
+
+    private void OnChange(ChangeEventArgs args)
+    {
+        int selectedVal = Convert.ToInt32(args.Value);
+        SelectedValueChanged.InvokeAsync(selectedVal);
+    }
+
+}

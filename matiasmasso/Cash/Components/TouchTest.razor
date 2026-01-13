@@ -1,0 +1,15 @@
+﻿<div class="Wrapper" @ontouchstart="TouchStart">
+    <img src="/img/naipe.jpg" />
+    <div class="Label">
+@msg
+    </div>
+</div>
+
+@code {
+    string? msg = "swipe it!";
+
+    void TouchStart(TouchEventArgs args)
+    {
+        msg = $"touch start at {args.Touches[0].PageX} x {args.Touches[0].PageY} px";
+    }
+}

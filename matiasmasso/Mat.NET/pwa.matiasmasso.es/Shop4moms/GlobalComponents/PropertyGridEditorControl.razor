@@ -1,0 +1,148 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+
+    @if (Item.Cod == PropertyGridModel.Cods.Boolean)
+    {
+        <Toggle Value="(bool?)Item.Value" CanEdit="CanEdit" ObjChanged="ValueChanged"></Toggle>
+    }
+    else if (Item.Cod == PropertyGridModel.Cods.Fch)
+    {
+       
+        <Textbox2 Fch @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></Textbox2>
+    }
+    else if (Item.Cod == PropertyGridModel.Cods.Tel)
+    {
+        <Tel @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></Tel>
+    }
+    else if (Item.Cod == PropertyGridModel.Cods.Email && Item.Value is UserModel)
+    {
+        <a class="Email" href="#" @onclick="ItemClickAsync" @onclick:preventDefault>
+            @(((UserModel?)Item.Value)?.EmailAddress)
+        </a>
+
+        @*
+    <ContextMenuTrigger MenuId="MenuEmail" Data="Item.Value">
+    <UxEmail @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="false"></UxEmail>
+    </ContextMenuTrigger>
+    *@
+    }
+    else if (Item.Cod == PropertyGridModel.Cods.Password)
+    {
+        <Textbox IsPassword @bind-Value="Item.Value" @bind-Value:event="ObjChanged" CanEdit="CanEdit"></Textbox>
+    }
+    else if (Item.Cod == PropertyGridModel.Cods.Dropdown)
+    {
+        <Dropdown Values="Item.Values"
+              Value="(IModel?)Item.Value"
+              ValueChanged="DropdownChanged"
+              CanEdit="CanEdit"></Dropdown>
+        @*ContextMenu="Item.ContextMenu"*@
+    }
+    else if (Item.Cod == PropertyGridModel.Cods.Multiline)
+    {
+        <Textbox2 Multiline @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></Textbox2>
+
+        @*<Textarea @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></Textarea>*@
+        @*<MatTextarea @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></MatTextarea>*@
+    }
+    else if (Item.Cod == PropertyGridModel.Cods.Files)
+    {
+        <Dropzone Values="(List<DocFileModel>?)Item.Value" 
+            Accept="@Item.Accept"
+            MbMaxLength="@Item.MbMaxLength"
+            ValuesChanged="ValueChanged"></Dropzone>
+    }
+    else
+    {
+        <Textbox2 @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></Textbox2>
+    }
+
+</div>
+
+<ContextMenu Id="MenuEmail">
+    <Item Key="LoginAs" OnClick="@ContextMenuClickAsync">Loggeja'l</Item>
+    <Item Key="Message" OnClick="@ContextMenuClickAsync">Missatge</Item>
+</ContextMenu>
+
+
+@code {
+
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsDirty { get; set; }
+    [Parameter] public int? MaxLength { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> SetDirty { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> RequestToAddNew { get; set; }
+    [Parameter] public EventCallback<ItemClickEventArgs> ContextMenuClick { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> ItemClick { get; set; }
+    [Parameter] public PropertyGridModel.Item Item { get; set; }
+
+    private bool isEditing = false;
+    private bool isShowingSelector = false;
+
+    private void ValueClicked()
+    {
+        if (Item!.Cod == PropertyGridModel.Cods.Dropdown)
+        {
+            isShowingSelector = true;
+            isEditing = true;
+        }
+        else if (Item!.Cod == PropertyGridModel.Cods.Boolean)
+        {
+            if ((bool)(Item.Value ?? false))
+            {
+                Item!.Value = false;
+                Item.Id = "False";
+                Item.DisplayText = Item.Id;
+            }
+            else
+            {
+                Item!.Value = true;
+                Item.Id = "True";
+                Item.DisplayText = Item.Id;
+            }
+        }
+        else
+        {
+            isEditing = true;
+        }
+    }
+
+
+    private void DropdownChanged(object args)
+    {
+        Item.Value = args;
+        SetDirty.InvokeAsync(Item);
+        //isEditing = false;
+        //isShowingSelector = false;
+    }
+
+    private void ValueChanged(object args)
+    {
+        Item.Value = args;
+        SetDirty.InvokeAsync(Item);
+    }
+
+    private void AddNewRequest()
+    {
+        RequestToAddNew.InvokeAsync(Item);
+    }
+
+    async Task ContextMenuClickAsync(ItemClickEventArgs e)
+    {
+        await ContextMenuClick.InvokeAsync(e);
+    }
+
+    async Task ItemClickAsync()
+    {
+        await ItemClick.InvokeAsync(Item);
+    }
+
+
+    //void DroppedFilesChanged(List<DocFileModel> docfiles)
+    //{
+    //    Item.Value = docfiles;
+    //    SetDirty.InvokeAsync(Item);
+    //}
+
+}

@@ -1,0 +1,156 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="Wrapper">
+
+    @if (ApiService.DocSrcs() == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nova font documental</a>
+            </PageOptions>
+        </div>
+
+        <SearchBox @bind-Value="@searchTerm" ></SearchBox>
+
+        <div class="Grid">
+
+            @if (string.IsNullOrEmpty(searchTerm))
+            {
+                @if (parents?.Any() ?? false)
+                {
+                    @foreach (var parent in parents)
+                    {
+                        <a class="Parent" href="#" @onclick="@(()=>ParentClick(parent))" @onclick:preventDefault>
+                            <div class="Nom Truncate">@parent.Nom</div>
+                            <div class="Icon">
+                                <Icon Id="Icon.Ids.Xmark" Width="12px"></Icon>
+                            </div>
+                        </a>
+                    }
+
+                    <div class="Spacer">&nbsp;</div>
+                }
+
+                @foreach (var child in Children() ?? new())
+                {
+                    <div class="Item">
+                        <a class="Icon" href="#" disabled="@(!HasChildren(child))" @onclick="@(()=>parents?.Add(child))" @onclick:preventDefault>
+                            <Icon Id="@(HasChildren(child) ? Icon.Ids.ChevronDown : Icon.Ids.None)"></Icon>
+                        </a>
+                        <a class="Nom Truncate" href="#" @onclick="@(()=>ItemClick(child))" @onclick:preventDefault>
+                            @child.Nom
+                        </a>
+                        <div class="DocsCount">
+                            @($"{ApiService.RecursiveDocs(child)?.Count():N0}")
+                            </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <Virtualize Items="@(FilteredItems() ?? new())" Context="item">
+                    <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        <div>&nbsp;</div>
+                        <div class="Nom Truncate">@item.NomLlarg</div>
+                        <div class="DocsCount">
+                            @($"{ApiService.RecursiveDocs(item)?.Count():N0}")
+                        </div>
+                    </a>
+                    <div class="GridRowDivider HideOnDesktop"></div>
+                </Virtualize>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public DocSrcModel? Root { get; set; }
+    [Parameter] public EventCallback<DocSrcModel> ItemSelected { get; set; }
+
+    List<DocSrcModel>? parents;
+    IModel? selectedItem;
+
+    string? searchTerm;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        parents = new List<DocSrcModel>();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    void ParentClick(DocSrcModel item)
+    {
+        var parentsCollection = new List<DocSrcModel>();
+        var idx = parents?.IndexOf(item);
+        for (var i = 0; i < idx; i++)
+        {
+            parentsCollection.Add(parents![i]);
+        }
+        parents = parentsCollection;
+        StateHasChanged();
+    }
+
+    void ItemClick(DocSrcModel item)
+    {
+        if (ItemSelected.HasDelegate)
+            ItemSelected.InvokeAsync(item);
+        else
+            selectedItem = item;
+    }
+
+    void AddNew()
+    {
+        var item = new DocSrcModel();
+        item.Nom = "(nova font documental)";
+        item.Parent = parents?.LastOrDefault()?.Guid ?? Root?.Guid;
+        ItemClick(item);
+    }
+
+    bool HasChildren(DocSrcModel item)
+    {
+        return ApiService.DocSrcs()?.Any(x => x.Parent == item.Guid) ?? false;
+    }
+
+    List<DocSrcModel>? Children()
+    {
+        DocSrcModel? root = parents?.LastOrDefault() ?? Root;
+        var retval = ApiService.DocSrcs()?.Where(x => x.Parent == root?.Guid).ToList();
+        return retval;
+    }
+
+    List<DocSrcModel>? FilteredItems()
+    {
+        var allValues = ApiService.RecursiveChildren(Root);
+        if (string.IsNullOrEmpty(searchTerm))
+            return allValues;
+        else
+            return allValues?.Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+
+    }
+
+}

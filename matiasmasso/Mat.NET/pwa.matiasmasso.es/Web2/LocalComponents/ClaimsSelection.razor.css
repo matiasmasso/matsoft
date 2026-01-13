@@ -1,0 +1,30 @@
+﻿.SelectedValues {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.SelectedValues a {
+    display: inline-flex;
+    gap: 10px;
+    padding: 4px 7px 2px 4px;
+    border-radius: 5px;
+    border: 1px solid gray;
+    background-color: aliceblue;
+    margin: 0 10px 10px 0;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap: 10px;
+}
+
+.Grid a {
+    display:contents;
+}
+
+.Nom, .Dsc {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}

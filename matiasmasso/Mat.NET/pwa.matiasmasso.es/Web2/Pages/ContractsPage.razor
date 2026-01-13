@@ -1,0 +1,206 @@
+﻿@page "/contracts"
+@page "/{LangSegment}/contracts"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject ContractsService contractsService
+
+<div class="PageWrapper600">
+
+
+    @if (model == null && exception == null)
+    {
+        <h1>@culture.Localize("Contracts")</h1>
+
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <h1>@culture.Localize("Contracts")</h1>
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+             <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                 @culture.Localize("AddNew")
+             </a>
+         </PageOptions>
+     </div>
+
+        <SelectedEmps @bind-SelectedValues="selectedEmps"></SelectedEmps>
+
+        <SelectedValues @bind-Values="selectedValues"></SelectedValues>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} contracts, {1} en actiu",model?.Count(), model?.Where(x => x.FchTo == null).Count())
+        </div>
+
+
+        <div class="Grid">
+
+            @if (SelectedCodi() == null && string.IsNullOrEmpty(searchTerm))
+            {
+                <div class="Codis">
+                    @foreach (var item in FilteredCodis() ?? new())
+                    {
+                        <a href="#" @onclick="() => CodiClick(item)"
+                        @onclick:preventDefault="true"
+                           class="Codi Truncate @(CodiObsolet(item) ? "Obsoleto" : "")'">
+                            @item.Nom
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                foreach (var item in FilteredContracts() ?? new())
+                {
+                    <a href="@item.DownloadUrl()" target="_blank" class='Item @(item.FchTo == null ? "Obsoleto" : "")'>
+                        <div class="Truncate">@item.Contact?.FullNom</div>
+                        <div class="Truncate">@item.Nom</div>
+                        <div>@item.FchFrom</div>
+                    </a>
+                }
+            }
+        </div>
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private List<ContractModel>? model;
+    SelectedValues.Collection? selectedValues;
+
+    private ContractModel? selectedItem;
+    private List<EmpModel>? selectedEmps;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+    private Cols? sortedColumn = Cols.FchFrom;
+    private bool isDescendingOrder = false;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    private Exception? exception;
+
+    private enum Cols
+    {
+        Nom,
+        Ref,
+        FchFrom,
+        FchTo
+    }
+
+    protected override void OnInitialized()
+    {
+        session.OnChange += Refresca;
+        contractsService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    ContractModel.CodiClass? SelectedCodi() => (ContractModel.CodiClass?)selectedValues?.FirstOrDefault()?.Value;
+
+    private void Refresca(Exception? ex = null)
+    {
+        model = contractsService.Values;
+        if (selectedEmps == null || selectedEmps.Count == 0)
+            selectedEmps = session.Emps?.Where(x => model?.Any(y => x.Id == y.Emp) ?? false).ToList();
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<ContractModel> FilteredItems() => model!.Where(x => x.Matches(searchTerm)).ToList();
+
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            //case Cols.Ref:
+            //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Referencia ?? "").ToList() : model!.OrderBy(x => x.Referencia ?? "").ToList();
+            //    break;
+            //case Cols.User:
+            //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Usuari ?? "").ToList() : model!.OrderBy(x => x.Usuari ?? "").ToList();
+            //    break;
+        }
+    }
+
+    public void AddNew()
+    {
+        selectedItem = new ContractModel();
+    }
+
+    private void CodiClick(ContractModel.CodiClass codi)
+    {
+        selectedValues = new();
+        selectedValues.Add(codi, codi.Nom);
+    }
+
+    private bool CodiObsolet(ContractModel.CodiClass codi)
+    {
+        var items = model?.Where(x => x.Codi.Guid.Equals(codi!.Guid)).ToList();
+        var retval = items?.All(x => x.FchTo != null) ?? false;
+        return retval;
+    }
+    private List<ContractModel.CodiClass>? FilteredCodis()
+    {
+        var items = model?.Where(x =>
+            (x.FchTo == null || x.FchTo > DateTime.Today || IsShowingObsolets)
+            && (selectedEmps?.Any(y => x.Emp == y.Id) ?? false)
+            ).ToList();
+        var retval = items?.GroupBy(x => x.Codi?.Guid).Select(y => y.First().Codi).ToList();
+        return retval;
+    }
+
+    private List<ContractModel>? FilteredContracts()
+    {
+        List<ContractModel>? retval;
+
+        retval = model?.Where(x => 
+           (x.FchTo == null || x.FchTo > DateTime.Today || IsShowingObsolets)
+           && (selectedEmps?.Any(y => x.Emp == y.Id) ?? false)
+           ).ToList();
+        if (SelectedCodi() != null)
+            retval = retval?.Where(x => (x.Codi?.Guid.Equals(SelectedCodi()!.Guid) ?? false)).ToList();
+        if (!string.IsNullOrEmpty(searchTerm))
+            retval = retval?.Where(x => x.Matches(searchTerm)).ToList();
+
+        return retval;
+    }
+
+    private void ItemClick(ContractModel value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value.ToString()));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        contractsService.OnChange -= Refresca;
+    }
+
+}

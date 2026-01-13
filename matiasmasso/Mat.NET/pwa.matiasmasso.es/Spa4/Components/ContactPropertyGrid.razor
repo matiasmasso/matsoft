@@ -1,0 +1,98 @@
+﻿@inherits _ComponentBase
+
+<PropertyGrid model="@gridModel"
+              RequestToUpdate="SaveRequest"
+              RequestToDelete="DeleteRequest"
+              RequestToCancel="CancelRequest"
+              ErrorMessage="@errorMessage"
+              GetOptions="GetOptions"></PropertyGrid>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private ContactModel? value;
+    private Helpers.PropertyGridModel? gridModel;
+    private AtlasModel? atlas;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        RaoSocial,
+        NomCom,
+        Nif,
+        Adr,
+        Class,
+        Tel,
+        Email
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var dto = await GetAsync<ContactDTO>("Contact", Guid.ToString());
+        value = dto.Contact;
+        var model = new Helpers.PropertyGridModel();
+        model.AddString((int)Fields.RaoSocial, value.RaoSocial, "Razon social", "Rao Social", "Corporate name");
+        model.AddString((int)Fields.NomCom, value.NomComercial, "Nombre comercial", "Nom comercial", "Commercial name");
+        //model.AddString((int)Fields.Nif, value.Nifs, "Nif", "Nif", "Vat number");
+        //model.AddString((int)Fields.Adr, value.Address, "Dirección", "Adreça", "Address");
+        model.AddEnum((int)Fields.Class, value.ContactClass, value.ContactClass?.ToString(), value.ContactClass.Nom.Tradueix(base.Lang()), "Clase", "Classe", "Class");
+        foreach (var tel in value.Telefons)
+        {
+            model.AddString((int)Fields.Tel, tel.Caption(), "Teléfono", "Telèfon", "Phone number");
+        }
+        foreach (var email in value.Emails)
+        {
+            model.AddString((int)Fields.Email, email.Caption(), "Email");
+        }
+        gridModel = model;
+        StateHasChanged();
+    }
+
+
+    private void SaveRequest()
+    {
+        //value!.Country = (Guid)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Country)?.Value;
+        //value!.ISO = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.ISO)?.Value?.ToString();
+        //value!.Nom = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Nom)?.Value?.ToString();
+        //value!.Provincia = (Guid)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Provincia)?.Value;
+        //value!.Lang = (LangDTO)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Lang)?.Value;
+        //value!.ExportCod = (int)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.ExportCod)?.Value;
+        //value!.Mod347 = (bool)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Mod347)?.Value;
+
+        //if (await PostAsync<ZonaModel, bool>(value, "Zona"))
+        //    CancelRequest();
+        //else
+        //    errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Location/delete", value!.Guid.ToString()))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+    public async Task<List<Option>> GetOptions(Helpers.PropertyGridModel.Item item)
+    {
+        List<Option> retval = new();
+        if (item.Field == (int)Fields.Class)
+        {
+            var guidnoms = await GetAsync<List<GuidNom>>("ContactClasses");
+            retval = guidnoms.Select(x => new Option
+                {
+                    Id = x.Guid.ToString(),
+                    Nom = x.Nom ?? "?"
+                }).ToList();
+        }
+
+        return retval;
+    }
+}

@@ -1,0 +1,85 @@
+﻿@page "/Countries_Page"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("Countries")</h1>
+
+    <PageOptions>
+        <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+    </PageOptions>
+
+    @if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("Countries.Found",model.Count())
+        </div>
+
+        <Countries_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></Countries_List>
+
+    }
+    else
+    {
+        <Country Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></Country>
+    }
+
+
+
+</div>
+
+@code {
+    List<CountryModel> model;
+    CacheDTO cache;
+    string searchTerm;
+    CountryModel selectedItem = null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        model = cache.Countries;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Country);
+        model = cache.Countries;
+    }
+
+    List<CountryModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+            return model;
+        else
+            return model.Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    private void ItemClick(CountryModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new CountryModel();
+    }
+
+    private void OnUpdate(CountryModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(CountryModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+}

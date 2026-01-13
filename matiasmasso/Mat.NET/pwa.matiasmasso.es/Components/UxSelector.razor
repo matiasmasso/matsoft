@@ -1,0 +1,95 @@
+﻿@if (Options != null)
+{
+    <div class="Wrapper">
+        @if (Options.Count() > 12)
+        {
+            <div class="ButtonsBar">
+                <SearchBox IsShowing="@(Options.Count() > 12)"
+                   @bind-Value="@searchterm"></SearchBox>
+
+                <div class="@(Options.Count() > 12 ? "Hidden":"")">&nbsp;</div>
+
+                <div class="MenuButton" @onclick="@(()=>{isShowingMenu = !isShowingMenu;})" @onclick:preventDefault="true">
+                    <i class="fa-solid fa-bars"></i>
+
+                    <Nav nav="@Menu"
+                         IsShowing="isShowingMenu"
+                         ActionRequest="@MenuActionRequest"></Nav>
+                </div>
+
+
+            </div>
+        }
+        @foreach (var option in FilteredOptions())
+        {
+            <div class="Option">
+                @if (IsSelected(option))
+                {
+                    <div class="Ico"><i class="fa-solid fa-check"></i></div>
+                    <div class="Caption">@option.Nom</div>
+                }
+                else
+                {
+                    <div class="Ico">&nbsp;</div>
+                    <a href="#"
+           class="Caption"
+           @onclick="@(() => OptionClicked(option))"
+           @onclick:preventDefault="true"
+           @onclick:stopPropagation="true">
+
+                        @option.Nom
+                    </a>
+                }
+            </div>
+        }
+    </div>
+}
+
+
+@code {
+    [Parameter] public bool IsShowing { get; set; }
+    [Parameter] public List<Option> Options { get; set; } = new();
+    [Parameter] public string? Value { get; set; } //corresponds to Option.Id
+    [Parameter] public EventCallback<Option> ValueChanged { get; set; } //returns selected Option
+    [Parameter] public EventCallback<string> ActionRequest { get; set; }
+    [Parameter] public NavDTO? Menu { get; set; }
+
+    private bool isShowingMenu = false;
+    private string searchterm = "";
+
+    private void MenuActionRequest(string action)
+    {
+        if (ActionRequest.HasDelegate) ActionRequest.InvokeAsync(action);
+    }
+
+    private async Task OptionClicked(Option option)
+    {
+        if (ValueChanged.HasDelegate)
+        {
+            await ValueChanged.InvokeAsync(option);
+        }
+    }
+
+    private List<Option> FilteredOptions()
+    {
+        var retval = Options;
+        if (Options != null && !string.IsNullOrEmpty(searchterm))
+        {
+            retval = Options
+            .Where(x => x.Nom.Contains(searchterm, StringComparison.InvariantCultureIgnoreCase))
+            .ToList();
+        }
+        return retval;
+    }
+
+    private bool IsSelected(Option option)
+    {
+        bool retval = false;
+        if (Value != null)
+            retval = Value!.ToUpperInvariant() == option.Id.ToUpperInvariant();
+        return retval;
+
+    }
+
+
+}

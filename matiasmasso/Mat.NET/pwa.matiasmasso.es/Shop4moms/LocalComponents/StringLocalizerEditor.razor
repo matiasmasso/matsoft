@@ -1,0 +1,103 @@
+﻿@inherits _Base
+@inject StringsLocalizerService localizer
+@inject CultureService culture
+@inject AppStateService appState
+
+<div class="EditorWrapper">
+    @if (Model != null)
+    {
+        <div class="StringKey">
+            <div>Key</div>
+            <div><input type="text" @bind="@Model.StringKey" @oninput="StringKeyChanged" /></div>
+        </div>
+
+        @foreach (var item in items ?? new())
+        {
+            <CollapsiblePanel Caption="@culture.Localize((new LangDTO(item.LangTag)).StringKey())">
+                <StringLocalizerItemEditor Value="item" ValueChanged="ValueChanged"></StringLocalizerItemEditor>
+            </CollapsiblePanel>
+        }
+
+        <div class="ButtonsBar">
+
+            <ButtonsBar IsDirty="isDirty"
+                    CanEdit="true"
+                    State="state"
+                    IsUpdating="isUpdating"
+                    RequestToCancel="CancelRequest"
+                    RequestToDelete="DeleteRequest"
+                    RequestToUpdate="UpdateRequest"></ButtonsBar>
+        </div>
+    }
+
+    <Error Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public StringLocalizerModel? Model { get; set; }
+    [Parameter] public EventCallback RequestToClose { get; set; }
+    [Parameter] public EventCallback<StringLocalizerModel> RequestToUpdate { get; set; }
+
+    private List<StringLocalizerModel.Item>? items;
+    private bool isDirty;
+    private bool isUpdating;
+    private DbState state;
+    private Exception? exception;
+
+    protected override void OnParametersSet()
+    {
+        LangDTO[] langs = {
+            LangDTO.Esp(), LangDTO.Cat(), LangDTO.Eng(), LangDTO.Por()
+    };
+
+        items = langs.Select(x => new StringLocalizerModel.Item
+            {
+                LangTag = x.Tag(),
+                Value = Model.GetValue(x.Id)
+            }).ToList();
+    }
+
+    void StringKeyChanged(ChangeEventArgs args)
+    {
+        Model!.StringKey = args.Value?.ToString() ?? "";
+        isDirty = true;
+    }
+
+    async Task UpdateRequest()
+    {
+        state = DbState.IsUpdating;
+        //Model!.Items = items;
+        await RequestToUpdate.InvokeAsync(Model);
+        state = DbState.StandBy;
+    }
+    async Task DeleteRequest()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            if (await appState.PostAsync<string, bool>(Model!.StringKey, "StringLocalizer/delete")) CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        state = DbState.StandBy;
+    }
+    void CancelRequest()
+    {
+        RequestToClose.InvokeAsync();
+    }
+
+    private void ValueChanged(StringLocalizerModel.Item item)
+    {
+        var val = Model.Items.FirstOrDefault(x => x.LangTag == item.LangTag);
+        if (val == null)
+            Model.Items.Add(item);
+        else
+            val.Value = item.Value;
+        isDirty = true;
+        state = DbState.IsDirty;
+    }
+
+}

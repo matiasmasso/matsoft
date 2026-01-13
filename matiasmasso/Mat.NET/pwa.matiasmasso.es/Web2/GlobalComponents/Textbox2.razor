@@ -1,0 +1,68 @@
+﻿@if (Multiline)
+{
+    <textarea @oninput="HandleOnChange" autofocus disabled="@(!CanEdit)" rows="4">@data</textarea>
+
+} else if (Fch)
+{
+    <input type="date"
+           autofocus
+           disabled="@(!CanEdit)"
+    @oninput="HandleOnChange"
+    @bind-value="fchdata" />
+}
+else
+{
+    <input type="text"
+           autofocus
+           disabled="@(!CanEdit)"
+       @oninput="HandleOnChange"
+       @bind-value="data" />
+}
+
+
+@code {
+    [Parameter] public bool Multiline { get; set; }
+    [Parameter] public bool Fch { get; set; }
+    [Parameter] public object? Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+
+    private string data = "";
+    private DateTime fchdata;
+
+    protected override void OnParametersSet()
+    {
+        data = Value?.ToString() ?? "";
+        base.OnParametersSet();
+    }
+
+    private async Task HandleOnChange(ChangeEventArgs args)
+    {
+        data = args.Value?.ToString() ?? "";
+
+        if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+            await ObjChanged.InvokeAsync(data);
+        if (ValueChanged.HasDelegate)
+            await ValueChanged.InvokeAsync(data);
+    }
+
+
+
+    //private string _value
+    //{
+    //    get => Value?.ToString() ?? "";
+    //    set
+    //    {
+    //        if (Value?.ToString() != value)
+    //        {
+    //            //Value = value;
+
+    //            if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+    //                ObjChanged.InvokeAsync(value);
+    //            if (ValueChanged.HasDelegate)
+    //                ValueChanged.InvokeAsync(value);
+    //        }
+    //    }
+    //}
+}

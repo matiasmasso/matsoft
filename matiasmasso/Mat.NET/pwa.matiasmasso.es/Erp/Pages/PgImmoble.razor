@@ -1,0 +1,145 @@
+﻿@page "/PgImmoble/{Guid:guid}"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>
+        @Localizer("RealState")
+    </h1>
+
+    <TabControl>
+        <TabPage Text="@Localizer("Details")">
+
+            <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          RequestToLoadOptions="LoadOptionsRequest"
+                          CanEdit="true"></PropertyGrid>
+
+        </TabPage>
+
+        <TabPage Text="@Localizer("Downloads")">
+            <UxDocfiles Values="@value.Docfiles"></UxDocfiles>
+        </TabPage>
+
+        <TabPage Text="@Localizer("Inventory")">
+            <UxInventariItems Values="@value.Inventari"></UxInventariItems>
+        </TabPage>
+
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <UxButtonsBar CanEdit="true"
+                      IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(value != null && !value.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></UxButtonsBar>
+    </div>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private ImmobleModel? value;
+    private PropertyGridModel? gridModel;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    new ProblemDetails problemDetails;
+
+    private enum Fields : int
+    {
+        Nom,
+        Cadastre,
+        Address,
+        FchFrom,
+        FchTo
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Guid == null)
+            value = new ImmobleModel();
+        else
+        {
+            ApiResponse<ImmobleModel> apiResponse = await HttpService.GetAsync<ImmobleModel>(http, "Immoble", Guid.ToString());
+            if (apiResponse.Success())
+                value = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+
+        if (value != null)
+        {
+            var model = new PropertyGridModel(value);
+            model.AddString((int)Fields.Nom, value.Nom, Localizer("Nom"));
+            model.AddString((int)Fields.Cadastre, value.Cadastre, Localizer("Immoble.Cadastre"));
+            model.AddAddress((int)Fields.Address, value.Address, Localizer("Address"));
+            model.AddFch((int)Fields.FchFrom, value.FchFrom, Localizer("EntryDate"));
+            model.AddFch((int)Fields.FchTo, value.FchTo, Localizer("TerminationDate"));
+            gridModel = model;
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        isUpdating = true;
+        value.Nom = gridModel.GetString((int)Fields.Nom);
+        value.Cadastre = gridModel.GetString((int)Fields.Cadastre);
+        value.FchFrom = gridModel.GetValue<DateTime?>((int)Fields.FchFrom);
+        value.FchTo = gridModel.GetValue<DateTime?>((int)Fields.FchTo);
+        var apiResponse = await HttpService.PostAsync<ImmobleModel, bool>(http, value, "immoble");
+        if (apiResponse.Value)
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        isUpdating = false;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await HttpService.GetAsync<ApiResponse<bool>>(http, "Immoble/delete", value!.Guid.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        base.NavigateToPage("/Immobles");
+    }
+
+    private async Task LoadOptionsRequest(PropertyGridModel.Item item)
+    {
+        ApiResponse<GuidNom[]> apiResponse = null;
+        switch ((Fields)item.Field)
+        {
+            //case Fields.CarModel:
+            //    apiResponse = await HttpService.GetAsync<GuidNom[]>("Vehicles/CarModels");
+            //    break;
+            default:
+                break;
+        }
+
+        if (apiResponse != null)
+        {
+            if (apiResponse.Fail())
+                problemDetails = apiResponse.ProblemDetails;
+            else
+            {
+                List<IModel> values = apiResponse.Value.OrderBy(x => x.Nom).ToList<IModel>();
+                gridModel.Items.First(x => x.Field == item.Field).Values = values;
+                StateHasChanged();
+            }
+        }
+    }
+
+}
+

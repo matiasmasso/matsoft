@@ -1,0 +1,28 @@
+﻿.Wrapper {
+    position: relative;
+    width: 70px;
+    height: 37px;
+}
+
+.Cart path {
+    fill: gray;
+}
+
+.Circle.EmptyBasket {
+    fill: gray;
+}
+
+.Circle.NonEmptyBasket {
+    fill: red;
+}
+
+.Counter {
+    position: absolute;
+    z-index: 3;
+    bottom: 0px;
+    right: 3px;
+}
+
+.Wrapper:hover path {
+    fill: white;
+}

@@ -1,0 +1,26 @@
+﻿<div class="modal-backdrop @(IsOpen ? "show" : "")" @onclick="CloseFalse"></div>
+
+<div class="modal-container @(IsOpen ? "show" : "")" @onclick:stopPropagation="true">
+    <div class="modal-card">
+        <h3 class="modal-title">Eliminar fotos i videos</h3>
+
+        <p class="modal-text">
+            Segur que vols eliminar @Count imatges/videos?
+            Aquesta acció no es pot tornar enrera.
+        </p>
+
+        <div class="modal-buttons">
+            <button class="btn-cancel" @onclick="CloseFalse">Cancel·lar</button>
+            <button class="btn-danger" @onclick="CloseTrue">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public int Count { get; set; }
+    [Parameter] public EventCallback<bool> Closed { get; set; }
+
+    private async Task CloseTrue() => await Closed.InvokeAsync(true);
+    private async Task CloseFalse() => await Closed.InvokeAsync(false);
+}

@@ -1,0 +1,103 @@
+﻿@implements IDisposable
+
+@using DTO
+
+<div class="BannerRotator">
+    @if(banner == null)
+    {
+        <Loading></Loading>
+    } else
+    {
+        <a href="@banner?.Url" title="@banner?.Caption" class="img-anchor">
+            <img src="@banner?.ImageUrl" alt="@banner?.Caption" class="Banner" width="@BannerDTO.BANNERWIDTH" height="@BannerDTO.BANNERHEIGHT" />
+        </a>
+
+        <a class="prev" @onclick="GoPrevious" title='ir al banner anterior'>&#10094;</a>
+        <a class="next" @onclick="GoNext" title='ir al siguiente banner'>&#10095;</a>
+
+        <div style="text-align:center" class="dots">
+            @foreach (var banner in Banners!)
+            {
+                <a class='dot @IsActiveClass(banner)'  @onclick="() => Display(banner)" title="@banner!.Caption)"></a>
+            }
+        </div>
+    } 
+</div>
+@code
+{
+    [Parameter]
+    public List<Box>? Banners { get; set; } = new();
+
+    [Parameter]
+    public int secondsToFirstLaunch { get; set; } = 3;
+
+    [Parameter]
+    public int secondsInterval { get; set; } = 3;
+
+    private System.Threading.Timer? Timer;
+    private Box? banner = null;
+    private int idx = 0;
+
+    protected override void OnParametersSet()
+    {
+        SetBanner();
+        base.OnParametersSet();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if(firstRender)
+        {
+            Timer = new System.Threading.Timer(_ =>
+            {
+              idx+=1;
+              SetBanner();
+              InvokeAsync(StateHasChanged);
+            }, null, secondsToFirstLaunch * 1000, secondsInterval * 1000);
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    private void SetBanner()
+    {
+        if(Banners != null && Banners.Count > 0)
+        {
+            idx = idx >= Banners!.Count ? 0 : idx;
+            idx = idx < 0 ? Banners!.Count-1 : idx;
+            banner = Banners[idx];
+        }
+    }
+
+    private string IsActiveClass(Box banner) => banner.Equals(Banners![idx]) ? "active" : "";
+
+    private void Display(Box banner)
+    {
+        idx = Banners!.IndexOf(banner);
+        SetBanner();
+    }
+
+    private void GoTo(int i)
+    {
+        idx = i;
+        SetBanner();
+        idx = idx==0 ? Banners!.Count-1: idx-1; //ensure at least a full interval
+    }
+
+    private void GoNext()
+    {
+        idx += 1;
+        SetBanner();
+    }
+
+    private void GoPrevious()
+    {
+        idx -= 1;
+        SetBanner();
+    }
+
+    void IDisposable.Dispose()
+    {
+        Timer?.Dispose();
+        Timer = null;
+    }
+}

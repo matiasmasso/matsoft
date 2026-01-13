@@ -1,0 +1,63 @@
+﻿/*issues*/
+
+.Wrapper {
+    max-width: 400px;
+}
+
+.Count, .Ancestors {
+    text-align: right;
+}
+
+.ItemErr {
+    grid-column: 1/-1;
+}
+
+.GridRowDivider {
+    margin: 10px 0;
+}
+
+@media(max-width:599px) {
+    .Ico {
+        display: none;
+    }
+
+    .Caption {
+        grid-area: txt;
+    }
+
+    .Count {
+        grid-area: cnt;
+        text-align: right;
+    }
+
+    .Ancestors {
+        grid-area: anc;
+        text-align: right;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-areas: "txt txt txt" "cnt cnt anc";
+        grid-template-columns: 1fr 100px 50px;
+        grid-column-gap: 10px;
+        padding: 10px 0;
+    }
+
+    .Refresca {
+        display:block;
+        padding: 15px 0 30px;
+        border-bottom: 1px solid gray;
+    }
+
+}
+
+@media(min-width:599px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: 20px min-content min-content min-content;
+        grid-column-gap: 10px;
+        align-items: center;
+        margin-top: 15px;
+    }
+
+}

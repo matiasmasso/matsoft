@@ -1,0 +1,246 @@
+﻿.ShowObsolets {
+    margin: 20px 0 10px;
+}
+
+
+
+
+/*------------------------ mobiles ----------------------*/
+
+@media (max-width:599px) {
+
+    .HideOnMobile {
+        display: none !important;
+    }
+
+    .Catalog {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Brands .Item, .Categories .Item {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 10px;
+        border-bottom: 1px solid #DDDDDD;
+    }
+
+    .Skus .Item {
+        display: grid;
+        grid-template-columns: 15px 100px 1fr;
+        grid-template-rows: min-content min-content min-content 1fr 1px;
+        grid-template-areas: "bg thumb ref"
+            "bg thumb nom"
+            "bg thumb pvp"
+            "bg thumb stk"
+            "line line line";
+        grid-column-gap: 10px;
+    }
+
+    .Item.Selected {
+    }
+
+    .BgColor {
+        grid-area: bg;
+    }
+
+        .BgColor.BgGreen {
+            background-color: lightgreen;
+        }
+
+        .BgColor.BgYellow {
+            background-color: lightyellow;
+        }
+
+        .BgColor.BgSalmon {
+            background-color: lightsalmon;
+        }
+
+        .BgColor.BgGray {
+            background-color: lightgray;
+        }
+
+    .Thumbnail {
+        grid-area: thumb;
+        width: 100px;
+    }
+
+        .Thumbnail img {
+            width: 100%;
+            height: auto;
+            padding:10px 0;
+        }
+
+    .Ref {
+        grid-area: ref;
+        padding-top:10px;
+    }
+
+    .Nom {
+        grid-area: nom;
+    }
+
+    .Stk {
+        grid-area: stk;
+    }
+
+    .Pvp {
+        grid-area: pvp;
+    }
+
+    .Ico, .Cli, .Prg, .Img, .Prv {
+        display: none;
+    }
+
+    .Line {
+        grid-area:line;
+        border-bottom: 1px solid #DDDDDD;
+    }
+
+    .ContextMenu {
+        position: absolute;
+        box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background-color: lemonchiffon;
+        z-index: 10;
+        width: 100%;
+    }
+}
+
+
+/*------------------------ desktop ----------------------*/
+
+
+@media (min-width:600px) {
+
+    .HideOnDesktop {
+        display: none !important;
+    }
+
+    .Catalog {
+        display: grid;
+        grid-template-columns: minmax(100px,min-content) minmax(150px, min-content) 1fr;
+        grid-column-gap: 0;
+        font-size: 0.8em;
+    }
+
+        .Catalog > div {
+            position: relative;
+            border: 1px solid #DDDDDD;
+        }
+
+    .ColumnHeaders {
+        display: contents;
+    }
+
+    .Item {
+        position: relative;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 4px 7px 2px 4px;
+        margin: 0;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid #DDDDDD;
+        }
+
+        .Item.Selected {
+            background-color: lightblue;
+        }
+
+    .Skus {
+        display: grid;
+        grid-template-columns: min-content minmax(200px,1fr) 20px min-content min-content min-content min-content 20px min-content;
+    }
+
+        .Skus .Item {
+            position: relative;
+            display: contents;
+            cursor: pointer;
+        }
+            .Skus .Item.Selected div {
+                background-color: lightblue;
+            }
+
+            .Skus .Item:not(:last-child) div {
+                border-bottom: 1px solid #DDDDDD;
+            }
+
+            .Skus .Item div:not(:last-child) {
+                border-right: 1px solid #DDDDDD;
+            }
+
+            .Skus .Item .Nom {
+                position: relative;
+            }
+
+    .ColumnHeader {
+        color: gray;
+        padding: 0 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .Ref, .Nom, .Stk, .Cli, .Prg, .Pvp, .Prv {
+        padding: 0 5px;
+    }
+
+    .Ref, .Nom {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .Stk, .Cli, .Prg, .Pvp, .Prv {
+        text-align: right;
+    }
+
+    .BgGreen, .BgYellow, .BgSalmon, BgGray {
+        border-bottom: 1px solid white;
+        border-right: 1px solid white;
+    }
+
+    .BgGreen {
+        background-color: lightgreen;
+    }
+
+    .BgYellow {
+        background-color: lightyellow;
+    }
+
+    .BgSalmon {
+        background-color: lightsalmon;
+    }
+
+    .BgGray {
+        background-color: lightgray;
+    }
+
+    .HasImg {
+        background-image:url("/img/Camera-16.png");
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    .ContextMenu {
+        position: absolute;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        border: 1px solid black;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background-color: lemonchiffon;
+        z-index: 10;
+        min-width: 100px;
+        max-width: 100%;
+    }
+
+}

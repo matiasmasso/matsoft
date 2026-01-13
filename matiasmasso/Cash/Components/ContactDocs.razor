@@ -1,0 +1,144 @@
+﻿@inject ApiService ApiService
+
+
+@if (values == null)
+{
+    <div class="PageWrapper600">
+        <Loading></Loading>
+    </div>
+}
+else if (selectedItem != null)
+{
+    <ContactDoc Value="selectedItem"
+                     AfterUpdate="HandleAfterUpdate"
+                     AfterDelete="HandleAfterDelete"
+                     CloseRequest="@(()=>selectedItem = null)"></ContactDoc>
+}
+else
+{
+    <div class="PageWrapper600">
+
+        <PageOptions>
+            <ButtonExcel LoadRequest="LoadExcelBook"></ButtonExcel>
+            <a href="#" @onclick:preventDefault @onclick="AddNew">
+                Afegir
+            </a>
+        </PageOptions>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <a href="#" @onclick="@(()=>selectedItem = item)" @onclick:preventDefault class="Item">
+                    <div class="Doc">
+                        @if (item.Docfile == null)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            <Icon Id="Icon.Ids.Doc"></Icon>
+                        }
+                    </div>
+                    <div>@($"{item.Fch:dd/MM/yy}")</div>
+                    <div>@item.Ref</div>
+                </a>
+            }
+        </div>
+
+    </div>
+}
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public IModel? Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<ContactDocModel>? values;
+    ContactDocModel? selectedItem;
+    string? searchterm;
+    string? title;
+    string? targetNom;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+        if(Model is ContactModel)
+            targetNom = ((ContactModel)Model)?.FullNom;
+        else if(Model is EmpModel)
+            targetNom = ((EmpModel)Model)?.Nom;
+
+        title = $"Documents de {targetNom}";
+        try
+        {
+            values = await ApiService.GetAsync<List<ContactDocModel>>("ContactDocs", Model!.Guid.ToString());
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private List<ContactDocModel>? FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return values?.OrderByDescending(x => x.Fch).ToList();
+        else
+            return values?.Where(x => x.Matches(searchterm)).OrderByDescending(x => x.Fch).ToList();
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    void HandleAfterUpdate(ContactDocModel args)
+    {
+        var previous = values!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous == null)
+            values!.Add(args);
+        else
+        {
+            var idx = values!.IndexOf(previous);
+            values![idx] = args;
+        }
+        selectedItem = null;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void HandleAfterDelete(ContactDocModel args)
+    {
+        var previous = values!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous != null)
+            values!.Remove(previous);
+        selectedItem = null;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void AddNew()
+    {
+        selectedItem = new ContactDocModel
+            {
+                Target = Model!.Guid,
+                Fch = DateOnly.FromDateTime(DateTime.Today),
+                Ref = $"(nou document de {targetNom})"
+            };
+    }
+
+    void LoadExcelBook(DTO.Excel.Book book)
+    {
+        book.Filename = $"{title}.xlsx";
+        var sheet = book.AddSheet();
+        foreach (var item in FilteredItems() ?? new())
+        {
+            var url = item.Docfile?.DownloadUrl();
+            var row = sheet.AddRow();
+            row.AddCell($"{item.Fch:dd/MM/yy}");
+            row.AddCell(item.Ref, url);
+        }
+    }
+}

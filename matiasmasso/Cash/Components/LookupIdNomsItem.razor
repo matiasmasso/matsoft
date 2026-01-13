@@ -1,0 +1,52 @@
+﻿<div class="Wrapper @(SelectedValue == Value ? "Selected" : "")">
+    <a href="#" @onclick:preventDefault @onclick="ItemClick">@Value?.ToString()</a>
+
+    @if (isShowingMenu && SelectedValue == Value)
+    {
+        <div class="ContextMenu">
+            <a href="#" @onclick:preventDefault @onclick="@(()=>ContextMenuClick("Zoom"))">Zoom</a>
+            <a href="#" @onclick:preventDefault @onclick="@(()=>ContextMenuClick("AddNew"))">Add new</a>
+            <a href="#" @onclick:preventDefault @onclick="@(()=>ContextMenuClick("Remove"))">Remove</a>
+            <a href="#" @onclick:preventDefault @onclick="@(()=>ContextMenuClick("Cancel"))">Cancel</a>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public IdNom? Value { get; set; }
+    [Parameter] public IdNom? SelectedValue { get; set; }
+    [Parameter] public EventCallback<IdNom> ZoomRequest { get; set; }
+    [Parameter] public EventCallback<IdNom> AddNewRequest { get; set; }
+    [Parameter] public EventCallback<IdNom> RemoveRequest { get; set; }
+    [Parameter] public EventCallback<IdNom?> SelectedValueChanged { get; set; }
+
+    bool isShowingMenu;
+
+    void ItemClick()
+    {
+        isShowingMenu = !isShowingMenu;
+        SelectedValueChanged.InvokeAsync(Value);
+    }
+
+    void ContextMenuClick(string tag)
+    {
+        switch (tag)
+        {
+            case "Zoom":
+                ZoomRequest.InvokeAsync(Value);
+                break;
+            case "AddNew":
+                AddNewRequest.InvokeAsync(Value);
+                break;
+            case "Remove":
+                RemoveRequest.InvokeAsync(Value);
+                break;
+            case "Cancel":
+                SelectedValueChanged.InvokeAsync();
+                break;
+        }
+        isShowingMenu = false;
+        SelectedValueChanged.InvokeAsync();
+    }
+}

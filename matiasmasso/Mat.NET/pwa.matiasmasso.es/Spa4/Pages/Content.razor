@@ -1,0 +1,166 @@
+﻿@page "/news/{*Catchall}"
+@page "/blog/{*Catchall}"
+
+@using Spa4.Shared
+@using Spa4.ViewModels
+@inject HttpClient Http
+@inject AppState AppState
+
+
+@if (viewModel!.LoadStatus == Globals.LoadStatusEnum.Loading) {
+    <div>Loading...</div>
+} else if (@viewModel!.LoadStatus == Globals.LoadStatusEnum.Failed) {
+    <div>Failed...</div>
+} else {
+    <div class="Wrapper">
+    <h1>@viewModel!.Title</h1>
+
+    <div>@((MarkupString)viewModel!.Content)</div>
+
+    </div>
+}
+
+<style scoped>
+.Wrapper {
+    display:flex;
+    flex-direction:column;
+    width:100%;
+}
+
+h1 {
+    margin-top:0;
+}
+
+.Wrapper img {
+    margin-top:10px;
+}
+
+/* --------------------------------------Product Plugins --------------------------------*/
+
+.PluginWrapper .Plugin {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.8px;
+}
+
+    .PluginWrapper .Plugin .ChevronLeft, .Plugin .ChevronRight {
+        display: none;
+    }
+
+.PluginWrapper .Plugin > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+    .PluginWrapper .Plugin > div > a {
+        display: flex;
+        flex-direction: column;
+        align-self: self-end;
+        justify-content: center;
+        width: 150px;
+        color: black;
+    }
+
+        .PluginWrapper .Plugin > div > a img {
+            margin: 0;
+            height: auto;
+        }
+
+    .PluginWrapper .Plugin > div a > div:last-child {
+        word-wrap: normal;
+        text-align: center;
+    }
+
+
+.StoreLocatorCallToAction {
+    display: flex;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+    .StoreLocatorCallToAction a {
+        padding: 10px 20px;
+        font-weight: 600;
+        background-color: red;
+        color: white;
+        border-radius: 10px;
+    }
+
+        .StoreLocatorCallToAction a:hover {
+            background-color: orange;
+            color: white;
+        }
+
+
+/*----------------------------- Video ----------------------------------*/
+
+.video-responsive {
+    height: 0;
+    overflow: hidden;
+    padding-bottom: 56.25%;
+    /* padding-top: 30px; */
+    position: relative;
+}
+
+    .video-responsive iframe, .video-responsive object, .video-responsive embed {
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+    }
+
+@@media screen and (max-width:540px) {
+    .Plugin .ChevronLeft {
+        display: block;
+        font-size: 36px;
+    }
+
+    .Plugin .ChevronRight {
+        display: block;
+        font-size: 36px;
+        margin-left: 5px;
+    }
+
+    .Plugin > div {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 100%;
+    }
+
+    .PluginWrapper {
+        width: 100%;
+        display: flex;
+    }
+
+    .Plugin {
+        width: 100%;
+    }
+
+        .Plugin > div::-webkit-scrollbar {
+            display: none;
+        }
+}
+
+</style>
+
+
+@code {
+    [Parameter]
+    public string? Catchall { get; set; }
+
+    private ContentViewModel? viewModel;
+
+    protected override  Task OnInitializedAsync()
+    {
+        viewModel = new ContentViewModel(AppState, Catchall ?? "" );
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch(Http);
+        return base.OnInitializedAsync();
+    }
+}

@@ -1,0 +1,142 @@
+﻿@inherits _Base
+
+<h1>
+    @value?.AbrOrNom()
+</h1>
+
+<TabControl >
+    <TabPage Text="@Localizer("Properties")">
+
+        @if (value == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <PropertyGrid model="@gridModel"
+                      SetDirty="@(()=>isDirty=true)"
+                      CanEdit="@true"></PropertyGrid>
+
+            <div class="ButtonsBar">
+                <ButtonsBar CanEdit="@true"
+                          IsDirty="isDirty"
+                          IsUpdating="isUpdating"
+                          CanDelete="@(!(value?.IsNew ?? false))"
+                          RequestToCancel="CancelRequest"
+                          RequestToUpdate="UpdateRequest"></ButtonsBar>
+            </div>
+        }
+
+
+    </TabPage>
+
+    <TabPage Text="@Localizer("JornadaLaboral")">
+        <StaffJornadasLaborals Guid="Guid"></StaffJornadasLaborals>
+    </TabPage>
+    <TabPage Text="@Localizer("Payrolls")">
+        <StaffNominas Guid="Guid"></StaffNominas>
+    </TabPage>
+    <TabPage Text="@Localizer("CertsIrpf")">
+        <CertificatsIrpf Guid="Guid"></CertificatsIrpf>
+    </TabPage>
+
+</TabControl>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private StaffModel? value;
+    private PropertyGridModel? gridModel;
+    private bool isDirty;
+    private bool isUpdating;
+    private ProblemDetails? problemDetails;
+
+    private enum Fields : int
+    {
+        Nom,
+        Abr,
+        Nif,
+        NumSS,
+        Position,
+        Address,
+        FchFrom,
+        FchTo,
+        Birthday,
+        Iban,
+        Tel,
+        Email
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var apiResponse = await GetAsync<StaffModel>("Staff", Guid.ToString());
+        if (apiResponse.Value != null)
+        {
+            value = apiResponse.Value;
+            var model = new PropertyGridModel(value);
+            model.AddString((int)Fields.Nom, value.Nom, Localizer("Name"));
+            model.AddString((int)Fields.Abr, value.Abr, Localizer("Alias"));
+            model.AddString((int)Fields.Nif, value.Nif, Localizer("Vat"));
+            model.AddString((int)Fields.NumSS, value.NumSS, Localizer("Soc.Sec.Number"));
+            //model.AddEnum((int)Fields.Position, value.Position, value.Position?.Guid.ToString(), value.Position?.Nom.Tradueix(base.Lang()), "Cargo", "Carrec", "Position");
+            model.AddAddress((int)Fields.Address, value.Address, Localizer("Address"));
+            model.AddFch((int)Fields.Birthday, value.Birthday, Localizer("Birthday"));
+            model.AddFch((int)Fields.FchFrom, value.FchFrom, Localizer("EntryDate"));
+            model.AddFch((int)Fields.FchTo, value.FchTo, Localizer("TerminationDate"));
+            //model.AddIban((int)Fields.Iban, value.Iban);
+            foreach (var tel in value.Telefons)
+            {
+                //model.AddTel((int)Fields.Tel, tel);
+            }
+            foreach (var email in value.Emails)
+            {
+                //model.AddEmail((int)Fields.Email, email);
+            }
+            gridModel = model;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+            StateHasChanged();
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        var cc = new System.Globalization.CultureInfo("es-ES");
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value!.Abr = gridModel!.GetString((int)Fields.Abr);
+        value!.NumSS = gridModel!.GetString((int)Fields.NumSS);
+        value!.Position = gridModel!.GetValue<StaffModel.StaffPos?>((int)Fields.Position);
+        value!.Birthday = gridModel!.GetValue<DateTime?>((int)Fields.Birthday);
+        value!.FchFrom = gridModel!.GetValue<DateTime?>((int)Fields.FchFrom);
+        value!.FchTo = gridModel!.GetValue<DateTime?>((int)Fields.FchTo);
+        value!.Iban = gridModel!.GetValue<IbanModel?>((int)Fields.Iban);
+
+
+        var apiResponse = await PostAsync<StaffModel, bool>(value, "Staff");
+        if (apiResponse?.Value != null)
+            CancelRequest();
+        else
+            problemDetails = apiResponse?.ProblemDetails;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<bool>("Staff/delete", value!.Guid.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse?.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+}
+

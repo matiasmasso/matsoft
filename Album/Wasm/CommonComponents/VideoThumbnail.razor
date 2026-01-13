@@ -1,0 +1,45 @@
+﻿@inject IJSRuntime JS
+
+<div class="video-thumb-wrapper">
+    <div class="filmstriptop"></div>
+
+    <div class="video-thumb-content" style="@AspectStyle">
+        <img class="thumbnail" src="@ThumbnailUrl" draggable="false" />
+    </div>
+
+    <div class="filmstripbottom"></div>
+</div>
+
+@* <a href="#" class="container" @onclick="HandleOnClick">
+    <div class="filmstriptop"></div>
+    <div style="@AspectStyle">
+    <img class="thumbnail" src="@ThumbnailUrl"
+               draggable="false"
+             ondragstart="return false;" />
+    </div>
+    <div class="filmstripbottom"></div>
+</a> *@
+
+@code {
+    [Parameter, EditorRequired] public string ThumbnailUrl { get; set; } = default!;
+    [Parameter] public EventCallback OnClick { get; set; }
+    private string AspectStyle = "aspect-ratio: 16/9;"; // fallback
+    private record ImageDims(int Width, int Height);
+
+    private async Task OnImageLoaded(ProgressEventArgs e)
+    {
+        // JS interop needed to read naturalWidth/naturalHeight
+        var dims = await JS.InvokeAsync<ImageDims>("getImageDims", ThumbnailUrl);
+
+        if (dims.Width > 0 && dims.Height > 0)
+        {
+            AspectStyle = $"aspect-ratio: {dims.Width} / {dims.Height};";
+            StateHasChanged();
+        }
+    }
+
+    void HandleOnClick()
+    {
+        OnClick.InvokeAsync();
+    }
+}

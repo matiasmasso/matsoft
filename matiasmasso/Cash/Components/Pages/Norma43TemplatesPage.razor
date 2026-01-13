@@ -1,0 +1,112 @@
+﻿@using DTO.Integracions.Banca
+@page "/Norma43Templates"
+@inject ApiService ApiService
+
+@if (selectedItem != null)
+{
+    <Norma43Template Value="selectedItem"
+        AfterUpdate="HandleAfterUpdate"
+                     AfterDelete="HandleAfterDelete"
+                     CloseRequest="@(()=>selectedItem =null)"></Norma43Template>
+}
+else
+{
+    <div class="PageWrapper600">
+        <h3>Plantilles norma 43</h3>
+
+        @if (allValues == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <PageOptions>
+                <LookupEmp Value="emp" ValueChanged="HandleEmpChanged"></LookupEmp>
+            </PageOptions>
+
+            <div class="Searchbox">
+                <SearchBox @bind-Value="searchterm"></SearchBox>
+            </div>
+
+            <div class="Grid">
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>selectedItem =item)">
+                        <div class="Truncate">@item.Pattern</div>
+                        <div class="Truncate">@ApiService.GetPgcCta(item.Cta)?.ToString()</div>
+                    </a>
+                }
+            </div>
+        }
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+
+
+@code {
+    List<Norma43.Template>? allValues;
+    Norma43.Template? selectedItem;
+    List<GuidNom>? contacts;
+    List<GuidNom>? projectes;
+    Exception? exception;
+    EmpModel.EmpIds? emp;
+    string? searchterm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            emp = ApiService.DefaultEmp();
+            var allProjectes = await ApiService.GetAsync<List<ProjecteModel>>("projectes");
+            projectes = allProjectes?.Where(x => x.Emp == emp)?.Select(x => x.ToGuidNom()).ToList();
+            var allContacts = await ApiService.GetAsync<List<ContactModel>>("contacts");
+            contacts = allContacts?.Where(x => x.Emp == emp)?.Select(x => x.ToGuidNom()).ToList();
+            allValues = await ApiService.GetAsync<List<Norma43.Template>>("Norma43Templates");
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    List<Norma43.Template>? FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return allValues?.Where(x => x.Emp == emp)
+            .OrderBy(x => x.Pattern)
+            .ToList();
+        else
+            return allValues?.Where(x => x.Emp == emp && x.Matches(searchterm))
+            .OrderBy(x => x.Pattern)
+            .ToList();
+    }
+
+
+    void HandleEmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    void HandleAfterUpdate(Norma43.Template args)
+    {
+        var previous = allValues!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous == null)
+            allValues!.Add(args);
+        else
+        {
+            var idx = allValues!.IndexOf(previous);
+            allValues![idx] = args;
+        }
+
+        allValues = allValues!.OrderBy(x => x.Pattern).ToList();
+        selectedItem = null;
+    }
+
+    void HandleAfterDelete(Norma43.Template args)
+    {
+        var previous = allValues!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous != null)
+            allValues!.Remove(previous);
+        selectedItem = null;
+    }
+}

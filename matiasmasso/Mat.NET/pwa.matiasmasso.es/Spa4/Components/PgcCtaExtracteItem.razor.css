@@ -1,0 +1,84 @@
+﻿.Contents.ShowOnDesktop {
+    display: contents;
+}
+
+.Contents.ShowOnMobile {
+    display: none;
+}
+
+.Ico {
+    display: block;
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+}
+
+    .Ico.Doc {
+        background-image: url(/img/pdf-36.png);
+    }
+
+.Fch {
+    display: block;
+}
+
+
+
+.Concept {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.TH {
+    color: gray;
+}
+
+.Grayed {
+    color: gray;
+}
+
+.Deb, .Hab, .Sdo {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.Deb, .Hab {
+    color: gray;
+}
+
+
+
+@media (min-width:600px) {
+
+    .ShowOnMobile {
+        display: none;
+    }
+}
+
+
+
+@media (max-width:599px) {
+
+    .Contents.ShowOnDesktop {
+        display: none;
+    }
+
+    .Contents.ShowOnMobile {
+        display: contents;
+    }
+
+    .Concept {
+        grid-column: 2/-1;
+    }
+
+    .ShowOnDesktop {
+        display: none;
+    }
+
+    .Line {
+        grid-column: 1/-1;
+        border-bottom: 1px solid gray;
+        margin: 10px 0;
+    }
+}

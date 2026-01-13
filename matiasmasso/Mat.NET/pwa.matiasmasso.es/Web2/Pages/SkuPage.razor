@@ -1,0 +1,42 @@
+﻿@page "/sku/{Guid:guid}"
+@page "/{LangSegment}/sku/{Guid:guid}"
+
+@implements IDisposable
+@inject CultureService culture
+@inject ProductsService productsService
+
+<div class="PageWrapper600">
+    <h3>@model?.NomLlarg?.Tradueix(culture.Lang())</h3>
+    <TabControl>
+        <TabPage Text="@culture.Localize("General")"></TabPage>
+    </TabControl>
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    ProductSkuModel? model;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        productsService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        model = productsService.Sku(guid);
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        productsService.OnChange -= Refresca;
+    }
+}

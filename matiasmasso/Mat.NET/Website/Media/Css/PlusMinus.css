@@ -1,0 +1,28 @@
+﻿        .Expanded, .Collapsed, .NoChildren {
+            padding-left: 20px;
+        }
+
+
+        .PlusMinus {
+            display: inline-block;
+            width: 20px;
+            height: 22px;
+            background-size: 100%;
+            background-repeat: no-repeat;
+        }
+
+        .Collapsed > .PlusMinus {
+            background-image: url(https://www.matiasmasso.es/media/img/ico/plus.gif);
+        }
+
+        .Expanded > .PlusMinus {
+            background-image: url(https://www.matiasmasso.es/media/img/ico/minus.gif);
+        }
+        
+        .Collapsed > .Expanded, .Collapsed > .Collapsed, .Collapsed > .NoChildren {
+            display: none;
+        }
+
+        .Expanded > .Expanded, .Expanded > .Collapsed, .Expanded > .NoChildren {
+            display: block;
+        }

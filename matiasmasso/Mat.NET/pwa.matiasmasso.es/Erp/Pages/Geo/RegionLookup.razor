@@ -1,0 +1,77 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    @if (isEditing)
+    {
+        <input type="text" @bind="searchTerm" @bind:event="oninput" />
+        <div class="Dropdown">
+            <Regions_List Model="FilteredItems()" SelectedItemChanged="OnItemSelected"></Regions_List>
+        </div>
+
+    }
+    else
+    {
+        <UxCaptionEllipsis Tag="Value"
+                       Caption="@caption"
+                       OnClick="EditRequest"
+                       HideEllipsis="HideEllipsis"
+                       OnEllipsis="ToggleContextMenu"></UxCaptionEllipsis>
+
+        @if (Value != null && isShowingMenu)
+        {
+            <ContextMenu_Deprecated Model="ContextMenuModel.Factory(Value)" OnClick="@(()=>isShowingMenu = false)"></ContextMenu_Deprecated>
+        }
+
+    }
+</div>
+
+@code {
+    [Parameter] public bool HideEllipsis { get; set; } = false;
+    [Parameter] public RegionModel Value { get; set; }
+    [Parameter] public EventCallback<RegionModel> ValueChanged { get; set; }
+
+    string caption;
+    string searchTerm;
+    bool isEditing = false;
+    bool isShowingMenu = false;
+    CountryModel country;
+    CacheDTO cache = AppState.DefaultCache();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        caption = Value?.Nom;
+        var countryGuid = Value == null ? CountryModel.Wellknown(CountryModel.Wellknowns.Spain).Guid : Value.Country;
+        country = cache.Country(countryGuid);
+    }
+
+    void ToggleContextMenu()
+    {
+        isShowingMenu = !isShowingMenu;
+    }
+
+    void EditRequest()
+    {
+        isEditing = true;
+        searchTerm = caption;
+    }
+
+    List<RegionModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm) || searchTerm == caption)
+            return CountryRegions();
+        else
+            return CountryRegions().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<RegionModel> CountryRegions() => cache.Regions.Where(x => x.Country == country.Guid).ToList();
+
+
+    void OnItemSelected(RegionModel item)
+    {
+        isEditing = false;
+        //caption = Value?.Nom.Tradueix(base.Lang());
+        ValueChanged.InvokeAsync(item);
+    }
+}

@@ -1,0 +1,159 @@
+﻿@inherits _Base
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedItem == null)
+    {
+        <h1>
+            @Localizer("PurchaseOrders")
+        </h1>
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+                <select value="@year" @onchange="@YearChanged" class="@( model.Years.Count==0 ? "Hidden":"")">
+                    @foreach (var i in model.Years)
+                    {
+                        <option>@i.ToString()</option>
+                    }
+                </select>
+            </PageOptions>
+        </div>
+
+        <div class="SearchBox">
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+        </div>
+
+        <div class="Summary">
+            @Localizer("PurchaseOrders.Count",model.Items.Count().ToString())
+        </div>
+
+        <div class="Grid">
+            <div class="DesktopContents">
+                <div class="TH Id">@Localizer("Id")</div>
+                <div class="TH Fch">@Localizer("Fch")</div>
+                <div class="TH Doc">&nbsp;</div>
+                <div class="TH Cli">@Localizer("Customer")</div>
+                <div class="TH Amt">@Localizer("Amount")</div>
+                <div class="TH Pdd">@Localizer("Concept")</div>
+                <div class="TH Usr">@Localizer("User")</div>
+
+
+                <!-- to set margin from column captions -->
+                <div class="THSpacer">&nbsp;</div>
+
+
+                <!-- to compensate Virtualize bug, set an empty row of Columns.Count-1 -->
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+
+            <Virtualize Items="@FilteredItems()" Context="item">
+                <a class="ItemContents" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Id">@item.Id</div>
+                    <div class="Fch">@item.Fch.ToString("dd/MM/yy")</div>
+                    <div class="Doc @(item.HasDoc() ? "HasDoc":"NoDoc")"></div>
+                    <div class="Cli">@(item.Contact?.Nom ?? "")</div>
+                    <div class="Amt">@item.Amt?.CurFormatted()</div>
+                    <div class="Pdd">@item.Concept</div>
+                    <div class="Usr">@item.User</div>
+                </a>
+            </Virtualize>
+        </div>
+
+    }
+    else
+    {
+        <PurchaseOrder Guid="selectedItem.Guid" CloseRequest="@(()=>selectedItem = null)"></PurchaseOrder>
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    private PurchaseOrderListDTO? model;
+    private string? searchTerm;
+    private int year;
+    private PurchaseOrderListDTO.Item? selectedItem = null;
+    private UserModel? user;
+    private  ProblemDetails? problemDetails;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            user = await base.GetUser();
+            await Refresca();
+        }
+    }
+
+
+    private List<PurchaseOrderListDTO.Item> FilteredItems()
+    {
+        return model!.Items
+        .Where(x => x.Matches(searchTerm))
+        .OrderByDescending(x => x.Fch.Year)
+        .ThenByDescending(x => x.Id)
+        .ToList();
+    }
+
+
+    private async Task YearChanged(ChangeEventArgs e)
+    {
+        year = int.Parse(e.Value!.ToString()!);
+        model = null;
+        await Refresca();
+    }
+    private async Task Refresca()
+    {
+        ApiResponse<PurchaseOrderListDTO> apiResponse = null;
+        if (user.IsCustomer())
+        {
+            apiResponse = await GetAsync<PurchaseOrderListDTO>("PurchaseOrderList");
+        }
+        else
+        {
+            apiResponse = await GetAsync<PurchaseOrderListDTO>("PurchaseOrderList", ((int)Globals.DefaultEmp).ToString(), year.ToString());
+        }
+        if (apiResponse.Success())
+        {
+            model = apiResponse.Value;
+            if (year == 0) year = model.Years.First();
+        }
+        else
+        {
+            problemDetails = apiResponse.ProblemDetails;
+        }
+        StateHasChanged();
+    }
+
+
+    private string LoadingMessage()
+    {
+        if (year == 0)
+            return base.Tradueix("Cargando últimos pedidos", "Carregant comandes recents", "Loading last purchase orders");
+        else
+            return string.Format(base.Tradueix("Cargando pedidos del {0}", "Carregant comandes del {0}", "Loading {0} purchase orders"), year);
+    }
+
+    private void ItemClick(PurchaseOrderListDTO.Item item)
+    {
+        selectedItem = item;
+    }
+
+    private void RequestToClose()
+    {
+        selectedItem = null;
+    }
+
+}

@@ -1,0 +1,79 @@
+﻿@page "/Brand/{Guid:guid}"
+@inherits _ComponentBase
+
+<h3>@value?.Nom.Tradueix(base.Lang())</h3>
+
+<PropertyGrid model="@gridModel"
+              RequestToUpdate="SaveRequest"
+              RequestToDelete="DeleteRequest"
+              RequestToCancel="CancelRequest"
+              ErrorMessage="@errorMessage"></PropertyGrid>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private CacheDTO cache;
+    private ProductBrandModel? value;
+    private PropertyGridModel? gridModel;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        Nom
+    }
+
+    protected override void OnInitialized()
+    {
+        cache = AppState.DefaultCache();
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (value == null)
+        {
+            value = cache.Brand(guid);
+            var model = new PropertyGridModel();
+            model.AddLangText((int)Fields.Nom, value.Nom, "Nombre", "Nom", "Name");
+            //model.AddString((int)Fields.NomEsp, value.Nom?.Esp ?? "", "Español", "Espanyol", "Spanish");
+            //model.AddString((int)Fields.NomCat, value.Nom?.Cat ?? "", "Catalán", "Català", "Catalan");
+            //model.AddString((int)Fields.NomEng, value.Nom?.Eng ?? "", "Inglés", "Anglès", "English");
+            //model.AddString((int)Fields.NomPor, value.Nom?.Por ?? "", "Portugués", "Portuguès", "Portuguese");
+            gridModel = model;
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task SaveRequest()
+    {
+        value!.Nom = (LangTextModel)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Nom)?.Value;
+        //value!.Nom!.Cat = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomCat)?.Value?.ToString();
+        //value!.Nom!.Eng = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomEng)?.Value?.ToString();
+        //value!.Nom!.Por = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomPor)?.Value?.ToString();
+
+        if (await PostAsync<ProductBrandModel, bool>(value, "Brand"))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Brand/delete", value!.Guid.ToString()))
+        {
+            cache!.Brands.Remove(value);
+            CancelRequest();
+        }
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+            NavigateToPage("/catalog");
+    }
+
+}
+

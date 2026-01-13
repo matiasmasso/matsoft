@@ -1,0 +1,41 @@
+﻿.Item > *:not(:first-child) {
+    padding-left: 10px;
+}
+
+
+@media(max-width:599px){
+    .Grid {
+        display:flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 50% 50%;
+        padding:10px 0;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid gray;
+        }
+
+}
+
+@media(min-width:600px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: 50% 50%;
+    }
+
+    .Item {
+        display:contents;
+    }
+
+    .Item > *{
+        padding:4px 0 2px;
+    }
+
+    .Item:not(:last-child){
+        border-bottom:1px solid #DDDDDD;
+    }
+}

@@ -1,0 +1,103 @@
+﻿<div class="Wrapper">
+    @if (CanEdit && isEditing)
+    {
+        @if (Multiline)
+        {
+            <textarea @oninput="TextareaChange" 
+              @onblur="@(()=>{isEditing = false;})">
+                @((MarkupString)_innerControlValue.Replace(Environment.NewLine, "<br/>"))
+                    </textarea>
+        }
+        else
+        {
+            <input type="@(IsPassword & !isShowingPassword ? "password" : "text")"
+           autofocus
+           maxlength="@(MaxLength == null? "524288" : MaxLength)"
+           @bind-value="@_innerControlValue"
+           @onblur="@(()=>{isEditing = false;})" />
+        }
+    }
+    else
+    {
+        <a class="Display" href="#" @onclick="@(()=>{isEditing = true;})" @onclick:preventDefault="true">
+            @if (string.IsNullOrEmpty(_innerControlValue))
+            {
+                <div>&nbsp;</div>
+            }
+            else if (IsPassword & !isShowingPassword)
+            {
+                <div class="Truncate">
+                    @(new string('*', _innerControlValue.Length))
+                </div>
+            }
+            else
+            {
+                <div class="@(Multiline  ? "Multiline":"Text")">
+                    @((MarkupString)_innerControlValue.Replace(Environment.NewLine, "<br/>"))
+                </div>
+            }
+        </a>
+    }
+
+    <div class="ButtonsBar">
+        @if (IsPassword)
+        {
+            <a href="#" @onclick="@(()=>{isShowingPassword = !isShowingPassword;})" @onclick:preventDefault="true">
+                <i class="fa-solid fa-eye"></i>
+            </a>
+        }
+    </div>
+
+</div>
+
+@code {
+    //[Parameter] public string? Value { get; set; }
+    [Parameter] public Object? Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public bool IsPassword { get; set; } = false;
+
+    [Parameter] public bool Multiline { get; set; }
+    [Parameter] public int? Cols { get; set; } = 20;
+    [Parameter] public int? Rows { get; set; } = 2;
+    [Parameter] public int? MaxLength { get; set; }
+
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+    private bool isShowingPassword = false;
+    private bool isEditing = false;
+
+    protected override void OnParametersSet()
+    {
+        isEditing = IsEditing;
+    }
+
+    private string _innerControlValue
+    {
+        get => Value?.ToString() ?? "";
+        set
+        {
+            if (Value?.ToString() != value)
+            {
+                Value = value;
+
+                if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                    ObjChanged.InvokeAsync(value);
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    private void TextareaChange(ChangeEventArgs args)
+    {
+        var value = (args?.Value?.ToString() ?? "").Replace("<br/>", Environment.NewLine);
+        if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+            ObjChanged.InvokeAsync(value);
+        if (ValueChanged.HasDelegate)
+            ValueChanged.InvokeAsync(value);
+    }
+
+
+
+}

@@ -1,0 +1,75 @@
+﻿@implements IDisposable
+
+@inject CultureService culture
+@inject SessionStateService session
+@inject NoticiasService noticiasService
+
+<div class="Wrapper">
+    @if (items == null)
+    {
+        <Loading></Loading>
+    } else if(selectedItem != null)
+    {
+        <Noticia Model="selectedItem" CancelRequest="@(()=>selectedItem = null)"></Noticia>
+    } else
+    {
+        <div class="Grid">
+            @foreach (var item in items)
+            {
+                <a class="Item @(IsVisible(item) ? "" : "Hidden")"
+                   href="#"
+                   @onclick="@(()=>selectedItem = item)"
+                   @onclick:preventDefault>
+
+                    <div class="Thumbnail">
+                        <img src="@item.ThumbnailUrl()" />
+                    </div>
+
+                    <div class="Label">
+                        @item.Caption
+                    </div>
+                </a>
+            }
+        </div>
+
+        <div class="SeeMore">
+            <a href="#" @onclick="@(()=>{VisibleCount+=visibleInterval;})" @onclick:preventDefault="true">
+                @culture.Tradueix("ver más","veure mes","see more")
+            </a>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int? VisibleCount { get; set; } = 12;
+    [Parameter] public Guid? HideThis { get; set; } //to hide displayed noticia on side list
+
+    int visibleInterval = 12;
+    List<NoticiaModel>? items;
+    NoticiaModel? selectedItem;
+
+    protected override void OnInitialized()
+    {
+        noticiasService.OnChange += Refresca;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        items = noticiasService.UserValues(session.User, culture.Lang(), HideThis);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool IsVisible(NoticiaModel item)
+    {
+        var idx = items?.IndexOf(item);
+        var retval = idx < VisibleCount;
+        return retval;
+    }
+
+    public void Dispose()
+    {
+        noticiasService.OnChange -= Refresca;
+    }
+
+}

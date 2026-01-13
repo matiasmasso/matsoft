@@ -1,0 +1,42 @@
+﻿<div class="Wrapper">
+    <a href="#" @onclick:preventDefault @onclick="@(()=>isEditing=!isEditing)">
+        @value.ToString()
+    </a>
+
+    @if (isEditing)
+    {
+
+        <div class="Dropdown">
+            @foreach (var item in Values ?? new())
+            {
+                <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>OnClick(item))">
+                    @item.ToString()
+                </a>
+            }
+        </div>
+    }
+
+</div>
+
+
+@code {
+    [Parameter] public List<int>? Values { get; set; }
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+
+    bool isEditing;
+    private int? value;
+
+    protected override void OnParametersSet()
+    {
+        value = Value;
+        base.OnParametersSet();
+    }
+
+    void OnClick(int? args = null)
+    {
+        if (value != args)
+            ValueChanged.InvokeAsync(args);
+        isEditing = false;
+    }
+}

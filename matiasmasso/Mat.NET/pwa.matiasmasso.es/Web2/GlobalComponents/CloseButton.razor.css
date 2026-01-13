@@ -1,0 +1,8 @@
+﻿.Wrapper ::deep path {
+    fill: #BBBBBB;
+    width:40px;
+}
+
+    .Wrapper:hover ::deep path {
+        fill: black;
+    }

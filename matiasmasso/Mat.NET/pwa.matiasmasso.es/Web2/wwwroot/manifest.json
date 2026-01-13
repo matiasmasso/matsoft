@@ -1,0 +1,26 @@
+{
+  "name": "M+O",
+  "lang": "es-es",
+  "short_name": "M+O",
+  "description": "M+O erp",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#3367D6",
+  "theme_color": "#3367D6",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/LogoMmo512.png",
+      "sizes": "512x512"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/test",
+      "accept": {
+        "text/plain": [ ".txt" ]
+      }
+    }
+  ]
+}

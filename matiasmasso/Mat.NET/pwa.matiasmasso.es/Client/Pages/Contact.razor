@@ -1,0 +1,64 @@
+﻿@page "/contact/{Guid:guid}"
+@using Client.Shared
+@using Client.ViewModels
+@layout ProLayout
+@inject AppState AppState
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <EditForm Model="@viewModel" OnValidSubmit="@Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            Rao social: <InputText id="nom" @bind-Value="viewModel!.Model.RaoSocial" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Nom comercial: <InputText id="nom" @bind-Value="viewModel!.Model.NomComercial" class="form-control" />
+        </div>
+
+        <Address Model=viewModel!.Model.Address ></Address>
+
+        <br />
+
+      <div class="Buttons">
+          <button type="submit" class="btn btn-success">Update</button>
+          <input type="button" form="my-form-ref" class="btn btn-secondary" @onclick=Delete value="Delete"/>
+          <input type="button" form="my-form-ref" class="btn btn-secondary" @onclick=Cancel value="Cancel"/>
+      </div>
+      </EditForm>
+}
+
+@code {
+    [Parameter]
+    public Guid Guid { get; set; }
+
+    private ContactViewModel? viewModel;
+
+
+    protected override Task OnParametersSetAsync()
+    {
+        viewModel = new ContactViewModel(AppState, Guid);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+        return base.OnParametersSetAsync();
+    }
+
+    private void Submit()
+    {
+        
+    }
+
+    private void Delete()
+    {
+        
+    }
+
+    private void Cancel()
+    {
+        
+    }
+
+}

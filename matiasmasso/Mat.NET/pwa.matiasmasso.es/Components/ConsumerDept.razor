@@ -1,0 +1,58 @@
+﻿@inherits _Base
+
+@if (model == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="Wrapper">
+        <div class="Breadcrumbs">
+            <Breadcrumbs Model="breadcrumbs"></Breadcrumbs>
+        </div>
+
+        <div class="Content">
+            @(model?.Content == null ? null : (MarkupString)model?.Content)
+            <CategoriesGallery Model="@Categories()"></CategoriesGallery>
+        </div>
+
+        <div id="StoreLocator">
+            <StoreLocator Model="model.StoreLocator"></StoreLocator>
+        </div>
+
+        <Error ProblemDetails="problemDetails"></Error>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    private List<Box> breadcrumbs = new();
+    private string? content;
+    private ProductLandingPageDTO? model;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (model == null)
+        {
+            var apiResponse = await GetAsync<ProductLandingPageDTO>("ProductLandingPage", Guid.ToString());
+            if (apiResponse.Success())
+            {
+                model = apiResponse.Value;
+                breadcrumbs = model!.Breadcrumbs(Cache!, base.Lang());
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+    }
+
+    List<ProductCategoryModel> Categories()
+    {
+        return Cache.Categories
+        .Where(x => x.Dept == Guid && x.Obsoleto == false && x.Codi <= (int)ProductCategoryModel.Codis.accessories && x.HasImage)
+        .OrderBy(x => x.Codi)
+        .ThenBy(x => x.Nom?.Tradueix(base.Lang()))
+        .ToList(); 
+    }
+
+}

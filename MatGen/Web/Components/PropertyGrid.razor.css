@@ -1,0 +1,38 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-items: flex-start;
+    min-height: 150px;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    /*    grid-template-columns: minmax(100px, min-content) 1fr;
+*/ border: 1px solid #DDDDDD;
+}
+
+.Label {
+    background-color: #EEEEEE;
+    padding: 4px 7px 2px 4px;
+    border-bottom: 2px solid white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Value {
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+}
+
+.ButtonsBar {
+    margin-top: 15px;
+}
+
+.ErrorMessage {
+    margin-top: 15px;
+}

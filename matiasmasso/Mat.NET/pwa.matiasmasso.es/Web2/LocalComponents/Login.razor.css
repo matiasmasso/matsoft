@@ -1,0 +1,22 @@
+﻿.Wrapper {
+    max-width:600px;
+    margin:15px auto;
+}
+
+.Grid {
+    max-width:300px;
+    margin:auto;
+}
+
+.Value {
+    margin:5px 0 15px;
+}
+
+input[type="text"], input[type="password"]{
+    width:100%;
+    padding:4px 7px 2px 4px;
+}
+
+.Button {
+    width:100%;
+}

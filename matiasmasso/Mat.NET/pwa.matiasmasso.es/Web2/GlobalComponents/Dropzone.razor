@@ -1,0 +1,64 @@
+﻿@inject CultureService culture
+
+<div class="Wrapper">
+    @if (isLoading)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <label>
+            <span class="Info HideOnMobile">@culture.Localize("DropAFileOrClickToPick")</span>
+            <span class="Info HideOnDesktop">@culture.Localize("TapToPickAFile")</span>
+            <InputFile multiple OnChange="@LoadFiles" />
+        </label>
+    }
+
+    <div class="Files">
+        @foreach (var file in files ?? new())
+        {
+            <div class="Item">
+                <div class="Icon">
+                    <Icon Id="Icon.Ids.Doc" Width="32px"></Icon>
+                    <div class="Remove" @onclick="@(()=>RemoveRequest(file))">
+                        <Icon Id="Icon.Ids.XmarkRedCircle" />
+                    </div>
+                </div>
+                <div class="Filename">
+                    @file.Name
+                </div>
+                <div class="Features">
+                    @Features(file)
+                </div>
+            </div>
+
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public EventCallback<List<IBrowserFile>> OnChange { get; set; }
+    List<IBrowserFile>? files;
+    bool isLoading;
+
+
+    async Task LoadFiles(InputFileChangeEventArgs args)
+    {
+        files = args.GetMultipleFiles().ToList();
+        StateHasChanged();
+        await OnChange.InvokeAsync(files);
+    }
+
+    string Features(IBrowserFile file)
+    {
+        return string.Format("{0}, {1} bytes", file.ContentType, file.Size);
+    }
+
+    async Task RemoveRequest(IBrowserFile file)
+    {
+        files?.Remove(file);
+        await OnChange.InvokeAsync(files);
+    }
+
+}

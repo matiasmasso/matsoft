@@ -1,0 +1,230 @@
+﻿@using ImageMagick;
+@using System.Drawing;
+@inject CultureService culture
+@inject IWebHostEnvironment hostEnvironment
+
+<div class="Wrapper">
+    @if (isLoading)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <label class="@(hasErrors ? "Warning":"") @(isDraggingOver ? "Hover":"")" @ondragover="@(()=>isDraggingOver = true)" @ondragleave="@(()=>isDraggingOver = false)">
+            @if (hasErrors)
+            {
+                <span class="Warning"><Icon Id="Icon.Ids.Warning"></Icon></span>
+                @if (ErrSizeTooLarge)
+                {
+                    <span>@culture.Localize("TotalFileSizeOver",string.Format("{0} Mb",MbMaxLength ))</span>
+                }
+                @if (ErrForbiddenMime)
+                {
+                    <span>@culture.Localize("FileMimesAccepted",Accept)</span>
+                }
+            }
+            else
+            {
+                <span class="HideOnMobile">@culture.Localize("DropAFileOrClickToPick")</span>
+                <span class="HideOnDesktop">@culture.Localize("TapToPickAFile")</span>
+            }
+            <InputFile OnChange="@LoadFiles" />
+        </label>
+    }
+
+    <div class="Grid">
+        @foreach (var dropfile in docfiles)
+        {
+            <div class="Item">
+                <div class="Icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                        <path d="M0 64C0 28.65 28.65 0 64 0H204.1C216.8 0 229.1 5.057 238.1 14.06L369.9 145.9C378.9 154.9 384 167.2 384 179.9V448C384 483.3 355.3 512 320 512H64C28.65 512 0 483.3 0 448V64zM368 448V179.9C368 178.6 367.9 177.3 367.8 176H248C225.9 176 208 158.1 208 136V16.24C206.7 16.08 205.4 16 204.1 16H64C37.49 16 16 37.49 16 64V448C16 474.5 37.49 496 64 496H320C346.5 496 368 474.5 368 448zM361.1 160C360.3 159 359.5 158.1 358.6 157.3L226.7 25.37C225.9 24.5 224.1 23.68 224 22.93V136C224 149.3 234.7 160 248 160H361.1z" />
+                    </svg>
+                    <div class="Remove" @onclick="@(()=>RemoveRequest(dropfile))">
+                        <Icon Id="Icon.Ids.XmarkRedCircle" />
+                    </div>
+                </div>
+                <div class="Features">
+                    @dropfile.Filename<br />@dropfile.Features()
+                </div>
+
+            </div>
+        }
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public List<DocFileModel>? Values { get; set; }
+    [Parameter] public EventCallback<List<DocFileModel>> ValuesChanged { get; set; }
+    [Parameter] public string? Accept { get; set; }
+    [Parameter] public int? MbMaxLength { get; set; }
+
+    bool isLoading;
+    bool ErrSizeTooLarge;
+    bool ErrForbiddenMime;
+    bool hasErrors;
+    bool isDraggingOver;
+    List<DocFileModel> docfiles;
+
+    protected override void OnParametersSet()
+    {
+        docfiles = Values ?? new();
+    }
+
+    async Task LoadFiles(InputFileChangeEventArgs args)
+    {
+        hasErrors = false;
+        var files = args.GetMultipleFiles();
+        ErrSizeTooLarge = files.Sum(x => x.Size / 1000000) > MbMaxLength;
+        if (ErrSizeTooLarge) hasErrors = true;
+        ErrForbiddenMime = !ValidateExtensions(files);
+        if (ErrForbiddenMime) hasErrors = true;
+
+        if (!ErrSizeTooLarge && !ErrForbiddenMime)
+        {
+            isLoading = true;
+            foreach (var file in args.GetMultipleFiles())
+            {
+                var docfile = await DocfileHelper.CreateDocfileAsync(file, 350, 400);
+                docfiles.Add(docfile);
+            }
+            isLoading = false;
+            await ValuesChanged.InvokeAsync(docfiles);
+        }
+
+    }
+
+    async Task RemoveRequest(DocFileModel docfile)
+    {
+        docfiles.Remove(docfile);
+        await ValuesChanged.InvokeAsync(docfiles);
+    }
+
+    //async Task<DocFileModel> CreateDocfile(IBrowserFile file, int thumbnailWidth, int thumbnailHeight)
+    //{
+    //    var mimeCod = Media.MimeCodFromContentType(file.ContentType);
+    //    Stream stream = file.OpenReadStream(maxAllowedSize: 100000000);
+    //    MemoryStream ms = new MemoryStream();
+    //    await stream.CopyToAsync(ms);
+    //    stream.Close();
+
+    //    ms.Seek(0, SeekOrigin.Begin);
+    //    var bytes = ms.ToArray();
+
+    //    DocFileModel retval = new DocFileModel();
+    //    retval.Document = bytes;
+    //    retval.StreamMime = mimeCod;
+    //    retval.Size = bytes.Length;
+    //    retval.Hash = DTO.Helpers.CryptoHelper.HashMD5(bytes);
+    //    retval.Filename = file.Name;
+    //    retval.Nom = file.Name;
+    //    retval.FchCreated = file.LastModified.DateTime;
+    //    retval.Fch = DateTime.Now;
+
+    //    switch (mimeCod)
+    //    {
+    //        case Media.MimeCods.Jpg:
+    //        case Media.MimeCods.Gif:
+    //        case Media.MimeCods.Png:
+    //            Image img;
+    //            using (var ms1 = new MemoryStream(bytes))
+    //            {
+    //                img = Image.FromStream(ms1);
+    //            };
+    //            retval.Width = img.Width;
+    //            retval.Height = img.Height;
+    //            retval.VRes = (int?)img.VerticalResolution;
+    //            retval.HRes = (int?)img.HorizontalResolution;
+
+    //            var thumbnail = DTO.Helpers.ImageHelper.Resize(srcImage: img, width: DocFileModel.THUMB_WIDTH, height: DocFileModel.THUMB_HEIGHT);
+    //            using (var ms2 = new MemoryStream())
+    //            {
+    //                thumbnail.Save(ms2, ImageHelper.ImageFormat(mimeCod));
+    //                retval.Thumbnail = ms2.ToArray();
+    //                retval.ThumbnailMime = mimeCod;
+    //            }
+    //            break;
+
+    //        case Media.MimeCods.Pdf:
+    //            using (MagickImageCollection images = new MagickImageCollection())
+    //            {
+    //                MagickReadSettings settings = new MagickReadSettings();
+    //                settings.FrameIndex = 0;
+    //                settings.FrameCount = 1;
+
+    //                images.Ping(bytes);
+    //                retval.Pags = images.Count;
+
+    //                images.Read(ms, settings);
+    //                using (var image = images.First())
+    //                {
+    //                    image.Format = MagickFormat.Png;
+    //                    retval.Width = image.Width;
+    //                    retval.Height = image.Height;
+    //                    var landscape = retval.Width / retval.Height > thumbnailWidth / thumbnailHeight;
+    //                    int resizeWidth = landscape ? thumbnailWidth : (int)retval.Width * thumbnailHeight / (int)retval.Height;
+    //                    int resizeHeight = landscape ? (int)retval.Height * thumbnailWidth / (int)retval.Width : thumbnailHeight;
+    //                    int frameWidth = (thumbnailWidth - resizeWidth) / 2;
+    //                    int frameHeight = (thumbnailHeight - resizeHeight) / 2;
+    //                    image.Resize(resizeWidth, resizeHeight);
+    //                    retval.Thumbnail = image.ToByteArray();
+    //                }
+    //            }
+    //            break;
+
+    //        case Media.MimeCods.Mp4:
+    //        case Media.MimeCods.Mov:
+    //        case Media.MimeCods.Mpg:
+    //            var thumnailMime = ThumbnailMime("video.png");
+    //            retval.Thumbnail = thumnailMime?.Image;
+    //            retval.ThumbnailMime = thumnailMime?.Mime ?? Media.MimeCods.NotSet;
+    //            break;
+
+    //        default:
+    //            var imageMime = ThumbnailMime("cartadeajuste.png");
+    //            retval.Thumbnail = imageMime?.Image;
+    //            retval.ThumbnailMime = imageMime?.Mime ?? Media.MimeCods.NotSet;
+    //            break;
+
+    //    }
+    //    return retval;
+    //}
+
+    ImageMime? ThumbnailMime(string imageName)
+    {
+        ImageMime? retval = null;
+        string path = hostEnvironment.WebRootPath + @"\img\" + imageName;
+        var mimeCod = MimeHelper.MimeCod(imageName);
+        var image = Image.FromFile(path);
+        if (image != null)
+        {
+            var thumbnail = DTO.Helpers.ImageHelper.Resize(image, DocFileModel.THUMB_WIDTH, DocFileModel.THUMB_HEIGHT);
+            using (var ms = new MemoryStream())
+            {
+                thumbnail.Save(ms, ImageHelper.ImageFormat(mimeCod));
+                retval = new ImageMime(ms.ToArray(), mimeCod);
+            }
+        }
+        return retval;
+    }
+
+    bool ValidateExtensions(IReadOnlyList<IBrowserFile> files)
+    {
+        var retval = true;
+        var allowedExtensions = Accept.Split(",");
+        foreach (var file in files)
+        {
+            var dotIdx = file.Name.LastIndexOf(".");
+            var extension = file.Name.Substring(dotIdx, file.Name.Length - dotIdx);
+            if (!allowedExtensions.Contains(extension, StringComparer.InvariantCultureIgnoreCase))
+            {
+                retval = false;
+                break;
+            }
+        }
+        return retval;
+    }
+
+
+}

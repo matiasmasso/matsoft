@@ -1,0 +1,12 @@
+﻿.Item{
+    display:block;
+    padding:10px;
+    border-bottom: 1px solid gray;
+}
+
+    .Item.Brand.Selected {
+        background-color: #4FDBDA;
+    }
+    .Item.Category.Selected {
+        background-color: #AEFEFF;
+    }

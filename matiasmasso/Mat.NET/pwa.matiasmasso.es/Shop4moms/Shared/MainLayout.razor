@@ -1,0 +1,141 @@
+﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager? navigationManager
+@inject CultureService culture
+@inject RoutesService routesService
+@inject BasketService basketService
+@inject NavService navService
+
+
+<PageTitle>4moms</PageTitle>
+
+<div itemscope itemtype="http://schema.org/Organization" class="Layout @(isShowingMenu ? "IsShowingMenu" : "")">
+    <header itemscope itemtype="https://schema.org/WPHeader">
+
+        <a itemprop="url" class="Logo" href="@culture.RelativeUrl(_lang)" title="@_lang.Tradueix("página de inicio","pàgina d'inici","home page","Vá para a página inicial")">
+            <img itemprop="logo" src="/img/logo4moms.jpg" width="135" height="37" alt="4moms" />
+        </a>
+
+        <div class="Buttons">
+            <a title="@basketInfo" href='@culture.RelativeUrl(_lang,"Basket")'>
+                <Counter Value="itemsInBasket"></Counter>
+            </a>
+
+            <div>
+                <UserIcon></UserIcon>
+            </div>
+
+            <a href="#" class="Hamburger" @onclick="@(()=>isShowingMenu = !isShowingMenu)" @onclick:preventDefault>
+                <img src="/img/hamburger-solid-white.svg" width="37" height="37" alt="menu" />
+            </a>
+        </div>
+
+            <div class="Claim Truncate">
+                @culture.Localize("OfficialShop", "4moms")
+            </div>
+
+    </header>
+
+
+
+    <main>
+        <aside>
+            <NavMenu ItemClick="@(()=>isShowingMenu = false)" />
+        </aside>
+        <div itemscope itemtype="https://schema.org/Article" class="Body">
+            @Body
+        </div>
+
+    </main>
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+    <footer>
+        <div class="FooterNav">
+            <FooterNav Items="@footerMenu"></FooterNav>
+        </div>
+        <div>
+            &copy; Copyright 4moms
+        </div>
+        
+        <div class="Whatsapp">
+        <Whatsapp></Whatsapp>
+        </div>
+    </footer>
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+@code {
+    private bool isShowingMenu = false;
+    bool isCookieChecked;
+    LangDTO _lang;
+    string? basketInfo;
+    int itemsInBasket;
+    List<MenuItemModel> footerMenu = new();
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        routesService.OnChange += RefrescaFooter;
+        basketService.ItemsCountChanged += ItemsCountChanged;
+        _lang = culture.Lang();
+        switch (itemsInBasket)
+        {
+            case 0:
+                basketInfo = _lang.Tradueix(
+                 "la cesta está vacía"
+                , "la cistella està buida"
+                , "the shopping basket is empty"
+                , "O cesto está vazio"
+                );
+                break;
+            case 1:
+                basketInfo = _lang.Tradueix(
+                 "ver un producto en la cesta de la compra"
+                , "veure un producte a la cistella de la compra"
+                , "see 1 product in the shopping basket"
+                , "ver 1 produto no cesto de compras"
+                );
+                break;
+            default:
+                basketInfo = _lang.Tradueix(
+                 "ver {0} productos en la cesta de la compra"
+                , "veure {0} productes a la cistella de la compra"
+                , "see {0} products in the shopping basket"
+                , "ver {0} produtos no cesto de compras"
+                );
+                break;
+        }
+        RefrescaFooter();
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var basket = await basketService.GetBasketAsync(_lang);
+            itemsInBasket = basket.Items.Count;
+        }
+    }
+
+    void RefrescaFooter()
+    {
+        footerMenu = routesService.FooterMenu();
+    }
+
+
+    void ItemsCountChanged(object? sender, DTO.Helpers.MatEventArgs<int> args)
+    {
+        itemsInBasket = args.Value;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        basketService.ItemsCountChanged -= ItemsCountChanged;
+        routesService.OnChange -= RefrescaFooter;
+
+    }
+}

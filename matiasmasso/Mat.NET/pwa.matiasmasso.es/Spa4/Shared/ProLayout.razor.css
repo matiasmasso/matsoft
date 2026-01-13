@@ -1,0 +1,76 @@
+﻿.MainLayout {
+    max-width: 1200px;
+    margin: auto;
+    height: 100%;
+    display: grid;
+    grid-template-areas: "header header"
+        "left main"
+        "footer footer";
+    grid-template-columns: minmax(min-content,265px) minmax(min-content,1fr);
+    grid-template-rows: max-content 1fr max-content;
+    gap: 10px;
+    padding: 10px;
+}
+
+    .MainLayout.MenuVisible aside.Menu {
+        display: block;
+    }
+
+    .MainLayout.MenuVisible aside.Left {
+        display: none;
+    }
+
+header {
+    grid-area: header;
+    width: 100%;
+}
+
+main {
+    grid-area: main;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+}
+
+aside {
+    max-width: 265px;
+}
+
+    aside.Menu {
+        grid-area: left;
+/*        display: none;
+*/    }
+
+
+footer {
+    grid-area: footer;
+}
+
+
+
+/* ------------- mobiles -----------------*/
+
+@media screen and (max-width:600px) {
+    .MainLayout {
+        grid-template-areas: "header"
+            "main"
+            "footer";
+        grid-template-columns: 1fr;
+    }
+
+    aside.Menu:not(.Hidden) {
+        grid-area: main;
+        max-width: 100%;
+        z-index: 10;
+        background-color: white;
+    }
+
+    .MainLayout aside.Menu {
+        display: block;
+    }
+
+    .MainLayout.HiddeMenuOnMobile aside.Menu {
+        display: none;
+    }
+
+}

@@ -1,0 +1,38 @@
+﻿@page "/"
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+<PropertyGrid Model="@person" />
+
+
+@code {
+    Person person = new()
+    {
+        Name = "John",
+        Age = 42,
+        Status = "Approved",
+        Active = true
+    };
+
+    public class Person
+    {
+        [Required]
+        [StringLength(4)]
+        public string Name { get; set; }
+
+        [Range(0, 10)]
+        public int Age { get; set; }
+
+        [PgOptions("Pending", "Approved", "Rejected")]
+        public string Status { get; set; }
+
+        public bool Active { get; set; }
+
+        // [PgEditor(typeof(CountryLookupEditor))]
+        // public string Country { get; set; }
+
+    }
+}

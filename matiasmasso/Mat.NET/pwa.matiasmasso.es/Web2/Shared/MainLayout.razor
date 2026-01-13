@@ -1,0 +1,51 @@
+﻿@inherits LayoutComponentBase
+@inject AppStateService appstate
+@inject SessionStateService session
+@inject NavService navService
+
+<div class="Layout">
+    <div class="Header">
+        <Header ToggleMenu="@(()=>{isShowingMenu = !isShowingMenu;})"></Header>
+    </div>
+
+    <main class="Body @(isShowingMenu ? "HideOnMobile":"")">
+        @Body
+    </main>
+
+    <aside class="Menu @(isShowingMenu ? "":"HideOnMobile")">
+        <NavMenu CloseRequestOnMobile="@(()=>{isShowingMenu = false;})"></NavMenu>
+    </aside>
+
+    <div class="Noticias">
+        <NoticiasGallery VisibleCount="4"></NoticiasGallery>
+    </div>
+</div>
+
+<span>[appstate live from @appstate.FchFrom.ToString("dd/MM/yy HH:mm:ss")]</span>
+
+
+
+@code {
+    Exception? exception;
+    bool isShowingMenu;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+        navService.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+        exception = ex;
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        navService.OnChange -= Refresca;
+    }
+
+}

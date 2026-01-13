@@ -1,0 +1,80 @@
+﻿@inject UsersService _usersService
+
+<div class="edit-form-container">
+    @if (value == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <EditForm Model="value" OnValidSubmit="Save">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label>Email</label>
+                <InputText class="form-control" @bind-Value="value.EmailAddress" />
+            </div>
+
+            <div class="mb-3">
+                <label>Nickname</label>
+                <InputText class="form-control" @bind-Value="value.Nickname" />
+            </div>
+
+            <div class="mb-3">
+                <label>Role</label>
+                <EnumSelect TEnum="UserModel.Rols"
+                            @bind-Value="value.Rol"
+                            Class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label>Reset Password</label>
+                <InputText class="form-control" @bind-Value="NewPassword" type="password" />
+                <small class="text-muted">Leave empty to keep current password</small>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Save</button>
+        </EditForm>
+    }
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public UserModel? Value { get; set; }
+    [Parameter] public EventCallback<UserModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback<UserModel> AfterUpdate { get; set; }
+
+    private UserModel? value;
+    private string? NewPassword;
+    //private UserModel.Rols rol;
+    private Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Value?.IsNew ?? true)
+            value = Value;
+        else
+            value = await _usersService.Find(Value);
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            //value!.Rol = rol;
+            value!.Password = string.IsNullOrWhiteSpace(NewPassword) ? null : NewPassword;
+            await _usersService.SaveAsync(value);
+            await ValueChanged.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+}

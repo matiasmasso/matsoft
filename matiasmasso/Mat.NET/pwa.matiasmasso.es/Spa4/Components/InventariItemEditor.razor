@@ -1,0 +1,80 @@
+﻿@inherits _ComponentBase
+@using System.Net.Http.Formatting
+
+<div>
+
+    @if (Model != null)
+    {
+
+        <EditForm Model="@Model" OnValidSubmit=@ValidFormSubmitted >
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                Nom: <InputText @bind-Value="Model.Nom" class="form-control" />
+            </div>
+            <div class="form-group">
+                Obs: <InputText @bind-Value="Model.Obs" class="form-control" />
+            </div>
+
+
+            <br />
+
+            <div class="Buttons">
+                <!--<button type="submit" form="my-form-ref" class="btn btn-success" value="Update"/>-->
+                <button type="submit" class="btn btn-success">Update</button>
+                <input type="button" class="btn btn-secondary" value="Delete" />
+                <input type="button" class="btn btn-secondary" value="Cancel" @onclick="Cancel" />
+            </div>
+
+        </EditForm>
+    }
+
+</div>
+@code {
+
+    private ImmobleDTO.InventariItem? _model;
+
+    [Parameter]
+    public ImmobleDTO.InventariItem? Model
+    {
+        get => _model;
+        set
+        {
+            if (_model == value ) return;
+            _model = value;
+            ModelChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<ImmobleDTO.InventariItem> ModelChanged { get; set; }   
+
+    [Parameter]
+    public EventCallback<ImmobleDTO.InventariItem> SaveRequest { get; set; }   
+
+
+
+    async void ValidFormSubmitted(EditContext editContext)
+    {
+        if(editContext.IsModified())
+        {
+            MultaModel model = (MultaModel)editContext.Model;
+            var url = Globals.ApiUrl("Immoble/inventariItem");
+
+            var content = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+            var response = await base.http.PostAsync(url, content, new JsonMediaTypeFormatter());
+            if ((int)response.StatusCode == 200)
+                NavigationManager.NavigateTo("Immobles");
+            else
+                throw new Exception("error on updating inventari item");
+        }
+    }
+
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("Immoble/fromInventoryItem/" + Model.Guid.ToString());
+    }
+
+}

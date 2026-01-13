@@ -1,0 +1,30 @@
+﻿<div class="Wrapper">
+    <input @bind="Value" @bind:event="oninput" class="@(IsShowing?"":"Hidden")" />
+    <div class="Lupa">
+        <Icon Id="Icon.Ids.MagnifyingGlass"></Icon>
+    </div>
+</div>
+
+
+@code {
+    private string? text;
+
+    [Parameter]
+    public string Value
+    {
+        get => text ?? "";
+        set
+        {
+            if (text != value)
+            {
+                text = value;
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    [Parameter] public bool IsShowing { get; set; } = true;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+}

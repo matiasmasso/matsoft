@@ -1,0 +1,100 @@
+﻿.Year, .Month {
+    display:flex;
+    justify-content:space-between;
+}
+
+.Line {
+    grid-column: 1/-1;
+    border-bottom: 1px solid #DDDDDD;
+    margin: 10px 0;
+}
+
+
+
+@media (min-width:600px) {
+    .Grid {
+        display: grid;
+        /*"SiiResult PrintMode FraId Fch Cli Eur Fpg TipoFactura SiiL9 RegimenEspecialOTrascendencia Concepte"*/
+        grid-template-columns: 20px 20px min-content min-content 1fr min-content 1fr 20px 20px 20px min-content;
+        grid-column-gap:10px;
+    }
+
+    .VirtualizeBug {
+        grid-column: 1/10;
+    }
+
+    .ItemContents {
+        display: contents;
+    }
+
+    .Line.ShowOnMobile {
+        display:none;
+    }
+
+
+    .Eur {
+        white-space: nowrap;
+        text-align:right;
+    }
+
+    .Cli, .Fpg, .Concepte {
+        white-space: nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+}
+
+@media (max-width:599px) {
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ItemContents {
+        display: grid;
+        /*"SiiResult PrintMode FraId Fch Cli Eur Fpg TipoFactura SiiL9 RegimenEspecialOTrascendencia Concepte"*/
+        grid-template-areas: "FraId Fch Eur"
+            "Cli Cli Cli"
+            "Fpg Fpg Fpg";
+        grid-template-columns: min-content min-content 1fr;
+        grid-column-gap:10px;
+
+    }
+
+
+
+    .SiiResult {
+        display:none;
+    }
+    .PrintMode {
+        display: none;
+    }
+    .FraId {
+        grid-area:FraId;
+    }
+    .Fch {
+        grid-area: Fch;
+    }
+    .Cli {
+        grid-area: Cli;
+    }
+    .Eur {
+        grid-area: Eur;
+        text-align:right;
+    }
+    .Fpg {
+        grid-area: Fpg;
+    }
+    .TipoFactura {
+        display: none;
+    }
+    .SiiL9 {
+        display: none;
+    }
+    .RegimenEspecialOTrascendencia {
+        display: none;
+    }
+    .Concepte {
+        display: none;
+    }
+}

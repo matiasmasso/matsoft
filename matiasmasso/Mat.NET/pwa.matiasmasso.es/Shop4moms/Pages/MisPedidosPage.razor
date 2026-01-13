@@ -1,0 +1,66 @@
+﻿@page "/MisPedidos"
+@page "/{LangSegment}/MisPedidos"
+
+@inherits _PageBase
+@inject AuthenticationStateProvider authStateProvider;
+@inject AppStateService appState
+@inject CultureService culture
+<div class="Wrapper900">
+    @if (selectedItem == null)
+    {
+
+        <h2>@culture.Localize("PurchaseOrders")</h2>
+
+        @if (Items == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <div class="Grid">
+                <div class="Item ColumnHeaders">
+                    <div class="Fch">@culture.Localize("Fch")</div>
+                    <div class="Id">@culture.Localize("PurchaseOrder")</div>
+                    <div class="Eur">@culture.Localize("Amt")</div>
+                </div>
+                @foreach (var item in Items)
+                {
+                    <div class="GridRowDivider HideOnDesktop" />
+                    <a class="Item" @onclick="@(()=>selectedItem=item)" @onclick:preventDefault>
+                        <div class="Fch">@string.Format("{0:dd/MM/yy} {0:hh:mm}",item.Fch)</div>
+                        <div class="Id">@item.OrderNum</div>
+                        <div class="Eur">@string.Format("{0:N2} €",item.Goods)</div>
+                    </a>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <ConsumerTicket Value="selectedItem"
+                    CancelRequest="@(()=>selectedItem = null)"></ConsumerTicket>
+    }
+
+
+    <Error Exception="exception"></Error>
+</div>
+
+@code {
+    List<ConsumerTicketModel>? Items;
+    ConsumerTicketModel? selectedItem = null;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            UserModel? user = await base.GetUser(); // base.SessionProvider?.GetUserFromIdentity();
+            if(user != null)
+            Items = await appState.GetAsync<List<ConsumerTicketModel>>("ConsumerTickets/fromUser", MarketPlaceModel.Wellknown(MarketPlaceModel.Wellknowns.Shop4moms)!.Guid.ToString(), user?.Guid.ToString());
+
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+    }
+}

@@ -1,0 +1,76 @@
+﻿@inherits _Base
+
+<div class="Grid @(IsSingleCustomer ? "HideCustomer":"")">
+    <div class="ColumnHeader Id HideOnMobile">
+        @Localizer("Id")
+    </div>
+    <div class="ColumnHeader Fch HideOnMobile">
+        @Localizer("Fch")
+    </div>
+    <div class="ColumnHeader Customer HideOnMobile @(IsSingleCustomer ? "Hidden" : "")">
+        @Localizer("Customer")
+    </div>
+    <div class="ColumnHeader Product HideOnMobile">
+        @Localizer("Product")
+    </div>
+
+    <div class="GridRowDivider HideOnMobile"></div>
+
+    @foreach (var item in Model)
+    {
+        <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+            <div class="Id">@item.Id</div>
+            <div class="Fch">@string.Format("{0:dd/MM/yy HH:mm}",item.Fch)</div>
+            <div class="Customer @(IsSingleCustomer ? "Hidden" : "")">
+                @Customer(item)
+            </div>
+            <div class="Product">@Product(item)</div>
+        </a>
+        <div class="GridRowDivider"></div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<IncidenciaModel> Model { get; set; }
+    [Parameter] public EventCallback<IncidenciaModel> SelectedItemChanged { get; set; }
+    [Parameter] public bool IsSingleCustomer { get; set; }
+    private IncidenciaModel selectedItem = null;
+
+    string Customer(IncidenciaModel item)
+    {
+        string retval = "";
+        if (item.Customer != null)
+        {
+            var contact = Cache.Contacts.FirstOrDefault(x => x.Guid == item.Customer);
+            retval = contact.Nom;
+        }
+        return retval;
+    }
+
+    string Product(IncidenciaModel item)
+    {
+        var retval = string.Empty;
+        if (item.Product != null)
+        {
+            var product = Cache.ProductFromGuid(item.Product);
+            if (product != null)
+            {
+                switch (product.Src)
+                {
+                    case ProductModel.SourceCods.Sku:
+                        retval = ((ProductSkuModel)product).NomLlarg.Tradueix(base.Lang());
+                        break;
+                    default:
+                        retval = product.Nom.Tradueix(base.Lang());
+                        break;
+                }
+            }
+        }
+        return retval;
+    }
+
+    void ItemClick(IncidenciaModel item)
+    {
+        SelectedItemChanged.InvokeAsync(item);
+    }
+}

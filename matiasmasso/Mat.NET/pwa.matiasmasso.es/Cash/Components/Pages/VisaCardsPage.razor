@@ -1,0 +1,129 @@
+﻿@page "/visaCards"
+@inject ApiService ApiService
+
+
+@if (values == null)
+{
+    <h3>Targetes de Crèdit</h3>
+    <div>Loading...</div>
+}
+else if (selectedValue != null)
+{
+    <VisaCard Value="selectedValue"
+              AfterUpdate="HandleAfterUpdate"
+              AfterDelete="HandleAfterDelete"
+              CloseRequest="@(()=>selectedValue = null)"></VisaCard>
+}
+else
+{
+    <div class="PageWrapper600">
+        <h3>Targetes de Crèdit</h3>
+
+        <div class="OptionsBar">
+            <PageOptions>
+                <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+                <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir</a>
+            </PageOptions>
+        </div>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            <div class="ColHeaders HideOnMobile">
+                <div class="Ico">&nbsp;</div>
+                <div class="Nom">
+                    Alias
+                </div>
+                <div class="Digits">
+                    Digits
+                </div>
+                <div class="Nom">
+                    Caducitat
+                </div>
+            </div>
+
+            @foreach(var item in FilteredValues())
+            {
+                <a class="Item" href="#" @onclick="@(()=>selectedValue = item)" @onclick:preventDefault>
+                    <div class="Ico">
+                       <Icon Id="Icon.Ids.CreditCard"></Icon>
+                    </div>
+                    <div class="Nom">@item.Nom</div>
+                    <div class="Digits">@item.FormatedDigits()</div>
+                    <div class="Nom HideOnMobile">@item.FormatedCaducitat()</div>
+                </a>
+            }
+
+        </div>
+    </div>
+}
+
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds emp;
+    List<VisaCardModel>? values;
+    List<ContactModel>? contacts;
+    VisaCardModel? selectedValue;
+    string? searchterm;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        try
+        {
+            values = await ApiService.GetAsync<List<VisaCardModel>>("VisaCards");
+            contacts = await ApiService.GetAsync<List<ContactModel>>("Contacts");
+            emps = values!.Select(x => x.Emp).Distinct().ToList();
+            emp = (EmpModel.EmpIds)ApiService.Emp!;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    private List<VisaCardModel> FilteredValues()
+    {
+        var retval = values!.Where(x => x.Emp == emp).OrderBy(x => x.Nom).ToList();
+        if (!string.IsNullOrEmpty(searchterm))
+        {
+            retval = retval.Where(x => x.Nom!.Contains(searchterm, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        return retval;
+    }
+
+    private void AddNew()
+    {
+        selectedValue = new VisaCardModel();
+        selectedValue.Emp = emp;
+        selectedValue.Nom = "(nova targeta de crèdit)";
+    }
+
+    private void HandleAfterUpdate(VisaCardModel args)
+    {
+        if(!values!.Any(x=>x.Guid == args.Guid))
+        {
+            values!.Add(args);
+            values = values.OrderBy(x => x.Nom).ToList();
+            emps = values.Select(x => x.Emp).Distinct().ToList();
+            selectedValue = null;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleAfterDelete(VisaCardModel args)
+    {
+        values!.Remove(args);
+    }
+}

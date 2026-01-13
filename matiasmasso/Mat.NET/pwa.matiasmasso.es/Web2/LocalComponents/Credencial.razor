@@ -1,0 +1,136 @@
+﻿@inject CultureService culture
+@inject CredencialsService credencialsService
+@inject IJSRuntime JSRuntime
+
+<div class="Wrapper">
+    <div class="HeaderRow">
+        <h3>Credencial</h3>
+        <CloseButton CloseRequest="RequestToClose"></CloseButton>
+    </div>
+
+    <div class="Label">@culture.Localize("Ref")</div>
+    <div class="Value">
+        <input type="text" @bind-value="reference" @oninput="SetDirty" />
+    </div>
+
+
+    <div class="Label">@culture.Localize("Url")</div>
+    <div class="Value">
+        <input type="text" @bind-value="url" @oninput="SetDirty" />
+        <a href="@url" target="_blank" class="Browse" >
+            <Icon Id="Icon.Ids.MagnifyingGlass" Width="20px"></Icon>
+        </a>
+        <CopyButton Value="@url"></CopyButton>
+    </div>
+
+    <div class="Label">@culture.Localize("Username")</div>
+    <div class="Value">
+        <input type="text" @bind-value="username" @oninput="SetDirty" />
+        <CopyButton Value="@username"></CopyButton>
+    </div>
+
+    <div class="Label">@culture.Localize("Password")</div>
+    <div class="Value">
+        <input type="@(isShowingPassword ? "text" : "password")" @bind-value="password" @oninput="SetDirty" />
+
+        <a href="#" @onclick="@(()=>isShowingPassword=!isShowingPassword)" @onclick:preventDefault>
+            <Icon Id="@(isShowingPassword?Icon.Ids.Eye:Icon.Ids.EyeSlash)" Width="20px"></Icon>
+        </a>
+
+        <CopyButton Value="@password"></CopyButton>
+    </div>
+
+    <div class="Label">@culture.Localize("Obs")</div>
+    <div class="Value">
+        <textarea @oninput="ObsChanged">@obs</textarea>
+    </div>
+
+    <div class="ButtonsBar">
+        <ButtonsBar CanEdit="true"
+                    State="state"
+                    CanDelete="@(!(Model?.IsNew ?? false))"
+                    RequestToCancel="RequestToClose"
+                    RequestToDelete="DeleteRequest"
+                    RequestToUpdate="UpdateRequest"></ButtonsBar>
+    </div>
+</div>
+
+@code {
+    [Parameter] public CredencialModel? Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    string? reference;
+    string? url;
+    string? username;
+    string? password;
+    string? obs;
+    DbState state;
+    bool isShowingPassword;
+    Exception? exception;
+
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Model != null)
+        {
+            reference = Model.Referencia;
+            url = Model.Url;
+            username = Model!.Usuari;
+            password = Model.Password;
+            obs = Model.Obs;
+        }
+    }
+    private async Task RequestToClose()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    private void SetDirty()
+    {
+        state = DbState.IsDirty;
+    }
+
+    private void ObsChanged(ChangeEventArgs args)
+    {
+        obs = args.Value?.ToString();
+        SetDirty();
+    }
+
+    private async Task UpdateRequest()
+    {
+        Model.Referencia = reference;
+        Model.Url = url;
+        Model.Usuari = username;
+        Model.Password = password;
+        Model.Obs = obs;
+
+        try
+        {
+            await credencialsService.UpdateAsync(Model);
+            await RequestToClose();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        try
+        {
+            await credencialsService.DeleteAsync(Model);
+            await RequestToClose();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private async Task CopyToClipboardAsync(string value)
+    {
+        await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", value);
+    }
+}

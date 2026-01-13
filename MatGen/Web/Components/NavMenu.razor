@@ -1,0 +1,103 @@
+﻿@inject ApiService ApiService
+@inject CatalogService CatalogService
+@inject NavigationManager NavigationManager
+
+<div class="Wrapper">
+    @foreach (var parent in parents)
+    {
+        <div class="Parent">
+            <a href="#" @onclick="@(()=>ParentClick(parent))" @onclick:preventDefault>
+                @parent.Nom
+            </a>
+        </div>
+    }
+    @foreach (var item in Children() ?? new())
+    {
+        <div class="Item @(item == selectedItem ? "Selected":"")">
+            <a href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                @item.Nom
+            </a>
+        </div>
+    }
+
+    @if (parents?.Count == 0)
+    {
+        <div class="Item">
+            <BusyAction Caption="Reset" OnClick="ResetAsync" IsBusy="isResetting"></BusyAction>
+        </div>
+        <div class="Item">
+            <LogoutButton></LogoutButton>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback NavigationRequest { get; set; }
+    [Parameter] public EventCallback MenuClicked { get; set; }
+    private NavModel? model;
+    private List<NavModel.Item> parents = new();
+    private NavModel.Item? selectedItem;
+    bool isResetting;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        model = NavModel.Factory();
+    }
+
+    List<NavModel.Item>? Children()
+    {
+        NavModel.Item? parent = parents.LastOrDefault();
+        if (parent == null)
+            return model?.Items;
+        else
+            return parent.Children;
+    }
+
+    void ParentClick(NavModel.Item parent)
+    {
+        var idx = parents.IndexOf(parent);
+        parents.RemoveRange(idx, parents.Count - idx);
+    }
+
+    void ItemClick(NavModel.Item? item)
+    {
+        if (item?.Children.Count > 0)
+        {
+            parents.Add(item);
+        }
+        else
+        {
+            selectedItem = item;
+            switch (item?.Mode)
+            {
+                case NavModel.Item.Modes.Navigate:
+                    if (!string.IsNullOrEmpty(item.Value))
+                        NavigationManager.NavigateTo(item.Value);
+                    break;
+                case NavModel.Item.Modes.Action:
+                    switch (item.Value)
+                    {
+                        case "ToggleLocalApi":
+                            ApiService.UseLocalApi = !ApiService.UseLocalApi;
+                            item.Nom = ApiService.UseLocalApi ? "Api local" : "Api remota";
+                            break;
+                    }
+                    break;
+            }
+            MenuClicked.InvokeAsync(); // amaga el menu al mobil despres de clicar
+            NavigationRequest.InvokeAsync(null); // restaura el body del layout
+
+        }
+    }
+
+    async Task ResetAsync()
+    {
+        isResetting = true;
+        CatalogService.Reset();
+        await Task.Yield();
+        await Task.Delay(500);
+        isResetting = false;
+    }
+
+}

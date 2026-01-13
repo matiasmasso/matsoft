@@ -1,0 +1,32 @@
+﻿@inject CultureService culture
+
+<a href="#" class="CopyToClipboard" title="@culture.Localize("Copy")"
+   onclick="var el = this;
+            el.classList.add('Copying');
+            navigator.clipboard.writeText('@Value');
+            setTimeout(function(){
+               el.classList.remove('Copying');
+               }, 500);"
+@onclick:preventDefault>
+
+    <div class="StandBy">
+        <Icon Id="Icon.Ids.Copy" Width="20px"></Icon>
+    </div>
+
+    <div class="Loader">
+        <Loading></Loading>
+    </div>
+
+</a>
+
+
+
+@code {
+    [Parameter] public string? Value { get; set; }
+
+    //onclick description:
+    //assign the anchor element to a variable since settimeout callback function loses the reference to "this"
+    //add a class to give IU feedback to the user hidding the standard copy icon and showing a loader
+    //write the value to clipboard. Due to IOS restrictions, moving this code to Blazor is not allowed
+    //add a delay in miliseconds with a callback function that removes the CSS class to hide the loader and display the standard copy icon again
+}

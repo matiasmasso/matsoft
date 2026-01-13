@@ -1,0 +1,39 @@
+﻿@inherits _Base
+@inject NavigationManager NavigationManager
+
+<div class="Wrapper">
+    @foreach (var item in Items)
+    {
+
+        <NavLink href="@base.RelativeUrl(item.Url ?? new())">
+            <div class="Item">
+                @Caption(item)
+            </div>
+        </NavLink>
+
+
+        @*
+    <a class="Item" href="#" @onclick="@(()=>MenuItemClick(item))" @onclick:preventDefault>
+    @(item.Caption?.Tradueix(base.Lang()) ?? "")
+    </a>
+    *@
+    }
+</div>
+
+@code {
+    [Parameter] public List<MenuItemModel> Items { get; set; } = new();
+
+    //string Url(MenuItemModel item) => UrlHelper.Culturize(base.Lang(), item.Url?.Tradueix(base.Lang()) ?? "/");
+    string Caption(MenuItemModel item) => item.Caption?.Tradueix(base.Lang()) ?? "?";
+
+    //private void MenuItemClick(MenuItemModel item)
+    //{
+    //    if (item.Mode == MenuItemModel.Modes.Navigation)
+    //    {
+    //        var url = UrlHelper.Culturize(base.Lang(), item.Url?.Tradueix(base.Lang()) ?? "/");
+    //        navigationManager?.NavigateTo(url ?? "/", true);
+    //    }
+    //}
+
+
+}

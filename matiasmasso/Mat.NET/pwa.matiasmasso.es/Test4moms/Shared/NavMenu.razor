@@ -1,0 +1,77 @@
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Globalization;
+@inject NavigationManager NavigationManager
+@inject ProtectedLocalStorage LocalStorage
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IStringLocalizer<AppResource> Localizer
+@inject AuthenticationStateProvider authStateProvider
+
+
+
+<div class="Wrapper">
+    @foreach (var item in NavService.Factory(rol))
+    {
+        <a href="#" class="Item" @onclick="(()=>OnClick(item))" @onclick:preventDefault>
+            @(item.Caption?.Tradueix(Lang()) ?? "?")
+        </a>
+    }
+
+    <div class="Lang">
+        <Lang></Lang>
+    </div>
+
+    <AuthorizeView>
+        <Authorized>
+            <a href="#" class="Item" @onclick="Logout" @onclick:preventDefault>
+                @Localizer["History"]
+            </a>
+            <a href="#" class="Item" @onclick="Logout" @onclick:preventDefault>
+                @Localizer["Logout"]
+            </a>
+        </Authorized>
+        <NotAuthorized>
+            <a href="/Login" class="Item">
+                @Localizer["Login"]
+            </a>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? authenticationState { get; set; }
+    [Parameter] public EventCallback<MenuItemModel> ItemClick { get; set; }
+    UserModel.Rols? rol;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var customAuthenticateStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        var authState = await customAuthenticateStateProvider.GetAuthenticationStateAsync();
+        var claims = authState?.User?.Claims;
+        var srol =claims?.FirstOrDefault(x => x.Type.EndsWith("/role"))?.Value;
+        if(srol != null)
+        {
+            rol = (UserModel.Rols)Enum.Parse(typeof(UserModel.Rols), srol);
+        }
+    }
+
+    void OnClick(MenuItemModel item)
+    {
+        ItemClick.InvokeAsync(item);
+    }
+
+    LangDTO Lang()
+    {
+        var cookie = HttpContextAccessor.HttpContext?.Request.Cookies[Microsoft.AspNetCore.Localization.CookieRequestCultureProvider.DefaultCookieName];
+        var cc = cookie == null ? "es" : cookie?.Split("|").First().Split("=")[1] ?? "es";
+        var retval = LangDTO.FromCultureInfo(cc);
+        return retval;
+    }
+
+    async Task Logout()
+    {
+        var customAuthenticateStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthenticateStateProvider.UpdateAuthenticationState(null);
+        NavigationManager.NavigateTo("/", true);
+    }
+
+}

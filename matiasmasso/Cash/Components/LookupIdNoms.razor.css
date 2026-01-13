@@ -1,0 +1,9 @@
+﻿.Grid {
+    display: flex;
+    flex-direction: column;
+    width:100%;
+}
+
+.IdNom {
+    padding:2px 0;
+}

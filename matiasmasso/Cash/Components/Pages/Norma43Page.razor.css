@@ -1,0 +1,27 @@
+﻿.Bancs {
+}
+.Banc {
+    display:block;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr min-content min-content;
+    grid-column-gap: 10px;
+    grid-row-gap: 5px;
+    font-size: .8em;
+}
+
+.ColHeaders div {
+    margin-bottom:10px;
+}
+
+.Item, .ColHeaders {
+    display: contents;
+}
+
+.FileInput {
+    display:flex;
+    justify-content:center;
+    padding-top:15px;
+}

@@ -1,0 +1,76 @@
+﻿@page "/tpv/ok"
+@page "/{LangSegment}/tpv/ok"
+@inherits _PageBase
+
+@inject PostFormService PostFormService
+@inject CultureService culture
+<div class="OuterWrapper">
+    <div class="InnerWrapper">
+        <div class="Message">
+            <div class="Ico">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <!--fontawesome - circle-check-->
+                    <path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM369 209L241 337l-17 17-17-17-64-64-17-17L160 222.1l17 17 47 47L335 175l17-17L385.9 192l-17 17z" />
+                </svg>
+            </div>
+            <div class="Text">
+                <p>@culture.Localize("ThanksForPurchasing","4moms")</p>
+                <p>@culture.Localize("OrderCfmEmailSent",emailAddress ?? "")</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+@code {
+    DTO.Integracions.Redsys.Request? response;
+    string? emailAddress;
+    ShoppingBasketModel? basket;
+    ProblemDetails? problemDetails;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnInitialized();
+        try
+        {
+            var user = await base.GetUser();
+            emailAddress = user?.EmailAddress;
+
+            //no funciona en producció
+
+            //response = new DTO.Integracions.Redsys.Request
+            //    {
+            //        Ds_MerchantParameters = PostFormService.Form?["Ds_MerchantParameters"],
+            //        Ds_SignatureVersion = PostFormService.Form?["Ds_SignatureVersion"],
+            //        Ds_Signature = PostFormService.Form?["Ds_Signature"]
+            //    };
+
+            //var tpvOrderNum = response.TpvOrderNum();
+            //if (tpvOrderNum != null)
+            //{
+            //    var apiResponse = await GetAsync<ShoppingBasketModel>("shop4moms/basket", tpvOrderNum);
+            //    if (apiResponse.Success())
+            //    {
+            //        basket = apiResponse.Value;
+            //        if (basket == null) throw new Exception("Basket not found by Tpv order '" + tpvOrderNum + "'");
+            //        emailAddress = basket?.User?.EmailAddress;
+            //    }
+            //    else
+            //        problemDetails = apiResponse.ProblemDetails;
+            //}
+            //else
+            //    problemDetails = ProblemDetails.Factory(new Exception("tpvOrderNum is null"));
+
+            
+        }
+        catch (Exception ex)
+        {
+            problemDetails = ProblemDetails.Factory(ex);
+        }
+    }
+
+
+}

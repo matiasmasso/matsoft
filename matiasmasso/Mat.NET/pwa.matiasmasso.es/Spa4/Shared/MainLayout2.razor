@@ -1,0 +1,204 @@
+﻿@using System.Globalization
+@using System.Net.Http.Headers
+@using using Microsoft.AspNetCore.Mvc
+
+@inherits LayoutComponentBase
+@inject HttpClient http
+
+
+@*@implements IErrorComponent
+@inject AppState AppState
+@inject ProtectedLocalStorage ProtectedLocalStore
+*@
+           <div class="MainLayout @(IsMenuVisible ? "MenuVisible" : "") @(HideMenuOnMobile ? "HiddeMenuOnMobile" : "")">
+               <header>
+                   <Header ShowHamburger="@true"
+                        HamburgerClicked="HamburgerClicked" />
+               </header>
+               <main>
+                               @Body
+@*                   @if (isErrorActive)
+        {
+            <ErrComponent Title="@title"
+                      Message="@message"
+                      HideError="() => isErrorActive=false">
+            </ErrComponent>
+        }
+
+        <CascadingValue Value="this" Name="ErrorComponent">
+            @Body
+        </CascadingValue>*@
+
+        @*            <ErrorBoundary @ref="@errorBoundary">
+        <ChildContent>
+        @Body
+        </ChildContent>
+        <ErrorContent>
+        <h1 style="color: red;">Oops... error occured</h1>
+        <p>@(AppState.ProblemDetails?.Title ?? "error title")</p>
+        <p>@(AppState.ProblemDetails?.Detail ?? "error message")</p>
+        </ErrorContent>
+        </ErrorBoundary>*@
+    </main>
+
+@*    <aside class="Menu">
+        <Nav nav="@model?.Nav"></Nav>
+    </aside>
+    <aside class="Left">
+        <Gallery Boxes="@model?.BlogPosts"></Gallery>
+    </aside>
+    <aside class="Right">
+        <Gallery Boxes="@model?.News"></Gallery>
+    </aside>
+    <footer>
+        <Footer></Footer>
+    </footer>*@
+</div>
+
+@code {
+    private LayoutDTO? model;    //private ErrorBoundary errorBoundary;
+    private bool IsMenuVisible = false;
+    private bool HideMenuOnMobile = true;
+    private bool isErrorActive;
+    private SessionDTO Session;
+
+    string title;
+    string message;
+
+    public void ShowError(string title, string message)
+    {
+        this.isErrorActive = true;
+        this.title = title;
+        this.message = message;
+        StateHasChanged();
+    }
+
+
+
+
+    //[CascadingParameter]
+    //private Task<AuthenticationState> authenticationStateTask
+    //{
+    //    get => AppState.authenticationState;
+    //    set
+    //    {
+    //        if (AppState.authenticationState == value) return;
+
+    //        AppState.authenticationState = value;
+    //        var authState = AppState.authenticationState.Result;
+    //        //viewModel = new LayoutViewModel(AppState);
+    //        //viewModel.OnStateChange += StateChange;
+    //    }
+    //}
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = await GetAsync<LayoutDTO>("layout");
+            StateHasChanged();
+        }
+    }
+
+
+    private void HamburgerClicked()
+    {
+        IsMenuVisible = !IsMenuVisible;
+        HideMenuOnMobile = !HideMenuOnMobile;
+    }
+
+    private void MenuItemClicked(MenuItemModel menuItem)
+    {
+        HideMenuOnMobile = true;
+    }
+
+    #region "HttpClient"
+
+
+    protected async Task<T> GetAsync<T>(params string[] segments)
+    {
+        var url = Globals.ApiUrl(segments);
+        SetDefaultHeaders();
+        HttpResponseMessage response = await http.GetAsync(url);
+        return await ResponseMessage<T>(response, url);
+    }
+
+    protected void SetDefaultHeaders()
+    {
+        SetAuthHeader();
+        SetLangHeader();
+    }
+
+    private void SetAuthHeader()
+    {
+        string? userId = UserId();
+        if (userId != null)
+            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("ApiKey", userId);
+    }
+
+    private void SetLangHeader()
+    {
+        var cc = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+        var currentLangId = LangDTO.FromCultureInfo(cc).ToString();
+        var header = http.DefaultRequestHeaders.FirstOrDefault(x => x.Key == "Lang");
+        var httpLangId = header.Value?.FirstOrDefault() ?? "";
+        if (currentLangId != httpLangId)
+            http.DefaultRequestHeaders.Add("Lang", currentLangId.ToString());
+    }
+
+    private async Task<T> ResponseMessage<T>(HttpResponseMessage response, string url)
+    {
+        try
+        {
+            if (response.IsSuccessStatusCode)
+            {
+                string responseText = await response.Content.ReadAsStringAsync();
+                T? retval = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(responseText);
+                return retval;
+            }
+            else
+            {
+                problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>() ?? new ProblemDetails();
+                ShowError(problemDetails);
+            }
+        }
+
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            // Its a timeout issue
+            problemDetails = new ProblemDetails
+                {
+                    Title = "TimeOut Exception on " + url,
+                    Detail = ex.Message + ' ' + ex.StackTrace
+                };
+            ShowError(problemDetails);
+            NotifyStateChanged();
+        }
+        catch (Exception ex)
+        {
+            problemDetails = new ProblemDetails
+                {
+                    Title = "Exception on " + url,
+                    Detail = ex.Message + ' ' + ex.StackTrace
+                };
+            ShowError(problemDetails);
+            NotifyStateChanged();
+        }
+        return default(T);
+
+    }
+
+    private string? UserId()
+    {
+        var authState = authenticationState.Result;
+        var user = authState.User;
+        var retval = IsAuthenticated() ? user?.GetUserId() : null;
+        return retval;
+    }
+
+    private void NotifyStateChanged() => OnStateChange?.Invoke();
+    #endregion
+
+
+}

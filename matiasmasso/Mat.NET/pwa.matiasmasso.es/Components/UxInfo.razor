@@ -1,0 +1,14 @@
+﻿<div class="Wrapper">
+    <div class="Ico">
+        <img src="/img/svg/info.svg" />
+    </div>
+    <div>
+        <p>
+            @((MarkupString)Text.Html())
+        </p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Text { get; set; }
+}

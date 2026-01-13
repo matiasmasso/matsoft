@@ -1,0 +1,32 @@
+﻿.Item {
+    display: flex;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+    .Item:not(:first-child) {
+        border-top: 1px solid gray;
+    }
+
+.Ico {
+    width: 48px;
+    height: 48px;
+    background-image: url("img/spinner24.gif");
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-right: 10px;
+}
+
+.Details {
+    width: 100%;
+}
+
+.Saldo {
+    display: flex;
+    justify-content: space-between;
+    color: gray;
+}
+
+.Eur {
+    white-space: nowrap;
+}

@@ -1,0 +1,57 @@
+﻿.ButtonsBar {
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+button.Item {
+    background-color: none;
+    border: none;
+}
+
+.Item:not(:first-child) {
+    border-top: 1px solid gray;
+}
+
+
+.Item {
+    display: block;
+    padding: 10px;
+}
+
+    .Item.Selected {
+        display: flex;
+        justify-content: space-between;
+        background-color: lightgray;
+    }
+
+.fa-xmark {
+    padding: 4px 2px;
+}
+
+
+
+
+.Spacer {
+    padding: 10px;
+}
+
+a {
+    color:black;
+}
+
+
+@media screen and (min-width:600px) {
+    .Item {
+        border-top: 0;
+        padding: 0 5px;
+    }
+}
+
+@media (max-width:600px){
+    .ButtonsBar {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+}

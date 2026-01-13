@@ -1,0 +1,63 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JS
+
+<div class="custom-file-upload">
+    <a href="#" @onclick="TriggerFileSelect" @onclick:preventDefault>
+        @Caption
+    </a>
+
+    <!-- Hidden InputFile component MaxAllowedFiles="100"-->
+    <InputFile @ref="inputFileRef"
+               OnChange="HandleFiles"
+               multiple
+               MaxFileSize="@long.MaxValue"
+               style="display:none" />
+</div>
+
+@code {
+    private InputFile? inputFileRef; // component instance
+    private ElementReference? inputFileElement; // DOM element
+
+    [Parameter] public string Caption { get; set; } = "Select Files";
+    [Parameter] public EventCallback<IReadOnlyList<IBrowserFile>> OnFilesSelected { get; set; }
+    //[Parameter] public EventCallback<IBrowserFile> OnFileSelected { get; set; }
+
+    private List<IBrowserFile> SelectedFiles = new();
+
+    private async Task TriggerFileSelect()
+    {
+        if (inputFileElement.HasValue)
+        {
+            await JS.InvokeVoidAsync("triggerClick", inputFileElement.Value);
+        }
+    }
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && inputFileRef is not null)
+        {
+            // capture the DOM element from the InputFile component
+            inputFileElement = inputFileRef.Element;
+        }
+    }
+
+
+
+
+    // configurable limits
+    private const long MaxFileSize = 1024 * 1024 * 1024; // max 50 MB per file?
+
+    private async Task HandleFiles(InputFileChangeEventArgs e)
+    {
+        // request all files, no cap
+        var files = e.GetMultipleFiles(int.MaxValue);
+
+        // validate sizes
+        if (files.Any(f => f.Size > MaxFileSize))
+            throw new Exception($"One or more files exceed {MaxFileSize} Mb.");
+
+        SelectedFiles = files.ToList();
+        await OnFilesSelected.InvokeAsync(SelectedFiles);
+    }
+}

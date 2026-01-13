@@ -1,0 +1,333 @@
+﻿.body-content {
+    padding-top: 30px;
+    padding-bottom: 20px;
+    font-family: Open Sans, Arial;
+    font-size: 16px;
+}
+
+.body-content {
+    /* Set padding to keep content from hitting the edges */
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+
+
+.showOnMobile {
+    display: none;
+}
+
+/*----------------------------------------------- Blog Layout ---------------------*/
+
+
+
+
+/*----------------------------------------------- Header Layout -------------------*/
+
+
+header {
+    margin: 4px 0;
+    padding: 0;
+}
+
+
+.headerTopRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: 1px solid gray;
+    align-items: center;
+}
+
+.headerTopRow .banner img {
+    width:100%;
+}
+
+.headerTopRow img {
+    height: 20px;
+    width: auto;
+    margin: 0px;
+    padding: 0px;
+}
+
+.headerTopRow .logo a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.headerTopRow .razonsocial {
+    font-family: Arial;
+    font-size: 26px;
+    font-weight: 600;
+    color: darkgrey;
+    margin: 0 0 0 7px;
+}
+
+.profileIcon {
+    margin: 0 10px;
+}
+
+.headerTopRow .SearchBoxRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between center;
+    align-items: center;
+}
+
+    .SearchBox {
+        /*padding: 4px 7px 2px 20px;*/
+        padding-left: 20px;
+        background-image: url('/Media/Img/Misc/searchicon16.jpg');
+        background-position: 2px 2px;
+        background-repeat: no-repeat;
+        border: 1px solid gray;
+        font-size: 1em;
+        /*-webkit-transition: width 0.4s ease-in-out;
+                transition: width 0.4s ease-in-out;*/
+    }
+
+.LangSelector {
+    border: 1px solid gray;
+    font-size: 1em;
+    padding:0 0 1px 0;
+    margin:0 0 0 10px;
+}
+
+
+
+.avatar {
+    display: flex;
+    margin: 0 10px;
+    justify-content: center;
+}
+
+
+
+
+
+    /*----------------------------------------------------------------------------------*/
+    main {
+    margin-top: 30px;
+    margin-bottom:30px;
+}
+
+/*
+.flex-container {
+    display: flex;
+}
+input[type=text] {
+    background: url('/Content/images/Magnifier16.png') no-repeat right;
+    border: 1px solid black;
+    height: 20px;
+}
+*/
+
+
+
+
+/*----------------------------------------------- Misc -------------------*/
+
+.menuChevron {
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+.chevronRight {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+}
+
+.chevronLeft {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
+
+.chevronUp {
+    transform: rotate(-135deg);
+    -webkit-transform: rotate(-135deg);
+}
+
+.chevronDown {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
+
+
+
+
+/*----------------------------------------------- Footer Layout -------------------*/
+
+footer {
+    font-size: .8em;
+    margin-top: 20px;
+}
+
+.topFooter {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f5f5f5;
+    margin-bottom: 0px;
+}
+
+    .topFooter > div {
+        flex: 1 1 0px;
+        min-width: 0;
+        max-width: 250px;
+        padding: 0px 20px 0px 20px;
+    }
+
+
+img.contact {
+    height: 1em;
+}
+
+.socialMedia {
+    display: flex;
+    justify-content: flex-start;
+}
+
+    .socialMedia img {
+        margin: 5px;
+    }
+
+.socialMediaMobile {
+    text-align: center;
+}
+
+    .socialMediaMobile img {
+        margin: 12px;
+        width: 40px;
+        height: 40px;
+    }
+
+.bottomFooter {
+    display: flex;
+    justify-content: space-between;
+    background-color: #d5d5d5;
+    margin: 0px;
+    padding: 20px;
+}
+
+.legal {
+    display: flex;
+    height: 1em;
+}
+
+    .legal a {
+        border-right: 1px solid black;
+        padding-right: 7px;
+        padding-left: 7px;
+    }
+
+        .legal a:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+
+
+
+@media screen and (max-width: 900px) {
+    .Hello {
+        display: none;
+    }
+
+
+
+        @media(max-width:700px) {
+
+            .SideMenuCaption:not(.popSidenav.popup) {
+                display: block;
+                padding: 20px 0 15px 0;
+            }
+
+            .Logo-container:not(.popSidenav.popup) {
+                display: none;
+            }
+        }
+
+    @media screen and (max-width: 600px) {
+        body {
+        }
+
+        .hideOnMobile {
+            display: none;
+        }
+
+        .showOnMobile {
+            display: block;
+        }
+
+        .avatar img {
+            height: 12px;
+            width:auto;
+        }
+
+        .headerTopRow {
+            border-bottom: none;
+        }
+
+        .socialMediaMobile img {
+            margin: 10px;
+            width: 44px;
+            height: 44px;
+        }
+
+        nav {
+            display: none;
+        }
+
+            nav.show {
+                width: 100%;
+                position: absolute;
+                display: block;
+                background: white;
+            }
+
+        .bottomFooter {
+            justify-content: center;
+            background-color: white;
+            padding: 20px;
+        }
+
+    }
+
+    @media screen and (max-width: 405px) {
+        header .razonsocial {
+            font-size: 16px;
+            font-weight: 400;
+        }
+    }
+
+    @media screen and (max-width: 393px) {
+
+        .hideOnMobile {
+            display:none;
+         }
+
+       .headerTopRow {
+            flex-direction: column;
+        }
+
+            .headerTopRow .searchBox {
+                margin-top: 10px;
+            }
+
+            .headerTopRow .razonsocial {
+                font-size: 6.5vw !important;
+            }
+
+    }
+
+    @media screen and (max-width: 320px) {
+
+        .socialMediaMobile img {
+            margin: 5px;
+            width: 44px;
+            height: 44px;
+        }
+    }
+

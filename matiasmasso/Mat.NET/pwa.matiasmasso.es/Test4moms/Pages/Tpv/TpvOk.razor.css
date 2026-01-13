@@ -1,0 +1,21 @@
+﻿.OuterWrapper {
+    padding: 10px;
+}
+.InnerWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.Message {
+    margin:20px 0 0;
+    display:grid;
+    grid-template-columns:32px 1fr;
+    grid-column-gap:10px;
+}
+
+.Ico path {
+    fill: green;
+}

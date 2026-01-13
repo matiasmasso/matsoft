@@ -1,0 +1,193 @@
+﻿@page "/banc/transfers"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject BancTransfersService bancTransfersService
+
+<div class="PageWrapper900">
+    @if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <h3>@culture.Localize("BancTransfers")</h3>
+
+        <PageOptions>
+            <div class="LookupEmps">
+                <LookupEmps Value="selectedEmp" ValueChanged="EmpChanged"></LookupEmps>
+            </div>
+            <SelectedValues @bind-Values="selectedValues"></SelectedValues>
+            <a href="#" @onclick="@(()=>isPreloading = !isPreloading)" @onclick:preventDefault>
+                @culture.Localize("Preload")
+            </a>
+            <a href="#" @onclick="@(()=>isAdding = !isAdding)" @onclick:preventDefault>
+                @culture.Localize("AddNew")
+            </a>
+        </PageOptions>
+
+        @if (values?.Count == 0 && exception == null)
+        {
+            <Loading></Loading>
+        }
+        else if (SelectedYear() == null)
+        {
+            <div class="Info">@culture.Localize("Select.Year")</div>
+            <div class="Years">
+                @foreach (var year in Years() ?? new())
+                {
+                    <a href="#" @onclick="@(()=>SelectYear(year))" @onclick:preventDefault>
+                        @year.ToString()
+                    </a>
+                }
+            </div>
+        }
+        else if (isPreloading)
+        {
+            <div class="PreloadOptions">
+                <a href="#" @onclick="PreloadStaff" @onclick:preventDefault>
+                    Staff
+                </a>
+                <a href="#" @onclick="PreloadReps" @onclick:preventDefault>
+                    Reps
+                </a>
+            </div>
+        }
+        else if (isAdding)
+        {
+            <div>isAdding new transfer</div>
+        }
+        else
+        {
+            <div class="Grid">
+                <Virtualize Items="Items()" Context="item">
+                    <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        <div class="Fch">@string.Format("{0:dd/MM/yy}",item.Fch)</div>
+                        <div class="Nom">@item.Beneficiari</div>
+                        <div class="Num">@item.Amount?.CurFormatted()</div>
+                    </a>
+                </Virtualize>
+            </div>
+        }
+
+
+        <Error @bind-Exception="exception"></Error>
+    }
+
+</div>
+
+
+@code {
+    List<BancModel.Transfer>? values;
+    EmpModel? selectedEmp;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    SelectedValues.Collection? selectedValues;
+    bool isPreloading;
+    bool isAdding;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        bancTransfersService.OnChange += NotifyChange;
+    }
+    protected override void OnParametersSet()
+    {
+        NotifyChange();
+    }
+
+    void NotifyChange(Exception? ex = null)
+    {
+        exception = ex;
+        values = bancTransfersService.Values?
+        .Where(x => x.Emp() == selectedEmp?.Id)?
+        .ToList();
+        if (values?.Count > 0)
+        {
+            var lastYear = ((DateTime)(values.Max(x => x.Fch()))).Year;
+            SelectYear(lastYear);
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    int? SelectedYear() => (int?)selectedValues?.FirstOrDefault()?.Value;
+
+    List<int>? Years() => values?.GroupBy(x => ((DateTime)x.Fch()!).Year)
+    .Select(x => ((DateTime)x.First().Fch()!).Year)
+    .OrderByDescending(x => x)
+    .ToList();
+
+    void SelectYear(int year)
+    {
+        selectedValues = new();
+        selectedValues.Add(year, year.ToString());
+    }
+
+    public List<XItem> Items()
+    {
+        var retval = new List<XItem>();
+        if (values?.Count > 0)
+        {
+
+            foreach (var transfer in values.Where(x => ((DateTime)x.Fch()!).Year == SelectedYear()))
+            {
+                foreach (var item in transfer.Items)
+                {
+                    retval.Add(new XItem
+                        {
+                            Pool=transfer,
+                            Guid = item.Guid,
+                            Fch = transfer.Fch(),
+                            Beneficiari = bancTransfersService.Beneficiari(item)?.RaoSocial + " - " + item.Concept,
+                            Amount = item.Amount
+                        });
+                }
+            }
+        }
+        return retval
+        .OrderByDescending(x => x.Fch)
+        .ThenBy(x => x.Beneficiari)
+        .ToList();
+    }
+
+    private void EmpChanged(EmpModel emp)
+    {
+        selectedEmp = emp;
+        NotifyChange();
+    }
+
+    private void PreloadStaff()
+    {
+
+    }
+
+    private void PreloadReps()
+    {
+
+    }
+
+    private void ItemClick(XItem value)
+    {
+        var item = (IModel)value.Pool;
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(item, item.ToString() ?? "?"));
+    }
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        bancTransfersService.OnChange -= NotifyChange;
+    }
+
+    public class XItem
+    {
+        public BancModel.Transfer Pool{ get; set; }
+        public Guid Guid;
+        public DateTime? Fch { get; set; }
+        public string? Beneficiari { get; set; }
+        public Amt? Amount { get; set; }
+    }
+}

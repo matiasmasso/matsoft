@@ -1,0 +1,244 @@
+﻿@implements IDisposable
+
+@inject ApiService ApiService
+
+<div class="PageWrapper">
+    @if (state == DbState.IsLoading)
+    {
+        <h1>Menció al document</h1>
+        <Loading />
+    }
+    else if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>Menció al document</h1>
+        <TabControl>
+            <TabPage Text="General">
+
+                <PropertyGrid model="@gridModel"
+                              SetDirty="DirtyChanged"
+                              ItemSelected="SelectItem"
+                              RequestToAddNew="PgAddNewHandler"
+                              CanEdit="true"></PropertyGrid>
+            </TabPage>
+
+        </TabControl>
+
+        <div class="ButtonsBar">
+            <ButtonsBar CanEdit="true"
+                        State="state"
+                        CanDelete="@(!(value?.IsNew ?? false))"
+                        RequestToCancel="CancelRequestHandler"
+                        RequestToDelete="DeleteRequest"
+                        RequestToUpdate="UpdateRequest"></ButtonsBar>
+        </div>
+    }
+
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public Guid? Doc { get; set; }
+    [Parameter] public DocTargetModel? Value { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+
+
+    private DocTargetModel? value;
+    private PropertyGridModel? gridModel;
+    private List<PersonModel>? persons;
+    private List<LocationModel>? locations;
+    //private PersonModel? selectedPerson;
+    //private LocationModel? selectedLocation;
+    private IModel? selectedItem;
+    private DbState state;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Doc,
+        TargetCod,
+        Target,
+        Rel,
+        SubjectePassiu,
+        Difunt
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        state = DbState.IsLoading;
+        try
+        {
+            if (Value != null)
+                value = Value;
+            else if (Guid == null)
+                value = new DocTargetModel { Doc = (Guid?)Doc };
+            else
+                value = ApiService.DocTarget(Guid);
+
+            if (value == null) throw new Exception("null DocTarget");
+
+            var docs = ApiService.Docs();
+            persons = ApiService.Persons();
+            locations = ApiService.Locations();
+            var docRels = ApiService.DocRels();
+
+            var doc = docs?.FirstOrDefault(x => x.Guid == value.Doc);
+            var docRel = docRels?.FirstOrDefault(x => x.Guid == value.Rel);
+
+            gridModel = new PropertyGridModel(value);
+            gridModel.AddDropdown<DocModel>((int)Fields.Doc, docs ?? new(), doc, "Document");
+            gridModel.AddEnum((int)Fields.TargetCod, new DocTargetModel.TargetCods(), (int)value.TargetCod, "Codi target");
+            gridModel.AddDropdown<IModel>((int)Fields.Target, Targets(value.TargetCod), Target(), "Target");
+            gridModel.AddDropdown<DocRelModel>((int)Fields.Rel, docRels ?? new(), docRel, "Rol");
+            gridModel.AddBool((int)Fields.SubjectePassiu, value.SubjectePassiu, "Subjecte passiu");
+            gridModel.AddBool((int)Fields.Difunt, value.Difunt, "Difunt");
+
+            if (value!.IsNew && value.Target != null && value.Doc != null && value.Rel != null)
+                state = DbState.IsDirty;
+            else
+                state = DbState.StandBy;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            state = DbState.StandBy;
+        }
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SetDirty(object args)
+    {
+        var item = (PropertyGridModel.Item)args;
+        if (item.Field == (int)Fields.TargetCod)
+        {
+            var cod = (DocTargetModel.TargetCods?)item?.Value ?? DocTargetModel.TargetCods.NotSet;
+            var targetItem = gridModel!.Items.First(x => x.Field == (int)Fields.Target);
+            targetItem.Values = Targets(cod);
+        }
+        state = DbState.IsDirty;
+    }
+
+    private DocTargetModel.TargetCods CurrentTargetCod()
+    {
+        var item = gridModel?.Items.FirstOrDefault(x => x.Field == (int)Fields.TargetCod);
+        var codWrapper = (EnumItemModel?)item?.Value;
+        DocTargetModel.TargetCods? retval = (DocTargetModel.TargetCods?)codWrapper?.Value;
+        return retval ?? DocTargetModel.TargetCods.Person;
+    }
+
+    private List<IModel> Targets(DocTargetModel.TargetCods cod)
+    {
+        List<IModel> retval;
+        if (value?.TargetCod == DocTargetModel.TargetCods.Location)
+            retval = (List<IModel>?)locations?.Select(x => (IModel)x).ToList() ?? new();
+        else
+            retval = (List<IModel>?)persons?.Select(x => (IModel)x).ToList() ?? new();
+        return retval;
+    }
+
+
+    private IModel? Target()
+    {
+        IModel? retval;
+        var cod = CurrentTargetCod();
+        if (cod == DocTargetModel.TargetCods.Location)
+            retval = ApiService.Location(value?.Target);
+        else
+            retval = ApiService.Person(value?.Target);
+        return retval;
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        state = DbState.IsUpdating;
+
+        try
+        {
+            value!.Doc = gridModel!.GetModelGuid((int)Fields.Doc);
+            value.TargetCod = (DocTargetModel.TargetCods?)gridModel.GetValue<EnumItemModel>((int)Fields.TargetCod)?.Value ?? 0;
+            value.Target = gridModel.GetModelGuid((int)Fields.Target);
+            value.Rel = gridModel.GetModelGuid((int)Fields.Rel);
+            value.SubjectePassiu = gridModel.GetBool((int)Fields.SubjectePassiu);
+            value.Difunt = gridModel.GetBool((int)Fields.Difunt);
+            await ApiService.UpdateAsync(value);
+            await AfterUpdate.InvokeAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private void DirtyChanged(PropertyGridModel.Item item)
+    {
+        state = DbState.IsDirty;
+        if (item.Field == (int)Fields.Rel & item.Value != null)
+        {
+            DocRelModel? docRel = item.Value as DocRelModel;
+            gridModel?.SetBool((int)Fields.SubjectePassiu, docRel?.SubjectePassiu ?? false);
+        }
+    }
+
+    async Task SelectItem(PropertyGridModel.Item item)
+    {
+        await ItemSelected.InvokeAsync((IModel)item.Value!);
+    }
+
+    void PgAddNewHandler(PropertyGridModel.Item item)
+    {
+        if (item.Field == (int)Fields.Target)
+        {
+            selectedItem = PersonModel.Factory();
+        } else if(item.Field == (int)Fields.Rel)
+        {
+            selectedItem = DocRelModel.Factory();
+        }
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+
+}

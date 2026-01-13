@@ -1,0 +1,140 @@
+﻿@using DTO.Helpers;
+@using System.Net.Http.Headers;
+@implements IDisposable
+@inject AppState AppState
+@inject HttpClient http
+@inject AuthenticationStateProvider authStateProvider
+
+@*//specific for Blazor server
+//using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+//inject ProtectedSessionStorage _sessionStorage
+*@
+
+@if (isLoaded)
+{
+    <CascadingValue Value="@this">
+        @ChildContent
+    </CascadingValue>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@*Erp*@
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    public Erp.Services.SessionState? Session { get; set; }
+    public event EventHandler<EventArgs>? MenuJustLoaded;
+    public bool isLoaded;
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        var custAuthProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        custAuthProvider.TokenChangedAsync += TokenChangedAsync;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Maintains session collection returning current or creating a new one
+            Guid guid;
+            if (Guid.TryParse(await SecureStorage.GetAsync("sessionId"), out guid))
+            {
+                Session = AppState.Session(guid);
+            }
+
+            if (Session == null)
+            {
+                Session = AppState.AddSession();
+                await SecureStorage.SetAsync("sessionId", Session.Guid.ToString());
+            }
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    #region "nav"
+
+    public async Task LoadNav()
+    {
+        isLoaded = false;
+        var apiResponse = await HttpService.GetAsync<NavDTO>(http, "navs/custom", ((int)EmpModel.EmpIds.MatiasMasso).ToString());
+        if (apiResponse.Success())
+        {
+            Session!.Nav = apiResponse.Value!;
+            Session.MenuItems = Session.Nav.Items.Where(x => x.Parent == null).OrderBy(y => y.Ord).ToList();
+            Session.IsLoadingMenu = false;
+            if (MenuJustLoaded != null)
+            {
+                MenuJustLoaded.Invoke(this, new EventArgs());
+            }
+        }
+    }
+
+    #endregion
+
+    #region "auth token"
+
+    public async Task TokenChangedAsync(object? sender, EventArgs args)
+    {
+        var token = ((MatEventArgs<string>)args)?.Value;
+        if (token == null)
+            http.DefaultRequestHeaders.Authorization = null;
+        else
+            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        await LoadNav();
+    }
+
+    public async Task<UserModel?> GetUserFromIdentity()
+    {
+        UserModel? retval = null;
+        var authstate = await authStateProvider.GetAuthenticationStateAsync();
+        var claims = authstate.User.Claims;
+        var claim = claims.FirstOrDefault(x => x.Type == "UserId");
+        if (claim != null)
+        {
+            retval = new UserModel(new Guid(claim.Value));
+            retval.Rol = claims.FirstOrDefault(x => x.Type == "Rol")?.Value.ToEnum<UserModel.Rols>() ?? 0;
+            retval.Nickname = claims.FirstOrDefault(x => x.Type == "DisplayName")?.Value;
+            retval.EmailAddress = claims.FirstOrDefault(x => x.Type == "Email")?.Value;
+            retval.Hash = claims.FirstOrDefault(x => x.Type == "Hash")?.Value;
+            var emps = claims.FirstOrDefault(x => x.Type == "Emps")?.Value;
+
+        }
+        return retval;
+    }
+
+    public async Task LogoutAsync()
+    {
+        await ((CustomAuthenticationStateProvider)authStateProvider).LogoutAsync();
+    }
+
+    public void Dispose()
+    {
+        ((CustomAuthenticationStateProvider)authStateProvider).TokenChangedAsync -= TokenChangedAsync;
+    }
+
+    #endregion
+
+    #region "Browser History"
+
+    public void AddToBrowserHistory(string url)
+    {
+        if (Session!.BrowserHistory.Count == 0 || url != Session!.BrowserHistory.Last())
+            Session!.BrowserHistory.Add(url);
+    }
+
+    public void RemoveLastBrowserHistory()
+    {
+        Session!.BrowserHistory.RemoveAt(Session!.BrowserHistory.Count - 1);
+    }
+
+    public string GetLastBrowserHistory() => Session!.BrowserHistory[Session!.BrowserHistory.Count - 1];
+
+    #endregion
+
+}

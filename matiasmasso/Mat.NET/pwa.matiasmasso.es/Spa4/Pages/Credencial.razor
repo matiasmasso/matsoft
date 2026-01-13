@@ -1,0 +1,69 @@
+﻿@page "/Credencial"
+@page "/Credencial/{Guid:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+@using System.Net.Http.Formatting
+
+<div class="Wrapper">
+    <h1>Credencial</h1>
+
+       <TabControl SelectedTab = "1">
+
+            <ChildContent>
+
+                <TabPage Text="General">
+                    <CredencialEditor @bind-Model="@Model"></CredencialEditor>
+                </TabPage>
+
+                <TabPage Text="Propietaris">
+                    <CredencialOwners @bind-Model="@Model"></CredencialOwners>
+                </TabPage>
+
+                <TabPage Text="Rols">
+                    <Rols @bind-Model="@Rols"></Rols>
+                </TabPage>
+
+            </ChildContent>
+
+        </TabControl>
+
+
+
+</div>
+@code {
+    private CredencialModel? Model = null;
+    private List<UserDTO.Rols>? Rols = null;
+
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Guid == null)
+            Model = new CredencialModel();
+        else
+        {
+            var dto = await base.GetAsync<CredencialDTO>("credencial", Guid.ToString());
+            Model = dto.Model;
+        }
+        Rols = Model.Rols;
+        StateHasChanged();
+    }
+
+
+    
+    async void Save()
+    {
+        base.LoadUsrLog(Model!.UsrLog);
+
+        var url = Globals.ApiUrl("Credencial");
+        var content = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+        var response = await base.http.PostAsync(url, content, new JsonMediaTypeFormatter());
+        if ((int)response.StatusCode == 200)
+            NavigationManager.NavigateTo("Credencials");
+        else
+            throw new Exception("error on updating credential");
+    }
+}
+

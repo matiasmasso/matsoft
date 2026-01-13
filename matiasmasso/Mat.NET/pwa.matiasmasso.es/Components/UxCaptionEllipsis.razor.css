@@ -1,0 +1,36 @@
+﻿
+.ItemWrapper {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+}
+
+    .ItemWrapper:hover {
+        background: #FAFAFA;
+    }
+
+
+.Item {
+    display: block;
+    width: 100%;
+}
+
+.ContextMenu:hover {
+    background: #DDDDDD;
+}
+
+
+.ItemWrapper:hover .Ellipsis {
+    visibility: visible;
+}
+
+.Elipsis.IsShowingMenu {
+    visibility: visible;
+}
+
+.Ellipsis:not(.IsShowingMenu) {
+    visibility: hidden;
+}
+

@@ -1,0 +1,42 @@
+﻿.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr min-content min-content min-content min-content;
+    grid-column-gap: 10px;
+}
+
+
+.Item, .ColHeaders {
+    display:contents;
+}
+
+    .ColHeaders div {
+        padding: 0 0 10px;
+    }
+
+    .Toggle {
+        width:1.5em;
+    }
+
+.Nom {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.Fch {
+    white-space: nowrap;
+}
+
+.Ico {
+    display:flex;
+    justify-content: center;
+}
+
+@media(max-width:599px){
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content 1fr min-content min-content;
+        grid-column-gap: 10px;
+    }
+
+}

@@ -1,0 +1,39 @@
+﻿@if (availableValues.Count > 1)
+{
+    <div class="Wrapper">
+        @foreach (var item in availableValues)
+        {
+            <a href="#" class="Item @(IsSelected(item)?"Selected":"")" @onclick="@(()=>ItemClickAsync(item))" @onclick:preventDefault>
+                @item.Abr
+            </a>
+        }
+    </div>
+}
+
+
+@code {
+    [Parameter] public List<EmpModel>? AvailableValues { get; set; }
+    [Parameter] public List<EmpModel>? SelectedValues { get; set; }
+    [Parameter] public EventCallback<List<EmpModel>> SelectedValuesChanged { get; set; }
+    List<EmpModel> availableValues = new();
+    List<EmpModel> selectedValues = new();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        selectedValues = SelectedValues ?? new();
+        if (availableValues.Count==0)
+        availableValues = AvailableValues ?? new List<EmpModel>(selectedValues);
+    }
+
+    async Task ItemClickAsync(EmpModel emp)
+    {
+        if (IsSelected(emp))
+            selectedValues.Remove(emp);
+        else
+            selectedValues.Add(emp);
+        await SelectedValuesChanged.InvokeAsync(selectedValues);
+    }
+
+    bool IsSelected(EmpModel emp) => selectedValues.Any(x => x.Id == emp.Id);
+}

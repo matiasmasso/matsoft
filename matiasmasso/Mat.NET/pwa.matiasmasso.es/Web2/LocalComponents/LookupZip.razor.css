@@ -1,0 +1,83 @@
+﻿.Modal {
+    margin: 15px;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 4px;
+    z-index: 100;
+    padding: 5px;
+    width: 100%;
+    min-width:599px;
+    min-height:200px;
+    backdrop-filter: blur(0);
+    padding:10px;
+/*    -webkit-filter: blur(0);
+    -moz-filter: blur(0);
+    -o-filter: blur(0);
+    -ms-filter: blur(0);
+    filter: blur(0);
+*/}
+
+.Header {
+    display:flex;
+    justify-content: space-between;
+    gap:10px;
+}
+
+.ButtonsBar {
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    border-top: black;
+    margin:10px 0 0;
+}
+
+
+.Title {
+    display:flex;
+    justify-content: space-between;
+    margin:15px 0 10px;
+    border-bottom:1px solid gray;
+/*    padding:4px 7px 2px 4px;
+*/
+
+}
+
+.Info {
+    margin:10px 0;
+}
+.SelectedValues {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+    .SelectedValues a {
+        display: inline-flex;
+        gap: 10px;
+        padding: 4px 7px 2px 4px;
+        border-radius: 5px;
+        border: 1px solid gray;
+        background-color: aliceblue;
+        margin: 0 10px 10px 0;
+    }
+
+    .HasValue {
+        display:flex;
+        gap:10px;
+    }
+
+.Grid {
+}
+.Countries, .Zonas, .Locations, .Zips {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, min-content);
+    grid-template-rows: repeat(12,min-content );
+    column-gap:10px;
+    grid-auto-flow: column;
+    height:100%;
+}
+
+.Countries a, .Zonas a, .Locations a, .Zips a {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}

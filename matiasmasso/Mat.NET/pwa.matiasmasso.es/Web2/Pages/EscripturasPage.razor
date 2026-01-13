@@ -1,0 +1,193 @@
+﻿@page "/escripturas"
+@page "/{LangSegment}/escripturas"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject EscripturasService escripturasService
+
+<div class="PageWrapper600">
+
+
+    @if (model == null && exception == null)
+    {
+        <h1>@culture.Localize("Escripturas")</h1>
+
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <h1>@culture.Localize("Escripturas")</h1>
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+             <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                 @culture.Localize("AddNew")
+             </a>
+             <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+         </PageOptions>
+     </div>
+
+        <SelectedEmps @bind-SelectedValues="selectedEmps"></SelectedEmps>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} escripturas, {1} en actiu",model?.Count(), model?.Where(x => x.FchTo == null).Count())
+        </div>
+
+
+        <div class="Grid">
+            <div class="Item ColHeaders HideOnMobile">
+                <span>&nbsp;</span>
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.FchFrom))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("Fch")
+                </a>
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.Plate))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("Concept")
+                </a>
+            </div>
+
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <a class='Item' href="@(()=>ItemClick(item))" target="_blank" title="@item.DocFile?.Features()">
+
+                    <div class="Icon">
+                        @if (item.DocFile == null)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            <div>
+                                <Icon Id="Icon.Ids.Doc"></Icon>
+                            </div>
+                        }
+
+                    </div>
+
+                    <a href="#" class='Fch @(item.IsOutdated() ? "Obsoleto" : "")' @onclick="@(()=>ItemClick( item))" @onclick:preventDefault>
+                        @string.Format("{0:dd/MM/yy}",item.FchFrom)
+                    </a>
+
+                    <a href="#" class='Nom Truncate @(item.IsOutdated() ? "Obsoleto" : "")' @onclick="@(()=>ItemClick( item))" @onclick:preventDefault>
+                        @item.Nom
+                    </a>
+
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private List<EscripturaModel>? model;
+    private List<EmpModel>? selectedEmps;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    private string searchTerm = string.Empty;
+    private Cols? sortedColumn = Cols.FchFrom;
+    private bool isDescendingOrder = false;
+    private bool isShowingObsolets;
+    private Exception? exception;
+
+    private enum Cols
+    {
+        FchFrom,
+        Plate,
+        CarModel,
+        Driver
+    }
+
+    protected override void OnInitialized()
+    {
+        session.OnChange += Refresca;
+        escripturasService.OnChange += Refresca;
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        model = escripturasService.Values;
+        if (selectedEmps == null || selectedEmps.Count == 0)
+            selectedEmps = session.Emps?.Where(x => model?.Any(y => x.Id == y.Emp) ?? false).ToList();
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<EscripturaModel>? FilteredItems()
+    {
+        var retval = model?
+    .Where(x => x.Matches(searchTerm)
+    && (x.FchTo == null || x.FchTo > DateTime.Today || isShowingObsolets)
+    && (selectedEmps?.Any(y => x.Emp == y.Id) ?? false))
+    .ToList();
+
+        var retval1 = model?
+        .Where(x => x.Matches(searchTerm)).ToList();
+        var retval2 = model?
+        .Where(x => x.FchTo == null || x.FchTo > DateTime.Today || isShowingObsolets).ToList();
+        var retval3 = model?
+        .Where(x => selectedEmps?.Any(y => x.Emp == y.Id) ?? false).ToList();
+
+        return retval;
+    }
+
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            //case Cols.Ref:
+            //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Referencia ?? "").ToList() : model!.OrderBy(x => x.Referencia ?? "").ToList();
+            //    break;
+            //case Cols.User:
+            //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Usuari ?? "").ToList() : model!.OrderBy(x => x.Usuari ?? "").ToList();
+            //    break;
+        }
+    }
+
+    private void ItemClick(EscripturaModel value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value.ToString()));
+    }
+
+    public void AddNew()
+    {
+        var value = new EscripturaModel();
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, culture.Lang().Tradueix("Nueva escritura", "Nova escriptura", "New notarial deed")));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        escripturasService.OnChange -= Refresca;
+    }
+
+}

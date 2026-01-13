@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Api.Entities;
+
+public partial class VwSkuAndBundlePnc
+{
+    public Guid SkuGuid { get; set; }
+
+    public int? Clients { get; set; }
+
+    public int? ClientsAlPot { get; set; }
+
+    public int? ClientsEnProgramacio { get; set; }
+
+    public int? ClientsBlockStock { get; set; }
+
+    public int? Pn1 { get; set; }
+
+    public int Xcod { get; set; }
+}

@@ -1,0 +1,115 @@
+﻿@page "/CcaScheds"
+@implements IDisposable
+@inject ApiService ApiService
+
+<PageTitle>Cash</PageTitle>
+
+@if (selectedValue != null)
+{
+    <CcaSched Value="selectedValue"
+              CloseRequest="@(()=>selectedValue=null)"
+              AfterUpdate="HandleAfterUpdate">
+    </CcaSched>
+}
+else
+{
+    <div class="PageWrapper600">
+        @if (values == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <PageOptions>
+                <LookupEmp Value="emp" ValueChanged="HandleEmpChange" Values="availableEmps"></LookupEmp>
+                <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir</a>
+            </PageOptions>
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+
+            <div class="Grid">
+                @foreach (var value in FilteredValues() ?? new())
+                {
+                    <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>selectedValue = value)">
+                        <div>@value.ToString()</div>
+                        <div>@($"{value.DueDate():dd/MM/yy}")</div>
+                    </a>
+                }
+            </div>
+        }
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+
+@code {
+    List<CcaSchedModel>? values;
+    EmpModel.EmpIds? emp;
+    List<EmpModel.EmpIds>? availableEmps;
+    CcaSchedModel? selectedValue;
+    string? searchterm;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            ApiService.OnChange += Refresca;
+            values = await ApiService.GetAsync<List<CcaSchedModel>>("CcaScheds");
+            if (values!.Count > 0)
+                availableEmps = values?.Select(x => x.Emp).Distinct().ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        await base.OnInitializedAsync();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<CcaSchedModel>? FilteredValues()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return values?.Where(x => x.Emp == emp).ToList();
+        else
+            return values?.Where(x => x.Emp == emp && x.Matches(searchterm)).ToList();
+    }
+
+    void AddNew()
+    {
+        selectedValue = new CcaSchedModel
+            {
+                Emp = (EmpModel.EmpIds)emp!,
+                Concept = "(nova programació d'assentament)",
+                Ccd = CcaModel.CcdEnum.Manual
+            };
+    }
+
+    void HandleAfterUpdate(CcaSchedModel args)
+    {
+        var previous = values!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous == null)
+            values!.Add(args);
+        else
+        {
+            var idx = values!.IndexOf(previous);
+            values[idx] = args;
+        }
+        selectedValue = null;
+        StateHasChanged();
+    }
+
+    void HandleEmpChange(EmpModel.EmpIds args)
+    {
+        emp = args;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

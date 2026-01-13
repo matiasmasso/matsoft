@@ -1,0 +1,25 @@
+﻿h1 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-bottom:20px;
+}
+
+@media (min-width:700px) {
+    .Wrapper {
+        display: grid;
+        grid-template-columns: 1fr 265px;
+        grid-column-gap: 10px;
+        max-width:100%;
+    }
+}
+
+
+/*------------------mobiles ----------------------*/
+
+@media (max-width:599px) {
+
+    .OtherNews {
+        margin: 20px 0 15px;
+    }
+}
+

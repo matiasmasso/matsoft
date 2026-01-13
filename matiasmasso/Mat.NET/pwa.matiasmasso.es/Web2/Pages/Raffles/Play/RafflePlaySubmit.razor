@@ -1,0 +1,46 @@
+﻿@inject CultureService culture
+@inject RafflesService rafflesService
+
+<a class="Bases" href="@basesUrl" title="@culture.Localize("Raffle.ClickToDownloadBases")" target="_blank">
+    <span>@culture.Localize("Raffle.ClickToBrowseBases")</span>
+</a>
+
+<div class="SubmitRow">
+    <div>
+        <input type="checkbox" id="termsAcceptance" @onchange="CheckedChange" />
+        @culture.Tradueix("He leido y acepto las bases del sorteo", "He llegit i accepto les bases del sorteig", "I've read and accept the raffle terms", "Li e aceito as bases do sorteio")
+    </div>
+    <button class="Button ButtonOk" @onclick="RequestToSubmit" disabled="@(!isChecked)">
+        @culture.Tradueix("Enviar", "Enviar", "Submit")
+    </button>
+</div>
+
+<Error @bind-Exception="exception"></Error>
+@code {
+    [Parameter] public RaffleModel.Participant? Participant { get; set; }
+    [Parameter] public EventCallback SubmitRequest { get; set; }
+    string? basesUrl;
+    Exception? exception;
+    bool isChecked;
+
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            if (Participant?.Raffle == null) throw new Exception("missing participant raffle");
+            basesUrl = culture.RelativeUrl("sorteo/bases", Participant?.Raffle?.Guid.ToString());
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+    }
+    void CheckedChange(ChangeEventArgs args)
+    {
+        isChecked = (bool)args.Value!;
+    }
+
+    async Task RequestToSubmit()
+    {
+        await SubmitRequest.InvokeAsync();
+    }
+}

@@ -1,0 +1,35 @@
+﻿@page "/Credencials"
+@inherits _ComponentBase
+@layout ProLayout
+
+
+<div class="Wrapper">
+    <h1>Credencials</h1>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Grid">
+        @if (base.IsLoaded)
+        {
+            foreach (var item in model.Items.Where(x => x.Matches(searchTerm)))
+            {
+                <a href="@item.UrlSegment()">
+                <div class="Ref">@item.Referencia</div>
+                <div class="User">@item.Usuari</div>
+                </a>
+            }
+        }
+    </div>
+</div>
+
+
+@code {
+    private CredencialListDTO? model;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        model = await base.GetAsync<CredencialListDTO>("credencials");
+    }
+
+}

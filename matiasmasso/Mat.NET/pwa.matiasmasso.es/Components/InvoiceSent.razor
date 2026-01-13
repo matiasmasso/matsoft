@@ -1,0 +1,197 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <a class="CloseButton" href="#" @onclick="RequestToClose" @onclick:preventDefault>
+        [@(Localizer("Close")))
+    </a>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@Localizer("Invoice") @model.Id</h1>
+
+        <TabControl>
+            <TabPage Text="@Localizer("Details")">
+                <ChildContent>
+
+                    <div class="Truncate">
+                        @Localizer("InvoiceIdFromFch",model.Id,model.Fch)
+                    </div>
+                    <div class="Truncate">
+                        @model.Contact.Nom
+                    </div>
+
+                    <div class="Items @(isShowingDto ? "IsShowingDto":"IsHiddingDto")">
+
+                        <div class="Item ColumnHeader">
+                            <div class="Sku">
+                                @Localizer("Sku")
+                            </div>
+                            <div class="Qty">
+                                @Localizer("Qty")
+                            </div>
+                            <div class="Price">
+                                @Localizer("Price")
+                            </div>
+                            @if (isShowingDto)
+                            {
+                                <div class="Dto">
+                                    @Localizer("Dto")
+                                </div>
+                            }
+                            <div class="Amt">
+                                @Localizer("Amt")
+                            </div>
+                        </div>
+
+                        @foreach (var item in model.Items)
+                        {
+                            @if (ShouldPrintDelivery(item))
+                            {
+                                <a href="#" class="Delivery" @onclick="@(()=>DeliveryClick(delivery))" @onclick:preventDefault>
+                                    @item.Delivery.Nom
+                                </a>
+                            }
+                            @if (ShouldPrintPurchaseOrder(item))
+                            {
+                                <a href="#" class="PurchaseOrder" @onclick="@(()=>PurchaseOrderClick(purchaseOrder))" @onclick:preventDefault>
+                                    @item.PurchaseOrder.Nom
+                                </a>
+                            }
+
+                            @if (ShouldPrintSpv(item))
+                            {
+                                <a href="#" class="PurchaseOrder" @onclick="@(()=>PurchaseOrderClick(purchaseOrder))" @onclick:preventDefault>
+                                    @item.PurchaseOrder.Nom
+                                </a>
+                            }
+
+                            <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                                <div class="Sku Truncate">
+                                    @SkuNomLlarg(item)
+                                </div>
+                                <div class="Qty">
+                                    @string.Format("{0:N0}",item.Qty)
+                                </div>
+                                <div class="Price">
+                                    @string.Format("{0:N2} €",item.Price)
+                                </div>
+                                @if (isShowingDto)
+                                {
+                                    <div class="Dto">
+                                        @(item.Dto == 0 ? "" : string.Format(dtoPattern, item.Dto))
+                                    </div>
+                                }
+                                <div class="Amt">
+                                    @string.Format("{0:N2} €",item.Amt())
+                                </div>
+                            </a>
+                        }
+                    </div>
+
+
+
+                </ChildContent>
+            </TabPage>
+        </TabControl>
+    }
+</div>
+
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    GuidNom? delivery; // = new GuidNom();
+    GuidNom? purchaseOrder; // = new GuidNom();
+
+    InvoiceSentModel? model;
+
+    bool isShowingDto;
+    int dtoDecimals;
+    string? dtoPattern;
+    private  ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (model == null)
+        {
+            delivery = new GuidNom();
+            purchaseOrder = new GuidNom();
+            var apiResponse = await GetAsync<InvoiceSentModel>( "InvoiceSent", Guid.ToString());
+            if (apiResponse.Success())
+            {
+                model = apiResponse.Value;
+                isShowingDto = model.Items.Any(x => x.Dto != 0);
+                dtoDecimals = model.Items.Select(x => x.Dto?.GetDecimalPlaces() ?? 0).Max();
+                dtoPattern = "{0:N" + dtoDecimals.ToString() + "}%";
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+            StateHasChanged();
+        }
+    }
+
+    private bool ShouldPrintDelivery(InvoiceSentModel.Item item)
+    {
+        bool retval = false;
+        var idx = model.Items.IndexOf(item);
+        if (idx == 0)
+            retval = true;
+        else if (!model.Items[idx - 1].Delivery.Guid.Equals(item.Delivery.Guid))
+            retval = true;
+        return retval;
+    }
+
+    private bool ShouldPrintPurchaseOrder(InvoiceSentModel.Item item)
+    {
+        bool retval = false;
+        if(item.PurchaseOrder != null)
+        {
+            var idx = model.Items.IndexOf(item);
+            if (idx == 0)
+                retval = true;
+            else if (model.Items[idx - 1].PurchaseOrder == null)
+                retval = true;
+            else if (!model.Items[idx - 1].PurchaseOrder.Guid.Equals(item.PurchaseOrder.Guid))
+                retval = true;
+        }
+        return retval;
+    }
+
+    private bool ShouldPrintSpv(InvoiceSentModel.Item item)
+    {
+        bool retval = false;
+        return retval;
+    }
+
+    private void DeliveryClick(GuidNom delivery)
+    {
+        
+    }
+
+    private void PurchaseOrderClick(GuidNom delivery)
+    {
+
+    }
+
+    private void ItemClick(InvoiceSentModel.Item item)
+    {
+
+    }
+
+    private string SkuNomLlarg(InvoiceSentModel.Item item) => Cache.Sku((Guid)item.Sku)?.NomLlarg.Tradueix(base.Lang());
+
+
+    private void RequestToClose()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}
+

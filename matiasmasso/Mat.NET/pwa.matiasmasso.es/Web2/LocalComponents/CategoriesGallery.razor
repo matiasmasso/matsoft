@@ -1,0 +1,34 @@
+﻿@inject CultureService culture
+@inject ProductsService products
+
+<div class="Grid">
+    @foreach (var item in Model)
+    {
+
+        <NavLink href="@products.LandingPage(item, culture)"
+                 title="@item.Nom?.Tradueix(culture.Lang())">
+
+            <div class="Item">
+
+                <div class="Thumbnail">
+                    <img src="@item.ImageUrl()"
+                         width="@ProductCategoryModel.IMG_WIDTH"
+                         height="@ProductCategoryModel.IMG_HEIGHT" />
+                </div>
+
+                <div class="Label">
+                    @item.Nom?.Tradueix(culture.Lang())
+                </div>
+
+            </div>
+
+        </NavLink>
+    }
+    <div class="clearfix"></div>
+</div>
+
+
+@code {
+    [Parameter] public List<ProductCategoryModel> Model { get; set; } = new();
+
+}

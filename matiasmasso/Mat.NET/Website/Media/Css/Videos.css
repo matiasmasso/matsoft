@@ -1,0 +1,43 @@
+﻿
+    .video-list-Wrapper {
+        clear: both;
+    }
+
+@media screen and (max-width:970px) {
+    .video-list-Wrapper {
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .videoItem-box {
+        display: inline-block;
+        width: 295px;
+        height: 220px;
+        border: 1px solid gray;
+        margin: 0 10px 10px 0;
+    }
+
+    .videoItem-caption {
+        display: block;
+        padding: 5px;
+        margin: 0px;
+        height: 20px;
+        font-size: 0.8em;
+        overflow: hidden;
+        background-color: black;
+        color: lightgray;
+    }
+
+    .videoItem-container {
+        display: block;
+        width: 295px;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .novideo {
+        clear: both;
+        text-align: center;
+    }
+
+

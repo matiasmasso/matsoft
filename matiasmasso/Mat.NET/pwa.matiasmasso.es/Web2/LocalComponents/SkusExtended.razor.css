@@ -1,0 +1,36 @@
+﻿
+.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr 24px min-content min-content min-content min-content 24px min-content;
+    grid-column-gap: 1px;
+}
+
+.Item, .ColHeaders {
+    display:contents;
+}
+
+.ColHeaders div {
+    color:darkgray;
+    margin:10px;
+}
+
+.Item > div, .Item > a {
+    padding:0 5px;
+}
+
+.Nom {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    cursor:pointer;
+}
+
+.Stock, .Clients, .Prog, .Pvp, .Proveidor {
+    display:flex;
+    justify-content: flex-end;
+}
+
+.HasImg {
+    display: flex;
+    justify-content: center;
+}

@@ -1,0 +1,264 @@
+﻿@inherits _PageBase
+@inject IJSRuntime JS
+@inject SessionStateService session
+@inject AppStateService appState
+@inject CultureService culture
+
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@base.CanonicalUrl()" />
+    @if (model != null)
+    {
+        @foreach (var lang in LangDTO.All())
+        {
+            <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@base.CanonicalUrl(lang, routes.LangText(model?.Guid))" />
+        }
+
+        <meta name="description" content="@((MarkupString)Excerpt())">
+
+        <meta property="og:title" content="@model.Nom?.Tradueix(base.Lang())" />
+        <meta property="og:description" content="@model?.Excerpt?.Tradueix(base.Lang())" />
+        <meta property="og:image" content="@model?.ImageUrl()" />
+        <meta property="og:image:alt" content="@model.Nom?.Tradueix(base.Lang())" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="@base.CanonicalUrl()" />
+        <meta property="og:site_name" content="4moms" />
+        <meta name="twitter:title" content="@model.Nom?.Tradueix(base.Lang())" />
+        <meta name="twitter:description" content="@model.Excerpt?.Tradueix(base.Lang())" />
+        <meta name="twitter:image" content="@Cache?.ImageUrl(model)" />
+        <meta name="twitter:image:alt" content="@model?.Nom?.Tradueix(base.Lang())" />
+    }
+
+</HeadContent>
+
+<PageTitle>4moms | @model?.CamelCase4moms(base.Lang())</PageTitle>
+
+
+<div class="Wrapper600">
+
+    @if (model != null)
+    {
+        <SourceEditor Value="@model?.Content?.Text(base.Lang())"
+                      CanEdit="canEdit"
+                      ValueChanged="SourceChangedAsync"></SourceEditor>
+
+        <h2 itemprop="headline">
+            @model?.CamelCase4moms(base.Lang())
+        </h2>
+
+        @if (model?.Content?.HasValue() ?? false)
+        {
+
+            <div itemprop="articleBody" class="Content">
+                @((MarkupString)Content())
+            </div>
+
+            <div class="StoreLocator">
+                <StoreLocator Product="@model"
+                              Caption="@Tradueix("Tambien disponible en:","També disponible a:","Also available at:","Também disponível na:")"></StoreLocator>
+            </div>
+        }
+        else
+        {
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+            <div class="SkusGrid">
+                @foreach (var sku in FilteredSkus())
+                {
+                    <a class='ProductPluginItem' href="@ProductPluginService.CanonicalUrl(routes, sku, base.Lang())" title="@(sku?.NomLlarg?.Tradueix(base.Lang()) ?? "")">
+                        <div class="Thumbnail">
+                            @if (sku?.HasImage ?? false)
+                            {
+                                <img src="@ProductSkuModel.ImageUrl(sku.Guid)" width="@ProductSkuModel.THUMBNAIL_WIDTH" height="@ProductSkuModel.THUMBNAIL_HEIGHT" alt="@(sku?.NomLlarg?.Tradueix(base.Lang()) ?? "")" />
+                            }
+                            else
+                            {
+                                <Icon Id="Icon.Ids.NoImg"></Icon>
+                            }
+                        </div>
+                        <div class="Caption">@(sku?.NomLlarg?.Tradueix(base.Lang()) ?? "")</div>
+                        <div class='BuyIt'>@string.Format("{0} {1:N2} €", Tradueix("Comprar por", "Comprar per", "Buy it for"), retailPrices.FirstOrDefault(x => x.Guid == sku.Guid)?.Value)</div>
+                    </a>
+
+                }
+            </div>
+
+        }
+
+
+        @if (langDocuments != null)
+        {
+            <TogglePanel Caption="@string.Format(base.Tradueix("{0} descargas","{0} descarregues", "{0} downloads","{0} Transferências"),langDocuments.Count)">
+                <ChildContent>
+                    <div class="DocItems">
+                        <SortableGallery Items="@langDocuments" Context="item" TItem="DownloadTargetModel">
+                            <ChildContent>
+                                <a class="Item" href="#" @onclick="@(()=>DownloadDoc(item))" @onclick:preventDefault>
+                                    <div class="Img">
+                                        <img src="@item.DocFile?.ThumbnailUrl()" width="140" height="160" alt="@item.DocFile?.Nom" />
+                                    </div>
+                                    <div class="Features">
+                                        <div>@item.DocFile?.Nom</div>
+                                        <div>@item.DocFile?.Features(item.DocFile?.MimeText(), item.DocFile?.PagesText())</div>
+                                        <div>@item.DocFile?.Features(item.DocFile?.WeightText(), item.DocFile?.DimensionsText())</div>
+                                        <div>@string.Format("{0:dd/MM/yy}",item.DocFile?.Fch ?? item.DocFile?.FchCreated )</div>
+                                    </div>
+                                </a>
+                            </ChildContent>
+                        </SortableGallery>
+                    </div>
+
+                </ChildContent>
+            </TogglePanel>
+        }
+
+        @if (videos != null)
+        {
+            <TogglePanel Caption="@string.Format(base.Tradueix("ver {0} videos","veure {0} videos", "see {0} videos","ver {0} videos"),videos.Count)">
+                <ChildContent>
+                    <VideoGallery Values="@videos"></VideoGallery>
+                </ChildContent>
+            </TogglePanel>
+        }
+
+    }
+    else if (notAvailable)
+    {
+        <div class="Warning">
+            <UxWarning>
+                @culture.Localize("ProductNotAvailable")
+            </UxWarning>
+        </div>
+    }
+    else
+    {
+        <Loading></Loading>
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+<AnchorNavigation />
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    ProductCategoryModel? model;
+    List<ProductSkuModel>? skus;
+    List<ProductSkuModel>? categorySkus;
+    List<ProductCategoryModel>? categories;
+    RouteModel.Collection? routes;
+    List<ProductPluginModel>? productPlugins;
+    List<GuidDecimal>? retailPrices;
+    List<DownloadTargetModel>? langDocuments;
+    List<YouTubeMovieModel>? videos;
+    bool isEditing;
+    bool isShowingVideos = false;
+    bool canEdit;
+    bool notAvailable;
+    string searchTerm;
+    ProblemDetails? problemDetails;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+
+            var user = base.CurrentUser();
+            canEdit = user?.Rol == UserModel.Rols.superUser || user?.Rol == UserModel.Rols.marketing;
+
+            routes = await appState.GetAsync<RouteModel.Collection>("Shop4moms/routes");
+            categories = await appState.GetAsync<List<ProductCategoryModel>>("Shop4moms/Categories");
+            model = categories?.FirstOrDefault(x => x.Guid == Guid);
+            if (model == null)
+                notAvailable = true;
+            else
+            {
+                skus = await appState.GetAsync<List<ProductSkuModel>>("Shop4moms/Skus");
+                if (!session.ShowAllProducts)
+                    skus = skus?.Where(x => x.HasImage && !x.Obsoleto).ToList();
+
+                categorySkus = skus?.Where(x => x.Category == Guid).ToList() ?? new();
+                productPlugins = await appState.GetAsync<List<ProductPluginModel>>("Shop4moms/ProductPlugins");
+                retailPrices = await appState.GetAsync<List<GuidDecimal>>("Shop4moms/SkuRetails");
+                var documents = await appState.GetAsync<List<DownloadTargetModel>>("DownloadTargets", Guid.ToString());
+                langDocuments = documents?.Where(x => x.Langset.HasLang(base.Lang())).ToList() ?? new();
+
+                var allVideos = await appState.GetAsync<List<YouTubeMovieModel>>("Shop4moms/videos");
+                var pageProducts = new List<Guid>() { model.Guid };
+                pageProducts.AddRange(categorySkus.Select(x => x.Guid));
+                videos = allVideos?
+                    .Where(x => pageProducts.Intersect(x.Products).Count() > 0
+                    && !x.Obsoleto
+                    && x.LangSet!.HasLang(base.Lang()))
+                    .Distinct()
+                    .ToList();
+                if (videos?.Count <= 1) videos = null;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            problemDetails = ProblemDetails.Factory(ex);
+        }
+
+    }
+
+    string Excerpt() => model?.Excerpt?.Tradueix(base.Lang())?.Html() ?? "";
+
+    string Content()
+    {
+        var html = model?.Content?.Tradueix(base.Lang())?.Html();
+        var products = new List<ProductModel>();
+        products.AddRange(categories ?? new());
+        products.AddRange(skus ?? new());
+        var retval = ProductPluginService.ExpandPlugins(html, base.Lang(), model, productPlugins, products, routes, retailPrices);
+        return retval ?? "";
+    }
+
+    async Task SourceChangedAsync(string src)
+    {
+        var langItem = model!.Content!.Item(base.Lang());
+        langItem.Text = src;
+        //langItem.FchCreated = DateTime.Now;
+        var apiResponse = await base.PostAsync<LangTextModel.LangItem, DateTime>(langItem, "LangText/LangItem");
+        if (apiResponse.Success())
+        {
+            var apiResponse2 = await base.GetAsync<bool>("Shop4moms/resetCache");
+            if (apiResponse2.Success())
+            {
+                model!.Content!.SetText(base.Lang(), src);
+                StateHasChanged();
+                await Catalog!.LoadCatalogAsync();
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    async void DownloadDoc(DownloadTargetModel item)
+    {
+        if (item.DocFile?.Hash != null)
+        {
+            var hash = DTO.Helpers.CryptoHelper.UrlFriendlyBase64(item.DocFile.Hash);
+
+            var oByteArray = await appState.GetAsync<Byte[]>("docfile", hash);
+            var memStream = new MemoryStream(oByteArray);
+            var fileName = item?.DocFile.BuildFilename();
+
+            using var streamRef = new DotNetStreamReference(stream: memStream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+
+        }
+    }
+
+    List<ProductSkuModel> FilteredSkus()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+            return categorySkus ?? new();
+        else
+            return categorySkus.Where(x => x.Matches(searchTerm)).ToList() ?? new();
+    }
+
+}

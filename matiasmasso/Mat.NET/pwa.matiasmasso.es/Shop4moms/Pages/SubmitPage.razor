@@ -1,0 +1,257 @@
+﻿@page "/{LangSegment}/submit"
+@page "/submit"
+@inherits _PageBase
+@inject GeocodeService Geocode
+@inject CookieService cookie
+@inject BasketService basketService
+@inject Blazor.Analytics.IAnalytics Analytics
+@inject TpvService tpvService
+@inject CultureService culture
+
+<div class="Wrapper">
+
+
+    <AuthorizeView>
+        <Authorized>
+
+            @if(basket == null)
+            {
+                <Loading></Loading>
+            }
+            else if (noShipmentsToThisAddress)
+            {
+                <div class="NoShipmentsToThisAddress">
+                    <UxWarning>
+                        @culture.Localize("NoShipmentsToThisAddress")
+                    </UxWarning>
+                </div>
+            }
+            else
+            {
+                <div class="NomICognoms">
+                    <div class="FirstName">
+                        <div>
+                            @culture.Localize("FirstName")
+                        </div>
+                        <div>
+                            <input type="text" @bind-value="basket.FirstName" />
+                        </div>
+                    </div>
+
+                    <div class="LastName">
+                        <div>@culture.Localize("Surnames")</div>
+                        <div>
+                            <input type="text" @bind-value="basket.LastName" />
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="ZipLocation">
+                    <div class="Country">
+                        <div>@culture.Localize("Country")</div>
+                        <div>
+                            <select @bind="basket.Country">
+                                <option value="@CountryModel.Wellknown(CountryModel.Wellknowns.Spain)!.Guid">@culture.Localize("Spain")</option>
+                                <option value="@CountryModel.Wellknown(CountryModel.Wellknowns.Portugal)!.Guid">@culture.Localize("Portugal")</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="Zip">
+                        <div>@culture.Localize("ZipCod")</div>
+                        <div>
+                            <input type="text" value="@basket.ZipCod" @onchange="ZipChanged" />
+                        </div>
+                    </div>
+
+                    <div class="Location">
+                        <div>@culture.Localize("Location")</div>
+                        <div>
+                            <img class="@(isGeocoding ? "" : "Hidden")" src="/img/spinner-24.gif"
+                                 alt="@Lang().Tradueix("Un momento por favor"
+                                     ,"Un moment si us plau"
+                                     ,"A moment please"
+                                     ,"espere um momento por favor")" />
+
+                            <input type="text" class="@(isGeocoding ? "Hidden" : "")" @bind-value="basket.Location" />
+                        </div>
+                    </div>
+                </div>
+
+                @if (requestZona)
+                {
+                    <div>
+                        <div>@culture.Localize("Zona")</div>
+                        <div>
+                            <select>
+                            </select>
+                        </div>
+                    </div>
+
+                }
+                <div>
+                    <div>@culture.Localize("Address")</div>
+                    <div>
+                        <input type="text" @bind-value="basket.Address" />
+                    </div>
+                </div>
+                <div>
+                    <div>@culture.Localize("Tel")</div>
+                    <div>
+                        <input type="tel" @bind-value="basket.Tel" />
+                    </div>
+                </div>
+
+                <div>
+                    <div>@culture.Localize("TrpObs")</div>
+                    <div>
+                        <input type="text" @bind-value="basket.TrpObs" />
+                    </div>
+                </div>
+
+                <div class="RightAlign">
+                    <button class="Button ButtonOk @(isSubmitting ? "IsSubmitting" : "")" @onclick="SubmitAsync">
+                        <div class="@(isSubmitting ? "Hidden" : "")">@culture.Localize("Submit")</div>
+                        <div class="@(isSubmitting ? "" : "Hidden")">
+                            <img src="/img/spinner-24.gif"
+                                 alt="@Lang().Tradueix("Un momento por favor"
+                                     ,"Un moment si us plau"
+                                     ,"A moment please"
+                                     ,"espere um momento por favor")" />
+                        </div>
+                    </button>
+                </div>
+
+                <PostForm Url="@tpv?.Gateway()" Data="formData"></PostForm>
+            }
+        </Authorized>
+
+        <NotAuthorized>
+            <div class="SignIn">
+                <SignIn Success="SignInSuccess" Fail="SignInFail"></SignIn>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+<PageTitle>4moms | @Lang().Tradueix("Datos de envío","Dades de enviament","Shipment details","Informações de envio")</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? authenticationState { get; set; }
+    private Dictionary<string, string>? formData;
+    private DTO.Integracions.Redsys.Tpv? tpv;
+    private bool isGeocoding;
+    private bool requestZona;
+    private bool isSubmitting;
+    private bool noShipmentsToThisAddress;
+    private UserModel? user;
+    private ShoppingBasketModel? basket;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await GetUser();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            basket = await basketService.GetBasketAsync(base.Lang());
+            StateHasChanged();
+        }
+    }
+
+    async Task SubmitAsync()
+    {
+        try
+        {
+            if (AllowAnalytics())
+                Analytics?.TrackEvent("purchase", new { order = basket!.OrderNum });
+
+            if (basket!.NoShipmentsToThisAddress())
+            {
+                noShipmentsToThisAddress = true;
+                var isoPais = CountryModel.Favorites().FirstOrDefault(x => x.Guid == basket.Country)?.ISO ?? basket.Country?.ToString() ?? "none";
+                if (AllowAnalytics())
+                    Analytics?.TrackEvent("no_shipments_to_this_address", new { country = isoPais, zip = basket.ZipCod ?? "none", location = basket.Location ?? "none" });
+            }
+            else
+            {
+                isSubmitting = true;
+                tpv = tpvService.Tpv(base.Lang());
+                basket.User = await base.GetUser();
+                basket.MarketPlace = MarketPlaceModel.Wellknown(MarketPlaceModel.Wellknowns.Shop4moms);
+                basket.Amount = basket.Cash();
+                basket.Fch = DateTime.Now;
+                if (string.IsNullOrEmpty(basket.LastName2) && basket.LastName?.IndexOf(" ") > 0)
+                {
+                    int whitespace = basket.LastName!.IndexOf(' ');
+                    basket.LastName2 = basket.LastName.Substring(whitespace + 1);
+                    basket.LastName = basket.LastName.Substring(0, whitespace);
+                }
+
+                var tpvBookRequest = tpv!.BookRequest(basket);
+                var tpvResponse = await PostAsync<DTO.Integracions.Redsys.TpvLog, string>(tpvBookRequest, "Redsys/BookRequest");
+                if (tpvResponse.Success())
+                {
+                    basket.TpvOrderNum = tpvResponse.Value!;
+
+                    var apiResponse = await PostAsync<ShoppingBasketModel, bool>(basket, "ShoppingBasket");
+                    if (apiResponse.Success())
+                    {
+                        var request = tpv!.Request(basket.TpvOrderNum, basket.OrderNum!, basket.Cash(), basket.Lang.ToString());
+                        formData = request.FormData();
+                    }
+                    else
+                    {
+                        problemDetails = apiResponse.ProblemDetails;
+                        isSubmitting = false;
+                    }
+                }
+                else
+                {
+                    problemDetails = tpvResponse.ProblemDetails;
+                    isSubmitting = false;
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            problemDetails = ProblemDetails.Factory(ex);
+        }
+    }
+
+    void SignInSuccess(UserModel user)
+    {
+        //basket.User = user;
+        //base.navigationManager?.NavigateTo(base.navigationManager.Uri, true);
+    }
+
+    void SignInFail(ProblemDetails args)
+    {
+        problemDetails = args;
+    }
+
+    async Task ZipChanged(ChangeEventArgs args)
+    {
+        if (!string.IsNullOrEmpty(args.Value?.ToString()))
+        {
+            isGeocoding = true;
+            var countryIso = CurrentCountry().ISO;
+            basket.ZipCod = args.Value.ToString();
+            var zips = await Geocode.GetZipLocationsAsync(countryIso, basket.ZipCod);
+            basket.Location = zips.FirstOrDefault()?.LocationNom;
+            isGeocoding = false;
+        }
+    }
+
+    CountryModel CurrentCountry() => CountryModel.Favorites().Where(x => x.Guid == basket!.Country).First();
+}

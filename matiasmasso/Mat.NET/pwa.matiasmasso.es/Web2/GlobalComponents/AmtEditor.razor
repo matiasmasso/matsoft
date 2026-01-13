@@ -1,0 +1,47 @@
+﻿<div class="Wrapper @(isNotValid ? "NotValid" : "")">
+    @if (isEditing || isNotValid)
+    {
+        <input type="Num" value="@Value?.Value" @oninput="NotifyChange" @onblur="@(()=>isEditing=false)" />
+    }
+    else
+    {
+        <a href="#" @onclick="@(()=>isEditing=true)" @onclick:preventDefault>
+            @Value?.CurFormatted()
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public Amt? Value { get; set; }
+    [Parameter] public EventCallback<Amt?> ValueChanged { get; set; }
+
+    bool isEditing;
+    bool isNotValid;
+    DTO.Amt.Curs? cur;
+    decimal? exchange;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Value != null)
+        {
+            cur = Value.Cur;
+            if (Value.Eur != 0)
+                exchange = Value.Value / Value.Eur;
+        }
+    }
+
+    async Task NotifyChange(ChangeEventArgs args)
+    {
+        decimal value;
+        if (Decimal.TryParse(args.Value?.ToString(), out value))
+        {
+            isNotValid = false;
+            var eur = (cur == Amt.Curs.EUR ? value : exchange == 0 ? 0 : value / exchange);
+            var amt = new Amt(value, cur ?? Amt.Curs.EUR, eur);
+            await ValueChanged.InvokeAsync(amt);
+        }
+    else
+            isNotValid = true;
+    }
+}

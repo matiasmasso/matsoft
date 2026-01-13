@@ -1,0 +1,240 @@
+﻿@using System.Globalization
+@inherits _ComponentBase
+
+<div class="ButtonsBar">
+    <a href="#" title="search menu..." hidden="@IsShowingSearchbox" @onclick="ShowSearchbox" @onclick:preventDefault="true">
+        <img src="img/Lupa-20.png" alt="search menu..." width="20" height="20" />
+    </a>
+    <div class="Lang" hidden="@IsShowingSearchbox">
+        <Lang Culture="CultureInfo.DefaultThreadCurrentUICulture" AfterUpdate="AfterLangUpdate"></Lang>
+    </div>
+    <div class="Searchbox" hidden="@(!IsShowingSearchbox)">
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+    </div>
+</div>
+
+@if (string.IsNullOrEmpty(searchTerm))
+{
+    @foreach (var selectedItem in AppState.SelectedMenuItems)
+    {
+        <a class="Item Selected" href="#" @onclick="() => SelectedItemClick(selectedItem)" @onclick:preventDefault="true">
+            @selectedItem.Nom.Tradueix(base.Lang())
+            <i class="fa-solid fa-xmark"></i>
+        </a>
+    }
+
+    @foreach (var item in AppState.MenuItems)
+    {
+        if (item.Mode == (int)NavDTO.Model.Modes.Navigation)
+        {
+            <a class="Item" href="@item.Action" target="_top">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Toggle)
+        {
+            <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off") />
+                @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Lang)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else
+        {
+            <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+    }
+
+
+
+}
+else
+{
+    @foreach (var item in AppState.Nav.Items.Where(x => x.Nom.Contains(searchTerm)))
+    {
+
+        if (item.Mode == (int)NavDTO.Model.Modes.Navigation)
+        {
+            <a class="Item" href="@item.Action" target="_top">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Toggle)
+        {
+            <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off") />
+                @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else
+        {
+            <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+
+    }
+
+}
+
+
+
+
+<!--hidden form submit LogoutButton gets clicked by _Host.cshtml jscript window.LogoutRequest() triggered by Mode.Logout NavDTO item -->
+<form hidden="hidden" method="post" id="LogoutForm" action="Identity/Account/LogOut" target="_top">
+    <button type="submit" class="Item" Id="LogoutButton">logout hidden</button>
+</form>
+
+
+@code {
+    ElementReference LogoutButton;
+    private string? searchTerm;
+    private CultureInfo culture;
+    private bool isLoaded = false;
+    private bool IsShowingSearchbox = false;
+    [Parameter] public NavDTO Nav { get; set; }
+    [Parameter] public EventCallback<List<NavDTO.Model>> SelectedItemsChanged { get; set; }
+    [Parameter] public EventCallback<List<NavDTO.Model>> ItemsChanged { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        string cc =  Preferences.Get("blazorCulture", "es-ES");
+        var culture = new CultureInfo(cc);
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+
+        base.OnInitialized();
+    }
+    protected override void OnParametersSet()
+    {
+        if (AppState.Nav != null)
+        {
+            //    if (AppState.SelectedMenuItems.Count == 0)
+            //        menuItems = AppState.Nav.Items.Where(x => x.Parent == null).OrderBy(y => y.Ord).ToList();
+            //    else
+            //    {
+            //        selectedItems = AppState.SelectedMenuItems;
+            //        menuItems = AppState.MenuItems;
+            //    }
+            RemoveAccountItems();
+            StateHasChanged();
+        }
+
+
+    }
+
+
+    //private Task<AuthenticationState> authenticationState;
+
+    //[CascadingParameter]
+    //private Task<AuthenticationState> authenticationStateTask
+    //{
+    //    get => authenticationState;
+    //    set
+    //    {
+    //        if (authenticationState == value) return;
+    //        authenticationState = value;
+    //    }
+    ////}
+
+    private async void RemoveAccountItems()
+    {
+        if (IsAuthenticated())
+        {
+            //AppState.Nav.Items.RemoveAll(x => x.Guid == NavDTO.Login().Guid);
+            //AppState.Nav.Items.RemoveAll(x => x.Guid == NavDTO.SignUp().Guid);
+        }
+        else
+        {
+            //AppState.Nav.Items.Add(NavDTO.Login());
+            //AppState.Nav.Items.Add(NavDTO.SignUp());
+        }
+    }
+
+    private async Task SelectedItemClick(NavDTO.Model item)
+    {
+        var idx = AppState.SelectedMenuItems.IndexOf(item);
+        AppState.SelectedMenuItems.RemoveRange(idx, AppState.SelectedMenuItems.Count - idx);
+        AppState.MenuItems = AppState.Nav.Items.Where(x => x.Parent == item.Parent).OrderBy(y => y.Ord).ToList();
+        RemoveAccountItems();
+        if(ItemsChanged.HasDelegate)        await ItemsChanged.InvokeAsync(AppState.MenuItems);
+        if(SelectedItemsChanged.HasDelegate) await SelectedItemsChanged.InvokeAsync(AppState.SelectedMenuItems);
+        StateHasChanged();
+    }
+
+    private async Task ItemClick(NavDTO.Model item)
+    {
+        switch ((NavDTO.Model.Modes)item.Mode)
+        {
+
+            case NavDTO.Model.Modes.Logout:
+                NavigateToPage("Logout");
+                break;
+            case NavDTO.Model.Modes.Login:
+                NavigateToPage("Login");
+                break;
+            case NavDTO.Model.Modes.Toggle:
+                break;
+            case NavDTO.Model.Modes.Action:
+                break;
+            default:
+                var items = AppState.Nav.Items.Where(x => x.Parent == item.Guid).OrderBy(y => y.Ord).ToList();
+                if (items.Count > 0)
+                {
+                    AppState.MenuItems = items;
+                    AppState.SelectedMenuItems.Add(item);
+                    RemoveAccountItems();
+                }
+                break;
+        }
+
+        if(ItemsChanged.HasDelegate) await ItemsChanged.InvokeAsync(AppState.MenuItems);
+        if (SelectedItemsChanged.HasDelegate) await SelectedItemsChanged.InvokeAsync(AppState.SelectedMenuItems);
+    }
+
+    private void UseLocalApi()
+    {
+        Globals.UseLocalApi = !Globals.UseLocalApi;
+    }
+
+    private void ShowSearchbox()
+    {
+        IsShowingSearchbox = true;
+    }
+
+    private void AfterLangUpdate(CultureInfo culture){
+        //var language = CultureInfo.CurrentCulture;
+        Preferences.Set("blazorCulture", culture.Name);
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+
+        base.NavigateToPageAndReload(NavigationManager.Uri);
+    }
+
+}
+

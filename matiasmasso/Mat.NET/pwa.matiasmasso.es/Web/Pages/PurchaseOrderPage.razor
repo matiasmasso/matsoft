@@ -1,0 +1,7 @@
+﻿@page "/purchaseorder/{Guid:guid}"
+
+<PurchaseOrder Guid="guid"></PurchaseOrder>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+}

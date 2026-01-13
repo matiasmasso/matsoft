@@ -1,0 +1,85 @@
+﻿@page "/stringLocalizer"
+@inherits _Base
+
+<div class="PageWrapper900">
+    <h1>String Localizer</h1>
+
+    <div class="PageOptions">
+
+        <PageOptions IsShowingOptions>
+            <a href="#" @onclick="@(()=>loadExcelRequest = true)" @onclick:preventDefault>Load Excel</a>
+        </PageOptions>
+
+    </div>
+
+    @if (isLoadingExcel || isUpdating)
+    {
+        <Loading></Loading>
+    }
+    else if (isLoadedExcel)
+    {
+        <ExcelMapping Src="sheet"
+                  Mappings="colHeaders"
+                  ValueChanged="UpdateAsync"></ExcelMapping>
+    }
+    else if (loadExcelRequest)
+    {
+        <InputFile OnChange="@LoadFiles" />
+    }
+    else
+    {
+        <StringsLocalizer></StringsLocalizer>
+    }
+
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    bool loadExcelRequest;
+    bool isLoadingExcel;
+    bool isUpdating;
+    bool isLoadedExcel;
+    DTO.Excel.Sheet? sheet;
+    string[] colHeaders = new[] { "StringKey", "Esp", "Cat", "Eng", "Por" };
+    ProblemDetails? problemDetails;
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        isLoadingExcel = true;
+        var file = e.File;
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            List<Exception> exs = new();
+            var book = DTO.Excel.ClosedXml.Read(exs, ms.ToArray());
+            if (exs.Count == 0)
+            {
+                sheet = book?.Sheets.FirstOrDefault();
+            }
+            else
+                problemDetails = ProblemDetails.Factory(exs.First());
+        }
+
+        isLoadingExcel = false;
+        isLoadedExcel = true;
+
+    }
+
+    private async Task UpdateAsync(DTO.Excel.Sheet sheet)
+    {
+        isUpdating = true;
+        var values = StringLocalizerModel.FromExcel(sheet);
+
+        var apiResponse = await PostAsync<List<StringLocalizerModel>, bool>( values, "StringsLocalizer");
+        if (apiResponse.Success())
+            isUpdating = false;
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        isUpdating = false;
+    }
+
+}

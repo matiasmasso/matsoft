@@ -1,0 +1,52 @@
+﻿@if (CanEdit)
+{
+    <div class="Wrapper">
+        @if (RequestToDelete.HasDelegate && CanDelete)
+        {
+            <button class="Button Del" @onclick="@(()=>RequestToDelete.InvokeAsync())" disabled="@(!CanDelete)">
+                Eliminar
+            </button>
+        }
+        else
+        {
+            <div class="Spacer">&nbsp;</div>
+        }
+
+        <div class="RightButtons">
+            @if (RequestToCancel.HasDelegate)
+            {
+                <button class="Button Cancel" @onclick="@(()=>RequestToCancel.InvokeAsync())">
+                    Cancel·lar
+                </button>
+            }
+
+            @if (RequestToUpdate.HasDelegate)
+            {
+                if(IsUpdating)
+                {
+                    <button class="Button Updating" disabled>
+                        <img width="24" height="24" style="width:2rem;height:2rem" src="/img/spinner-200px.svg" />
+                    </button>
+                }
+                else
+                {
+                <button class="Button Ok" @onclick="@(()=>RequestToUpdate.InvokeAsync())" disabled="@(!IsDirty)">
+                    Desar
+                </button>
+                }
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter] public EventCallback RequestToUpdate { get; set; }
+    [Parameter] public EventCallback RequestToDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool CanDelete { get; set; }
+    [Parameter] public bool IsDirty { get; set; }
+    [Parameter] public bool IsUpdating { get; set; }
+
+}

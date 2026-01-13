@@ -1,0 +1,64 @@
+﻿@page "/contenido/{id}"
+@page "/contingut/{id}"
+@page "/content/{id}"
+
+@inherits _Base
+@inject HttpClient http
+@inject NavigationManager NavigationManager
+
+<div class="Wrapper600">
+    @((MarkupString)(content ?? ""))
+
+    <AuthorizeView Roles="superUser">
+        @if (model != null)
+        {
+            <div class="Textarea @(isEditing ? "" : "Hidden")">
+                <textarea @bind="model.Text" rows="10"></textarea>
+            </div>
+            <div class="ButtonsBar">
+                <button class="Button ButtonOk @(isEditing ? "Hidden":"")" @onclick="@(()=>isEditing = true)">Edit</button>
+                <button class="Button ButtonCancel @(isEditing ? "":"Hidden")" @onclick="@(()=>isEditing = false)">Cancel</button>
+                <button class="Button ButtonOk @(isEditing ? "":"Hidden")" @onclick="Update">Update</button>
+            </div>
+        }
+    </AuthorizeView>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    [Parameter] public string? id { get; set; }
+    string? content;
+    bool isEditing = false;
+    LangTextModel.LangItem? model;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var baseUrl = NavigationManager.BaseUri;
+        var absoluteUrl = NavigationManager.Uri;
+        var segment = absoluteUrl.Replace(baseUrl, "");
+        var apiResponse = await HttpService.PostAsync<string, LangTextModel>(http, segment, "Shop4moms/content");
+        if (apiResponse.Success())
+        {
+            var langtext = apiResponse.Value!;
+            model = langtext.Item(Lang());
+            content = model.Text;
+        }
+    }
+
+    async Task Update()
+    {
+        if (model != null)
+        {
+            var apiResponse = await HttpService.PostAsync<LangTextModel.LangItem, bool>(http, model, "LangText/LangItem");
+            if (apiResponse.Success())
+                isEditing = false;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+        else
+            problemDetails = new ProblemDetails { Title = "no model available to update on Content.razor" };
+
+    }
+}

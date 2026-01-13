@@ -1,0 +1,144 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+
+    @if (values == null)
+    {
+        <h3>Comptes</h3>
+        <Loading></Loading>
+    }
+    else if (selectedCta != null)
+    {
+        <div>
+            @selectedCta.NomCat()
+            <a href="#" @onclick:preventDefault @onclick="@(()=>selectedCta = null)">[tanca]</a>
+        </div>
+
+        <div class="Ccbs">
+            @foreach (var ccb in FilteredCcbs())
+            {
+                <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>ItemClick(ccb))">
+                    <div class="Fch">@($"{ccb.Cca?.Fch:dd/MM/yy}")</div>
+                    <div class="Nom">@ccb.Cca?.Concept</div>
+                    <div class="Eur">@($"{ccb.Eur:N2} €")</div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <h3>Comptes</h3>
+        <div class="Projects">
+            <ToggleButtonsBar Values="FilteredProjectes()" SelectedValue="projecte" SelectedValueChanged="ProjecteChanged" T="ProjecteModel"></ToggleButtonsBar>
+        </div>
+        <div class="Grid">
+            @foreach (var item in FilteredItems())
+            {
+                <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>selectedCta = item.Cta)">
+                    <div class="Nom">@item.Cta?.NomCat()</div>
+                    <div class="Eur">@($"{item.Eur:N2} €")</div>
+                </a>
+            }
+        </div>
+    }
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public EventCa
+    private ExerciciModel? exercici;
+    private List<CcaModel>? values;
+    private List<PgcCtaModel>? ctas;
+    private List<ProjecteModel>? projectes;
+    private ProjecteModel? projecte;
+    private PgcCtaModel? selectedCta;
+    private Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        exercici = new ExerciciModel { Emp = EmpModel.EmpIds.MMC, Year = 2023 }; // DateTime.Today.Year };
+        try
+        {
+            ctas = await ApiService.GetAsync<List<PgcCtaModel>>("PgcCtas");
+            projectes = await ApiService.GetAsync<List<ProjecteModel>>("Projectes");
+            values = await ApiService.GetAsync<List<CcaModel>>("Ccas", ((int)exercici.Emp).ToString(), exercici.Year.ToString());
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    List<ProjecteModel> FilteredProjectes()
+    {
+        List<ProjecteModel> retval = new();
+        if (projectes != null && exercici?.Emp == EmpModel.EmpIds.MMC)
+            retval = projectes.Where(x => x.Emp == exercici.Emp).ToList();
+        return retval;
+    }
+
+    List<Saldo> FilteredItems()
+    {
+        var retval = values!
+        .Where(x => x.Projecte == (projecte == null ? x.Projecte : projecte.Guid))
+        .SelectMany(x => x.Items)
+        .GroupBy(x => x.Cta)
+        .Select(x => new Saldo
+            {
+                Cta = ctas!.FirstOrDefault(y => y.Guid == x.Key),
+                Eur = x.Sum(y => (y.Dh == CcaModel.Item.DhEnum.Deb ? y.Eur : -y.Eur))
+            })
+        .OrderBy(x => x.Cta?.NomCat() ?? "?")
+        .ToList();
+
+        foreach(var item in retval){
+            if (item.Cta.IsCreditora()) item.Eur = -item.Eur;
+        }
+
+        if (projecte != null)
+            retval = retval.Where(x => x.Cta?.Id != "57200").ToList();
+
+        return retval;
+    }
+
+    List<Ccb> FilteredCcbs()
+    {
+        List<Ccb> retval = new();
+        foreach (var cca in values!.Where(x => x.Items.Any(y => y.Cta == selectedCta!.Guid)))
+        {
+            foreach (var itm in cca.Items.Where(y => y.Cta == selectedCta!.Guid))
+            {
+                retval.Add(new Ccb
+                    {
+                        Cca = cca,
+                        Eur =( itm.Dh == CcaModel.Item.DhEnum.Deb ? itm.Eur : -itm.Eur)
+                    });
+            }
+        }
+        return retval.OrderByDescending(x => x.Cca?.Fch).ToList();
+    }
+
+    void ItemClick(Ccb args)
+    {
+        
+    }
+
+    protected class Saldo
+    {
+        public PgcCtaModel? Cta { get; set; }
+        public decimal Eur { get; set; }
+    }
+
+    protected class Ccb
+    {
+        public CcaModel? Cca;
+        public decimal Eur { get; set; }
+    }
+
+    void ProjecteChanged(ProjecteModel args)
+    {
+        projecte = args;
+    }
+}

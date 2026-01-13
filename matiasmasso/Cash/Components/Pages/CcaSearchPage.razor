@@ -1,0 +1,92 @@
+﻿@page "/CcaSearch"
+@* @implements IDisposable *@
+@inject ApiService ApiService
+
+<PageTitle>Buscar assentaments</PageTitle>
+
+@if (selectedValue != null)
+{
+    <Cca Value="selectedValue"
+         AfterUpdate="@(()=>selectedValue=null)"
+         AfterDelete="@(()=>selectedValue=null)"
+         CloseRequest="@(()=>selectedValue=null)"></Cca>
+}
+else
+{
+    <div class="PageWrapper600">
+        <h3>Buscar assentaments per import</h3>
+
+        <PageOptions>
+            <LookupEmp Values="availableEmps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+        </PageOptions>
+
+        <div class="SearchBox">
+            <input type="number" placeholder="Import" @oninput="OnInputHandler" value="@searchterm" />
+            <button @onclick="OnButtonClickHandlerAsync" disabled="@isButtonDisabled">Busca</button>
+        </div>
+
+        @if(values != null){
+            <div class="Grid">
+                <Virtualize Items="values" Context="item">
+                    <a class="Item" href="#" @onclick="@(()=>selectedValue = item)" @onclick:preventDefault>
+                        <div class="Fch">@(String.Format("{0:dd/MM/yy}", item.Fch))</div>
+                        <div class="Concept">@item.Concept</div>
+                    </a>
+                </Virtualize>
+            </div>
+        }
+
+    </div>
+}
+
+
+<Error @bind-Value="exception"></Error>
+@code {
+    List<EmpModel.EmpIds>? availableEmps;
+    EmpModel.EmpIds? emp;
+    List<CcaModel>? values;
+    CcaModel? selectedValue;
+    string? searchterm;
+    string? searchValue;
+    bool isShowingObsolets;
+    bool isButtonDisabled = true;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        try{
+            base.OnInitialized();
+            emp = ApiService.Emp;
+
+        } catch(Exception ex){
+            exception = ex;
+        }
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    private void OnInputHandler(ChangeEventArgs args)
+    {
+        searchValue = args?.Value?.ToString();
+        values?.Clear();
+        isButtonDisabled = string.IsNullOrEmpty(searchValue);
+    }
+
+    private async Task OnButtonClickHandlerAsync(){
+        try
+        {
+            values = await ApiService.GetAsync<List<CcaModel>>("ccas/search",((int)emp).ToString(), searchValue);
+            isButtonDisabled = true;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+
+}

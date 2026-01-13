@@ -1,0 +1,27 @@
+﻿<a href="#"
+   title="@Title"
+   tabindex="-1"
+   @onclick:preventDefault
+   onclick="var el = this;
+            el.className = el.classList.contains('Copying2') ? 'Copying1' : 'Copying2';
+            navigator.clipboard.writeText('@Value');">
+
+    @if (ChildContent == null)
+    {
+        <div class="CopyToClipboard">
+            <Icon Id="Icon.Ids.Copy"></Icon>
+        </div>
+    }
+    else
+    {
+        @ChildContent
+    }
+</a>
+
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public string Title { get; set; } = "Click aquí per copiar";
+
+}

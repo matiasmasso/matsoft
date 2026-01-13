@@ -1,0 +1,42 @@
+﻿.Wrapper {
+    position: relative;
+}
+
+.Value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 7px 2px 4px;
+    border-bottom: 1px solid #AAAAAA;
+    z-index: 10;
+    cursor: pointer;
+}
+
+    .Value span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .Value span, .Value i {
+        min-height: 24px;
+    }
+
+.Selector {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+}
+
+.StringEditor {
+    width: 100%;
+}
+
+.Email {
+    padding:0 0 0 10px;
+} 
+
+.Toggle {
+    width:1.5em;
+}

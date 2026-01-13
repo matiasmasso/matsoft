@@ -1,0 +1,286 @@
+﻿@page "/{LangSegment}/basket"
+@page "/{LangSegment}/basket/{Guid:guid}"
+@page "/basket"
+@page "/basket/{Guid:guid}"
+
+@using DTO.Helpers
+@inherits _PageBase
+@inject BasketService basketService
+@inject AppStateService appState
+@inject CultureService culture
+
+<div class="Wrapper900">
+    @if (basket == null && problemDetails == null)
+    {
+        <Loading></Loading>
+    }
+    else if (basket?.IsEmpty() ?? false)
+    {
+        <div class="NoItems">
+            <p>@culture.Localize("NoItemsInBasketYet")</p>
+
+            <a class="KeepPurchasing" href='@base.RelativeUrl("/")'>
+                <img alt="@base.Lang().Tradueix("atrás","enrera","backwards","voltar")" src="/img/chevrons-duotone-left.svg" />
+                @culture.Localize("KeepPurchasing")
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="CallToAction">
+            <a class="KeepPurchasing" href="@base.RelativeUrl("/")">
+                <img src="/img/chevrons-duotone-left.svg" alt="@base.Lang().Tradueix("atrás","enrera","backwards","voltar")" />
+                @culture.Localize("KeepPurchasing")
+            </a>
+            <a class="CloseBasket" href="@base.RelativeUrl("submit")">
+                @culture.Localize("CloseBasket")
+                <img src="/img/chevrons-duotone-right.svg" alt="@culture.Localize("CloseBasket")" />
+            </a>
+        </div>
+
+        <div class="PageOptions">
+        <PageOptions IsShowingOptions>
+        @if (CanAddPorts())
+            {
+                <div><a href="#" @onclick="AddPorts" @onclick:preventDefault>[afegir ports]</a></div>
+            }
+        </PageOptions>
+        </div>
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders">
+                <div class="Thumbnail">&nbsp;</div>
+                <div class="Nom">&nbsp;</div>
+                <div class="Qty">@culture.Localize("Units")</div>
+                <div class="Price">@culture.Localize("Price")</div>
+                <div class="Amount">@culture.Localize("Amount")</div>
+                <div class="Del">&nbsp;</div>
+            </div>
+
+            @if (basket?.ShouldShowTotals() ?? false)
+            {
+                <div class="Item Totals">
+                    <div class="Thumbnail">&nbsp;</div>
+                    <div class="Nom">
+                        @culture.Localize("Total")
+                    </div>
+                    <div class="Qty">&nbsp;</div>
+                    <div class="Price">&nbsp;</div>
+                    <div class="Amount">@string.Format("{0:N2} €",basket?.Cash())</div>
+                    <div class="Del">&nbsp;</div>
+                </div>
+            }
+
+            @foreach (var item in basket?.Items ?? new())
+            {
+                <div class="Item">
+                    <div class="Thumbnail">
+                        <a href="@SkuUrl(item)" title="">
+                            <img src="@SkuImageUrl(item)" alt=">@SkuFullNom(item)" />
+                        </a>
+                    </div>
+                    <div class="Nom">
+                        @CategoryNom(item)
+                        <br />
+                        @SkuNom(item)
+                    </div>
+                    <div class="Qty">
+                        <PlusMinusNum Value="@item.Qty"
+                                      Tag="item"
+                                      ValueChanged="QtyChanged"></PlusMinusNum>
+                    </div>
+                    <div class="Price">@string.Format("{0:N2} €",item.Price)</div>
+                    <div class="Amount">@string.Format("{0:N2} €",item.Amount())</div>
+                    <div class="Del">
+                        <a href="#"
+                           title="@lang!.Tradueix("Eliminar","Eliminar","Delete","Remover")"
+                        @onclick="@(async ()=>await basketService.RemoveItemAsync(item))"
+                        @onclick:preventDefault>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                <!-- trash can thin -->
+                                <path d="M115.6 64L143.8 18.8C151.1 7.105 163.9 0 177.7 0H270.3C284.1 0 296.9 7.105 304.2 18.8L332.4 64H440C444.4 64 448 67.58 448 72C448 76.42 444.4 80 440 80H8C3.582 80 0 76.42 0 72C0 67.58 3.582 64 8 64H115.6zM134.4 64H313.6L290.6 27.28C286.2 20.26 278.5 16 270.3 16H177.7C169.5 16 161.8 20.26 157.4 27.28L134.4 64zM40 112C44.42 112 48 115.6 48 120V440C48 470.9 73.07 496 104 496H344C374.9 496 400 470.9 400 440V120C400 115.6 403.6 112 408 112C412.4 112 416 115.6 416 120V440C416 479.8 383.8 512 344 512H104C64.24 512 32 479.8 32 440V120C32 115.6 35.58 112 40 112zM136 416C136 420.4 132.4 424 128 424C123.6 424 120 420.4 120 416V160C120 155.6 123.6 152 128 152C132.4 152 136 155.6 136 160V416zM232 416C232 420.4 228.4 424 224 424C219.6 424 216 420.4 216 416V160C216 155.6 219.6 152 224 152C228.4 152 232 155.6 232 160V416zM328 416C328 420.4 324.4 424 320 424C315.6 424 312 420.4 312 416V160C312 155.6 315.6 152 320 152C324.4 152 328 155.6 328 160V416z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            }
+
+            @if (basket?.HasPorts() ?? false)
+            {
+                <div class="Item">
+                    <div class="Thumbnail">
+                        &nbsp;
+                    </div>
+                    <div class="Nom">
+                        @culture.Tradueix("Gastos de envío","Despeses de enviament","Shipping charges","Custos de expedição")
+                    </div>
+                    <div class="Qty">
+                        <PlusMinusNum Value="1" CanEdit="false"
+                                      ></PlusMinusNum>
+                    </div>
+                    <div class="Price">@string.Format("{0:N2} €",5)</div>
+                    <div class="Amount">@string.Format("{0:N2} €",5)</div>
+                    <div class="Del">
+                        &nbsp;
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <Error ProblemDetails="problemDetails" Exception="exception"></Error>
+</div>
+
+<PageTitle>
+    @base.Lang().Tradueix(
+    "4moms | cesta de la compra",
+    "4moms | cistella de la compra",
+    "4moms | cesto de compras",
+    "4moms | shopping basket"
+    )
+</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+
+@code {
+    [Parameter] public Guid? guid { get; set; }
+    LangDTO? lang = null;
+    ShoppingBasketModel? basket;
+
+    List<ProductSkuModel> skus = new();
+    List<ProductSkuModel> categorySkus = new();
+    List<ProductCategoryModel> categories = new();
+    RouteModel.Collection routes = new();
+    List<ProductPluginModel> productPlugins = new();
+    List<GuidDecimal> retailPrices = new();
+
+    Exception? exception;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            routes = await appState.GetAsync<RouteModel.Collection>("Shop4moms/routes") ?? new();
+            categories = await appState.GetAsync<List<ProductCategoryModel>>("Shop4moms/Categories") ?? new();
+            skus = await appState.GetAsync<List<ProductSkuModel>>("Shop4moms/Skus") ?? new();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            lang = base.Lang();
+            basket = guid == null ? await basketService.GetBasketAsync(lang) : await GetBasketFromDatabase((Guid)guid);
+            StateHasChanged();
+        }
+    }
+
+
+    async Task QtyChanged(MatEventArgs<int, object> args)
+    {
+        var tag = (ShoppingBasketModel.Item)args.Tag!;
+        var item = await basketService.GetItemAsync(tag.Sku);
+        var qty = args.Value;
+        if (qty <= 0)
+            await basketService.RemoveItemAsync(item);
+        else if (item != null)
+            item.Qty = qty;
+        StateHasChanged();
+    }
+
+    string SkuImageUrl(ShoppingBasketModel.Item item)
+    {
+        var sku = skus.FirstOrDefault(x => x.Guid == item.Sku);
+        var retval = sku?.ImageUrl() ?? "";
+        return retval;
+    }
+
+    string? SkuUrl(ShoppingBasketModel.Item item)
+    {
+        var retval = base.RelativeUrl(routes?.LangText(item.Sku) ?? new());
+        return retval;
+    }
+
+    string? SkuFullNom(ShoppingBasketModel.Item item)
+    {
+        string? retval = null;
+        var sku = skus.FirstOrDefault(x => x.Guid == item.Sku);
+        if (sku != null)
+        {
+            var category = categories.FirstOrDefault(x => x.Guid == sku.Category);
+            retval = string.Format("{0} {1}", category?.Nom?.Tradueix(lang), sku?.Nom?.Tradueix(lang));
+        }
+        return retval;
+    }
+
+    string? CategoryNom(ShoppingBasketModel.Item item)
+    {
+        var category = Category(item);
+        return category?.Nom?.Tradueix(base.Lang());
+    }
+
+    string? SkuNom(ShoppingBasketModel.Item item)
+    {
+        var sku = Sku(item);
+        return sku?.Nom?.Tradueix(base.Lang());
+    }
+
+    ProductCategoryModel? Category(ShoppingBasketModel.Item item)
+    {
+        var sku = Sku(item);
+        return categories.FirstOrDefault(x => x.Guid == sku?.Category);
+    }
+
+    ProductSkuModel? Sku(ShoppingBasketModel.Item item)
+    {
+        return skus.FirstOrDefault(x => x.Guid == item.Sku);
+    }
+
+    async Task<ShoppingBasketModel?> GetBasketFromDatabase(Guid guid)
+    {
+        ShoppingBasketModel? retval = null;
+        var apiResponse = await base.GetAsync<ShoppingBasketModel>("ShoppingBasket", guid.ToString()!);
+        if (apiResponse.Success())
+        {
+            if (apiResponse.Value == null)
+                retval = await basketService.GetBasketAsync();
+            else
+            {
+                retval = apiResponse.Value;
+                basketService.SetBasket(retval);
+                basketService.NotifyItemsCountChanged();
+            }
+        }
+        else
+        {
+            problemDetails = apiResponse.ProblemDetails;
+        }
+        return retval;
+    }
+
+
+
+    void AddPorts()
+    {
+        basket!.Ports = 5;
+    }
+
+    bool CanAddPorts()
+    {
+        var allowedUser = base.CurrentUser()?.isStaff() ?? false;
+        var hasPorts = basket?.Ports != null && basket?.Ports > 0;
+        bool retval = allowedUser && !hasPorts;
+        return retval;
+    }
+
+}

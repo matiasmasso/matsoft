@@ -1,0 +1,949 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="About.AppName" xml:space="preserve">
+    <value>App name</value>
+  </data>
+  <data name="About.BuildString" xml:space="preserve">
+    <value>App build</value>
+  </data>
+  <data name="About.PackageName" xml:space="preserve">
+    <value>App Package name</value>
+  </data>
+  <data name="About.Rol" xml:space="preserve">
+    <value>Rol</value>
+  </data>
+  <data name="About.Title" xml:space="preserve">
+    <value>About this app</value>
+  </data>
+  <data name="About.User" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="About.VersionString" xml:space="preserve">
+    <value>App Version</value>
+  </data>
+  <data name="AddNew" xml:space="preserve">
+    <value>Add new</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="Age" xml:space="preserve">
+    <value>Age</value>
+  </data>
+  <data name="Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="Amt" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="and" xml:space="preserve">
+    <value>and</value>
+  </data>
+  <data name="Andorra" xml:space="preserve">
+    <value>Andorra</value>
+  </data>
+  <data name="Basket.AddToBasket" xml:space="preserve">
+    <value>Add to basket</value>
+  </data>
+  <data name="Basket.Destination" xml:space="preserve">
+    <value>Shipping address</value>
+  </data>
+  <data name="Basket.Destination:" xml:space="preserve">
+    <value>Destination:</value>
+  </data>
+  <data name="Basket.DestinationSelection" xml:space="preserve">
+    <value>Select a destination point:</value>
+  </data>
+  <data name="Basket.ProductSelection" xml:space="preserve">
+    <value>Product selection</value>
+  </data>
+  <data name="BirthYear" xml:space="preserve">
+    <value>Birth year</value>
+  </data>
+  <data name="ButtonClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="BuyNowAt" xml:space="preserve">
+    <value>Buy now at...</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CarDealer" xml:space="preserve">
+    <value>Car dealer</value>
+  </data>
+  <data name="CarDriver" xml:space="preserve">
+    <value>Car driver</value>
+  </data>
+  <data name="CarFleet" xml:space="preserve">
+    <value>Car fleet</value>
+  </data>
+  <data name="CarModel" xml:space="preserve">
+    <value>Car model</value>
+  </data>
+  <data name="CarPlate" xml:space="preserve">
+    <value>Car plate</value>
+  </data>
+  <data name="Catalan" xml:space="preserve">
+    <value>Catalan</value>
+  </data>
+  <data name="Ccas" xml:space="preserve">
+    <value>Accounting seats</value>
+  </data>
+  <data name="Ccas.Found" xml:space="preserve">
+    <value>{0} seats found in {1}</value>
+  </data>
+  <data name="Center" xml:space="preserve">
+    <value>Center</value>
+  </data>
+  <data name="Centers" xml:space="preserve">
+    <value>Centers</value>
+  </data>
+  <data name="CertsIrpf" xml:space="preserve">
+    <value>Irpf certificates</value>
+  </data>
+  <data name="ClearBasket" xml:space="preserve">
+    <value>Clear the basket</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="CloseBasket" xml:space="preserve">
+    <value>Submit your order</value>
+  </data>
+  <data name="Commission" xml:space="preserve">
+    <value>Commission</value>
+  </data>
+  <data name="Concept" xml:space="preserve">
+    <value>Concept</value>
+  </data>
+  <data name="ContactRequest" xml:space="preserve">
+    <value>Contact request</value>
+  </data>
+  <data name="ContactRequest.ConfirmationMailBody" xml:space="preserve">
+    <value>&lt;p&gt;Thanks for contacting, your request was successfully received.&lt;br/&gt;
+For your reference, we are copying it below.&lt;br/&gt;
+You'll get an answer at soonest.&lt;/p&gt;</value>
+  </data>
+  <data name="ContactRequest.ConfirmationMailSubject" xml:space="preserve">
+    <value>Your request</value>
+  </data>
+  <data name="ContactRequest.Thanks" xml:space="preserve">
+    <value>Thanks for your request.&lt;br/&gt;We have just emailed a confirmation to {0}</value>
+  </data>
+  <data name="Contract" xml:space="preserve">
+    <value>Contract</value>
+  </data>
+  <data name="Contracts" xml:space="preserve">
+    <value>Contracts</value>
+  </data>
+  <data name="CopyingToClipboard" xml:space="preserve">
+    <value>Copying to the clipboard</value>
+  </data>
+  <data name="CopyPwd" xml:space="preserve">
+    <value>Copy password</value>
+  </data>
+  <data name="CopyToClipboard" xml:space="preserve">
+    <value>Copy to clipboard</value>
+  </data>
+  <data name="CopyUsername" xml:space="preserve">
+    <value>Copy user name</value>
+  </data>
+  <data name="Countries.Found" xml:space="preserve">
+    <value>{0} countries found</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>Country</value>
+  </data>
+  <data name="Credential.Ref" xml:space="preserve">
+    <value>Reference</value>
+  </data>
+  <data name="Credentials.AddNew" xml:space="preserve">
+    <value>Add new credential</value>
+  </data>
+  <data name="Customer" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="Dates" xml:space="preserve">
+    <value>Dates</value>
+  </data>
+  <data name="Day" xml:space="preserve">
+    <value>Day</value>
+  </data>
+  <data name="days" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Deliveries" xml:space="preserve">
+    <value>Deliveries</value>
+  </data>
+  <data name="Deliveries.Count" xml:space="preserve">
+    <value>{0:N0} deliveries found</value>
+  </data>
+  <data name="Delivery" xml:space="preserve">
+    <value>Delivery note</value>
+  </data>
+  <data name="DeliveryIdFromFch" xml:space="preserve">
+    <value>Delivery note {0:N0} from {1:dd/MM/yy}</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Downloads" xml:space="preserve">
+    <value>Downloads</value>
+  </data>
+  <data name="Dto" xml:space="preserve">
+    <value>Disc</value>
+  </data>
+  <data name="EmailAddress" xml:space="preserve">
+    <value>Email address</value>
+  </data>
+  <data name="EmailAddresses" xml:space="preserve">
+    <value>Email addresses</value>
+  </data>
+  <data name="EmailAddresses.Count" xml:space="preserve">
+    <value>We've found {0:N0} email addresses</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Entry" xml:space="preserve">
+    <value>Entry</value>
+  </data>
+  <data name="Error.Notify" xml:space="preserve">
+    <value>Notify IT support</value>
+  </data>
+  <data name="Errors.PleaseFixFollowingErrors" xml:space="preserve">
+    <value>Please fix following errors:</value>
+  </data>
+  <data name="Escriptura.Inscription" xml:space="preserve">
+    <value>Inscription</value>
+  </data>
+  <data name="Escriptura.MercantileRegistry" xml:space="preserve">
+    <value>Mercantile Registry</value>
+  </data>
+  <data name="Escriptura.Notary" xml:space="preserve">
+    <value>Notary</value>
+  </data>
+  <data name="Escriptura.Page" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Escriptura.ProtocolNumber" xml:space="preserve">
+    <value>Protocol number</value>
+  </data>
+  <data name="Escriptura.Sheet" xml:space="preserve">
+    <value>Sheet</value>
+  </data>
+  <data name="Escriptura.Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Expand" xml:space="preserve">
+    <value>Expand</value>
+  </data>
+  <data name="Fch" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Files" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="Gross" xml:space="preserve">
+    <value>Gross</value>
+  </data>
+  <data name="HelloWorld" xml:space="preserve">
+    <value>Hello World!</value>
+  </data>
+  <data name="HelloWorld1" xml:space="preserve">
+    <value>Hello, World!</value>
+  </data>
+  <data name="hours" xml:space="preserve">
+    <value>hours</value>
+  </data>
+  <data name="Incidence" xml:space="preserve">
+    <value>Incidence</value>
+  </data>
+  <data name="Incidences" xml:space="preserve">
+    <value>Incidences</value>
+  </data>
+  <data name="IncludeObsolets" xml:space="preserve">
+    <value>Include obsolets</value>
+  </data>
+  <data name="Insurance" xml:space="preserve">
+    <value>Insurance</value>
+  </data>
+  <data name="Invoice" xml:space="preserve">
+    <value>Invoice</value>
+  </data>
+  <data name="InvoiceIdFromFch" xml:space="preserve">
+    <value>Invoice {0:N0} from {1:dd/MM/yy}</value>
+  </data>
+  <data name="InvoicePending" xml:space="preserve">
+    <value>Unbilled</value>
+  </data>
+  <data name="Invoices" xml:space="preserve">
+    <value>Invoices</value>
+  </data>
+  <data name="KeepPurchasing" xml:space="preserve">
+    <value>Keep purchasing</value>
+  </data>
+  <data name="Line" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="LoadingOrder" xml:space="preserve">
+    <value>Loading order</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="Locations.Found" xml:space="preserve">
+    <value>{0} locations found, {1} in {2}</value>
+  </data>
+  <data name="Login.Email.VerificationCodeBody" xml:space="preserve">
+    <value>Please enter next verification code where requested: &lt;bold&gt;{0}&lt;/bold&gt;
+This is a message in response to a password reset request.
+If you have not asked to reset your password you may safely ignore this message.</value>
+  </data>
+  <data name="Login.Email.VerificationCodeSubject" xml:space="preserve">
+    <value>Verification code</value>
+  </data>
+  <data name="Login.Err.MissingPassword" xml:space="preserve">
+    <value>Please enter your password.
+If you do not have or you do not remember it you may click on above link.</value>
+  </data>
+  <data name="Login.Err.WrongCredentials" xml:space="preserve">
+    <value>Wrong password. If you don't remember it click on next button.
+We'll send you a code you'll be requested to enter in order to create a new password.</value>
+  </data>
+  <data name="Login.Err.WrongEmailAddress" xml:space="preserve">
+    <value>Please enter a valid email address.</value>
+  </data>
+  <data name="Login.IForgot.Anchor" xml:space="preserve">
+    <value>I don't have any password or I don't remember it.</value>
+  </data>
+  <data name="Login.IForgot.VerificationCodeFail" xml:space="preserve">
+    <value>The code you entered does not match the one we've sent you.
+If you did not get any message, please check whether you entered the right email address.
+You may edit and submit it again, or try to find our message in your spam inbox.</value>
+  </data>
+  <data name="Login.IForgot.VerificationCodeRequest" xml:space="preserve">
+    <value>You'll get an email in a minute with subject "{0}".
+Please enter the code on next textbox to create a new password.</value>
+  </data>
+  <data name="Login.Info.EmailAddress" xml:space="preserve">
+    <value>Please enter the email address you would like to be associated with.</value>
+  </data>
+  <data name="Login.NewPwd.Unmatch" xml:space="preserve">
+    <value>Passwords enter do not match or they are shorter than 6 characters length, please enter them again</value>
+  </data>
+  <data name="Login.NewPwdConfirm" xml:space="preserve">
+    <value>Enter it here again</value>
+  </data>
+  <data name="Login.NewPwdRequest" xml:space="preserve">
+    <value>Please enter a new password</value>
+  </data>
+  <data name="Login.Title" xml:space="preserve">
+    <value>Authentication</value>
+  </data>
+  <data name="Login.Title.CreateNewPassword" xml:space="preserve">
+    <value>Create new password</value>
+  </data>
+  <data name="Login.Title.SignUp" xml:space="preserve">
+    <value>New user sign up</value>
+  </data>
+  <data name="Login.UserIsAlreadyRegistered" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Login.UserIsNotRegistered" xml:space="preserve">
+    <value>We have no user registered with this email yet.
+Click on next button to receive a verification code so we make sure you have access to this address.</value>
+  </data>
+  <data name="Login.VerificationCode.EmailBody" xml:space="preserve">
+    <value>We've just been requested to reset your password in our system.
+If this was you, please copy next code and paste it where requested. 
+&lt;p style="text-align:center;font-weight:700;"&gt;{0}&lt;/p&gt;
+Otherelse you may safely ignore this message.</value>
+  </data>
+  <data name="Login.VerificationCode.EmailSubject" xml:space="preserve">
+    <value>Email address verification code</value>
+  </data>
+  <data name="MailCTO" xml:space="preserve">
+    <value>Mail to IT support</value>
+  </data>
+  <data name="MarketPlaces.Found" xml:space="preserve">
+    <value>{0} market places found</value>
+  </data>
+  <data name="minutes" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="Mkg.PortaitImgs.Title" xml:space="preserve">
+    <value>Portrait images</value>
+  </data>
+  <data name="MustAcceptConditions" xml:space="preserve">
+    <value>Please accept the raffle conditions</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Net" xml:space="preserve">
+    <value>Net</value>
+  </data>
+  <data name="NewCredential" xml:space="preserve">
+    <value>New credential</value>
+  </data>
+  <data name="News" xml:space="preserve">
+    <value>News</value>
+  </data>
+  <data name="News.OtherNews" xml:space="preserve">
+    <value>Other news:</value>
+  </data>
+  <data name="NextRaffle" xml:space="preserve">
+    <value>Next raffle</value>
+  </data>
+  <data name="NextRaffleOn" xml:space="preserve">
+    <value>Next raffle on</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="NoItemsInBasketYet" xml:space="preserve">
+    <value>No products selected yet</value>
+  </data>
+  <data name="NoLocationsAvailable" xml:space="preserve">
+    <value>No locations available at {0}</value>
+  </data>
+  <data name="NomAndCognoms" xml:space="preserve">
+    <value>Name and surname</value>
+  </data>
+  <data name="NoRegionsAvailable" xml:space="preserve">
+    <value>No regions available in {0}</value>
+  </data>
+  <data name="Notarial deed" xml:space="preserve">
+    <value>Notarial deed</value>
+  </data>
+  <data name="Notarial deeds" xml:space="preserve">
+    <value>Notarial deeds X</value>
+  </data>
+  <data name="NotarialDeedsCount" xml:space="preserve">
+    <value>{0} deeds found, {1} active</value>
+  </data>
+  <data name="NoZonasAvailable" xml:space="preserve">
+    <value>No zones available in {0}</value>
+  </data>
+  <data name="Obs" xml:space="preserve">
+    <value>Comments</value>
+  </data>
+  <data name="Offer" xml:space="preserve">
+    <value>Offer</value>
+  </data>
+  <data name="Offers" xml:space="preserve">
+    <value>Offers</value>
+  </data>
+  <data name="OfficialShop" xml:space="preserve">
+    <value>{0} official store for Spain, Portugal and Andorra</value>
+  </data>
+  <data name="Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="OrderCfmEmailSent" xml:space="preserve">
+    <value>We have just sent an order confirmation to {0}</value>
+  </data>
+  <data name="OrderIdFromFch" xml:space="preserve">
+    <value>Order {0:N0} from {1:dd/MM/yy}</value>
+  </data>
+  <data name="OutdatedIncluded" xml:space="preserve">
+    <value>Outdated included</value>
+  </data>
+  <data name="OutdatedNotIncluded" xml:space="preserve">
+    <value>Outdated not included</value>
+  </data>
+  <data name="Payrolls" xml:space="preserve">
+    <value>Payrolls</value>
+  </data>
+  <data name="Penalties" xml:space="preserve">
+    <value>Penalties</value>
+  </data>
+  <data name="Permissions" xml:space="preserve">
+    <value>Permissions</value>
+  </data>
+  <data name="PlayYoureStillOnTime" xml:space="preserve">
+    <value>Play! You are still on time!</value>
+  </data>
+  <data name="Portugal" xml:space="preserve">
+    <value>Portugal</value>
+  </data>
+  <data name="Portuguese" xml:space="preserve">
+    <value>Portuguese</value>
+  </data>
+  <data name="Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Prize" xml:space="preserve">
+    <value>Prize</value>
+  </data>
+  <data name="Product" xml:space="preserve">
+    <value>Product</value>
+  </data>
+  <data name="ProductBrands.Found" xml:space="preserve">
+    <value>{0} brands found, {1} active</value>
+  </data>
+  <data name="ProductCategories.Found" xml:space="preserve">
+    <value>{0} categories found, {1} active in {2}</value>
+  </data>
+  <data name="ProductDepts.Found" xml:space="preserve">
+    <value>{0} skus found, {1}, in {2}</value>
+  </data>
+  <data name="Products" xml:space="preserve">
+    <value>Products</value>
+  </data>
+  <data name="ProductSkus.Found" xml:space="preserve">
+    <value>{0} skus found, {1} active in {2}</value>
+  </data>
+  <data name="Profile" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="Profile.EnterYourPwd" xml:space="preserve">
+    <value>For your security, please enter your current password:</value>
+  </data>
+  <data name="Profile.ResetPwd" xml:space="preserve">
+    <value>Reset your password</value>
+  </data>
+  <data name="Profile.ResetPwdSuccess" xml:space="preserve">
+    <value>Your password has been successfully updated.</value>
+  </data>
+  <data name="Profile.UserDeletedSuccess" xml:space="preserve">
+    <value>Your user has been successfully deleted.</value>
+  </data>
+  <data name="Profile.WrongPwd" xml:space="preserve">
+    <value>Sorry wrong password. 
+We can only offer password reset to the current owner of the profile.</value>
+  </data>
+  <data name="Provinces.Found" xml:space="preserve">
+    <value>{0} provinces found, {1} in {2}</value>
+  </data>
+  <data name="PublishDate" xml:space="preserve">
+    <value>Publish day</value>
+  </data>
+  <data name="Purchase order" xml:space="preserve">
+    <value>Purchase order</value>
+  </data>
+  <data name="Purchase orders" xml:space="preserve">
+    <value>Purchase orders</value>
+  </data>
+  <data name="PurchaseDate" xml:space="preserve">
+    <value>Purchase date</value>
+  </data>
+  <data name="PurchaseOrders" xml:space="preserve">
+    <value>Purchase orders</value>
+  </data>
+  <data name="PurchaseOrders.Count" xml:space="preserve">
+    <value>{0} orders found</value>
+  </data>
+  <data name="Qty" xml:space="preserve">
+    <value>Qty</value>
+  </data>
+  <data name="Quantity" xml:space="preserve">
+    <value>Quantity</value>
+  </data>
+  <data name="Question" xml:space="preserve">
+    <value>Question</value>
+  </data>
+  <data name="Raffle.NextFchFrom" xml:space="preserve">
+    <value>Next raffle starts on {0:dd/MM/yy} </value>
+  </data>
+  <data name="Raffle.Participation" xml:space="preserve">
+    <value>Raffle participation</value>
+  </data>
+  <data name="RaffleDate" xml:space="preserve">
+    <value>Raffle date</value>
+  </data>
+  <data name="RafflePlay.ConfirmationEmailBody" xml:space="preserve">
+    <value>&lt;table&gt;
+&lt;tr&gt;&lt;td colspan="2"&gt;&lt;p&gt;We are glad to confirm your participation on the following raffle:&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Raffle&lt;/td&gt;&lt;td&gt;{0}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Participant&lt;/td&gt;&lt;td&gt;{1}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Date&lt;/td&gt;&lt;td&gt;{2}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Ticket&lt;/td&gt;&lt;td&gt;{3}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Answer&lt;/td&gt;&lt;td&gt;{4}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Distributor&lt;/td&gt;&lt;td&gt;{5}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2"&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td colspan="2"&gt;
+&lt;p&gt;Please remind this is an exclusive raffle for our social media followers. If you are not one of them yet, please follow us clicking the Like button on Facebook and/or Follow button on Instagram for the next pages:
+&lt;/p&gt;
+&lt;div&gt;&lt;a href="https://www.facebook.com/matiasmasso.sa"&gt;www.facebook.com/matiasmasso.sa&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href="https://www.instagram.com/matiasmasso.sa"&gt;www.instagram.com/matiasmasso.sa&lt;/a&gt;&lt;/div&gt;
+&lt;p&gt;You may check the results from 23:59 hours {6} {7} on &lt;a href="https://www.matiasmasso.es/sorteos"&gt;www.matiasmasso.es/sorteos&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;If you happen to win, you have 30 days to contact us at &lt;a href="mailto:marketing@matiasmasso.es"&gt;marketing@matiasmasso.es&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Thanks for playing!&lt;/p&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;</value>
+  </data>
+  <data name="RafflePlay.ConfirmationEmailJustSent" xml:space="preserve">
+    <value>An email has just sent to {0} confirming your answer, your ticket number and the distributor you choosed to collect the prize if you happen to win.</value>
+  </data>
+  <data name="RafflePlay.ConfirmationEmailSubject" xml:space="preserve">
+    <value>Raffle participation confirmation</value>
+  </data>
+  <data name="RafflePlay.DuplicatedPlayerBody" xml:space="preserve">
+    <value>Current user is alredy participating on this raffle with ticket number {0} from {1:dd/MM/yy HH:mm}</value>
+  </data>
+  <data name="RafflePlay.DuplicatedPlayerTitle" xml:space="preserve">
+    <value>Duplicated player</value>
+  </data>
+  <data name="RafflePlay.Error.18YearsOldMin" xml:space="preserve">
+    <value>Raffles are legally restricted to players from 18 years old on</value>
+  </data>
+  <data name="RafflePlay.Error.MissingAnswer" xml:space="preserve">
+    <value>You didn't select any answer</value>
+  </data>
+  <data name="RafflePlay.Error.MissingBasesAcceptance" xml:space="preserve">
+    <value>Raffle basis must be accepted</value>
+  </data>
+  <data name="RafflePlay.Error.MissingDistributor" xml:space="preserve">
+    <value>You didn't select any distributor</value>
+  </data>
+  <data name="RafflePlay.Error.MissingNom" xml:space="preserve">
+    <value>Player name incomplete</value>
+  </data>
+  <data name="RafflePlay.Error.MissingResidence" xml:space="preserve">
+    <value>Missing player location</value>
+  </data>
+  <data name="RafflePlay.Error.WrongBirthYear" xml:space="preserve">
+    <value>Player birth year is wrong</value>
+  </data>
+  <data name="RafflePlay.GoodLuck" xml:space="preserve">
+    <value>Good luck!</value>
+  </data>
+  <data name="RafflePlay.HaveReadBasis" xml:space="preserve">
+    <value>I have read and accepted raffle conditions</value>
+  </data>
+  <data name="RafflePlay.StepAcceptAndSubmit.Caption" xml:space="preserve">
+    <value>Please read raffle basis and confirm your participation</value>
+  </data>
+  <data name="RafflePlay.StepAcceptAndSubmit.Title" xml:space="preserve">
+    <value>Accept raffle conditions and submit</value>
+  </data>
+  <data name="RafflePlay.StepDistributor.Caption" xml:space="preserve">
+    <value>If you win, you can collect your prize there</value>
+  </data>
+  <data name="RafflePlay.StepDistributor.Title" xml:space="preserve">
+    <value>Select your nearest distributor</value>
+  </data>
+  <data name="RafflePlay.StepPlayerDetails.Title" xml:space="preserve">
+    <value>Player details</value>
+  </data>
+  <data name="RafflePlay.StepQuestion.Caption" xml:space="preserve">
+    <value>The prize will be raffled among those participants who have guessed the right answer</value>
+  </data>
+  <data name="RafflePlay.StepQuestion.Title" xml:space="preserve">
+    <value>Give us an answer</value>
+  </data>
+  <data name="RafflePlay.Thanks" xml:space="preserve">
+    <value>Thanks {0} for participating</value>
+  </data>
+  <data name="Raffles" xml:space="preserve">
+    <value>Raffles</value>
+  </data>
+  <data name="RealState" xml:space="preserve">
+    <value>Real state property</value>
+  </data>
+  <data name="RealStates" xml:space="preserve">
+    <value>Real state properties</value>
+  </data>
+  <data name="RefCatastral" xml:space="preserve">
+    <value>Cadastral reference</value>
+  </data>
+  <data name="Regions.Found" xml:space="preserve">
+    <value>{0} regions found, {1} in {2}</value>
+  </data>
+  <data name="Residence" xml:space="preserve">
+    <value>Residence</value>
+  </data>
+  <data name="RetailPrice" xml:space="preserve">
+    <value>Retail price</value>
+  </data>
+  <data name="RightAnswer" xml:space="preserve">
+    <value>Right answer</value>
+  </data>
+  <data name="Rrpp" xml:space="preserve">
+    <value>Rrpp</value>
+    <comment>Retail price</comment>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="seconds" xml:space="preserve">
+    <value>seconds</value>
+  </data>
+  <data name="SeeLess" xml:space="preserve">
+    <value>See less</value>
+  </data>
+  <data name="SeeMore" xml:space="preserve">
+    <value>See more...</value>
+  </data>
+  <data name="SelectACountry" xml:space="preserve">
+    <value>Select a country</value>
+  </data>
+  <data name="SelectedDistributor" xml:space="preserve">
+    <value>Selected distributor</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Shop.AddToBasket" xml:space="preserve">
+    <value>Add to basket</value>
+  </data>
+  <data name="Shop.CloseOrder" xml:space="preserve">
+    <value>Finalize the order</value>
+  </data>
+  <data name="Shop.SeeBasket" xml:space="preserve">
+    <value>See the basket</value>
+  </data>
+  <data name="ShowAll" xml:space="preserve">
+    <value>Show all</value>
+  </data>
+  <data name="ShowOutdateds" xml:space="preserve">
+    <value>Show outdateds</value>
+  </data>
+  <data name="SignUp.EmailNotFound" xml:space="preserve">
+    <value>Email address not registered. Click on next button to sign up.</value>
+  </data>
+  <data name="SignUp.EmailVerificationCodeFailed" xml:space="preserve">
+    <value>Wrong verification code; your email address could not be authenticated</value>
+  </data>
+  <data name="SignUp.SendVerificationCode" xml:space="preserve">
+    <value>Send me a verification code</value>
+  </data>
+  <data name="SignUp.Title" xml:space="preserve">
+    <value>User sign up</value>
+  </data>
+  <data name="SignUp.VerificationCodeSent" xml:space="preserve">
+    <value>We have just sent you a message with a verification code.
+Please check your mailbox and enter the code on next textbox:</value>
+  </data>
+  <data name="Sku" xml:space="preserve">
+    <value>Product</value>
+  </data>
+  <data name="Sku.Availability.None" xml:space="preserve">
+    <value>Out of stock</value>
+  </data>
+  <data name="Sku.Availability.Some" xml:space="preserve">
+    <value>Immediate delivery</value>
+  </data>
+  <data name="Spain" xml:space="preserve">
+    <value>Spain</value>
+  </data>
+  <data name="Spanish" xml:space="preserve">
+    <value>Spanish</value>
+  </data>
+  <data name="StaffPosition" xml:space="preserve">
+    <value>StaffPosition</value>
+  </data>
+  <data name="StaffProperties" xml:space="preserve">
+    <value>Staff details</value>
+  </data>
+  <data name="StaffSeniority" xml:space="preserve">
+    <value>StaffSeniority</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>Start date</value>
+  </data>
+  <data name="Surnames" xml:space="preserve">
+    <value>Surname</value>
+  </data>
+  <data name="TerminationDate" xml:space="preserve">
+    <value>Termination date</value>
+  </data>
+  <data name="TextResourcesFound" xml:space="preserve">
+    <value>{0:N0} resources found</value>
+  </data>
+  <data name="ThanksForPurchasing" xml:space="preserve">
+    <value>Thanks for purchasing at {0}.</value>
+  </data>
+  <data name="Transmission" xml:space="preserve">
+    <value>Transmission</value>
+  </data>
+  <data name="TransmissionPending" xml:space="preserve">
+    <value>Transmission pending</value>
+  </data>
+  <data name="TrpObs" xml:space="preserve">
+    <value>Notes for transport agency</value>
+  </data>
+  <data name="UnitPrice" xml:space="preserve">
+    <value>Unit price</value>
+  </data>
+  <data name="Units" xml:space="preserve">
+    <value>Units</value>
+  </data>
+  <data name="Units1" xml:space="preserve">
+    <value>Units</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>User name</value>
+  </data>
+  <data name="VehicleProperties" xml:space="preserve">
+    <value>Vehicle details</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>Verify</value>
+  </data>
+  <data name="WhereToBuy" xml:space="preserve">
+    <value>Where to buy?</value>
+  </data>
+  <data name="Winner" xml:space="preserve">
+    <value>Winner</value>
+  </data>
+  <data name="WorkDays" xml:space="preserve">
+    <value>Work days</value>
+  </data>
+  <data name="WrongImgSize" xml:space="preserve">
+    <value>Wrong size {0}x{1}px
+Accepted size {2}x{3}px</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ZipCod" xml:space="preserve">
+    <value>Zip code</value>
+  </data>
+  <data name="Zips.Found" xml:space="preserve">
+    <value>{0} zip codes found, {1} in {2}</value>
+  </data>
+  <data name="Zonas.Found" xml:space="preserve">
+    <value>{0} zones found, {1} in {2}</value>
+  </data>
+</root>

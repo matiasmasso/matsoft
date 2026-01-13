@@ -1,0 +1,264 @@
+﻿@using Pages.RRHH
+@inject CultureService culture
+
+@if (Breadcrumbs.Count > 0)
+{
+    <div class="Breadcrumbs">
+        @foreach (var breadcrumb in Breadcrumbs)
+        {
+            <a href="#" @onclick="@(()=>BreadcrumbClick(breadcrumb))" @onclick:preventDefault>
+                <Icon Id="Icon.Ids.Xmark"></Icon>
+                @breadcrumb.Caption
+            </a>
+        }
+    </div>
+}
+
+@if (Model is ProductBrandModel)
+{
+    <ProductBrand Model="(ProductBrandModel)Model"
+                  EditorRequest="EditorRequest"
+                  RequestToCancel="CancelRequestHandler"></ProductBrand>
+}
+
+@if (Model is ProductCategoryModel)
+{
+    <ProductCategory Model="(ProductCategoryModel)Model"
+                     EditorRequest="EditorRequest"
+                     RequestToCancel="CancelRequestHandler"></ProductCategory>
+}
+
+@if (Model is ProductSkuModel)
+{
+    <ProductSku Model="(ProductSkuModel)Model"
+                EditorRequest="EditorRequest"
+                RequestToCancel="CancelRequestHandler"></ProductSku>
+}
+else if (Model is StaffModel)
+{
+    <Staff Model="(StaffModel)Model"
+           RequestToCancel="CancelRequestHandler"></Staff>
+}
+else if (Model is RepModel)
+{
+    <Rep Model="(RepModel)Model"
+         RequestToCancel="CancelRequestHandler"></Rep>
+}
+else if (Model is ContactModel)
+{
+    <Contact Model="(ContactModel)Model"
+             EditorRequest="EditorRequest"
+             RequestToCancel="CancelRequestHandler"></Contact>
+}
+else if (Model is NominaModel)
+{
+    <Nomina Model="(NominaModel)Model"
+            CloseRequest="CancelRequestHandler"></Nomina>
+}
+else if (Model is NavDTO.MenuItem)
+{
+    <MenuItem Model="(NavDTO.MenuItem)Model"
+              RequestToCancel="CancelRequestHandler"
+              AfterUpdate="NotifyUpdate"></MenuItem>
+}
+else if (Model is ClaimModel)
+{
+    <Claim Model="(ClaimModel)Model"
+           RequestToCancel="@CancelRequestHandler"></Claim>
+}
+else if (Model is PurchaseOrderModel)
+{
+    <PurchaseOrder Model="(PurchaseOrderModel)Model"
+                   RequestToCancel="CancelRequestHandler"></PurchaseOrder>
+}
+else if (Model is DeliveryModel)
+{
+    <Delivery Model="(DeliveryModel)Model"
+              EditorRequest="EditorRequest"
+              RequestToCancel="CancelRequestHandler"></Delivery>
+}
+else if (Model is DeliveryModel.Item)
+{
+    <DeliveryItem Model="(DeliveryModel.Item)Model"
+                  EditorRequest="EditorRequest"
+                  RequestToCancel="CancelRequestHandler"></DeliveryItem>
+}
+else if (Model is TransmissionModel)
+{
+    <Transmission Model="(TransmissionModel)Model"
+                  EditorRequest="EditorRequest"></Transmission>
+}
+else if (Model is InvoiceSentModel)
+{
+    <InvoiceSent Model="(InvoiceSentModel)Model"
+                 EditorRequest="EditorRequest"></InvoiceSent>
+}
+else if (Model is DTO.Integracions.Miravia.Order)
+{
+    <Web.Pages.Integracions.MiraviaOrder Model="(DTO.Integracions.Miravia.Order)Model"
+                                         RequestToCancel="CancelRequestHandler"></Web.Pages.Integracions.MiraviaOrder>
+}
+else if (Model is BancModel.Transfer)
+{
+    <Web.Pages.Bancs.BancTransfer Model="(BancModel.Transfer)Model"></Web.Pages.Bancs.BancTransfer>
+}
+else if (Model is BankModel)
+{
+    <Bank Model="(BankModel)Model"
+          EditorRequest="EditorRequest"
+          RequestToCancel="CancelRequestHandler"></Bank>
+}
+else if (Model is BankModel.Branch)
+{
+    <Web.LocalComponents.BankBranch Model="(BankModel.Branch)Model"
+                                    RequestToCancel="CancelRequestHandler"></Web.LocalComponents.BankBranch>
+}
+else if (Model is ContractModel)
+{
+    <Contract Model="(ContractModel)Model"
+              RequestToCancel="CancelRequestHandler"></Contract>
+}
+else if (Model is CcaModel)
+{
+    <Cca Model="(CcaModel)Model"
+         RequestToCancel="CancelRequestHandler"></Cca>
+}
+else if (Model is EscripturaModel)
+{
+    <Escriptura Model="(EscripturaModel)Model" RequestToCancel="CancelRequestHandler"></Escriptura>
+
+}
+else if (Model is UserModel)
+{
+    <User Model="(UserModel)Model" RequestToCancel="CancelRequestHandler"></User>
+}
+else if (Model is TaskModel)
+{
+    <TaskComponent Model="(TaskModel)Model"
+                   EditorRequest="EditorRequest"
+                   RequestToCancel="CancelRequestHandler"></TaskComponent>
+}
+else if (Model is TaskModel.Schedule)
+{
+    <TaskSchedule Model="(TaskModel.Schedule)Model"
+                  RequestToCancel="CancelRequestHandler"></TaskSchedule>
+}
+else if (Model is IncidenciaModel)
+{
+    <Incidencia Model="(IncidenciaModel)Model"
+                EditorRequest="EditorRequest"></Incidencia>
+}
+else if (Model is EmpModel)
+{
+    <Emp Model="(EmpModel)Model"
+         EditorRequest="EditorRequest"
+         RequestToCancel="CancelRequestHandler"></Emp>
+}
+else if (Model is ImmobleModel)
+{
+    <Immoble Model="(ImmobleModel)Model"
+             EditorRequest="EditorRequest"
+             RequestToCancel="CancelRequestHandler"></Immoble>
+}
+else if (Model is DocfileSrcModel)
+{
+    <DocfileSrc Model="(DocfileSrcModel)Model"
+        RequestToUpdate="UpdateRequestHandler"
+             RequestToCancel="CancelRequestHandler"></DocfileSrc>
+}
+else if (Model is DocfileModel)
+{
+    <Docfile Model="(DocfileModel)Model"
+             RequestToCancel="CancelRequestHandler"></Docfile>
+}
+@*else if (Model is NominaModel)
+{
+    <Nomina Model="(FirstnomModel)Model"
+            ItemSelected="SelectItem"
+            AfterUpdate="NotifyUpdate"
+            CancelRequest="RequestToCancel"></Nomina>
+}
+*@
+
+@code {
+    [Parameter] public List<Breadcrumb> Breadcrumbs { get; set; }
+    [Parameter] public EventCallback<List<Breadcrumb>> BreadcrumbsChanged { get; set; }
+
+    [Parameter] public IModel? Model { get; set; }
+    [Parameter] public EventCallback<IModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<IModel> EditRequest { get; set; }
+    [Parameter] public EventCallback<IModel> UpdateRequest { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+
+    private IModel? selectedItem;
+
+    protected override void OnParametersSet()
+    {
+        Model = Breadcrumbs.Last().Model;
+        base.OnParametersSet();
+    }
+
+    void SelectItem(IModel item)
+    {
+        selectedItem = item;
+    }
+
+    async Task EditorRequest(Breadcrumb breadcrumb)
+    {
+        var breadcrumbs = new List<Breadcrumb>(Breadcrumbs);
+        breadcrumbs.Add(breadcrumb);
+        await BreadcrumbsChanged.InvokeAsync(breadcrumbs);
+    }
+
+    async Task NotifyUpdate()
+    {
+        await AfterUpdate.InvokeAsync(Model);
+        await CancelRequestHandler();
+    }
+
+
+    async Task EditRequestHandler(IModel value)
+    {
+        await EditRequest.InvokeAsync(value);
+    }
+
+    async Task CancelRequestHandler()
+    {
+        //await CancelRequest.InvokeAsync();
+        if (Breadcrumbs?.Count > 1)
+        {
+            Breadcrumbs.Remove(Breadcrumbs.Last());
+        }
+        else
+        {
+            await CancelRequest.InvokeAsync();
+        }
+    }
+
+    async Task UpdateRequestHandler(IModel value)
+    {
+        await UpdateRequest.InvokeAsync(value);
+    }
+
+    async Task BreadcrumbClick(Breadcrumb breadcrumb)
+    {
+        //removes all breadcrumbs from clicked one
+        //to set current model to previous breadcrumb if any
+        var idx = Breadcrumbs.IndexOf(breadcrumb);
+        Breadcrumbs.RemoveRange(idx, Breadcrumbs.Count - idx);
+        var breadcrumbs = new List<Breadcrumb>(Breadcrumbs);
+        await BreadcrumbsChanged.InvokeAsync(breadcrumbs);
+    }
+
+    public class Breadcrumb
+    {
+        public IModel Model { get; set; }
+        public string Caption { get; set; }
+
+        public Breadcrumb(IModel model, string caption)
+        {
+            Model = model;
+            Caption = caption;
+        }
+    }
+}

@@ -1,0 +1,88 @@
+﻿
+
+.CustomerSelection {
+    margin-bottom: 20px;
+}
+
+.CustomerSelected {
+    margin-bottom: 20px;
+}
+
+a.AdvancedOptions {
+    margin-bottom: 10px;
+}
+
+#Concept {
+    width: 100%;
+}
+
+#TotJunt {
+    text-wrap: none;
+}
+
+#FchMin {
+}
+
+#Obs {
+    width: 100%;
+}
+
+.ProductSelection {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.Focused {
+    background-color: lightyellow;
+}
+
+.QtySelection {
+    display: inline-block;
+    width: 150px;
+    vertical-align: bottom;
+    float: right;
+    margin: 0 0 20px 5px;
+}
+
+section.Grid {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.SkuThumbnail {
+    height: 172px;
+    border: 1px solid gray;
+    vertical-align: top;
+}
+
+.SkuDetails {
+    width: 150px;
+}
+
+    .SkuDetails div {
+        margin-bottom: 20px;
+    }
+
+        .SkuDetails div span {
+            vertical-align: middle;
+        }
+
+
+.SubmitButtons {
+    text-align: right;
+    margin-top: 20px;
+}
+
+    .SubmitButtons input[type=button] {
+        width: 85px;
+    }
+
+    .SubmitButtons span {
+        text-align: left;
+        margin-right: 20px;
+    }
+
+
+#RequestForNewOrder {
+    text-align: right;
+}

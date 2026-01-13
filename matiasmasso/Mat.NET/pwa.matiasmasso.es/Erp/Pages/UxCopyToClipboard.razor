@@ -1,0 +1,26 @@
+﻿@inherits _ComponentBase
+
+
+<a href="#" @onclick="CopyToClipboard" @onclick:preventDefault="true" tytle="@Localizer("CopyToClipboard")">
+    @if (isCopying)
+    {
+        <img src="~/img/Spinner-24.gif" alt="@Localizer("CopyingToClipboard")" />
+    }
+    else
+    {
+        <i class="fa-solid fa-copy"></i>
+    }
+</a>
+
+@code {
+    [Parameter] public string Text { get; set; }
+    private bool isCopying = false;
+
+    async Task CopyToClipboard()
+    {
+        isCopying = true;
+        await base.CopyToClipboard(Text);
+        Thread.Sleep(250);
+        isCopying = false;
+    }
+}

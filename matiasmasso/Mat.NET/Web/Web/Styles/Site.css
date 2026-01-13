@@ -1,0 +1,348 @@
+﻿body {
+    max-width: 1200px;
+    margin: auto;
+    padding: 10px 10px;
+    box-sizing: border-box;
+}
+
+
+[hide] {
+    display: none !important;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+    a:hover {
+        color: #167ac6;
+    }
+
+.Icon16 {
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.showOnMobile {
+    display: none;
+}
+
+
+
+.PageWrapperVertical {
+    display: flex;
+    flex-direction: column;
+    max-width: 1200px;
+    margin: 20px auto 0;
+    min-height: 450px;
+}
+
+
+.PageWrapperHorizontal {
+    display: flex;
+    flex-direction: row;
+    /*justify-content: space-between;*/
+    column-gap: 20px;
+    max-width: 1200px;
+    margin: 20px auto 0;
+    min-height: 450px;
+}
+.PageWrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    column-gap: 20px;
+    max-width: 1200px;
+    margin: 20px auto 0;
+    min-height: 450px;
+}
+
+
+.Spinner {
+    position: relative;
+    background-image: url('../Media/Img/preloaders/Spinner150.gif');
+    background-repeat: no-repeat;
+    left: 75px;
+    top: 0px;
+    width: 150px;
+    height: 150px;
+    z-index: 1000;
+}
+.Spinner64 {
+    display: inline-block;
+    background-image: url('../Media/Img/preloaders/Spinner64px.gif');
+    background-repeat: no-repeat;
+    left: 32px;
+    top: 0px;
+    width: 64px;
+    height: 64px;
+    z-index: 1000;
+}
+.Spinner16 {
+    display: inline-block;
+    background-image: url('/Media/Img/preloaders/Spinner16.png');
+    background-repeat: no-repeat;
+    left: 8px;
+    top: 0px;
+    width: 16px;
+    height: 16px;
+    z-index: 1000;
+}
+.Spinner20 {
+    display: inline-block;
+    background-image: url('../Media/Img/preloaders/arrowSpinner20x20.gif');
+    background-repeat: no-repeat;
+    left: 10px;
+    top: 0px;
+    width: 20px;
+    height: 20px;
+    z-index: 1000;
+}
+
+.AppStore {
+    display:flex;
+    margin-top:20px;
+}
+
+    .AppStore div {
+        vertical-align: top;
+        display: inline-block;
+        color: darkgray;
+    }
+
+    .AppStore img {
+        vertical-align: top;
+        display: inline-block;
+        color: darkgray;
+        margin: 0 10px 10px 0;
+    }
+
+
+
+.AppStoreIOS {
+    display: flex;
+    margin-top: 20px;
+}
+
+.AppStoreIOS div {
+    vertical-align: top;
+    display: inline-block;
+    color: darkgray;
+}
+
+.AppStoreIOS img {
+    vertical-align: top;
+    display: inline-block;
+    color: darkgray;
+    margin: 0 10px 10px 0;
+    max-width:120px;
+}
+
+
+    .Contingut img {
+        margin-bottom: 20px;
+    }
+
+.Contingut a {
+    color: #167ac6;
+}
+
+.Contingut #StoreLocator {
+    color: white;
+}
+
+.Comment .Avatar {
+    background-image: url('../Media/Img/Misc/noAvatar.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 80px;
+    height: 80px;
+    margin: 0 10px 0 0;
+}
+
+.Comment .Text, .Comment .ShortenedText, .Comment .CompleteText {
+    width: 100%;
+}
+
+/*--------------------------------------Generics-----------------------------------------------*/
+
+.RightAlign {
+    text-align: right;
+}
+
+.CenterAlign {
+    text-align: center;
+}
+
+
+/*--------------------------------------Breadcrumbs--------------------------------------------*/
+.Breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    overflow: hidden;
+
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0 0 20px 0;
+}
+
+    .Breadcrumbs span {
+        color: darkgray;
+    }
+
+    .Breadcrumbs a:hover {
+        color: #167ac6;
+    }
+
+    .Breadcrumbs > *:first-child {
+        padding-right: 20px;
+    }
+
+    .Breadcrumbs > *:not(:first-child) {
+        padding-right: 10px;
+        padding-left: 10px;
+        transform: translateX(-10px);
+        position: relative;
+    }
+
+        .Breadcrumbs > *:not(:first-child)::before {
+            content: "";
+            width: 2px;
+            height: 100%;
+            background: #c8c0d5;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+/*-------------------------------------------------------------------------------------------*/
+
+.Truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.SubmitRow {
+    /*tant sols un botó submit a la dreta*/
+    text-align: right;
+}
+
+.SubmitComplexRow {
+    /*per quan aprofitem la linia per posar un control a la esquerra*/
+    display: flex;
+    flex-direction: row;
+    column-gap: 10px;
+    justify-content: space-between;
+    align-content: center;
+}
+
+    .SubmitComplexRow input[type=text] {
+        box-sizing:border-box;
+        width:100%;
+        height: 28px;
+        margin: 10px 0;
+    }
+
+
+   .Submit, .Delete, .Cancel {
+        font-size: 1em;
+        background-color: #eeeeee;
+        margin: 10px 0 10px 10px;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        margin-left: auto;
+    }
+
+    .Submit:not([disabled]) {
+        color: white;
+        background-color: #167ac6;
+    }
+
+.Submit:not([disabled]):hover {
+    background-color: blue;
+    color: white !important;
+    cursor: pointer;
+}
+
+.Delete:not([disabled]):hover {
+    background-color: red;
+    color: white !important;
+    cursor: pointer;
+}
+
+.Cancel:hover {
+    cursor: pointer;
+}
+
+
+    /*--------------------Store Locator Call to Action-----------*/
+
+.Boton {
+    display: flex;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+    .Boton a {
+        padding: 10px 20px;
+        font-weight: 600;
+        background-color: red;
+        color: white !important;
+        border-radius: 10px;
+    }
+
+        .Boton a:hover {
+            background-color: orange;
+            color: white;
+        }
+
+.StoreLocatorCallToAction {
+    display: flex;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+    .StoreLocatorCallToAction a {
+        padding: 10px 20px;
+        font-weight: 600;
+        background-color: red;
+        color: white !important;
+        border-radius: 10px;
+    }
+
+        .StoreLocatorCallToAction a:hover {
+            background-color: orange;
+            color: white;
+        }
+
+/*----------------------------- Video ----------------------------------*/
+.video-responsive {
+    height: 0;
+    overflow: hidden;
+    padding-bottom: 56.25%;
+    /* padding-top: 30px; */
+    position: relative;
+}
+
+    .video-responsive iframe, .video-responsive object, .video-responsive embed {
+        height: 100%;
+        left: 0;
+        position: absolute;
+        top: 0;
+        width: 100%;
+    }
+
+@media screen and (max-width: 576px) {
+    .hideOnMobile {
+        display: none;
+    }
+
+    .showOnMobile {
+        display: block;
+    }
+}

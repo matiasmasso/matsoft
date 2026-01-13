@@ -1,0 +1,145 @@
+﻿@inject CultureService culture
+@inject StaffsService staffsService
+
+<h1>
+    @Model?.AbrOrNom()
+</h1>
+
+<TabControl >
+    <TabPage Text="@culture.Localize("Properties")">
+
+        @if (Model == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <PropertyGrid model="@gridModel"
+                      SetDirty="@(()=>state = DbState.IsDirty)"
+                      CanEdit="@true"></PropertyGrid>
+
+            <div class="ButtonsBar">
+                <ButtonsBar CanEdit="@true"
+                          State="state"
+                          CanDelete="@(!(Model?.IsNew ?? false))"
+                          RequestToCancel="CancelRequest"
+                          RequestToUpdate="UpdateRequest"></ButtonsBar>
+            </div>
+        }
+
+
+    </TabPage>
+
+    <TabPage Text="@culture.Localize("JornadaLaboral")">
+        <StaffJornadasLaborals Model="Model"></StaffJornadasLaborals>
+    </TabPage>
+    <TabPage Text="@culture.Localize("Payrolls")">
+        <StaffNominas Model="Model"></StaffNominas>
+    </TabPage>
+    <TabPage Text="@culture.Localize("CertsIrpf")">
+        <CertificatsIrpf Model="Model"></CertificatsIrpf>
+    </TabPage>
+
+</TabControl>
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public StaffModel? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private PropertyGridModel? gridModel;
+    private DbState state;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Nom,
+        Abr,
+        Nif,
+        NumSS,
+        Position,
+        Address,
+        FchFrom,
+        FchTo,
+        Birthday,
+        Iban,
+        Tel,
+        Email
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        try
+        {
+            if(Model != null)            Model = await staffsService.FindAsync(Model.Guid);
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+
+        gridModel = new PropertyGridModel(Model);
+        gridModel.AddString((int)Fields.Nom, Model?.Nom, culture.Localize("Name"));
+        gridModel.AddString((int)Fields.Abr, Model?.Abr, culture.Localize("Alias"));
+        gridModel.AddString((int)Fields.Nif, Model?.Nif, culture.Localize("Vat"));
+        gridModel.AddString((int)Fields.NumSS, Model?.NumSS, culture.Localize("Soc.Sec.Number"));
+        //gridModel.AddEnum((int)Fields.Position, Model.Position, Model.Position?.Guid.ToString(), Model.Position?.Nom.Tradueix(base.Lang()), "Cargo", "Carrec", "Position");
+        gridModel.AddAddress((int)Fields.Address, Model?.Address, culture.Localize("Address"));
+        gridModel.AddFch((int)Fields.Birthday, Model?.Birthday, culture.Localize("Birthday"));
+        gridModel.AddFch((int)Fields.FchFrom, Model?.FchFrom, culture.Localize("EntryDate"));
+        gridModel.AddFch((int)Fields.FchTo, Model?.FchTo, culture.Localize("TerminationDate"));
+        //gridModel.AddIban((int)Fields.Iban, Model.Iban);
+        foreach (var tel in Model?.Telefons ?? new())
+        {
+            //gridModel.AddTel((int)Fields.Tel, tel);
+        }
+        foreach (var email in Model?.Emails ?? new())
+        {
+            //gridModel.AddEmail((int)Fields.Email, email);
+        }
+        StateHasChanged();
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        var cc = new System.Globalization.CultureInfo("es-ES");
+        Model!.Nom = gridModel!.GetString((int)Fields.Nom);
+        Model!.Abr = gridModel!.GetString((int)Fields.Abr);
+        Model!.NumSS = gridModel!.GetString((int)Fields.NumSS);
+        Model!.Position = gridModel!.GetValue<StaffModel.StaffPos?>((int)Fields.Position);
+        Model!.Birthday = gridModel!.GetValue<DateTime?>((int)Fields.Birthday);
+        Model!.FchFrom = gridModel!.GetValue<DateTime?>((int)Fields.FchFrom);
+        Model!.FchTo = gridModel!.GetValue<DateTime?>((int)Fields.FchTo);
+        Model!.Iban = gridModel!.GetValue<IbanModel?>((int)Fields.Iban);
+
+        try
+        {
+            await staffsService.UpdateAsync(Model);
+            CancelRequest();
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        try
+        {
+            await staffsService.DeleteAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+}
+

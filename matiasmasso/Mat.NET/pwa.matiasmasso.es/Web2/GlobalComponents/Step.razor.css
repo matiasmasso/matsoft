@@ -1,0 +1,47 @@
+﻿.Step {
+    padding-bottom:15px;
+    margin-left:15px;
+}
+
+    .Step ::deep .CircleValue {
+        position: absolute;
+        left: -15px;
+    }
+
+.Step ::deep .CircleValue .Circle {
+    fill: lightgreen;
+    stroke: green;
+    stroke-width: 2;
+}
+
+.Step ::deep .CircleValue .Value {
+    fill: green;
+}
+
+.Step:not(.Disabled) {
+    border-left: 2px solid green;
+}
+
+
+.Step.Disabled ::deep .CircleValue .Circle {
+    fill: lightgray;
+    stroke: gray;
+}
+
+.Step.Disabled ::deep .CircleValue .Value {
+    fill: gray;
+}
+
+.Step .Epigraf {
+    position:relative;
+    padding-left: 30px;
+}
+
+.Step:not(.Disabled) .Epigraf {
+    font-weight:600;
+}
+
+
+.Step .Content {
+    margin:20px 0 0 40px;
+}

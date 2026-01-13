@@ -1,0 +1,27 @@
+﻿.CloseButton {
+    display:flex;
+    justify-content: flex-end;
+}
+
+    .CloseButton ::deep path {
+        opacity: 0.4;
+    }
+
+    .CloseButton:hover ::deep path {
+        opacity: 0.8;
+    }
+
+.Breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+    .Breadcrumbs a {
+        display: inline-flex;
+        gap: 10px;
+        padding: 4px 7px 2px 4px;
+        border-radius: 5px;
+        border: 1px solid gray;
+        background-color: lightgreen;
+        margin: 0 10px 10px 0;
+    }

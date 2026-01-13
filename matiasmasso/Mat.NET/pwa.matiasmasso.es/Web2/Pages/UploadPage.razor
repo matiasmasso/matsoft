@@ -1,0 +1,124 @@
+﻿@page "/Upload"
+@page "/{LangSegment}/upload"
+@layout ProLayout
+@inject SessionStateService session;
+@using Web.Helpers;
+
+<div class="PageWrapper600">
+    @if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+
+        <Dropzone OnChange="FilesUploaded"></Dropzone>
+
+        <div class="Thumbnail" width="350" height="400">
+            <img src="@thumbDataUrl" />
+        </div>
+
+        @foreach (var item in actions)
+        {
+            <a href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                @item.Caption
+            </a>
+        }
+        <Error @bind-Exception="exception"></Error>
+    }
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    EmpModel? emp;
+    string? thumbDataUrl;
+    List<Action> actions = new();
+    DocfileModel? docfile;
+    Media? media;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    Exception? exception;
+
+    enum Cods
+    {
+        Assentament,
+        Veepee
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task FilesUploaded(List<IBrowserFile> files)
+    {
+        if (files.Count > 0)
+        {
+            var file = files.First();
+            var mime = Media.MimeCodFromContentType(file.ContentType);
+            var fileBytes = await IBrowserFileHelper.FileBytes(file);
+            if (mime == Media.MimeCods.Pdf)
+            {
+                docfile = DocfileHelper.CreatePdfDocfile(fileBytes);
+                thumbDataUrl = docfile.ThumbnailDataUrl();
+            }
+            else
+            {
+                var media = new Media(mime, fileBytes);
+                thumbDataUrl = media.DataUrl();
+            }
+            actions = Actions(mime);
+            //await InvokeAsync(StateHasChanged);
+        }
+
+    }
+
+    private List<Action> Actions(Media.MimeCods mime)
+    {
+        List<Action> retval = new();
+        switch (mime)
+        {
+            case Media.MimeCods.Pdf:
+                retval.Add(new Action { Cod = Cods.Assentament, Caption = "Nou Assentament" });
+                break;
+            case Media.MimeCods.Xlsx:
+                retval.Add(new Action { Cod = Cods.Veepee, Caption = "Comandes Ven" });
+                break;
+        }
+        return retval;
+    }
+
+    private void ItemClick(Action item)
+    {
+        switch (item.Cod)
+        {
+            case Cods.Assentament:
+                var emp = session.Emps?.FirstOrDefault();
+                var cca = CcaModel.Factory(emp?.Id, session.User!, CcaModel.CcdEnum.Manual, DateOnly.FromDateTime( DateTime.Today));
+                cca.Docfile = docfile;
+                breadcrumbs.Add(new ModelEditor.Breadcrumb(cca, "Nou assentament"));
+                break;
+            case Cods.Veepee:
+                Web.Integracions.Veepee.OrderFulfillment.FromExcel(media?.Data);
+                break;
+        }
+    }
+
+    private class Action
+    {
+        public Cods Cod { get; set; }
+        public string? Caption { get; set; }
+    }
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+    }
+
+}

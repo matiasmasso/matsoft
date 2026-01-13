@@ -1,0 +1,117 @@
+﻿.StoreLocatorCallToAction {
+    display: flex;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+    .StoreLocatorCallToAction a {
+        padding: 10px 20px;
+        font-weight: 600;
+        background-color: red;
+        color: white;
+        border-radius: 10px;
+    }
+
+        .StoreLocatorCallToAction a:hover {
+            background-color: orange;
+            color: white;
+        }
+
+
+/*store locator */
+
+.RightAlign {
+    text-align: right;
+}
+
+.StoreLocatorOnlineOffline {
+    clear: both;
+    margin-top: 15px;
+}
+
+.AreaDropdown select {
+    width: 100%;
+    border-width: 1px;
+    border-color: #EAEAEA;
+}
+
+.StoreList {
+    display: inline-block;
+}
+
+
+
+.Stores {
+    max-height: 400px;
+    overflow: auto;
+}
+
+.StoreListTitle {
+    background-color: #EAEAEA;
+    height: 20px;
+    font-size: smaller;
+    padding: 1px 0 2px 5px;
+}
+
+.Store {
+    width: 100%;
+    border-width: 0 1px 1px 1px;
+    border-style: solid;
+    border-color: #EAEAEA;
+    margin: 0;
+    padding: 10px;
+    font-size: smaller;
+}
+
+.StoreNom {
+    font-weight: 600;
+}
+
+.Store .Distance {
+    margin: 0;
+    padding: 0;
+    text-align: right;
+}
+
+.BackToGeoLocator, .BackToNearestNeighbours {
+    text-align: right;
+    font-size: smaller;
+    margin: 10px 5px;
+}
+
+.InStock {
+    text-align: right;
+    color: green;
+}
+
+a[href^="tel:"]:before {
+    content: "\260e";
+    margin-right: 0.5em;
+}
+
+@media screen and (max-width:540px) {
+    .BloggerPostsWrapper {
+        display: none;
+    }
+
+    .StoreList {
+        width: 100%;
+    }
+
+    .AreaDropdown select {
+        height: 42px;
+    }
+}
+
+@media screen and (min-width:540px) {
+    .StoreList {
+        width: 280px;
+        margin: 5px;
+        vertical-align: top;
+    }
+
+    .AreaDropdown select {
+    }
+}
+
+

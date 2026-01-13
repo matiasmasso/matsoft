@@ -1,0 +1,106 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+
+    <TabControl>
+        <TabPage Text="@Localizer("Details")">
+            @if (gridModel == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          CanEdit="true"></PropertyGrid>
+            }
+        </TabPage>
+
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <UxButtonsBar CanEdit="true"
+                      IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(Model != null && !Model.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></UxButtonsBar>
+    </div>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+@code {
+    [Parameter] public LocationModel Model { get; set; }
+    [Parameter] public EventCallback<LocationModel> OnUpdate { get; set; }
+    [Parameter] public EventCallback<LocationModel> OnDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private LocationModel _value;
+    private PropertyGridModel gridModel;
+    private CacheDTO cache;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    new ProblemDetails problemDetails;
+
+    private enum Fields : int
+    {
+        Zona,
+        Nom
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        cache = base.DefaultCache();
+        if (!Model.IsNew)
+        {
+            var apiResponse = await base.GetAsync2<LocationModel>("Location", Model.Guid.ToString());
+            if (apiResponse.Success())
+                Model = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+
+        var zona = cache.Zona(Model.Zona);
+        var zonas = cache.Zonas.Where(x => x.Country == zona.Country).Select(x=>new GuidNom(x.Guid, x.Nom)).ToList();
+        var zonaGuidnom = new GuidNom(zona.Guid, zona.Nom);
+        var _gridModel = new PropertyGridModel(Model);
+        _gridModel.AddDropdown<GuidNom>((int)Fields.Zona, zonas, zonaGuidnom, Localizer("Zona"));
+        _gridModel.AddString((int)Fields.Nom, Model.Nom, Localizer("Nom"));
+        gridModel = _gridModel;
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        Model.Zona = (Guid)gridModel.GetModelGuid((int)Fields.Zona);
+        Model.Nom = gridModel.GetString((int)Fields.Nom);
+
+        var apiResponse = await HttpService.PostAsync<LocationModel, bool>(http,Model, "Location");
+        if (apiResponse.Success())
+        {
+            Model.IsNew = false;
+            await OnUpdate.InvokeAsync(Model);
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await HttpService.GetAsync<bool>(http, "Location/delete", Model!.Guid.ToString());
+        if (apiResponse.Success())
+            await OnDelete.InvokeAsync(Model);
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+}

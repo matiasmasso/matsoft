@@ -1,0 +1,23 @@
+﻿@page "/Locations"
+
+<div class="PageWrapper">
+    @if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>Poblacions</h1>
+        <Locations ItemSelected="ItemSelectedHandler"></Locations>
+    }
+</div>
+
+@code {
+    object? selectedItem;
+
+    void ItemSelectedHandler(object? item)
+    {
+        selectedItem = item;
+    }
+}

@@ -1,0 +1,85 @@
+﻿@page "/PgcCtaExtracte/{Emp:int}/{Year:int}/{Cta:guid}/{Contact:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+@if (model == null)
+{
+    <div>Loading...</div>
+}
+else
+{
+
+    <div class="Cta">@model!.Cta.Nom</div>
+    <div class="Contact">@(model!.Contact?.Nom ?? "")</div>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Grid">
+        <div></div>
+        <div class="TH CcaId ShowOnDesktop">Id</div>
+        <div class="TH Fch">Data</div>
+        <div class="TH Concept ShowOnDesktop">@base.Tradueix("Concepto","Concepte","Concept")</div>
+        <div class="TH Deb">@base.Tradueix("Debe","Deure","Debit")</div>
+        <div class="TH Hab">@base.Tradueix("Haber","Haver","Credit")</div>
+        <div class="TH Sdo">@base.Tradueix("Saldo","Saldo","Balance")</div>
+
+
+        <!-- to set margin from column captions -->
+        <div class="THSpacer">&nbsp;</div>
+ 
+
+        <!-- to compensate Virtualize bug, set an empty row of Columns.Count-1 -->
+        <div></div>
+        <div class="ShowOnDesktop"></div>
+        <div></div>
+        <div class="ShowOnDesktop"></div>
+        <div></div>
+        <div></div>
+
+
+    <Virtualize Items="@FilteredItems()" Context="item">
+        <PgcCtaExtracteItem Item="item"></PgcCtaExtracteItem>
+    </Virtualize>
+    
+
+    </div>
+}
+
+
+@code {
+    [Parameter] public Guid Contact { get; set; }
+    [Parameter] public Guid Cta { get; set; }
+    [Parameter] public int Year { get; set; }
+    [Parameter] public int Emp { get; set; }
+
+    private PgcCtaExtracteDTO? model;
+    private string searchTerm = string.Empty;
+
+    private DateTime dt1;
+    private DateTime dt2;
+    private DateTime dt3;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var request = new PgcCtaExtracteDTO
+            {
+                Lang = base.Lang(),
+                Emp = Emp,
+                Year = Year,
+                Cta = new GuidNom(Cta),
+                Contact = new GuidNom(Contact)
+            };
+        model = await PostAsync<PgcCtaExtracteDTO, PgcCtaExtracteDTO>(request, "PgcCtaExtracte");
+        //model = Api.Services.PgcCtaExtracteService.Extracte(request);
+        StateHasChanged();
+    }
+
+
+    private List<PgcCtaExtracteDTO.Item> FilteredItems()
+    {
+        return model!.Items
+        .Where(x => x.Matches(searchTerm))
+        .OrderByDescending(x => x.Ord)
+        .ToList();
+    }
+}

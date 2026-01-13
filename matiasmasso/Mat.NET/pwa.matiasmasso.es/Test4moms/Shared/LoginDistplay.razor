@@ -1,0 +1,27 @@
+﻿@inject NavigationManager NavigationManager
+@inject IStringLocalizer<AppResource> Localizer
+@inject AuthenticationStateProvider authStateProvider
+@inject ICookie cookie
+
+<AuthorizeView>
+    <Authorized>
+        <a href="Identity/Account/Manage">Hello, @context.User.Identity?.Name!</a>
+        <form method="post" action="Identity/Account/LogOut">
+            <button type="submit" class="nav-link btn btn-link">Log out</button>
+        </form>
+    </Authorized>
+    <NotAuthorized>
+        <a href="Identity/Account/Register">Register</a>
+        <a href="/Login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+    async Task Logout()
+    {
+        var customAuthenticateStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthenticateStateProvider.UpdateAuthenticationState(null);
+        await cookie.SetValue("token", string.Empty);
+        NavigationManager.NavigateTo("/", true);
+    }
+}

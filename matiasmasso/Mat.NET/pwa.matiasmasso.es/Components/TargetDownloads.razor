@@ -1,0 +1,49 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+
+    @if (Values != null)
+    {
+
+        <PageOptions>
+            @if (AddNewRequest.HasDelegate)
+            {
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                    @Localizer("AddNew")
+                </a>
+            }
+        </PageOptions>
+
+        <div class="Grid">
+            @foreach (var item in Values)
+            {
+                <a class="Item" href="@item.PageUrl()">
+                    <div class="Ico">
+                        <i class="fa-duotone fa-file"></i>
+                    </div>
+                    <div class="Fch">
+                        @string.Format("{0:dd/MM/yy}",item.DocFile?.Fch ?? item.DocFile?.FchCreated)
+                    </div>
+                    <div class="Nom Truncate">
+                        @item.DocFile?.Nom
+                    </div>
+                    <div class="Features Truncate">
+                        @item.DocFile?.Features()
+                    </div>
+                </a>
+                <div class="GridRowDivider" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<DownloadTargetModel>? Values { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+    void AddNew()
+    {
+        if (AddNewRequest.HasDelegate)
+            AddNewRequest.InvokeAsync();
+    }
+}

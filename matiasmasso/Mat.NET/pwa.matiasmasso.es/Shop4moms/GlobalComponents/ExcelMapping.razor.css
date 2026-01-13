@@ -1,0 +1,18 @@
+﻿.Wrapper {
+    width:100%;
+}
+.Grid {
+    display: grid;
+    border-left: 1px solid gray;
+    border-top: 1px solid gray;
+    max-width:100%;
+}
+
+    .Grid div {
+        border-right: 1px solid gray;
+        border-bottom: 1px solid gray;
+        padding: 4px 7px 2px 4px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow: ellipsis;
+    }

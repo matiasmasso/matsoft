@@ -1,0 +1,31 @@
+﻿.Grid {
+    display: grid;
+    grid-column-gap: 1px;
+    grid-template-columns: 1fr min-content min-content min-content min-content;
+    font-size: 0.8rem;
+}
+
+.ColHeaders, .Total, .Item {
+    display: contents;
+}
+
+.Total div {
+    margin:5px 0;
+}
+
+.Item:nth-child(odd) div {
+    background-color: aliceblue;
+}
+
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Num {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+    padding-left: 9px;
+}

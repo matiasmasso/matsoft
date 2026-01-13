@@ -1,0 +1,133 @@
+﻿@page "/MgzInventory"
+@inherits _ComponentBase
+
+<div class="Wrapper">
+    <h1>@base.Tradueix("Inventario","Inventari","Inventory")</h1>
+
+
+    @if (model == null)
+    {
+        <Loading class="Loading" Message="@base.Tradueix(
+            "Un momento por favor, estamos cargando los datos",
+            "Un moment si us plau, estem descarregant les dades",
+            "Wait a moment please, we are downloading the data"
+            )" Seconds="10"></Loading>
+    }
+    else
+    {
+        <div class="Grid">
+            <div class="ColumnHeaders">
+                <div class="Caption">@base.Tradueix("Concepto","Concepte","Concept")</div>
+                <div class="Qty">@base.Tradueix("Unidades","Unitats","Units")</div>
+                <div class="Eur">@base.Tradueix("Importe","Import","Amount")</div>
+                <div class="Ico">&nbsp;</div>
+            </div>
+
+            @foreach (var selectedItem in selectedItems)
+            {
+                <a class="Item Selected" href="#" @onclick="@(() => Collapse(selectedItem))" @onclick:preventDefault="true">
+                    <div class="Caption">
+                        @selectedItem.Caption
+                        <img src="/img/Spinner-24.gif" alt="loading..." hidden="@(!selectedItem.IsLoading)" />
+                    </div>
+                    <div class="Qty">@String.Format("{0:n0}", selectedItem.Qty)</div>
+                    <div class="Eur">@String.Format("{0:n2} €", selectedItem.Eur)</div>
+                    <div class="Ico">&nbsp;</div>
+                </a>
+                <div class="Line" />
+            }
+
+            @foreach (var item in Items)
+            {
+                <div class="Item">
+                    <a class="Caption" href="#" @onclick="@(() => Expand(item))" @onclick:preventDefault="true">
+                        @item.Caption
+                    </a>
+                    <div class="Qty">@String.Format("{0:n0}", item.Qty)</div>
+                    <div class="Eur">@String.Format("{0:n2} €", item.Eur)</div>
+                    <div class="Ico">
+                        @if (item.Period.Count == 3)
+                        {
+                            if (item.IsLoadingExcel)
+                            {
+                                <img src="/img/Spinner-24.gif" alt="loading..." />
+                            }
+                            else
+                            {
+                                <a class="Ico" href="#" @onclick="@(() => Excel(item))" @onclick:preventDefault="true">
+                                    <i class="fa-solid fa-file-excel"></i>
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <div class="Ico">&nbsp;</div>
+                        }
+                    </div>
+
+                </div>
+                <div class="Line" />
+            }
+
+        </div>
+    }
+</div>
+@code {
+    private MgzInventoryDTO? model = null;
+    private List<MgzInventoryDTO.Item> selectedItems { get; set; } = new();
+    private List<MgzInventoryDTO.Item> Items { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var mgz = MgzDTO.Wellknown(MgzDTO.Wellknowns.vivaceLliça);
+            model = await base.GetAsync<MgzInventoryDTO>("mgzinventory", mgz.Guid.ToString());
+            model.Cache = AppState.DefaultCache();
+            model.Lang = base.Lang();
+            Items = model.Years();
+            StateHasChanged();
+        }
+    }
+
+    private async Task Collapse(MgzInventoryDTO.Item selectedItem)
+    {
+        selectedItem.IsLoading = true;
+        var idx = selectedItems.IndexOf(selectedItem);
+        selectedItems = selectedItems.Take(idx).ToList();
+        StateHasChanged();    // to be sure, probably not needed
+        await Task.Delay(1);  // allow time for the rendering
+
+        var parent = selectedItems.Count == 0 ? null : selectedItems.Last();
+        Items = model!.Expand(parent);
+        selectedItem.IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task Expand(MgzInventoryDTO.Item item)
+    {
+        item.IsLoading = true;
+        selectedItems.Add(item);
+        Items = new List<MgzInventoryDTO.Item>();
+        StateHasChanged();
+        await Task.Delay(1);  // allow time for the rendering
+
+        Items = model!.Expand(item);
+        item.IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async void Excel(MgzInventoryDTO.Item item)
+    {
+        item.IsLoadingExcel = true;
+        StateHasChanged();
+        await Task.Delay(1);  // allow time for the rendering
+
+        var book = model!.ExcelBook(item);
+        var fileContents = Helpers.ClosedXml.Bytes(book);
+        await base.DownloadFile(book.Filename ?? "inventari.xlsx", fileContents);
+        await InvokeAsync(StateHasChanged);
+        item.IsLoadingExcel = false;
+        StateHasChanged();
+    }
+}

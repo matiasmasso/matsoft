@@ -1,0 +1,9 @@
+﻿.Grid {
+    display:grid;
+    grid-template-columns:min-content min-content 1fr 1fr;
+    grid-column-gap:10px;
+}
+
+.Item {
+    display:contents;
+}

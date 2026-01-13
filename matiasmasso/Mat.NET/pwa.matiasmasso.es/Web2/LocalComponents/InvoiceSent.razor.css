@@ -1,0 +1,42 @@
+﻿.Details {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap: 10px;
+}
+
+.Items {
+    display: grid;
+    grid-template-columns: min-content 1fr min-content min-content min-content min-content;
+    grid-column-gap: 10px;
+}
+
+    .Items.NoDiscount {
+        grid-template-columns: min-content 1fr min-content min-content min-content;
+    }
+
+.Item, .ColHeaders {
+    display: contents;
+}
+
+    .Item.Delivery > div {
+        grid-column: 1/-1;
+        font-weight: 600;
+        margin: 10px 0 5px;
+    }
+
+    .Item.Pdc > div {
+        grid-column: 1/-1;
+        font-style: italic;
+    }
+
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Num {
+    white-space: nowrap;
+    display: flex;
+    justify-content: flex-end;
+}

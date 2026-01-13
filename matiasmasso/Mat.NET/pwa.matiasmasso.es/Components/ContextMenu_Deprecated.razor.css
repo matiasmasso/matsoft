@@ -1,0 +1,23 @@
+﻿
+.Menu {
+    position: absolute;
+    border: 1px solid #DDDDDD;
+    right: 0;
+    top: 21px;
+    z-index: 3;
+    background-color: white;
+    border-radius: 3px;
+}
+
+.MenuItem {
+    display: block;
+    padding: 0 10px;
+}
+
+    .MenuItem:hover {
+        background-color: #DDDDDD;
+    }
+
+    .MenuItem:not(:last-child) {
+        border-bottom: 1px solid #DDDDDD;
+    }

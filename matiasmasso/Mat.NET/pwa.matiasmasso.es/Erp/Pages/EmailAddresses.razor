@@ -1,0 +1,58 @@
+﻿@page "/EmailAddresses"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>@Localizer("EmailAddresses")</h1>
+
+    <SearchBox @bind-Value="@searchTerm" SetDirty="SearchTermChanged"></SearchBox>
+
+    @if (model !=null)
+    {
+        <div class="Summary">
+            @Localizer("EmailAddresses.Count",model.Count())
+        </div>
+        <div class="Grid">
+            <Virtualize Items="@model" Context="item">
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Truncate">@item.EmailAddress</div>
+                    <div class="Truncate">@item.NomiCognomsOrNickname()</div>
+                </a>
+                <div class="GridRowDivider"></div>
+            </Virtualize>
+        </div>
+    }
+
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+
+@code {
+    private List<UserModel> model;
+    private bool isLoading = false;
+    private string searchTerm;
+    private int emp = 1;
+    private new ProblemDetails problemDetails;
+
+    async Task SearchTermChanged(string value)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length < 4)
+            model = new List<UserModel>();
+        else
+        {
+            isLoading = true;
+            ApiResponse<List<UserModel>> apiResponse = await HttpService.PostAsync<string, List<UserModel>>(http,searchTerm, "Users/search",emp.ToString());
+            if (apiResponse.Success())
+                model = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+            isLoading = false;
+        }
+    }
+
+    void ItemClick(UserModel item)
+    {
+        base.NavigateToPage("User",item.Guid.ToString());
+    }
+}

@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="SharedProjectFile_SccProperties">
+    <SharedProjectFile_ProjectGuid>{9187d3ad-b064-491e-9eb3-aeeda05b1fb6}</SharedProjectFile_ProjectGuid>
+    <SharedProjectFile_SccProjectName>SAK</SharedProjectFile_SccProjectName>
+    <SharedProjectFile_SccAuxPath>SAK</SharedProjectFile_SccAuxPath>
+    <SharedProjectFile_SccLocalPath>SAK</SharedProjectFile_SccLocalPath>
+    <SharedProjectFile_SccProvider>SAK</SharedProjectFile_SccProvider>
+  </PropertyGroup>
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>b1d64aa0-961f-466d-b901-30bf1306b70d</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>DTO</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AddressDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Amt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AtlasDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BancDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BannerDto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BaseGuid.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BlogPostDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Box.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BrowseHistory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CacheDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CatalogDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CcaDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ImageMime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PgcCtaExtracteDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CertificatIrpfDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ContactDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ContactModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ContentDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ContentRequestDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ContractModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CorrespondenciaModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CountryDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CredencialDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CredencialModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DeliveryListDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DocfileModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EmpDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EscripturaModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Excel\Book.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Excel\Cell.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Excel\Column.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Excel\Row.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Excel\Sheet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Globals.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GuidNom.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HomeDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IbanDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ImmobleDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IncidenciaDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InvoiceDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LangDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LangTextDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LangTextModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LayoutDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LocationDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LoginRequestDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MenuItemDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MenuItemModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MgzModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MgzInventoryDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MimeHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MultaModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NavDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NavMenuDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NominaModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NoticiaDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PgcCtaSdosDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProductBrandModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProductCategoryModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProductDeptModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProductModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProductLandingPageDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProductPluginDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProductSkuModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProvinciaDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PurchaseOrderDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RaffleModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RepDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RepliqDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SelloutDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SessionDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StaffModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StatDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StoreLocatorDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UserModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UsrLogModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)VehicleDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ZipDTO.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ZonaDTO.cs" />
+  </ItemGroup>
+</Project>

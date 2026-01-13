@@ -1,0 +1,13 @@
+﻿.Bar {
+    display:flex;
+    gap: 15px;
+}
+
+
+    .Bar a {
+        color:gray;
+    }
+
+    .Bar .Active {
+        border-bottom: 4px solid green;
+    }

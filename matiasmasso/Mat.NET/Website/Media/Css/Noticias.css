@@ -1,0 +1,26 @@
+﻿
+.Grid {
+    display: grid;
+    grid-template-columns: repeat( auto-fit, minmax(265px, 1fr) );
+    grid-gap: 25px;
+    font-size: 0.8em;
+}
+
+    .Grid .Item {
+        /*border: 1px solid red;*/
+    }
+
+        .Grid .Item img {
+            width: 100%;
+            height: auto !important;
+        }
+
+.More {
+    display: none;
+}
+
+.MoreNews {
+    color: blue;
+    text-align: right;
+    padding: 20px 0;
+}

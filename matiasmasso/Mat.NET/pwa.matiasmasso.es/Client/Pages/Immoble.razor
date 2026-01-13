@@ -1,0 +1,45 @@
+﻿@page "/immoble/{Guid:guid}"
+@layout ProLayout
+@using Client.Shared
+@using Client.ViewModels
+@inject AppState AppState
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+<h1>Immoble</h1>
+
+    <TabControl>
+
+        <ChildContent>
+
+            <TabPage Text="General">
+                <ImmobleEditor Model=viewModel.Model></ImmobleEditor>
+            </TabPage>
+
+            <TabPage Text="Documentacio">
+                <TargetDocfiles Target=viewModel.Model></TargetDocfiles>
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>  
+
+
+}
+
+@code {
+    [Parameter]
+    public Guid Guid { get; set; }
+
+    private ImmobleViewModel? viewModel;
+
+
+    protected override void OnParametersSet()
+    {
+        viewModel = new ImmobleViewModel(AppState, Guid);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+    }
+
+}

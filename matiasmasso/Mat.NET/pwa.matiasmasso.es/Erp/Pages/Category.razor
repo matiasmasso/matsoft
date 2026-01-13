@@ -1,0 +1,99 @@
+﻿@page "/Category/{Guid:guid}"
+@inherits _ComponentBase
+
+<h3>@value?.Nom.Tradueix(base.Lang())</h3>
+
+<PropertyGrid model="@gridModel"
+              RequestToUpdate="SaveRequest"
+              RequestToDelete="DeleteRequest"
+              RequestToCancel="CancelRequest"
+              ErrorMessage="@errorMessage"></PropertyGrid>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private CacheDTO cache;
+    private ProductCategoryModel? value;
+    private PropertyGridModel? gridModel;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        NomEsp,
+        NomCat,
+        NomEng,
+        NomPor
+    }
+
+    protected override void OnInitialized()
+    {
+        cache = AppState.DefaultCache();
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (value == null)
+        {
+            //value = cache.Category(guid);
+            //var model = new PropertyGridModel();
+            //model.AddString((int)Fields.NomEsp, value.Nom?.Esp ?? "", "Español", "Espanyol", "Spanish");
+            //model.AddString((int)Fields.NomCat, value.Nom?.Cat ?? "", "Catalán", "Català", "Catalan");
+            //model.AddString((int)Fields.NomEng, value.Nom?.Eng ?? "", "Inglés", "Anglès", "English");
+            //model.AddString((int)Fields.NomPor, value.Nom?.Por ?? "", "Portugués", "Portuguès", "Portuguese");
+            //gridModel = model;
+            //StateHasChanged();
+        }
+    }
+
+
+    private async Task SaveRequest()
+    {
+        value!.Nom!.Esp = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomEsp)?.Value?.ToString();
+        value!.Nom!.Cat = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomCat)?.Value?.ToString();
+        value!.Nom!.Eng = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomEng)?.Value?.ToString();
+        value!.Nom!.Por = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomPor)?.Value?.ToString();
+
+        if (await PostAsync<ProductCategoryModel, bool>(value, "Category"))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Category/delete", value!.Guid.ToString()))
+        {
+            cache!.Categories.Remove(value);
+            CancelRequest();
+        }
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+        NavigateToPage("/catalog");
+    }
+
+    //public async Task<List<Option>> GetOptions(PropertyGridModel.Item item)
+    //{
+    //    List<Option> retval = new();
+        //if (item.Field == (int)Fields.Lang)
+        //{
+        //    retval = Enum.GetValues(typeof(LangDTO.Ids))
+        //    .Cast<LangDTO.Ids>()
+        //    .Where(x => x != LangDTO.Ids.Unknown)
+        //    .Select(x => new Option
+        //        {
+        //            Id = x.ToString(),
+        //            Nom = (new LangDTO(x)).Nom(base.Lang()),
+        //            Tag = new LangDTO(x)
+        //        }).ToList();
+        //}
+
+    //    return retval;
+    //}
+}
+

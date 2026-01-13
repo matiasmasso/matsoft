@@ -1,0 +1,63 @@
+﻿@if (CanEdit)
+{
+    <div class="Wrapper">
+        @if (RequestToDelete.HasDelegate && CanDelete)
+        {
+            if (State == DbState.IsDeleting)
+            {
+                <button class="Button Del" disabled>
+                    <Loading></Loading>
+                </button>
+            }
+            else
+            {
+                <button class="Button Del" @onclick="@(()=>RequestToDelete.InvokeAsync())" disabled="@(!CanDelete)">
+                    Eliminar
+                </button>
+            }
+        }
+        else
+        {
+            <div class="Spacer">&nbsp;</div>
+        }
+
+        <div class="RightButtons">
+            @if (RequestToCancel.HasDelegate)
+            {
+
+                <button class="Button Cancel" @onclick="@(()=>RequestToCancel.InvokeAsync())">
+                    Cancel·lar
+                </button>
+            }
+
+            @if (RequestToUpdate.HasDelegate)
+            {
+                if (IsUpdating || State == DbState.IsUpdating)
+                {
+                    <button class="Button Ok" disabled>
+                        <Loading></Loading>
+                    </button>
+                }
+                else
+                {
+                    <button class="Button Ok" @onclick="@(()=>RequestToUpdate.InvokeAsync())" disabled="@(State != DbState.IsDirty)">
+                        Desar
+                    </button>
+                }
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter] public EventCallback RequestToUpdate { get; set; }
+    [Parameter] public EventCallback RequestToDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool CanDelete { get; set; }
+    [Parameter] public bool IsDirty { get; set; }
+    [Parameter] public bool IsUpdating { get; set; }
+    [Parameter] public DbState State { get; set; }
+
+}

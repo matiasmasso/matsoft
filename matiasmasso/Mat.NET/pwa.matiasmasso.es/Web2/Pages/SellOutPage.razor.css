@@ -1,0 +1,71 @@
+﻿.Wrapper {
+    max-width: 400px;
+}
+
+.Grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.Row {
+    border-top: 1px solid gray;
+    padding: 10px;
+}
+
+    .Row.Year, .Row.Month, .Row.Day {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .Row.Year {
+        background-color: #E5BA73;
+        font-weight: 600;
+    }
+
+    .Row.Month {
+        background-color: #FAEAB1;
+        font-weight: 600;
+    }
+
+
+        .Row.Year .Aux, .Row.Month .Aux {
+            font-weight: 400;
+        }
+
+    .Row.Day {
+        background-color: #FAF8F1;
+    }
+
+    .Row.Order {
+        display: grid;
+        grid-template-columns: min-content 1fr min-content;
+        grid-template-areas: "hh nom eur"
+            "loc loc loc"
+            "pdd pdd pdd";
+        grid-column-gap: 10px;
+    }
+
+.Hh {
+    grid-area: hh;
+}
+
+.Nom {
+    grid-area: nom;
+}
+
+.Eur {
+    grid-area: eur;
+    white-space: nowrap;
+}
+
+.Location {
+    grid-area: loc;
+}
+
+.Concept {
+    grid-area: pdd;
+}
+
+.Lighter {
+    color: #888888;
+}

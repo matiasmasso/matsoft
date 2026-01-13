@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{D6AB48F7-36E9-4CE3-8850-1CA00A508141}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MatHelper</RootNamespace>
+    <AssemblyName>MatHelper</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="ReachFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BarcodeHelper.cs" />
+    <Compile Include="Components\CustomPdfSplitter.cs" />
+    <Compile Include="Csv\File.cs" />
+    <Compile Include="Csv\Row.cs" />
+    <Compile Include="Delegates.cs" />
+    <Compile Include="Excel\AppHelper.cs" />
+    <Compile Include="Excel\Book.cs" />
+    <Compile Include="Excel\Cell.cs" />
+    <Compile Include="Excel\ClosedXml.cs" />
+    <Compile Include="Excel\Column.cs" />
+    <Compile Include="Excel\Rasterizer.cs" />
+    <Compile Include="Excel\Row.cs" />
+    <Compile Include="Excel\Sheet.cs" />
+    <Compile Include="Excel\ValidationResult.cs" />
+    <Compile Include="ImageHelper.cs" />
+    <Compile Include="PdfHelper.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TextHelper.cs" />
+    <Compile Include="XpsHelper.cs" />
+    <Compile Include="ZipHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Extensions\ImageExtensions.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BarCode">
+      <Version>2025.3.4</Version>
+    </PackageReference>
+    <PackageReference Include="ClosedXML">
+      <Version>0.102.0</Version>
+    </PackageReference>
+    <PackageReference Include="DocumentFormat.OpenXml">
+      <Version>3.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="DotNetZip">
+      <Version>1.16.0</Version>
+    </PackageReference>
+    <PackageReference Include="Ghostscript.NET">
+      <Version>1.2.3.1</Version>
+    </PackageReference>
+    <PackageReference Include="itext7">
+      <Version>8.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="itext7.bouncy-castle-adapter">
+      <Version>8.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="itext7.commons">
+      <Version>8.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Office.Interop.Excel">
+      <Version>15.0.4795.1001</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="SixLabors.Fonts">
+      <Version>1.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="SixLabors.ImageSharp">
+      <Version>2.1.10</Version>
+    </PackageReference>
+    <PackageReference Include="System.Drawing.Common">
+      <Version>9.0.3</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ai_140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Carrefour.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cartadeajuste.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Checked13.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\info.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Logo-Tatita84-200x60.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NoImg140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pdf_100.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RecycleSonae.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\scissors24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\video.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\warn.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\word.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wrong.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zip_140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MatHelperStd\MatHelperStd.vbproj">
+      <Project>{38401bfe-45c6-4e67-ba29-12f8dd0c483e}</Project>
+      <Name>MatHelperStd</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

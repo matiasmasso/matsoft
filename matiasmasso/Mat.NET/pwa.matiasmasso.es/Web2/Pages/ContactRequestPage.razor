@@ -1,0 +1,61 @@
+﻿@page "/ContactRequest"
+@page "/Msg/{Referencia:guid?}"
+@page "/Contact_us"
+@page "/{LangSegment}/Msg"
+@page "/{LangSegment}/Contact_us"
+
+@inject CultureService culture
+
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@culture.CanonicalUrl()" />
+
+    @foreach (var lang in LangDTO.All())
+    {
+        <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@culture.CanonicalUrl(lang,lang.Tradueix("contacto","contacte","contact","contato"))" />
+    }
+</HeadContent>
+
+<div class="Wrapper">
+    <h2>@culture.Localize("ContactRequest")</h2>
+
+    <AuthorizeView>
+        <Authorized>
+
+            <ContactRequest Referencia="Referencia"></ContactRequest>
+
+        </Authorized>
+        <NotAuthorized>
+
+            <div class="SignIn">
+                <SignIn ></SignIn>
+            </div>
+
+        </NotAuthorized>
+        <Authorizing>
+            <Loading></Loading>
+        </Authorizing>
+    </AuthorizeView>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+
+<PageTitle>M+O | @culture.Localize("ContactRequest")</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@culture.CanonicalUrl()" />
+    @foreach (var lang in LangDTO.All())
+    {
+        <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@culture.CanonicalUrl(lang)" />
+    }
+
+</HeadContent>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    [Parameter] public Guid? Referencia { get; set; }
+    Exception? exception;
+
+}

@@ -1,0 +1,46 @@
+﻿@page "/Mkg_PortadaImgs"
+@inherits _ComponentBase
+
+
+@if (model == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="Wrapper">
+        <h1>Localizer("Mkg.PortaitImg.Title")</h1>
+
+        <div class="Epigraf">
+            Imatges verticals per desktop (200x242px)
+        </div>
+
+        <Mkg_PortadaImg_Item Id="@PortadaImgModel.Ids.V1" Values="model" Width="200" Height="242"></Mkg_PortadaImg_Item>
+        <Mkg_PortadaImg_Item Id="@PortadaImgModel.Ids.V2" Values="model" Width="200" Height="242"></Mkg_PortadaImg_Item>
+        <Mkg_PortadaImg_Item Id="@PortadaImgModel.Ids.V3" Values="model" Width="200" Height="242"></Mkg_PortadaImg_Item>
+
+        <div class="Epigraf">
+            Imatges apaisades per mobil (600x338px)
+        </div>
+
+        <Mkg_PortadaImg_Item Id="@PortadaImgModel.Ids.H1" Values="model" Width="600" Height="338"></Mkg_PortadaImg_Item>
+        <Mkg_PortadaImg_Item Id="@PortadaImgModel.Ids.H2" Values="model" Width="600" Height="338"></Mkg_PortadaImg_Item>
+        <Mkg_PortadaImg_Item Id="@PortadaImgModel.Ids.H3" Values="model" Width="600" Height="338"></Mkg_PortadaImg_Item>
+    </div>
+}
+
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    List<PortadaImgModel> model;
+    private ProblemDetails problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        model = await GetAsync<List<PortadaImgModel>>("PortadaImgs");
+        base.OnInitialized();
+        StateHasChanged();
+    }
+
+}

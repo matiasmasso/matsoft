@@ -1,0 +1,46 @@
+﻿<div class="Wrapper">
+    @if (CanEdit && isEditing)
+    {
+        <input type="date" @bind-value="@_innerControlValue" @onblur="@(()=>{isEditing = false;})" />
+    }
+    else
+    {
+        <a href="#" @onclick="@(()=>{isEditing = true;})" @onclick:preventDefault="true">
+            @if (_innerControlValue == null)
+            {
+                <div>&nbsp;</div>
+            }
+            else
+            {
+                <span>@string.Format("{0:dd/MM/yy}",@_innerControlValue)</span>
+            }
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public Object? Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+
+    [Parameter] public EventCallback<DateTime?> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+
+    private bool isEditing = false;
+    private DateTime? _innerControlValue
+    {
+        get => (DateTime?)Value;
+        set
+        {
+            if ((DateTime?)Value != value)
+            {
+                Value = value;
+
+                if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                    ObjChanged.InvokeAsync(value);
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+}

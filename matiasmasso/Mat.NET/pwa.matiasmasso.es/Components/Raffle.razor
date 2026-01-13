@@ -1,0 +1,74 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Banner">
+            <img src="@model.ImgBanner600Url()" alt="Banner" width="@RaffleModel.BANNER600WIDTH" height="@RaffleModel.BANNER600HEIGHT" />
+        </div>
+
+        <h1>@model.Title</h1>
+
+        <div class="Grid">
+            <div class="Label">@Localizer("StartDate")</div>
+            <div class="Value">@string.Format("{0:dd/MM/yy}",model.FchFrom)</div>
+            <div class="GridRowDivider"/>
+            <div class="Label">@Localizer("EndDate")</div>
+            <div class="Value">@string.Format("{0:dd/MM/yy}",model.FchTo)</div>
+            <div class="GridRowDivider"/>
+            <div class="Label">@Localizer("Prize")</div>
+            <div class="Value">@model.Product.Nom</div>
+            <div class="GridRowDivider"/>
+            <div class="Label">@Localizer("Question")</div>
+            <div class="Value">
+                @if(isQuestionExpanded){
+                    @((MarkupString)model.Question)
+                } else {
+                    @((MarkupString)model.Question.Substring(0, 100)) 
+                    <span>...</span>
+                }
+                <More @bind-Value="@isQuestionExpanded"></More>
+            </div>
+            <div class="GridRowDivider" />
+            <div class="Label">@Localizer("RightAnswer")</div>
+            <div class="Value">@(model.Answer(model.RightAnswer))</div>
+            <div class="GridRowDivider"/>
+            <div class="Label">@Localizer("Winner")</div>
+            <div class="Value">@(model.Winner?.Lead?.Nom ?? "")</div>
+            <div class="GridRowDivider"/>
+            <div class="Label">@Localizer("SelectedDistributor")</div>
+            <div class="Value">@model.Winner.Distributor.Nom<br />@model.Winner.Distributor.Address<br />@model.Winner.Distributor.Location</div>
+        </div>
+
+        @if (model.HasImgWinner)
+        {
+            <div class="Winner">
+                <img src="@model.WinnerImgUrl()" alt="@Localizer("Winner")" />
+            </div>
+        }
+    }
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    RaffleModel? model;
+    bool isQuestionExpanded;
+    private ProblemDetails problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (model == null)
+        {
+            var apiResponse = await GetAsync<RaffleModel>("raffle", Guid.ToString());
+            model = apiResponse.Value;
+            problemDetails = apiResponse.ProblemDetails;
+        }
+    }
+}

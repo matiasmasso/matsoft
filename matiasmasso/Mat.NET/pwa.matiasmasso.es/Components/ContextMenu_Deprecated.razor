@@ -1,0 +1,21 @@
+﻿@inherits _Base
+<div class="Menu">
+
+    @foreach (var menuItem in Model.Items)
+    {
+        <a href="#" class="MenuItem" @onclick="@(()=>MenuItemClick(menuItem))" @onclick:preventDefault>
+            @menuItem.Caption.Tradueix(base.Lang())
+        </a>
+    }
+</div>
+
+
+@code {
+    [Parameter] public ContextMenuModel Model { get; set; }
+    [Parameter] public EventCallback<MenuItemModel> OnClick { get; set; }
+
+    void MenuItemClick(MenuItemModel menuItem)
+    {
+        OnClick.InvokeAsync();
+    }
+}

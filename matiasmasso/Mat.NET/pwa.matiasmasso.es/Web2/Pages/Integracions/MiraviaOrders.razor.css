@@ -1,0 +1,75 @@
+﻿.Grid {
+    display:grid;
+    grid-template-columns: min-content min-content min-content 1fr min-content;
+    grid-column-gap: 10px;
+}
+
+.ColHeaders, .Item{
+    display:contents;
+}
+
+
+.Fch {
+    white-space: nowrap;
+}
+
+.Nom {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.Num {
+    white-space: nowrap;
+    display:flex;
+    justify-content: flex-end;
+}
+
+.pending > * {
+    color: red;
+}
+
+.pending .Ico ::deep path {
+    fill: red;
+}
+.packed > * {
+    color: saddlebrown;
+}
+
+.packed .Ico ::deep path {
+    fill: saddlebrown;
+}
+
+.ready_to_ship > * {
+    color: darkcyan ;
+}
+
+.ready_to_ship .Ico ::deep path {
+    fill: darkcyan;
+}
+
+.shipped > * {
+    color: dodgerblue;
+}
+
+.shipped .Ico ::deep path {
+    fill: dodgerblue;
+}
+
+.canceled > * {
+    color:gray;
+}
+
+.canceled .Ico ::deep path {
+    fill:gray;
+}
+
+.Pagination {
+    display:flex;
+    justify-content: space-between;
+}
+
+a.Disabled {
+    pointer-events: none;
+    color: #DDDDDD;
+}

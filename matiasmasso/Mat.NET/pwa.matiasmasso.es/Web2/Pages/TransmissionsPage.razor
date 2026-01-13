@@ -1,0 +1,144 @@
+﻿@page "/transmisions"
+@page "/{LangSegment}/transmisions"
+@layout ProLayout
+@inject CultureService culture;
+@inject SessionStateService session;
+@inject TransmissionsService transmissionsService
+
+<div class="PageWrapper600">
+    @if (Values == null)
+    {
+        <h3>@culture.Localize("Transmissions")</h3>
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+            <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <h3>@culture.Localize("Transmissions")</h3>
+
+        @if (SelectedYear() == null)
+        {
+            <div class="Info">
+                @culture.Localize("Select.Year")
+            </div>
+
+            <div class="Years">
+                @foreach (var year in selectedEmp?.YearsDescendingRange() ?? new())
+                {
+                    <a href="#" @onclick="@(()=>YearClickAsync(year))" @onclick:preventDefault>
+                        @year.ToString()
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <SelectedValues @bind-Values="selectedValues"></SelectedValues>
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+            <div class="Grid">
+                <div class="ColHeaders">
+                    <div>@culture.Localize("Num")</div>
+                    <div>@culture.Localize("Fch")</div>
+                    <div>@culture.Localize("Albs")</div>
+                    <div>@culture.Localize("Lins")</div>
+                    <div>@culture.Localize("Units")</div>
+                    <div>@culture.Localize("Amt")</div>
+                    <div>@culture.Localize("Invoicing")</div>
+                </div>
+
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        <div>@item.Id</div>
+                        <div class="Fch">@($"{item.Fch:dd/MM/yy HH:mm}")</div>
+                        <div class="Num">@($"{item.AlbsCount:N0}")</div>
+                        <div class="Num">@($"{item.LinsCount:N0}")</div>
+                        <div class="Num">@($"{item.UnitsCount:N0}")</div>
+                        <div class="Num">@($"{item.Eur:N2} €")</div>
+                        <div class="Ico">
+                            <PieChart Values="Slices(item)"></PieChart>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+
+    }
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    List<TransmissionModel>? Values;
+    TransmissionModel? editingValue;
+    SelectedValues.Collection? selectedValues;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    EmpModel? selectedEmp;
+    string? searchterm;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        session.OnChange += Refresca;
+        selectedValues = new();
+        selectedValues.Add(DateTime.Today.Year, DateTime.Today.Year.ToString());
+        await LoadDataAsync();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        if (selectedEmp == null) selectedEmp = session.Emps?.FirstOrDefault(x => x.Id == EmpModel.EmpIds.MatiasMasso);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        Values = await transmissionsService.GetValuesAsync(SelectedYear()!);
+    }
+
+    private List<TransmissionModel>? FilteredItems()
+    {
+        List<TransmissionModel>? retval = Values;
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = Values?.Where(x => x.Matches(searchterm)).ToList();
+        return retval;
+    }
+    private string? SelectedYear() => selectedValues?.FirstOrDefault()?.Value?.ToString();
+
+    private async Task YearClickAsync(int year)
+    {
+        selectedValues = new();
+        selectedValues.Add(year, year.ToString());
+        await LoadDataAsync();
+    }
+
+    private void ItemClick(TransmissionModel item)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(item, item.Caption(culture.Lang())));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    private PieChart.Slices Slices(TransmissionModel item)
+    {
+        PieChart.Slices retval = new();
+        double value = (double?)(100 * (item.AlbsCount - item.AlbsInvoicePending) / item.AlbsCount) ?? 0;
+        if (value > 0) retval.Add(value, System.Drawing.Color.DarkBlue);
+        if (value < 100) retval.Add(100 - value, System.Drawing.Color.White);
+        return retval;
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+    }
+
+
+}

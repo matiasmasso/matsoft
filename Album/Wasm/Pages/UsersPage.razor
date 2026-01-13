@@ -1,0 +1,100 @@
+﻿@page "/users"
+@inject UsersService UsersService
+@inject IJSRuntime JS
+
+<div class="PageWrapper600">
+
+    @if (selectedUser is null)
+    {
+        <h3>Users</h3>
+
+        <PageOptions>
+            <button type="button" @onclick="AddNew">Afegir</button>
+        </PageOptions>
+
+        @switch (isLoading, exception, users)
+        {
+            case (true, _, _):
+                <Loading />
+                break;
+
+            case (_, not null, _):
+                <Error @bind-Value="exception" />
+                break;
+
+            case (_, _, { Count: 0 }):
+                <p>No users yet.</p>
+                break;
+
+            default:
+                <div class="UsersGrid">
+                    @foreach (var user in users ?? new()    )
+                    {
+                        <button type="button"
+                                class="UserRow"
+                                @onclick="() => SelectUser(user)">
+                            @user.Nickname (@user.EmailAddress) @user.Rol
+                        </button>
+                    }
+                </div>
+                break;
+        }
+    }
+    else
+    {
+        <UserEditor Value="selectedUser"
+                    ValueChanged="HandleUserUpdated" />
+    }
+
+</div>
+
+@code {
+    private List<UserModel>? users;
+    private UserModel? selectedUser;
+    private bool isLoading;
+    private Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            users = await UsersService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void AddNew()
+    {
+        selectedUser = UserModel.Factory();
+    }
+
+    private void SelectUser(UserModel user)
+    {
+        selectedUser = user;
+    }
+
+    private void HandleUserUpdated(UserModel updated)
+    {
+        if (users is null)
+            return;
+
+        var idx = users.FindIndex(x => x.Guid == updated.Guid);
+
+        if (idx == -1)
+            users.Add(updated);
+        else
+            users[idx] = updated;
+
+        selectedUser = null;
+        StateHasChanged();
+    }
+}

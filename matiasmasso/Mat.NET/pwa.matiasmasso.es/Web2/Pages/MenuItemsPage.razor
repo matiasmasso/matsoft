@@ -1,0 +1,30 @@
+﻿@page "/MenuItems"
+@page "/{LangSegment}/MenuItems"
+@layout ProLayout
+
+<div class="PageWrapper600">
+    @if (breadcrumbs.Count > 0)
+    {
+    <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+    <MenuItems EditorRequest="EditorRequest"></MenuItems>
+    }
+</div>
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    void EditorRequest(ModelEditor.Breadcrumb breadcrumb)
+    {
+        breadcrumbs.Add(breadcrumb);
+    }
+}
+

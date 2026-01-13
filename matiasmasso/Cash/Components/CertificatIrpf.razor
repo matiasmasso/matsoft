@@ -1,0 +1,162 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    <Title Value="@Title()" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (value == null || allContacts == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <PropertyGrid Model="propertyGrid"
+                      ItemChanged="HandleItemChanged"
+                      UpdateRequest="UpdateRequestHandler"
+                      CancelRequest="CloseRequestHandler"
+                      DeleteRequest="DeleteRequestHandler"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    }
+
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public CertificatIrpfModel? Value { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<CertificatIrpfModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<CertificatIrpfModel> AfterDelete { get; set; }
+
+    EmpModel.EmpIds? emp;
+    CertificatIrpfModel? value;
+    List<ContactModel>? allContacts;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Target,
+        Year,
+        Docfile
+    }
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            emp = ApiService.Emp;
+            ApiService.OnChange += Refresca;
+            allContacts = ApiService.GetContacts();
+            propertyGrid = PropertyGrid();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+            {
+                value = await ApiService.GetAsync<CertificatIrpfModel>("CertificatIrpf", Value.Guid.ToString());
+            }
+
+            Refresca();
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null){
+        exception = ex;
+        propertyGrid = PropertyGrid();
+        InvokeAsync(StateHasChanged);
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var contacts = allContacts?.Where(x => x.Emp == emp);
+        var retval = new PropertyGridModel();
+        retval.AddEmp(emp);
+        retval.AddGuidnom("Titular", value?.Contact, contacts);
+        retval.AddInt("Exercici", value?.Year);
+        retval.AddDocfile(value?.Docfile);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Contact = (Guid)propertyGrid!.GetGuid((int)Fields.Target)!;
+            value!.Year = (int)propertyGrid!.GetInt((int)Fields.Year);
+            value.Docfile = propertyGrid!.GetDocfile((int)Fields.Docfile);
+            value.Docfile!.Fch = new DateTime(value.Year, 12, 31);
+            value.Docfile.Nom = "Certificat Irpf";
+
+            await ApiService.PostMultipartAsync<CertificatIrpfModel, bool>(value.Docfile, value, "CertificatIrpf");
+            value.IsNew = false;
+            await AfterUpdate.InvokeAsync(value);
+            await CloseRequestHandler();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("CertificatIrpf/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+            await CloseRequestHandler();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    string Title() => (Value?.IsNew ?? true) ? "Registrar nou certificat Irpf" : $"Certificat Irpf {Value!.Year}";
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

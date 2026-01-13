@@ -1,0 +1,46 @@
+﻿@page "/login"
+@layout AuthLayout
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<h3 class="mb-3 text-center">Login</h3>
+
+@if (error != null)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="mb-3">
+    <label>Email</label>
+    <input class="form-control" @bind="email" />
+</div>
+
+<div class="mb-3">
+    <label>Password</label>
+    <input class="form-control" type="password" @bind="password" />
+</div>
+
+<button class="btn btn-primary w-100" @onclick="DoLogin">Login</button>
+
+<div class="text-center mt-3">
+    <a href="/forgot-password">Forgot your password?</a>
+</div>
+
+@code {
+    string email;
+    string password;
+    string error;
+
+    async Task DoLogin()
+    {
+        var ok = await Auth.Login(email, password);
+
+        if (!ok)
+        {
+            error = "Invalid credentials";
+            return;
+        }
+
+        Nav.NavigateTo("/");
+    }
+}

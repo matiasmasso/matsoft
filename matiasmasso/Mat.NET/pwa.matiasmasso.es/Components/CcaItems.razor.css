@@ -1,0 +1,22 @@
+﻿.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr min-content min-content;
+    grid-column-gap:10px;
+}
+
+.Deb, .Hab {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.Cta, .Scta {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.ColumnHeader {
+    font-weight: 600;
+    color:gray;
+    padding-bottom:5px;
+}

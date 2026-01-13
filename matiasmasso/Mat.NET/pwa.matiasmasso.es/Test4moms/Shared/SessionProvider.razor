@@ -1,0 +1,66 @@
+﻿@    using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject AppState AppState
+
+@if (isLoaded)
+{
+    <CascadingValue Value="@this">
+        @ChildContent
+    </CascadingValue>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    public Session? Session { get; set; }
+    public Shop4moms? Cache { get; set; }
+
+    public bool isLoaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var result = await ProtectedSessionStore.GetAsync<Guid>("sessionId");
+            if (result.Success)
+                Session = AppState.Session(result.Value);
+            else
+            {
+                Session = AppState.AddSession();
+                await ProtectedSessionStore.SetAsync("sessionId", Session.Guid);
+            }
+            Cache = AppState.Cache;
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    public void AddItemToBasket(ProductSkuModel? sku)
+    {
+        if (sku != null)
+        {
+            var price = Cache?.Price(sku);
+            Session?.Basket.AddItem(sku, price);
+            StateHasChanged();
+        }
+    }
+
+    public void RemoveItemFromBasket(ShoppingBasketModel.Item item)
+    {
+        Session?.Basket.Items.Remove(item);
+        StateHasChanged();
+    }
+
+    public ShoppingBasketModel.Item? BasketItem(ProductSkuModel? sku)
+    {
+        return Session?.Basket.Items.FirstOrDefault(x => x.Sku!.Guid == sku?.Guid);
+    }
+
+    public void AuthenticationStateChanged(UserModel userAccount)
+    {
+        Session!.Basket.User = userAccount;
+    }
+}

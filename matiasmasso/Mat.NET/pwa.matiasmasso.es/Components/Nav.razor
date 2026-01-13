@@ -1,0 +1,99 @@
+﻿@using System.Globalization
+@inherits _Base
+@inject NavigationManager NavigationManager
+
+<div class="Wrapper">
+    @foreach (var selectedItem in selectedItems)
+    {
+        <a class="Item Selected" href="#" @onclick="() => SelectedItemClick(selectedItem)" @onclick:preventDefault="true">
+            @selectedItem.Nom.Tradueix(base.Lang())
+            <span>X</span>
+        </a>
+    }
+
+    @foreach (var item in menuItems)
+    {
+        if (item.Mode == NavDTO.Model.Modes.Spacer)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else if (item.Mode == NavDTO.Model.Modes.Lang)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else
+        {
+            <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+    }
+</div>
+
+
+
+@code {
+    [Parameter] public NavDTO? nav { get; set; }
+    private List<NavDTO.Model> selectedItems = new();
+    private List<NavDTO.Model> menuItems = new();
+    [Parameter] public EventCallback<List<NavDTO.Model>> SelectedItemsChanged { get; set; }
+    [Parameter] public EventCallback<List<NavDTO.Model>> ItemsChanged { get; set; }
+    [Parameter] public EventCallback<string> ActionRequest { get; set; }
+
+
+
+    protected override void OnParametersSet()
+    {
+        if (nav != null && menuItems.Count == 0)
+        {
+            menuItems = nav.Items.Where(x => x.Parent == null).OrderBy(y => y.Ord).ToList();
+        }
+    }
+
+
+    private async Task SelectedItemClick(NavDTO.Model item)
+    {
+        var idx = selectedItems.IndexOf(item);
+        selectedItems.RemoveRange(idx, selectedItems.Count - idx);
+        menuItems = nav!.Items.Where(x => x.Parent == item.Parent).OrderBy(y => y.Ord).ToList();
+        await ItemsChanged.InvokeAsync(menuItems);
+        await SelectedItemsChanged.InvokeAsync(selectedItems);
+        StateHasChanged();
+    }
+
+
+    private async Task ItemClick(NavDTO.Model item)
+    {
+        switch ((NavDTO.Model.Modes)item.Mode)
+        {
+
+            case NavDTO.Model.Modes.Toggle:
+                break;
+            case NavDTO.Model.Modes.Navigation:
+                if (item.Action != null) NavigationManager.NavigateTo(item.Action);
+                break;
+            case NavDTO.Model.Modes.Action:
+                if (ActionRequest.HasDelegate)
+                    await ActionRequest.InvokeAsync(item.Action);
+                break;
+            default:
+                var items = nav!.Items.Where(x => x.Parent == item.Guid).OrderBy(y => y.Ord).ToList();
+                if (items.Count > 0)
+                {
+                    menuItems = items;
+                    selectedItems.Add(item);
+                }
+                break;
+        }
+
+
+        await ItemsChanged.InvokeAsync(menuItems);
+        await SelectedItemsChanged.InvokeAsync(selectedItems);
+    }
+
+}
+

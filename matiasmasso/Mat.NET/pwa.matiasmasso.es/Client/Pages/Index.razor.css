@@ -1,0 +1,37 @@
+﻿.Wrapper {
+    display: grid;
+    grid-template-areas: "banner banner banner"
+        "brand1 brand2 brand3"
+        "raffle raffle raffle";
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.Banner {
+    grid-area: banner;
+}
+
+.Brand1 {
+    grid-area: brand1;
+    max-width:100%;
+}
+
+.Brand2 {
+    grid-area: brand2;
+    max-width: 100%;
+}
+
+.Brand3 {
+    grid-area: brand3;
+}
+
+.Raffle {
+    grid-area: raffle;
+}
+
+
+    .Brand1 img, .Brand2 img, .Brand3 img, .Raffle img {
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+    }

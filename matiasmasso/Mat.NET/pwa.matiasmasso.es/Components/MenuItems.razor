@@ -1,0 +1,133 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <h1>Menu</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Buttons">
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+        </div>
+
+        <a href="/menuitem/AddFromRoot">
+            add from root
+        </a>
+
+
+        <div class="Grid">
+            @if (model != null)
+            {
+                foreach (var item in model.Where(x => x.Matches(searchTerm)))
+                {
+                    <div class="Item">
+                        <a href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true"
+               style="padding-left:@(item.Level*20)px">
+                            @item.Nom.Tradueix(base.Lang())
+                        </a>
+                        @if (item.Equals(selectedItem))
+                        {
+                            <div class="EditButtons">
+                                <a href="#" @onclick="() => EditRequest(item)" @onclick:preventDefault="true"
+                   class="EditRequest">
+                                    edit
+                                </a>
+                                <a href="#" @onclick="() => CreateChildRequest(item)" @onclick:preventDefault="true"
+                   class="CreateChildRequest">
+                                    createChild
+                                </a>
+                                <a href="#" @onclick="() => MoveUp(item)" @onclick:preventDefault="true"
+                   class="CreateChildRequest">
+                                    moveUp
+                                </a>
+                                <a href="#" @onclick="() => MoveDown(item)" @onclick:preventDefault="true"
+                   class="CreateChildRequest">
+                                    modeDown
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                }
+            }
+        </div>
+    }
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    private NavDTO? dto;
+    private List<NavDTO.Model>? model;
+    private NavDTO.Model? selectedItem;
+    private string searchTerm = string.Empty;
+    private ProblemDetails? problemDetails;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var apiResponse = await GetAsync<NavDTO>( "navs");
+            if (apiResponse.Success())
+            {
+                dto = apiResponse.Value;
+                model = dto?.SortedItems();
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+            StateHasChanged();
+        }
+    }
+
+    private void ItemClick(NavDTO.Model item)
+    {
+        selectedItem = item;
+    }
+
+    private void EditRequest(NavDTO.Model item)
+    {
+        navigationManager?.NavigateTo(item.EditorUrl());
+    }
+    private void CreateChildRequest(NavDTO.Model item)
+    {
+        navigationManager?.NavigateTo(item.CreateChildUrl());
+    }
+
+    private async Task MoveUp(NavDTO.Model item)
+    {
+        var siblings = model!.
+        Where(x => x.Parent == item.Parent && x.Ord < item.Ord).
+        OrderBy(y => y.Ord).
+        ToList();
+        await SwitchRequest(item, siblings.Last());
+    }
+
+    private async Task MoveDown(NavDTO.Model item)
+    {
+        var siblings = model!.
+        Where(x => x.Parent == item.Parent && x.Ord > item.Ord).
+        OrderBy(y => y.Ord).
+        ToList();
+        await SwitchRequest(siblings.First(), item);
+    }
+
+    async Task SwitchRequest(NavDTO.Model itemToMoveUp, NavDTO.Model itemToMoveDown)
+    {
+        itemToMoveUp.Ord = itemToMoveDown.Ord;
+        itemToMoveDown.Ord += 1;
+        var nav = new NavDTO();
+        nav.Items = new List<NavDTO.Model>() { itemToMoveUp, itemToMoveDown };
+        var apiResponse = await PostAsync<NavDTO, bool>( nav, "navs/UpdateSortOrder");
+        if (apiResponse.Success())
+        {
+            model = dto?.SortedItems();
+            StateHasChanged();
+        }
+    }
+
+
+}

@@ -1,0 +1,70 @@
+﻿@page "/test"
+@layout ProLayout
+@inherits _ComponentBase
+
+@if (atlas == null)
+{
+    <Loading Message="Loading atlas..."></Loading>
+}
+else
+{
+    <UxLookupCountry Class="UxCountry"
+                 Atlas="@atlas"
+                 Country="@country"
+                 ValueChanged="CountryChanged"></UxLookupCountry>
+
+    <UxLookupZona Class="UxZona"
+              Atlas="@atlas"
+              Country="@country"
+              Value="@zona"
+              ValueChanged="ZonaChanged"></UxLookupZona>
+
+    <UxLookupLocation Class="UxLocation"
+                  Atlas="@atlas"
+                  Zona="@zona"
+                  Value="@location"
+                  ValueChanged="LocationChanged"></UxLookupLocation>
+}
+
+<style>
+    .UxCountry {
+        border: 1px solid gray;
+        max-width: 300px;
+    }
+</style>
+
+@code {
+    private AtlasModel? atlas;
+    private CountryModel? country;
+    private ZonaModel? zona;
+    private LocationModel? location;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (atlas == null)
+        {
+            atlas = await base.Atlas();
+            country = atlas.DefaultCountry();
+        }
+    }
+
+    private void CountryChanged(CountryModel item)
+    {
+        country = item;
+        StateHasChanged();
+    }
+
+
+    private void ZonaChanged(ZonaModel item)
+    {
+        zona = item;
+        StateHasChanged();
+    }
+
+    private void LocationChanged(LocationModel item)
+    {
+        location = item;
+        StateHasChanged();
+    }
+
+}

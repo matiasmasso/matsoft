@@ -1,0 +1,203 @@
+﻿@page "/catalog"
+@page "/{LangSegment}/catalog"
+
+@implements IDisposable
+@layout ProLayout
+@inject CultureService culture
+@inject ProductsService productsService
+
+<div class="PageWrapper900">
+    @if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <PageOptions>
+            <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+        </PageOptions>
+
+        <SearchBox @bind-Value="@searchterm"></SearchBox>
+
+        @if (!string.IsNullOrEmpty(searchterm))
+        {
+            <div class="SearchResults">
+                <Virtualize Items="FilteredItems()" Context="item">
+
+                    <ListItem Value="item"
+                              Caption="@item.NomLlarg?.Tradueix(culture.Lang())"
+                              OnClick="@(()=>ItemClick(item))"
+                              EditorRequest="EditorRequestHandler"></ListItem>
+
+@*                     <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        @(item.NomLlarg?.Tradueix(culture.Lang()) ?? "?")
+                    </a>
+ *@                </Virtualize>
+            </div>
+        }
+        else
+        {
+
+
+            <div class="SelectedValues">
+                <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+             </div>
+
+            @if (SelectedBrand() == null)
+            {
+                <div class="Brands">
+                    @foreach (var brand in Brands())
+                    {
+                        <ListItem Value="brand" 
+                            Caption="@brand.Nom?.Tradueix(culture.Lang())"
+                                  OnClick="@(()=>ItemClick(brand))"
+                                  EditorRequest="EditorRequestHandler"></ListItem>
+                    }
+                </div>
+            }
+            else if (SelectedCategory() == null)
+            {
+                <div class="Categories">
+                    @foreach (var category in Categories())
+                    {
+                        <ListItem Value="category"
+                                  Caption="@category.Nom?.Tradueix(culture.Lang())"
+                                  OnClick="@(()=>ItemClick(category))"
+                                  EditorRequest="EditorRequestHandler"></ListItem>
+                    }
+                </div>
+            }
+            else
+            {
+
+                <div class="Skus">
+                    <SkusExtended Category="@productsService.Category(SelectedCategory()?.Guid)"
+                                  ItemSelected="ItemClick"
+                                  ShowObsoletos="@(!isShowingObsolets)"></SkusExtended>
+                </div>
+            }
+
+
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    private string? searchterm;
+    private bool isShowingObsolets;
+
+    SelectedValues.Collection selectedValues = new();
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        productsService.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+
+        if (SelectedBrand() == null)
+        {
+            var firstBrand = productsService.Brands()?.FirstOrDefault();
+            if (firstBrand != null)
+            {
+                selectedValues = new SelectedValues.Collection();
+                selectedValues.Add(firstBrand, firstBrand.Nom.Tradueix(culture.Lang()));
+            }
+        }
+
+        if (SelectedCategory() == null)
+        {
+            var categories = productsService.Categories(new ProductBrandModel(SelectedBrand().Guid)!, true);
+            var firstCategory = categories?.FirstOrDefault();
+            if (firstCategory != null)
+                selectedValues.Add(firstCategory, firstCategory.Nom.Tradueix(culture.Lang()));
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<ProductSkuModel> FilteredItems()
+    {
+        var retval = productsService.Skus(searchterm) ?? new();
+        if (!isShowingObsolets)
+            retval = retval.Where(x => !x.Obsoleto).ToList();
+        return retval;
+    }
+
+    List<ProductBrandModel> Brands()
+    {
+        var retval = productsService.Brands() ?? new();
+        if (isShowingObsolets)
+            retval = retval.Where(x => !x.Obsoleto).ToList();
+        return retval.OrderBy(x => x.Ord).ToList();
+    }
+
+    List<ProductCategoryModel> Categories()
+    {
+        var retval = productsService.Categories(new ProductBrandModel(SelectedBrand()!.Guid), !isShowingObsolets) ?? new();
+        // if (isShowingObsolets)
+        //     retval = retval.Where(x => !x.Obsoleto).ToList();
+        return retval
+            .OrderBy(x => x.Obsoleto)
+            .ThenBy(x => x.Codi)
+            .ThenBy(x => x.Ord)
+            .ThenBy(x => x.Nom.Tradueix(culture.Lang())).ToList();
+    }
+
+    List<ProductSkuModel> Skus()
+    {
+        var retval = productsService.Skus(new ProductCategoryModel(SelectedCategory()!.Guid), isShowingObsolets) ?? new();
+        if (isShowingObsolets)
+            retval = retval.Where(x => !x.Obsoleto).ToList();
+        return retval;
+    }
+
+    string Url(ProductSkuModel item) => culture.RelativeUrl("/sku/" + item.Guid.ToString())!;
+
+    ProductBrandModel? SelectedBrand() => (ProductBrandModel?)selectedValues.FirstOrDefault()?.Value;
+    ProductCategoryModel? SelectedCategory() => selectedValues?.Count > 1 ? (ProductCategoryModel)selectedValues[1].Value : null;
+
+
+    void ItemClick(ProductModel item)
+    {
+        if (item is ProductBrandModel)
+        {
+            var brand = (ProductBrandModel)item;
+            selectedValues = new SelectedValues.Collection();
+            selectedValues.Add(brand, brand.Nom.Tradueix(culture.Lang()));
+        }
+        else if (item is ProductCategoryModel)
+        {
+            var category = (ProductCategoryModel)item;
+            selectedValues.Add(category, category.Nom.Tradueix(culture.Lang()));
+        }
+        else if (item is ProductSkuModel)
+        {
+            var sku = (ProductSkuModel)item;
+            breadcrumbs.Add(new ModelEditor.Breadcrumb(sku, sku.NomLlarg?.Tradueix(culture.Lang()) ?? "?"));
+        }
+    }
+
+    private void EditorRequestHandler(ModelEditor.Breadcrumb breadcrumb)
+    {
+        breadcrumbs.Add(breadcrumb);
+        StateHasChanged();
+    }
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        productsService.OnChange -= Refresca;
+    }
+
+}

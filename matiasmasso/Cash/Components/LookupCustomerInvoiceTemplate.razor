@@ -1,0 +1,48 @@
+﻿@inject ApiService ApiService
+
+@if (values?.Count == 0)
+{
+    <a href="#" @onclick="AddNewRequestHandler" @onclick:preventDefault>afegir primera plantilla</a>
+}
+else
+{
+    <LookupModel Value="value" Values="values"
+                 ValueChanged="HandleValueChanged"
+                 AddNewRequest="AddNewRequestHandler"></LookupModel>
+}
+
+
+@code {
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public List<CustomerInvoiceModel.Template>? Values { get; set; }
+    [Parameter] public EventCallback<CustomerInvoiceModel.Template?> ValueChanged { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+    private List<CustomerInvoiceModel.Template>? values;
+    private Guid? value;
+    bool isAdding = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+        if (Values == null)
+            values = await ApiService.GetAsync<List<CustomerInvoiceModel.Template>>("CustomerInvoiceTemplates");
+        else
+            values = Values;
+        value = Value ?? values?.FirstOrDefault()?.Guid;
+    }
+
+    void HandleValueChanged(IModel? args)
+    {
+        if (args != null)
+        {
+            var value = (CustomerInvoiceModel.Template)args;
+            ValueChanged.InvokeAsync(value);
+        }
+    }
+
+    void AddNewRequestHandler()
+    {
+        AddNewRequest.InvokeAsync();
+    }
+}

@@ -1,0 +1,109 @@
+﻿@inject CultureService culture
+@inject ProductsService productsService
+
+<div class="PageWrapper600">
+
+    @if (Model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h3>@Model?.Nom?.Tradueix(culture.Lang())</h3>
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("General")">
+
+                <LookupBrand @bind-Value="brand" EditorRequest="EditorRequestHandler"></LookupBrand>
+
+                <div class="Properties">
+                    <div class="Label"></div>
+                    <div class="Value">
+                    </div>
+                </div>
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>state = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequest"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateAsync"></ButtonsBar>
+                </div>
+
+            </TabPage>
+        </TabControl>
+    }
+
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public ProductCategoryModel? Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    ProductBrandModel? brand;
+
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    enum Fields
+    {
+        NoEcom
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        brand = productsService.Brand(Model?.Brand);
+
+        gridModel = new PropertyGridModel(Model);
+        //gridModel.AddBool((int)Fields.NoEcom, Model?.NoEcom, culture.Localize("Sku.NoEcom"));
+    }
+
+
+    void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    async Task UpdateAsync()
+    {
+        try
+        {
+            Model!.Brand = brand!.Guid;
+            //Model!.NoEcom = gridModel!.GetBool((int)Fields.NoEcom);
+            await productsService.UpdateAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void DeleteRequest()
+    {
+        try
+        {
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task EditorRequestHandler(ModelEditor.Breadcrumb breadcrumb)
+    {
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+
+}

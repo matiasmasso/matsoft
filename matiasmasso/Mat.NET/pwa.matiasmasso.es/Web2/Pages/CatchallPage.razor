@@ -1,0 +1,85 @@
+﻿@page "/{url1}/{url2?}/{url3?}/{url4?}/{url5?}"
+@implements IDisposable
+@inject CultureService culture
+@inject LangTextsService langTexts
+@inject ProductsService productsService
+
+@if (exception != null)
+{
+    <Error @bind-Exception="exception"></Error>
+}
+else if (model == null)
+{
+    <Loading></Loading>
+}
+else if (model is ProductBrandModel)
+{
+    <ConsumerBrand Model="(ProductBrandModel)model"></ConsumerBrand>
+}
+else if (model is ProductDeptModel)
+{
+    <ConsumerDept Model="(ProductDeptModel)model"></ConsumerDept>
+}
+else if (model is ProductCategoryModel)
+{
+    <ConsumerCategory Model="(ProductCategoryModel)model"></ConsumerCategory>
+}
+else if (model is ProductSkuModel)
+{
+    <ProductSku Model="(ProductSkuModel)model"></ProductSku>
+}
+@code {
+    [Parameter] public string? Url1 { get; set; }
+    [Parameter] public string? Url2 { get; set; }
+    [Parameter] public string? Url3 { get; set; }
+    [Parameter] public string? Url4 { get; set; }
+    [Parameter] public string? Url5 { get; set; }
+
+
+    List<ProductBrandModel>? brands;
+    List<ProductDeptModel>? depts;
+    List<ProductCategoryModel>? categories;
+    List<ProductSkuModel>? skus;
+
+    private ProductModel? model;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        productsService.OnChange += Refresca;
+    }
+    protected override void OnParametersSet()
+    {
+        try
+        {
+            var url = RequestedUrlSegment().ToLower();
+            model = productsService.ProductFromLandingPage(url, culture.Lang());
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    private string RequestedUrlSegment()
+    {
+        var segments = new List<String?> { Url1, Url2, Url3, Url4, Url5 };
+        if (LangDTO.LangUrlSegments().Contains(Url1, StringComparer.OrdinalIgnoreCase))
+            segments.RemoveAt(0);
+        var retval = string.Join("/", segments.Where(x => !string.IsNullOrEmpty(x)));
+        return retval;
+    }
+
+    async void Refresca(Exception? ex = null)
+    {
+        var url = RequestedUrlSegment().ToLower();
+        model = productsService.ProductFromLandingPage(url, culture.Lang());
+        await InvokeAsync(() =>{ StateHasChanged(); });
+    }
+
+    public void Dispose()
+    {
+        productsService.OnChange -= Refresca;
+    }
+}

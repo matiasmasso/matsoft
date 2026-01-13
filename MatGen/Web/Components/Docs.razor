@@ -1,0 +1,128 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="Wrapper">
+    @if (FilteredItems() == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nou document</a>
+            <a href="#" @onclick="@(()=>isSortingByFchCreated = !isSortingByFchCreated)" @onclick:preventDefault>Ordenar per data</a>
+        </PageOptions>
+    </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+            <Virtualize Items="FilteredItems()" Context="item" TItem="DocModel">
+                <div class="Item">
+                    <div class="Ico">
+                        @if (item.DocFile?.Hash == null)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            <a href="@item.DownloadUrl()" target="_blank">
+                                <Icon Id="Icon.Ids.File"></Icon>
+                            </a>
+                        }
+                    </div>
+
+                    <a href="#" class="Year" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        @item.Year()
+                    </a>
+                    <a href="#" class="Title Truncate" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        @item.Tit
+                    </a>
+                </div>
+
+                <div class="GridRowDivider HideOnDesktop"></div>
+            </Virtualize>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public DocSrcModel? Src { get; set; }
+    [Parameter] public List<DocModel>? Items { get; set; } 
+    [Parameter] public EventCallback<DocModel> ItemSelected { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+    DocModel? selectedItem;
+    string? searchTerm;
+    List<DocModel>? values;
+    bool isSortingByFchCreated = true;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        if (Items != null)
+            values = Items;
+        else if (Src == null)
+            values = ApiService.Docs();
+        else
+            values = ApiService.RecursiveDocs(Src);
+        InvokeAsync(StateHasChanged);
+    }
+
+    void ItemClick(DocModel item)
+    {
+        if (ItemSelected.HasDelegate)
+            ItemSelected.InvokeAsync(item);
+        else
+            selectedItem = item;
+    }
+
+    void AddNew()
+    {
+        if (AddNewRequest.HasDelegate)
+            AddNewRequest.InvokeAsync();
+        else
+            ItemClick(DocModel.Factory());
+    }
+
+    List<DocModel>? FilteredItems()
+    {
+        List<DocModel>? retval = null;
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = values;
+        else
+            retval = values?.Where(x => x.Matches(searchTerm)).ToList();
+
+        if (isSortingByFchCreated)
+            retval = retval?.OrderByDescending(x => x.FchLastEdited).ToList();
+        else
+            retval = retval?.OrderBy(x => x.Fch).ToList();
+
+        return retval;
+    }
+
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+}

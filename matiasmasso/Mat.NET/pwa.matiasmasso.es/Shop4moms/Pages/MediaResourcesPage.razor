@@ -1,0 +1,124 @@
+﻿@page "/galeria"
+@page "/{LangSegment}/galeria"
+@page "/{LangSegment}/gallery"
+@inherits _PageBase
+@inject CultureService culture
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@base.CanonicalUrl()" />
+
+    @foreach (var lang in LangDTO.All())
+    {
+        <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@base.CanonicalUrl(lang,new LangTextModel("galeria","galeria","gallery","galeria"))" />
+    }
+
+    <meta name="description" content="@base.Tradueix(
+    "Galería de imágenes en alta resolución de los productos de 4moms"
+    , "Galeria de imatges en alta resolució dels productes de 4moms"
+    , "4moms product High resolution images"
+    , "Galeria de imagens em alta resolução dos produtos 4moms")" />
+
+</HeadContent>
+
+<div class="Wrapper900">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@culture.Localize("ImageGallery")</h1>
+
+        <EditButton CanEdit="base.IsEditor()" ValueChanged="@EditingChanged"></EditButton>
+
+        @foreach (var cod in cods ?? new())
+        {
+            <div class="Epigraf"> @culture.Localize(cod.ToString())</div>
+
+            <div class="Items">
+                <SortableGallery Items="@Items(cod)" Context="item" TItem="MediaResourceModel" CanSort="@isEditing" SortChanged="SortChanged">
+                    <ChildContent>
+                        <ContextMenuTrigger MenuId="MediaResource" Data="item">
+                            <a class="Item" href="@item.LandingPageUrl()" target="_blank">
+                                <div>
+                                    <img src="@item.ThumbnailUrl()" width="140" height="160" alt="@item.Description.Tradueix(base.Lang())" />
+                                </div>
+                                <div class="Features">@item.DimensionsText()</div>
+                            </a>
+                        </ContextMenuTrigger>
+                    </ChildContent>
+                </SortableGallery>
+            </div>
+        }
+    }
+</div>
+
+<ContextMenu Id="MediaResource">
+    <Item Key="Sort" OnClick="@MenuItemClick">Ordenar</Item>
+</ContextMenu>
+
+@code {
+    List<MediaResourceModel>? model;
+    List<MediaResourceModel.Cods>? cods;
+    MediaResourceModel? SelectedItem;
+    MediaResourceModel? ItemToDrag;
+
+    bool isEditing = false;
+    bool isDraggable = false;
+    string dropClass;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var apiResponse = await GetAsync<List<MediaResourceModel>>("Shop4moms/mediaResources");
+        model = apiResponse.Value?
+        .Where(x => x.LangSet.HasLang(base.Lang()) && !x.Obsoleto).ToList();
+        cods = model?.Select(x => x.Cod).Distinct().OrderBy(x => x).ToList();
+        problemDetails = apiResponse.ProblemDetails;
+    }
+
+
+    List<MediaResourceModel>? Items(MediaResourceModel.Cods cod)
+    {
+        var retval = model?.Where(x => x.Cod == cod).OrderBy(x => x.Ord).ThenBy(x => x.Filename).ToList();
+        return retval;
+    }
+
+
+    void ItemClick(MediaResourceModel item)
+    {
+
+    }
+
+    async Task MenuItemClick(ItemClickEventArgs e)
+    {
+        var item = (MediaResourceModel)e.Data;
+        var key = e.MenuItem.Attributes["Key"].ToString();
+        switch (key)
+        {
+            case "Sort":
+                ItemToDrag = item;
+                //var apiResponse = await base.GetAsync<bool>("ShoppingBasket/delete", item.Guid.ToString());
+                //if (apiResponse.Success())
+                //    await Refresca();
+                //else
+                //    problemDetails = apiResponse.ProblemDetails;
+                break;
+        }
+    }
+
+    void EditingChanged(bool value)
+    {
+        isEditing = value;
+        isDraggable = value;
+    }
+
+    void SortChanged(List<MediaResourceModel> items)
+    {
+        foreach (var item in items)
+        {
+
+        }
+    }
+
+}

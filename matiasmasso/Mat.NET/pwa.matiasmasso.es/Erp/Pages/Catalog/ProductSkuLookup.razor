@@ -1,0 +1,82 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    @if (isEditing)
+    {
+        <input type="text" @bind="searchTerm" @bind:event="oninput" />
+        @if (!string.IsNullOrEmpty(searchTerm))
+        {
+            <div class="Dropdown">
+                <ProductSkus_List Model="FilteredItems()" SelectedItemChanged="OnItemSelected" NomLlarg></ProductSkus_List>
+            </div>
+        }
+
+    }
+    else if (EditMode)
+    {
+        <a href="#" @onclick="@(()=>isEditing=true)" @onclick:preventDefault>
+            <input type="text" value="@caption" />
+        </a>
+    }
+    else
+    {
+        <UxCaptionEllipsis Tag="Value"
+                       Caption="@caption"
+                       OnClick="EditRequest"
+                       HideEllipsis="HideEllipsis"
+                       OnEllipsis="ToggleContextMenu"></UxCaptionEllipsis>
+
+        @if (Value != null && isShowingMenu)
+        {
+            <ContextMenu_Deprecated Model="ContextMenuModel.Factory(Value)" OnClick="@(()=>isShowingMenu = false)"></ContextMenu_Deprecated>
+        }
+
+    }
+</div>
+
+@code {
+    [Parameter] public bool HideEllipsis { get; set; } = false;
+    [Parameter] public bool EditMode { get; set; } = false;
+    [Parameter] public ProductSkuModel Value { get; set; }
+    [Parameter] public EventCallback<ProductSkuModel> ValueChanged { get; set; }
+
+    string caption;
+    string searchTerm;
+    bool isEditing = false;
+    bool isShowingMenu = false;
+    CacheDTO cache = AppState.DefaultCache();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        caption = Value?.NomLlarg.Tradueix(base.Lang());
+    }
+
+    void ToggleContextMenu()
+    {
+        isShowingMenu = !isShowingMenu;
+    }
+
+    void EditRequest()
+    {
+        isEditing = true;
+        searchTerm = caption;
+    }
+
+    List<ProductSkuModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm) || searchTerm == caption)
+            return cache.Skus.Where(x=>x.Obsoleto==false).Take(10).ToList();
+        else
+            return cache.Skus.Where(x => x.Obsoleto == false && x.Matches(searchTerm)).Take(10).ToList();
+    }
+
+
+    void OnItemSelected(ProductSkuModel item)
+    {
+        isEditing = false;
+        //caption = Value?.Nom.Tradueix(base.Lang());
+        ValueChanged.InvokeAsync(item);
+    }
+}

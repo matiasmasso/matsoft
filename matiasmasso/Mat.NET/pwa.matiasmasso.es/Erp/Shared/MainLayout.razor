@@ -1,0 +1,36 @@
+﻿@inherits LayoutComponentBase
+@inject HttpClient http
+@inject AppState AppState
+@inject IJSRuntime JSRuntime
+@using Erp.Helpers
+@using System.Globalization
+
+<div class="Wrapper">
+    <div class="Header">
+        <Header ToggleMenu="@(()=>{isShowingMenu = !isShowingMenu;})"></Header>
+    </div>
+
+    <main class="Body @(isShowingMenu ? "HideOnMobile":"")">
+        @Body
+    </main>
+
+    <aside class="Menu @(isShowingMenu ? "":"HideOnMobile")">
+        <MainNav Nav="@AppState.Nav" MenuItemClicked="@(()=>{isShowingMenu = false;})"></MainNav>
+    </aside>
+</div>
+
+@code {
+    private NavDTO? model;    
+    private bool isShowingMenu = false;
+    private ProblemDetails problemDetails;
+
+
+    //protected async Task WriteCookie(string cookieName, string cookieValue, int? daysDeadline = 0)
+    //{
+    //    await JSRuntime.InvokeAsync<object>("WriteCookie.WriteCookie", cookieName, cookieValue, daysDeadline);
+    //}
+
+
+
+
+}

@@ -1,0 +1,77 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    @if (isEditing)
+    {
+        <input type="text" @bind="searchTerm" @bind:event="oninput" />
+        <div class="Dropdown">
+            <ProductCategorys_List Model="FilteredItems()" SelectedItemChanged="OnItemSelected"></ProductCategorys_List>
+        </div>
+
+    }
+    else
+    {
+        <UxCaptionEllipsis Tag="Value"
+                       Caption="@caption"
+                       OnClick="EditRequest"
+                       HideEllipsis="HideEllipsis"
+                       OnEllipsis="ToggleContextMenu"></UxCaptionEllipsis>
+
+        @if (Value != null && isShowingMenu)
+        {
+            <ContextMenu_Deprecated Model="ContextMenuModel.Factory(Value)" OnClick="@(()=>isShowingMenu = false)"></ContextMenu_Deprecated>
+        }
+
+    }
+</div>
+
+@code {
+    [Parameter] public bool HideEllipsis { get; set; } = false;
+    [Parameter] public ProductCategoryModel Value { get; set; }
+    [Parameter] public EventCallback<ProductCategoryModel> ValueChanged { get; set; }
+
+    string caption;
+    string searchTerm;
+    bool isEditing = false;
+    bool isShowingMenu = false;
+    ProductBrandModel brand;
+    CacheDTO cache = AppState.DefaultCache();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        caption = Value?.Nom.Tradueix(base.Lang());
+        var brandGuid = Value == null ? ProductBrandModel.Wellknown(ProductBrandModel.Wellknowns.BritaxRoemer).Guid : Value.Brand;
+        brand = cache.Brand(brandGuid);
+    }
+
+    void ToggleContextMenu()
+    {
+        isShowingMenu = !isShowingMenu;
+    }
+
+    void EditRequest()
+    {
+        isEditing = true;
+        searchTerm = caption;
+    }
+
+    List<ProductCategoryModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm) || searchTerm == caption)
+            return CountryProductCategorys();
+        else
+            return CountryProductCategorys().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<ProductCategoryModel> CountryProductCategorys() => cache.Categories.Where(x => x.Brand == brand.Guid).ToList();
+
+
+    void OnItemSelected(ProductCategoryModel item)
+    {
+        isEditing = false;
+        //caption = Value?.Nom.Tradueix(base.Lang());
+        ValueChanged.InvokeAsync(item);
+    }
+}

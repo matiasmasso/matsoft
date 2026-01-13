@@ -1,0 +1,63 @@
+﻿.Wrapper {
+    max-width: 500px;
+}
+
+.Loading {
+    text-align: center;
+    margin: auto;
+}
+
+.Value input {
+    width: 100%;
+}
+
+.UserIsNotRegistered {
+    margin-top: 15px;
+}
+
+a.IForgot {
+    color: blue;
+    text-decoration: underline;
+}
+
+.Active Input {
+    background-color: lemonchiffon;
+}
+
+.IForgot {
+    display: block;
+    margin-top: 10px;
+}
+
+.VerificationCodeRequest {
+    margin-top: 15px;
+}
+
+.VerificationCode {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.VerificationCodeFail {
+    margin-top: 15px;
+}
+
+    .VerificationCodeFail img {
+        width: 32px;
+        height: auto;
+    }
+
+.PasswordReset {
+    margin-top: 15px;
+}
+
+
+.ButtonsBar {
+    text-align: right;
+    margin-top: 15px;
+}
+
+.Error {
+    margin-top: 15px;
+}

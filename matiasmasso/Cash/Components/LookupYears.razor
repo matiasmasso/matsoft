@@ -1,0 +1,23 @@
+﻿<Dropdown Values="values" Value="Value" ValueChanged="HandleValueChanged" AllowToClear="false"></Dropdown>
+
+@code {
+    [Parameter] public List<int>? Values { get; set; }
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+
+    private int? value;
+    private object[]? values;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        values = (Values ?? new()).Select(x=>(object)x).ToArray<object>();
+    }
+
+    void HandleValueChanged(object? args = null)
+    {
+        if ((int?)args != Value)
+            ValueChanged.InvokeAsync((int?)args);
+    }
+}
+

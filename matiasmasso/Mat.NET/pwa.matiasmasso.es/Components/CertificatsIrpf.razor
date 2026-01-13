@@ -1,0 +1,42 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Grid">
+            @foreach (var item in model)
+            {
+                <a class="Item" href="@item.PdfUrl()" target="_blank">
+                    <div class="Pdf">&nbsp;</div>
+                    <div class="Year">@item.Year.ToString()</div>
+                </a>
+                <div class="GridRowDivider"></div>
+            }
+        </div>
+    }
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    List<CertificatIrpfModel>? model;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        ApiResponse<List<CertificatIrpfModel>> apiResponse;
+        if (Guid == null)
+            apiResponse = await base.GetAsync<List<CertificatIrpfModel>>("staff/CertificatsIrpf");
+        else
+            apiResponse = await base.GetAsync<List<CertificatIrpfModel>>("staff/CertificatsIrpf", Guid.ToString()!);
+
+        model = apiResponse.Value;
+        problemDetails = apiResponse.ProblemDetails;
+    }
+}

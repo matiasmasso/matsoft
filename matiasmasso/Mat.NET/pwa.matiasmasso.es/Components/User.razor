@@ -1,0 +1,157 @@
+﻿@inherits _Base
+@inject AuthenticationStateProvider authStateProvider
+@inject ICookie cookie
+@inject NavigationManager NavigationManager
+
+<div class="Wrapper600">
+    <h1>
+        @Value?.NomiCognomsOrNickname()
+    </h1>
+
+    <div class="Avatar">
+        <Gravatar User="Value" Size="150"></Gravatar>
+    </div>
+
+    <div class="PageOptions">
+        <PageOptions IsShowingOptions>
+            <a href="@MailTo()">@base.Lang().Tradueix("Enviar mensaje","Enviar missatge", "Mail message")</a>
+            @if (CanLogin())
+            {
+                <a href="#" @onclick="LoginAsUserAsync" @onclick:preventDefault>@base.Lang().Tradueix("Login")</a>
+            }
+        </PageOptions>
+
+    </div>
+
+    <TabControl>
+        <TabPage Text="@Localizer("Properties")">
+
+            @if (isLoading)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          CanEdit="@true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="@true"
+                              IsDirty="isDirty"
+                              IsUpdating="isUpdating"
+                              CanDelete="@(!(Value?.IsNew ?? false))"
+                              RequestToCancel="CancelRequest"
+                              RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+
+
+        </TabPage>
+
+    </TabControl>
+
+    <Error Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public UserModel? Value { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    [Parameter] public EventCallback<UserModel> RequestToLogin { get; set; }
+
+    private PropertyGridModel? gridModel;
+    private UserModel? currentUser;
+    private bool isDirty;
+    private bool isUpdating;
+    private bool isLoading = true;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        EmailAddress,
+        Firstnom,
+        Cognoms
+    }
+
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            currentUser = await base.GetUser();
+            Value = await Get2Async<UserModel>("User", Value!.Guid.ToString());
+            var model = new PropertyGridModel(Value!);
+            model.AddString((int)Fields.EmailAddress, Value!.EmailAddress, Localizer("EmailAddress"));
+            model.AddString((int)Fields.Firstnom, Value!.Nom, Localizer("Firstnom"));
+            model.AddString((int)Fields.Cognoms, Value!.Cognoms, Localizer("Cognoms"));
+            gridModel = model;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isLoading = false;
+    }
+
+    private async Task UpdateRequest()
+    {
+        Value!.EmailAddress = gridModel!.GetString((int)Fields.EmailAddress);
+        Value!.Nom = gridModel!.GetString((int)Fields.Firstnom);
+        Value!.Cognoms = gridModel!.GetString((int)Fields.Cognoms);
+
+        try
+        {
+            await Post2Async<UserModel, bool>(Value, "User");
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        try
+        {
+            await Get2Async<bool>("User/delete", Value!.Guid.ToString());
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+    private string MailTo() => string.Format("mailto:{0}", System.Web.HttpUtility.UrlEncode(Value.EmailAddress ?? ""));
+
+    async Task LoginAsUserAsync()
+    {
+        await RequestToLogin.InvokeAsync(Value);
+    }
+
+    bool CanLogin()
+    {
+        bool retval = false;
+        if (currentUser != null)
+        {
+            retval = currentUser.Rol == UserModel.Rols.superUser;
+            if (currentUser.isStaff() && !retval)
+            {
+                retval = !Value?.isStaff() ?? false;
+            }
+        }
+        return retval;
+
+    }
+
+}
+

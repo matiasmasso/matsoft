@@ -1,0 +1,40 @@
+﻿@using System.Web;
+<div class="Wrapper">
+    <AuthorizeView>
+        <Authorized>
+            <a 
+               href="/logout?returnUrl=/"
+               >Logout</a>
+        </Authorized>
+        <NotAuthorized>
+            <div class="LoginForm">
+            <div>
+            <input type="text"
+                   placeholder="User Name"
+                   @bind="@Username" />
+           </div>
+           <div class="LoginButton">
+            <input type="password"
+                   placeholder="Password"
+                   @bind="@Password" />
+                   </div>
+                   <div>
+            <a class="btn btn-primary"
+               href="/login?paramUsername=@encode(@Username)&paramPassword=@encode(@Password)"
+               >Login</a>
+               </div>
+               </div>
+        </NotAuthorized>
+</AuthorizeView>
+</div>
+
+@code {
+    string Username = "";
+    string Password = "";
+    private string encode(string param)
+    {
+        return HttpUtility.UrlEncode(param);
+    }
+
+
+}

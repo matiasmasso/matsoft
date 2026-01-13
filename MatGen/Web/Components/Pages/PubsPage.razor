@@ -1,0 +1,28 @@
+﻿@page "/pubs"
+
+<div class="PageWrapper900">
+    @if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>Publicacions</h1>
+        <Pubs ItemSelected="ItemSelectedHandler"></Pubs>
+    }
+</div>
+
+@code {
+    IModel? selectedItem;
+
+    protected override void OnParametersSet()
+    {
+
+    }
+
+    void ItemSelectedHandler(object item)
+    {
+        selectedItem = (IModel)item;
+    }
+}

@@ -1,0 +1,24 @@
+﻿.Wrapper {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    max-width: 265px;
+    flex-basis: auto; /* default value */
+    flex-grow: 1;
+    flex-shrink: 1;
+    justify-content: flex-start;
+    font-size:0.8em;
+}
+
+a.Item {
+    display:block;
+    margin-bottom:10px;
+}
+
+a.Item img {
+    width:100%;
+}
+
+a.Item span {
+
+}

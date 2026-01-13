@@ -1,0 +1,251 @@
+﻿@page "/immobles"
+@page "/{LangSegment}/immobles"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject ImmoblesService immoblesService
+
+<div class="PageWrapper600">
+
+    @if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" 
+            BreadcrumbsChanged="BreadcrumbsChanged"
+                     UpdateRequest="UpdateRequest"></ModelEditor>
+    }
+    else if (model == null && exception == null)
+    {
+        <h1>@culture.Localize("Immobles")</h1>
+
+        <Loading></Loading>
+    }
+@*     else if (selectedItem != null)
+    {
+        <Immoble Model="selectedItem" RequestToCancel="@(()=>selectedItem=null)"></Immoble>
+    }
+ *@    
+    else
+    {
+        <h1>@culture.Localize("Immobles")</h1>
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+             <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+             <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                 @culture.Localize("AddNew")
+             </a>
+         </PageOptions>
+     </div>
+        <div class="Emps">
+            <SelectedEmps @bind-SelectedValues="selectedEmps"></SelectedEmps>
+        </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} immobles, {1} en actiu",model?.Count(), model?.Where(x => x.FchTo == null).Count())
+        </div>
+
+
+        <div class="Grid @(HideColEmp() ? "HideColEmp" : "")  @(HideColFchTo() ? "HideColFchTo" : "")">
+            <div class="Item ColumnHeaders HideOnMobile">
+                @if (!HideColEmp())
+                {
+                    <a href="#" class="Truncate"
+                    @onclick="@(()=>SortColumn(Cols.Emp))"
+                    @onclick:preventDefault="true">
+                        @culture.Localize("Emp")
+                    </a>
+                }
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.Nom))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("Name")
+                </a>
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.Ref))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("RefCatastral")
+                </a>
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.FchFrom))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("Entry")
+                </a>
+
+                @if (!HideColFchTo())
+                {
+                    <a href="#" class="Truncate"
+                    @onclick="@(()=>SortColumn(Cols.FchTo))"
+                    @onclick:preventDefault="true">
+                        @culture.Localize("Exit")
+                    </a>
+                }
+            </div>
+
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <div class='Item
+                    @(item == selectedItem ? "Selected" : "" )
+                    @(selectedItem != null && item != selectedItem ? "HideOnMobile" : "")
+                    @(item.FchTo == null ? "" : "Obsoleto" )
+                    '
+                @onclick="@(()=>ItemClick(item))"
+                @onclick:preventDefault="true">
+
+
+                    @if (!HideColEmp())
+                    {
+                        <div class="Truncate">
+                            @session.Emp(((EmpModel.EmpIds)item.Emp!))?.Abr
+                        </div>
+                    }
+                    <div class="Truncate">
+                        @item.Nom
+                    </div>
+                    <div class="Truncate">
+                        @item.Cadastre
+                    </div>
+                    <div>
+                        @item.FchFrom?.ToString("dd/MM/yyyy")
+                    </div>
+
+                    @if (!HideColFchTo())
+                    {
+                        <div>
+                            @item.FchTo?.ToString("dd/MM/yyyy")
+                        </div>
+                    }
+
+                    <div class="GridRowDivider">
+
+                        @if (item == selectedItem)
+                        {
+                            <div class="ContextMenu">
+                                <Nav nav="@selectedItem.ContextMenu()"></Nav>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+        </div>
+
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    private List<ImmobleModel>? model;
+    private ImmobleModel? selectedItem;
+    private List<EmpModel> availableEmps = new();
+    private List<EmpModel> selectedEmps = new();
+    private string searchTerm = string.Empty;
+    private Cols? sortedColumn = Cols.FchFrom;
+    private bool isDescendingOrder = false;
+    private bool isShowingObsolets;
+    private Exception? exception;
+
+    private enum Cols
+    {
+        Emp,
+        Nom,
+        Ref,
+        FchFrom,
+        FchTo
+    }
+
+    protected override void OnInitialized()
+    {
+        session.OnChange += Refresca;
+        immoblesService.OnChange += Refresca;
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        model = immoblesService.Values;
+        selectedEmps = session.Emps?.Where(x => model?.Any(y => x.Id == y.Emp) ?? false).ToList() ?? new();
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<ImmobleModel>? FilteredItems() => model?
+    .Where(x =>
+        x.Matches(searchTerm)
+        && selectedEmps.Any(y => x.Emp == y.Id)
+        && (x.FchTo == null || x.FchTo > DateTime.Today || isShowingObsolets))
+        .OrderByDescending(x => x.FchFrom)
+    .ToList();
+
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        //    switch (col)
+        //    {
+        //        //case Cols.Ref:
+        //        //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Referencia ?? "").ToList() : model!.OrderBy(x => x.Referencia ?? "").ToList();
+        //        //    break;
+        //        //case Cols.User:
+        //        //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Usuari ?? "").ToList() : model!.OrderBy(x => x.Usuari ?? "").ToList();
+        //        //    break;
+        //    }
+    }
+
+    public void AddNew()
+    {
+        selectedItem = new ImmobleModel();
+    }
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    private void ItemClick(ImmobleModel item)
+    {
+        var caption = item.Nom ?? "?";
+        var breadcrumb = new ModelEditor.Breadcrumb(item, caption);
+        breadcrumbs.Add(breadcrumb);
+
+        //await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    private async Task UpdateRequest(IModel value)
+    {
+        if(value is DocfileSrcModel)
+        {
+            try
+            {
+                await immoblesService.UpdateDocfileAsync((DocfileSrcModel)value);
+            } catch(Exception ex)
+            {
+                exception = ex;
+            }
+        }
+    }
+
+    bool HideColEmp() => selectedEmps.Count <= 1;
+    bool HideColFchTo() => !isShowingObsolets;
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        immoblesService.OnChange -= Refresca;
+    }
+
+}

@@ -1,0 +1,110 @@
+﻿@inject CultureService culture
+@inject IncidenciasService incidenciasService
+
+<div class="PageWrapper600">
+    <h3>@culture.Localize("Incidencia") </h3>
+    @if (model == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Properties">
+            <div class="Label">@culture.Localize("Fch")</div>
+            <div class="Value">@($"{model?.Fch:dd/MM/yy}")</div>
+            <div class="Label">@culture.Localize("Customer")</div>
+            <div class="Value">@incidenciasService.CustomerFullNom(model)</div>
+            <div class="Label">@culture.Localize("Email")</div>
+            <div class="Value">@model?.EmailAdr</div>
+            <div class="Label">@culture.Localize("Tel")</div>
+            <div class="Value">@model?.Tel</div>
+            <div class="Label">@culture.Localize("Ref")</div>
+            <div class="Value">@model?.CustomerRef</div>
+            <div class="Label">@culture.Localize("Product")</div>
+            <div class="Value">@incidenciasService.ProductNom(model)?.Tradueix(culture.Lang())</div>
+            <div class="Label">@culture.Localize("SerialNumber")</div>
+            <div class="Value">@model?.SerialNumber</div>
+            <div class="Label">@culture.Localize("ManufactureDate")</div>
+            <div class="Value">@model?.ManufactureDate</div>
+            <div class="Label">@culture.Localize("Procedencia")</div>
+            <div class="Value">@incidenciasService.ProcedenciaNom(model)?.Tradueix(culture.Lang())</div>
+            <div class="Label">@culture.Localize("FchCompra")</div>
+            <div class="Value">@model?.FchCompra?.ToShortDateString()</div>
+            <div class="Label">@culture.Localize("BoughtFrom")</div>
+            <div class="Value">@model?.BoughtFrom</div>
+            <div class="Label">@culture.Localize("Obs")</div>
+            <div class="Value">@model?.Obs</div>
+            <div class="Label">@culture.Localize("Src")</div>
+            <div class="Value">@model?.Src</div>
+            <div class="Label">@culture.Localize("CodiTancament")</div>
+            <div class="Value">@model?.CodiTancament</div>
+
+            <div class="Docfiles">
+                <div class="Label">@culture.Localize("PurchaseTickets")</div>
+                <div class="Gallery">
+                    @foreach (var docfile in model?.PurchaseTickets ?? new())
+                    {
+                        <a href="@docfile.DownloadUrl()" target="_blank" class="Thumbnail">
+                            <img src="@docfile.ThumbnailUrl()" />
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="Docfiles">
+                <div class="Label">@culture.Localize("Images")</div>
+                <div class="Gallery">
+                    @foreach (var docfile in model?.DocFileImages ?? new())
+                    {
+                        <a href="@docfile.DownloadUrl()" target="_blank" class="Thumbnail">
+                            <img src="@docfile.ThumbnailUrl()" />
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="Docfiles">
+                <div class="Label">@culture.Localize("Videos")</div>
+                <div class="Gallery">
+                    @foreach (var docfile in model?.Videos ?? new())
+                    {
+                        <a href="@docfile.DownloadUrl()" target="_blank" class="Thumbnail">
+                            <img src="@docfile.ThumbnailUrl()" />
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="UsrLog">
+                @model?.UsrLog?.Caption(culture.Lang())
+            </div>
+        </div>
+
+        <Error @bind-Exception="exception"></Error>
+    }
+</div>
+
+
+
+@code {
+    [Parameter] public IncidenciaModel? Model { get; set; }
+    IncidenciaModel? model;
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Model == null) throw new Exception("model is null");
+            model = await incidenciasService.GetValueAsync(Model.Guid);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+
+}

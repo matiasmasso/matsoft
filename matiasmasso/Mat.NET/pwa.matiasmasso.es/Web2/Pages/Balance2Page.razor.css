@@ -1,0 +1,55 @@
+﻿.Emps {
+    display: flex;
+    flex-direction: column;
+}
+
+    .Emps a {
+        display: block;
+    }
+
+.Years {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+}
+
+    .Years a {
+        display: inline-block;
+    }
+
+    .Fch {
+        width:min-content;
+    }
+
+    .Grid {
+        max-width:400px;
+        display:grid;
+        grid-template-columns: 1fr  min-content;
+        grid-column-gap: 10px;
+    }
+
+.ContextMenu a.Item {
+    display:block;
+}
+    
+
+.Item, .SCta {
+    display: contents;
+}
+
+    .SCta .Nom {
+        padding-left: 20px;
+    }
+
+    .SCta .Num {
+        padding-right: 20px;
+    }
+
+    .Nom {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .Num {
+        white-space: nowrap;
+    }

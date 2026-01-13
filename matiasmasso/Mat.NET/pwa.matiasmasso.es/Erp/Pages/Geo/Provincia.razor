@@ -1,0 +1,109 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+
+    <TabControl>
+        <TabPage Text="@Localizer("Details")">
+            @if (gridModel == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          CanEdit="true"></PropertyGrid>
+            }
+        </TabPage>
+
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <UxButtonsBar CanEdit="true"
+                      IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(Model != null && !Model.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></UxButtonsBar>
+    </div>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+@code {
+    [Parameter] public ProvinciaModel Model { get; set; }
+    [Parameter] public EventCallback<ProvinciaModel> OnUpdate { get; set; }
+    [Parameter] public EventCallback<ProvinciaModel> OnDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private ProvinciaModel _value;
+    private CountryModel country;
+    private PropertyGridModel gridModel;
+    private CacheDTO cache;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    new ProblemDetails problemDetails;
+
+    private enum Fields : int
+    {
+        Region,
+        Nom,
+        Intrastat
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        cache = base.DefaultCache();
+        if (!Model.IsNew)
+        {
+            var apiResponse = await base.GetAsync2<ProvinciaModel>("Provincia", Model.Guid.ToString());
+            if (apiResponse.Success())
+                Model = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+
+        var region = cache.Regions.FirstOrDefault(x => x.Guid == Model.Region);
+        country = cache.Country(region.Country);
+        var regions = cache.Regions.Where(x => x.Country == country.Guid).Select(x=>new GuidNom(x.Guid, x.Nom)).ToList();
+        var regionGuidnom = new GuidNom(region.Guid, region.Nom);
+        var _gridModel = new PropertyGridModel(Model);
+        _gridModel.AddDropdown<GuidNom>((int)Fields.Region, regions, regionGuidnom, Localizer("Region"));
+        _gridModel.AddString((int)Fields.Nom, Model.Nom, Localizer("Nom"));
+        gridModel = _gridModel;
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        Model.Region = (Guid)gridModel.GetModelGuid((int)Fields.Region);
+        Model.Nom = gridModel.GetString((int)Fields.Nom);
+
+        var apiResponse = await HttpService.PostAsync<ProvinciaModel, bool>(http, Model, "Provincia");
+        if (apiResponse.Success())
+        {
+            Model.IsNew = false;
+            await OnUpdate.InvokeAsync(Model);
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await HttpService.GetAsync<bool>(http, "Provincia/delete", Model!.Guid.ToString());
+        if (apiResponse.Success())
+            await OnDelete.InvokeAsync(Model);
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+}

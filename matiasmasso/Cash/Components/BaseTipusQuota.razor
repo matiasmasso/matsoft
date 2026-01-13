@@ -1,0 +1,58 @@
+﻿
+<div class="wrapper">
+    <InputEur Value="Value?.Base" placeholder = "Base imponible" ValueChanged="BaseChanged"></InputEur>
+    <InputPercent Value="Value?.Tipo" placeholder = "Tipus Iva" ValueChanged="TipusChanged"></InputPercent>
+    <InputEur Value="Value?.Quota" placeholder = "Quota" ValueChanged="QuotaChanged"></InputEur>
+    <div class="total">@Total()</div>
+</div>
+
+@code {
+    [Parameter] public BaseQuotaModel? Value { get; set; }
+    [Parameter] public EventCallback<BaseQuotaModel?> ValueChanged { get; set; }
+
+    private BaseQuotaModel? value { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        value = Value;
+    }
+
+    string? Total()
+    {
+        var retval = string.Empty;
+        var total = Value?.Total;
+        if (total != null && total != 0)
+            retval = $"{Value?.Total:#,###.00} €";
+            return retval;
+    }
+
+    void BaseChanged(decimal? args)
+    {
+        if(value == null)
+            value = new BaseQuotaModel();
+        value!.Base = args;
+        value!.Quota = (value.Base.HasValue && value.Tipo.HasValue) ? Math.Round((value.Base.Value * value.Tipo.Value / 100m),2) : null;
+        ValueChanged.InvokeAsync(value);
+    }
+
+    void TipusChanged(decimal? args)
+    {
+        if (value == null)
+            value = new BaseQuotaModel();
+        value!.Tipo = args;
+        value!.Quota = (value.Base.HasValue && value.Tipo.HasValue) ? Math.Round((value.Base.Value * value.Tipo.Value / 100m),2) : null;  
+        ValueChanged.InvokeAsync(value);
+    }
+
+    void QuotaChanged(decimal? args)
+    {
+        if (value == null)
+            value = new BaseQuotaModel();
+        value!.Quota = args;
+        value!.Tipo = (value.Base.HasValue && value.Quota.HasValue && value.Base.Value != 0) ? Math.Round((value.Quota.Value / value.Base.Value * 100m),2) : null;
+        ValueChanged.InvokeAsync(value);
+    }
+
+
+}

@@ -1,0 +1,601 @@
+﻿@using Microsoft.JSInterop
+@using Wasm.Services
+@using System.Security.Claims
+@inject AlbumsService _albumsService
+@inject ApiEndpointService _endpointService
+@inject JwtAuthStateProvider AuthStateProvider
+@inject HeicService Heic
+@inject IJSRuntime JS
+@inject ContextMenuService MenuService
+
+<div class="PageWrapper600">
+
+    @if (editingAlbum != null)
+    {
+        <AlbumEditor Value="editingAlbum"
+                     OnClose="HandleAlbumEditorClose"
+                     AfterUpdate="HandleAlbumEditorAfterUpdateAsync" />
+    }
+    else if (selectedItems != null)
+    {
+        <AlbumItemEditor Values="selectedItems"
+                         Albums="values"
+                         OnClose="HandleItemEditorClose"
+                         AfterUpdate="HandleItemEditorAfterUpdateAsync" />
+    }
+    else if (selectedYear == null)
+    {
+        @if (isLoading)
+        {
+            <Loading />
+        }
+        else if (values == null)
+        {
+            <div></div>
+        }
+        else if (values?.Count == 0)
+        {
+            <p>
+                No albums yet.
+                <button type="button" @onclick="AddNewAlbum">Create here the first one!</button>
+            </p>
+        }
+        else
+        {
+            <PageOptions>
+                <button type="button" @onclick="AddNewAlbum">nou album</button>
+            </PageOptions>
+
+            @if (years != null)
+            {
+                <div class="Year-grid">
+                    @foreach (var year in years)
+                    {
+                        <a href="#" class="Year"
+                           @onclick="@(() => YearClick(year))"
+                           @onclick:preventDefault>@year</a>
+                    }
+                </div>
+            }
+        }
+    }
+    else if (selectedAlbum == null)
+    {
+        <PageOptions>
+            @if (string.IsNullOrEmpty(searchTerm))
+            {
+                <a href="#" class="SelectedYear"
+                   @onclick="@(() => selectedYear = null)"
+                   @onclick:preventDefault>@selectedYear</a>
+            }
+            <a href="#" @onclick="AddNewAlbum" @onclick:preventDefault>nou album</a>
+        </PageOptions>
+
+        <SearchBox @bind-Value="searchTerm" />
+
+        <div class="Albums">
+            @foreach (var album in AlbumsForYear())
+            {
+                <a href="#" class="Album"
+                   @onclick="@(() => AlbumClickAsync(album))"
+                   @onclick:preventDefault>
+                    <div>@album.DatePart()</div>
+                    <div>@album.Name</div>
+                    <div>@album.Features()</div>
+                </a>
+
+            }
+        </div>
+    }
+    else
+    {
+        <a href="#" class="SelectedAlbum"
+           @onclick="@(() => selectedAlbum = null)"
+           @onclick:preventDefault>
+            @selectedAlbum.FolderName()
+        </a>
+
+        <PageOptions>
+            <a href="#" @onclick="DeleteAlbum" @onclick:preventDefault>eliminar</a>
+            <a href="#" @onclick="@(() => editingAlbum = selectedAlbum)" @onclick:preventDefault>edit</a>
+            <FileUploadButton Caption="pujar arxius"
+                              OnFilesSelected="HandleSelectedFiles" />
+            <a href="#" @onclick="AddNewAlbum" @onclick:preventDefault>nou album</a>
+        </PageOptions>
+
+        @if (isUploadingFiles)
+        {
+            <UploadProgressGrid Items="Items"
+                                TotalItems="TotalItems" />
+        }
+        else
+        {
+            @if (isFetchingItems)
+            {
+                <Loading />
+            }
+            else if (items == null || items.Count == 0)
+            {
+                <p>No items in this album yet.</p>
+            }
+            else
+            {
+                <div>
+
+                    <ImageGallery Items="items"
+                                  OnItemClick="ZoomAsync"
+                                  OnReordered="HandleItemsSortedAsync"
+                                  OnEditRequest="HandleEditItems"
+                                  OnDeleteRequest="HandleDeleteItems">
+
+                    </ImageGallery>
+                </div>
+            }
+        }
+    }
+
+    <Error @bind-Value="exception" />
+
+    <ConfirmDeleteModal IsOpen="@showDeleteModal"
+                        Count="@idsToDelete.Count"
+                        Closed="OnDeleteConfirmed" />
+</div>
+
+@code {
+    //private ElementReference sortableContainer; private DotNetObjectReference<Albums>? dotNetRef;
+    private List<AlbumModel>? values;
+    private List<UploadProgressGrid.UploadProgressItem> uploadItems = new();
+
+    private string? selectedYear;
+    private AlbumModel? selectedAlbum;
+    private List<AlbumModel.Item>? selectedItems;
+    private List<string>? years;
+    private List<AlbumModel.Item>? items;
+    private AlbumModel? editingAlbum;
+
+    private bool showDeleteModal;
+    private HashSet<Guid> idsToDelete = new();
+    private bool isDeleting = false;
+
+    private bool isUploadingFiles = false;
+    private bool isFetchingItems = false;
+    private List<UploadProgressGrid.UploadProgressItem> Items = new();
+    private int TotalItems = 0;
+    private List<IBrowserFile>? uploadedFiles;
+    private string? searchTerm;
+    private bool isLoading;
+    private UserModel? user;
+
+    private enum ContextMenuTags
+    {
+        Zoom,
+        Edit,
+        Delete
+    }
+
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        _endpointService.OnChanged += EndpointChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            values = await _albumsService.GetAllAlbums();
+            years = values?.Select(a => a.Year.ToString())
+                           .Distinct()
+                           .OrderByDescending(y => y)
+                           .ToList();
+
+            if (years?.Count > 0)
+                selectedYear = years.First();
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var usr = authState.User;
+            var usrGuid = new Guid(usr.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            user = new UserModel(usrGuid);
+
+            isLoading = false;
+        }
+        catch (Exception ex)
+        {
+            isLoading = false;
+            exception = ex;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+
+    private async Task Play(AlbumModel.Item item)
+    {
+        await JS.InvokeVoidAsync("open", DownloadUrl(item), "_blank");
+    }
+
+
+
+
+
+    private void EndpointChanged()
+    {
+        InvokeAsync(async () =>
+        {
+            if (selectedAlbum != null)
+                items = await _albumsService.GetAlbumItems(selectedAlbum);
+
+            StateHasChanged();
+        });
+    }
+
+    private async Task OpenVideo(AlbumModel.Item item)
+    {
+        await JS.InvokeVoidAsync("open", DownloadUrl(item), "_blank");
+    }
+
+    private string ThumbUrl(AlbumModel.Item item)
+    {
+        var uri = new Uri(new Uri(_endpointService.CurrentBaseUrl!), item.ThumbUrl);
+        return uri.ToString();
+    }
+
+
+    private string DownloadUrl(AlbumModel.Item item)
+    {
+        var uri = new Uri(new Uri(_endpointService.CurrentBaseUrl!), item.DownloadUrl);
+        return uri.ToString();
+    }
+
+    private List<AlbumModel> AlbumsForYear()
+    {
+        if (searchTerm == null)
+        {
+            return values?
+                .Where(a => a.Year.ToString() == selectedYear)
+                .OrderByDescending(x => x.Month)
+                .ThenByDescending(x => x.Day)
+                .ToList() ?? new();
+        }
+
+        return values?
+            .Where(x => x.Matches(searchTerm))
+            .OrderByDescending(x => x.Year)
+            .ThenByDescending(x => x.Month)
+            .ThenByDescending(x => x.Day)
+            .ToList() ?? new();
+    }
+
+    private void YearClick(string year)
+    {
+        selectedYear = year;
+    }
+
+
+
+
+
+
+    //-----------------------------------------------------------------
+    // album Actions
+    //-----------------------------------------------------------------
+
+    private async Task AlbumClickAsync(AlbumModel album)
+    {
+        try
+        {
+            selectedAlbum = album;
+            items = new();
+            isFetchingItems = true;
+
+            items = await _albumsService.GetAlbumItems(selectedAlbum);
+            items = items?.OrderBy(x => x.SortOrder).ToList();
+
+            isFetchingItems = false;
+        }
+        catch (Exception ex)
+        {
+            isFetchingItems = false;
+            exception = ex;
+        }
+    }
+
+    private void AddNewAlbum()
+    {
+        editingAlbum = new AlbumModel()
+        {
+            Name = "New Album",
+            Year = DateTime.Now.Year,
+            Month = DateTime.Now.Month,
+            Day = DateTime.Now.Day,
+            FchCreated = DateTimeOffset.Now,
+            UserCreated = user
+        };
+    }
+
+
+    private void HandleAlbumEditorClose()
+    {
+        editingAlbum = null;
+    }
+
+    private async Task HandleAlbumEditorAfterUpdateAsync(AlbumModel args)
+    {
+        if (args != null)
+        {
+            var editedAlbum = values?.FirstOrDefault(a => a.Guid == args.Guid);
+
+            if (editedAlbum != null)
+            {
+                editedAlbum.Name = args.Name;
+                editedAlbum.Year = args.Year;
+                editedAlbum.Month = args.Month;
+                editedAlbum.Day = args.Day;
+            }
+            else
+            {
+                values?.Add(args);
+                items = new();
+            }
+
+            years = values?.Select(a => a.Year.ToString())
+                           .Distinct()
+                           .OrderByDescending(y => y)
+                           .ToList();
+
+            selectedAlbum = editedAlbum ?? args;
+            selectedYear = selectedAlbum.Year.ToString();
+        }
+
+        editingAlbum = null;
+    }
+
+    private async Task DeleteAlbum()
+    {
+        try
+        {
+            if (selectedAlbum == null)
+                throw new Exception("No album selected.");
+
+            var confirmed = await JS.InvokeAsync<bool>(
+                "confirm",
+                $"Are you sure you want to delete the album '{selectedAlbum.FolderName()}'?"
+            );
+
+            if (!confirmed)
+                return;
+
+            await _albumsService.DeleteAsync(selectedAlbum);
+            values?.RemoveAll(a => a.Guid == selectedAlbum.Guid);
+
+            selectedAlbum = null;
+
+            years = values?.Select(a => a.Year.ToString())
+                           .Distinct()
+                           .OrderByDescending(y => y)
+                           .ToList();
+
+            selectedYear = years?.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    //-----------------------------------------------------------------
+    // Item Actions
+    //-----------------------------------------------------------------
+
+
+    private async Task HandleSelectedFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        try
+        {
+            if (selectedAlbum == null)
+                throw new Exception("No album selected.");
+
+            var size = files.Sum(x => x.Size);
+
+            isUploadingFiles = true;
+
+            uploadedFiles = files.ToList();
+            TotalItems = uploadedFiles.Count;
+
+            // ---------------------------------------------------------
+            // Initialize UploadProgressItem list
+            // ---------------------------------------------------------
+            Items = uploadedFiles
+                .Select((file, index) => new UploadProgressGrid.UploadProgressItem
+                {
+                    Id = index,
+                    DisplayName = file.Name,
+                    Percent = 0,
+                    BytesUploaded = 0,
+                    TotalBytes = file.Size,
+                    LastUpdate = DateTimeOffset.UtcNow,
+                    SpeedBytesPerSec = 0,
+                    IsPaused = false
+                })
+                .ToList();
+
+            await _albumsService.UploadFilesToAlbumAsync(
+                selectedAlbum,
+                uploadedFiles,
+                (fileIndex, bytesUploaded, totalBytes) =>
+                {
+                    var item = Items[fileIndex];
+
+                    var now = DateTimeOffset.UtcNow;
+                    var elapsed = (now - item.LastUpdate).TotalSeconds;
+                    if (elapsed > 0)
+                    {
+                        var delta = bytesUploaded - item.BytesUploaded;
+                        item.SpeedBytesPerSec = delta / elapsed;
+                    }
+
+                    item.BytesUploaded = bytesUploaded;
+                    item.TotalBytes = totalBytes;
+                    item.Percent = (int)Math.Ceiling(100.0 * bytesUploaded / totalBytes);
+                    item.LastUpdate = now;
+
+                    InvokeAsync(StateHasChanged);
+                },
+                Heic
+            );
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        finally
+        {
+            isUploadingFiles = false;
+
+            if (selectedAlbum != null)
+            {
+                try
+                {
+                    items = await _albumsService.GetAlbumItems(selectedAlbum);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            }
+        }
+    }
+
+
+    private async Task HandleItemEditorAfterUpdateAsync(List<AlbumModel.Item> args)
+    {
+        if (args != null)
+        {
+            foreach (var item in args)
+            {
+
+                var editedItem = items?.FirstOrDefault(a => a.Guid == item.Guid);
+                if (editedItem == null) throw new Exception($"no s'ha trobat l'item {item.Filename}");
+
+                if (editedItem.Album!.Guid == selectedAlbum!.Guid)
+                {
+                    editedItem!.Title = item.Title;
+                    editedItem.Description = item.Description;
+                }
+                else
+                    items!.Remove(editedItem);
+            }
+        }
+
+        selectedItems = null;
+    }
+
+
+    private async Task HandleItemsSortedAsync((int OldIndex, int NewIndex) evt)
+    {
+        try
+        {
+            var (oldIndex, newIndex) = evt;
+
+            if (oldIndex == newIndex)
+                return;
+
+            var moved = items![oldIndex];
+            items.RemoveAt(oldIndex);
+            items.Insert(newIndex, moved);
+
+            // 2. Recalcular SortOrder
+            for (int i = 0; i < items.Count; i++)
+                items[i].SortOrder = i;
+
+            // Persist the new order
+            var sortedDictionary = items.ToDictionary(
+                item => item.Guid,
+                item => item.SortOrder
+            );
+
+            await _albumsService.UpdateItemOrderAsync(sortedDictionary);
+            //items = await _albumsService.GetAlbumItems(selectedAlbum!);
+            items = items!.OrderBy(x => x.SortOrder).ToList();
+
+            // Force UI refresh
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void HandleItemEditorClose()
+    {
+        selectedItems = null;
+    }
+
+
+    //-----------------------------------------------------------------
+    // Item context menu Actions
+    //-----------------------------------------------------------------
+
+    private async Task ZoomAsync(AlbumModel.Item item)
+    {
+        await JS.InvokeVoidAsync("open", DownloadUrl(item), "_blank");
+    }
+
+
+
+    private async Task HandleDeleteItems(HashSet<Guid> selectedIds)
+    {
+        idsToDelete = selectedIds.Count > 0 ? selectedIds : new HashSet<Guid>( items!.Select(x=>x.Guid));
+        showDeleteModal = true;
+    }
+
+    private async Task OnDeleteConfirmed(bool confirmed)
+    {
+        showDeleteModal = false;
+        if (!confirmed || idsToDelete?.Count == 0)
+            return;
+
+        await DeleteAsync();
+        StateHasChanged();
+    }
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            isDeleting = true;
+            var itemsToDelete = items!.Where(i => idsToDelete.Contains(i.Guid)).ToList();
+            await _albumsService.DeleteItemsAsync(itemsToDelete);
+            items.RemoveAll(x=>itemsToDelete.Contains(x));
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+
+    }
+
+    private void HandleEditItems(HashSet<Guid> args)
+    {
+        var selectedIds = args.Count > 0 ? args : new HashSet<Guid>(items!.Select(x => x.Guid));
+        selectedItems = items!.Where(i => selectedIds.Contains(i.Guid)).ToList();
+    }
+    //-----------------------------------------------------------------
+
+    public void Dispose()
+    {
+        _endpointService.OnChanged -= EndpointChanged;
+    }
+}

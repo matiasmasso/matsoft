@@ -1,0 +1,124 @@
+﻿@implements IDisposable
+
+@inject ApiService ApiService
+
+<div class="PageWrapper900">
+    @if (ApiService.Pubs() == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+             <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nova publicació</a>
+         </PageOptions>
+     </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+
+            @foreach (var item in FilteredItems())
+            {
+                <div class="Item">
+                    <a href="#" @onclick:preventDefault @onclick="@(()=>ItemClick(item))">
+                        @string.Format("{0:dd/MM/yy}", item.FchCreated)
+                    </a>
+                    <a href="#" @onclick:preventDefault @onclick="@(()=>ItemClick(item))">
+                        @item.Nom
+                    </a>
+                </div>
+                <div class="GridRowDivider HideOnDesktop"></div>
+            }
+
+
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public PubModel? Root { get; set; }
+    [Parameter] public EventCallback<object> ItemSelected { get; set; }
+
+    //IModel? selectedItem;
+    string? searchTerm;
+    Exception? exception;
+
+    private enum MenuKeys
+    {
+        Zoom,
+        AddNew
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    void ItemClick(IModel? item)
+    {
+
+        ItemSelected.InvokeAsync(item);
+    }
+
+    void AddNew()
+    {
+        var value = new PubModel();
+        ItemSelected.InvokeAsync(value);
+    }
+
+    List<PubModel> FilteredItems()
+    {
+        List<PubModel>? retval = null;
+        var values = ApiService.Pubs();
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = values;
+        else
+            retval = values?.Where(x => x.Matches(searchTerm)).ToList();
+        return retval ?? new();
+    }
+
+
+    ContextMenuModel ContextMenu(object? item)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, item);
+
+        if (item is PubModel)
+            retval.AddItem("Afegir", (int)MenuKeys.AddNew, new PubModel());
+        return retval;
+    }
+
+    void ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        var tag = args.Tag;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Zoom:
+            case MenuKeys.AddNew:
+                ItemSelected.InvokeAsync(args.Tag);
+                break;
+        }
+    }
+
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

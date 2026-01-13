@@ -1,0 +1,15 @@
+﻿.Img img {
+    width:100%;
+}
+
+.Pvr {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font-size:1.2em;
+    font-weight: 600;
+    border-top: 1px solid #DDDDDD;
+    border-bottom: 1px solid #DDDDDD;
+    margin-bottom:20px;
+    background-color:#EEEEEE;
+}

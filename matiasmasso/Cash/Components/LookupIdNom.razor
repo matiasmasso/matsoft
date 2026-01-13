@@ -1,0 +1,95 @@
+﻿<div class="Wrapper">
+
+    @if (value == null)
+    {
+        <input type="text" class="Textbox" 
+            @bind-value="searchterm" 
+            @bind-value:event="oninput" placeholder="start typing to search..."
+            />
+    }
+    else if (values?.Count() > 1 && isShowingDropdown)
+    {
+        <div class="Caption" @onkeydown="OnKeyDownHandler">
+            <input type="text" class="Textbox" placeholder="start typing to search..."
+                   @bind-value="searchterm"
+                   @bind-value:event="oninput" />
+        </div>
+    }
+    else
+    {
+        <div class="Caption">
+            <a href="#" class="Nom" @onclick="@(()=>isShowingDropdown = !isShowingDropdown)" @onclick:preventDefault>
+                @if (Values == null)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    @value.ToString()
+                }
+            </a>
+        </div>
+    }
+
+    @if (Values?.Count() > 1 && (isShowingDropdown || !string.IsNullOrEmpty(searchterm)))
+    {
+        <div class="Dropdown">
+            <Virtualize Items="FilteredItems()" Context="item" TItem="IdNom">
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    @(item == null ? NullCaption : item.ToString())
+                </a>
+            </Virtualize>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public string NullCaption { get; set; } = "";
+    [Parameter] public IEnumerable<IdNom>? Values { get; set; }
+    [Parameter] public EventCallback<IdNom> ValueChanged { get; set; }
+
+    IdNom? value = null;
+    List<IdNom> values = new();
+    string? searchterm;
+    bool isShowingDropdown;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Values != null) 
+            values = Values.ToList();
+        if(Value != null && Values != null && Value < Values.Count())
+            value = values.FirstOrDefault(x=>x.Id == Value);
+    }
+
+    List<IdNom> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchterm) || searchterm == value?.ToString())
+            return values ?? new();
+        else
+            return Values?.Where(x => x.Nom?.Contains(searchterm) ?? false).ToList() ?? new();
+    }
+
+    void ItemClick(IdNom? item)
+    {
+        isShowingDropdown = false;
+        searchterm = null;
+        ValueChanged.InvokeAsync(item);
+    }
+
+    void OnKeyDownHandler(KeyboardEventArgs args)
+    {
+        // isShowingDropdown = false;
+        // searchterm = null;
+        isShowingDropdown = !isShowingDropdown;
+        searchterm = isShowingDropdown ? value!.Nom : "";
+
+        ValueChanged.InvokeAsync(null);
+    }
+
+
+
+
+}

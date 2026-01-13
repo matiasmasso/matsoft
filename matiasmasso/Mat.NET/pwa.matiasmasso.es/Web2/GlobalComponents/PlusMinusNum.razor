@@ -1,0 +1,33 @@
+﻿@using DTO.Helpers
+
+<div class="Wrapper">
+    <a href="#" class="Btn Decrement" @onclick="Decrement" @onclick:preventDefault> - </a>
+
+    <div class="Value">@string.Format("{0:N0}",value)</div>
+
+    <a href="#" class="Btn Increment" @onclick="Increment" @onclick:preventDefault> + </a>
+</div>
+
+@code {
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public int Moq { get; set; } = 1;
+    [Parameter] public EventCallback<int> ValueChanged { get; set; }
+
+    private int value = 0;
+
+    protected override void OnParametersSet()
+    {
+        value = Value ?? 0;
+    }
+
+    void Increment()
+    {
+        ValueChanged.InvokeAsync(value+Moq);
+    }
+
+    void Decrement()
+    {
+        ValueChanged.InvokeAsync(value-Moq);
+    }
+
+}

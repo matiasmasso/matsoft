@@ -1,0 +1,27 @@
+﻿.Years {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+}
+
+    .Years a {
+        display: inline-block;
+    }
+
+.Item, .ColHeaders {
+    display: grid;
+    grid-template-columns: 50px min-content 1fr 1fr 100px;
+    grid-column-gap: 10px;
+}
+
+.Nom {
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.Num {
+    display:flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}

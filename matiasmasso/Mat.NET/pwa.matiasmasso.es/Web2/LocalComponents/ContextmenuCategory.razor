@@ -1,0 +1,19 @@
+﻿@inject CultureService culture
+
+<div class="ContextMenu">
+    <a href="#" class="Item Nom" @onclick="Zoom" @onclick:preventDefault>
+        @culture.Localize("Zoom")
+    </a>
+</div>
+
+@code {
+    [Parameter] public ProductCategoryModel? Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+
+    private async Task Zoom()
+    {
+        var caption = Model!.Nom?.Tradueix(culture.Lang()) ?? "?";
+        var breadcrumb = new ModelEditor.Breadcrumb(Model, caption);
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+}

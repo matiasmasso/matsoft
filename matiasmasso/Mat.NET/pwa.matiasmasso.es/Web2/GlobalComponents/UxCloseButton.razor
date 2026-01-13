@@ -1,0 +1,14 @@
+﻿@inject CultureService culture
+
+<a class="CloseButton" href="#" @onclick="RequestToClose" @onclick:preventDefault>
+    [@(culture.Localize("Close"))]
+</a>
+
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    void RequestToClose()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}

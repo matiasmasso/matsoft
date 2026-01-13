@@ -1,0 +1,69 @@
+﻿.Wrapper {
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.Wrapper input {
+    width:100%;
+}
+
+/*.InputFile {
+    display:flex;
+    justify-content: space-between;
+}
+
+.InputFile .CustomButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: black;
+    cursor: pointer;
+    position: relative;
+}
+
+    .InputFile .CustomButton:hover {
+        background-color: lightblue;
+    }
+
+    .InputFile .CustomButton input[type=file] {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .FilePath {
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+*/
+.Thumbnail{
+    height:100%;
+    border:1px solid gray;
+}
+
+    .Thumbnail img {
+        width: 100%;
+        height:auto;
+       background-image: url(/img/camera-slash.svg);
+    }
+
+.Upload{
+    text-align:center;
+}
+
+.Upload button {
+    width:100%;
+}
+
+
+
+.InputFile:hover {
+    background-color: lightblue;
+}
+
+

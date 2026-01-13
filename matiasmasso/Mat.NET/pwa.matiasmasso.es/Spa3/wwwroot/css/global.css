@@ -1,0 +1,102 @@
+﻿/*custom global styles*/
+
+html, body {
+    height:100%;
+}
+
+
+h1 {
+    display: block;
+    font-size: 2em;
+    font-weight: bold;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+h2 {
+    display: block;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+.Errs {
+    color: red;
+    font-weight: 600;
+}
+
+.Truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.AddNew {
+    display: block;
+    font-size: 24px;
+    font-weight: 600;
+    border: 2px solid gray;
+    padding: 0 10px;
+    margin-left: 10px;
+}
+
+.ExpandableItem {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+    .ExpandableItem:not(.Expanded):not(.Collapsed) {
+        padding-left: 14px;
+    }
+
+    .ExpandableItem .Expanded, .ExpandableItem .Collapsed {
+        display: none;
+        margin-right: 5px;
+    }
+
+        .ExpandableItem.Expanded .Expanded {
+            display: block;
+        }
+
+        .ExpandableItem.Expanded .Collapsed {
+            display: none;
+        }
+
+        .ExpandableItem.Collapsed .Expanded {
+            display: none;
+        }
+
+        .ExpandableItem.Collapsed .Collapsed {
+            display: block;
+        }
+
+/* ------------------------------------ */
+
+EditForm {
+    max-width: 600px;
+}
+
+.Buttons {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.InputCheckbox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 15px;
+    gap: 15px;
+}
+
+
+
+

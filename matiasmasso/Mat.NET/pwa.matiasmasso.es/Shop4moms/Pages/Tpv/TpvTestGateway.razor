@@ -1,0 +1,42 @@
+﻿@page "/tpv/test/gateway"
+@inherits _ComponentBase
+@inject HttpClient http
+@inject IStringLocalizer<Translation> Localizer
+
+@if (request != null)
+{
+    <form action="@tpv?.Gateway()" method="post">
+        <input type="hidden" name="Ds_MerchantParameters" value="@request.Ds_MerchantParameters" />
+        <input type="hidden" name="Ds_Signature" value="@request.Ds_Signature" />
+        <input type="hidden" name="Ds_SignatureVersion" value="@request.Ds_SignatureVersion" />
+        <div class="RightAlign">
+            <input @onclick="SubmitClick" id="SubmitButton" type="submit" class="Button" value="@Localizer["Submit"]" />
+        </div>
+    </form>
+}
+
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    private ShoppingBasketModel? basket;
+    private TpvService.Tpv? tpv;
+    private TpvService.Request? request;
+    private ProblemDetails? problemDetails;
+
+    string queryString = "";
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        basket = ShoppingBasketModel.FakeBasket(base.Lang());
+        tpv = base.Tpv();
+        request = tpv.Request(basket.OrderNum, basket.Cash(), basket.Lang.ToString());
+    }
+
+    protected void SubmitClick(EventArgs args)
+    {
+        var mouseArgs = (MouseEventArgs)args;
+    }
+
+}

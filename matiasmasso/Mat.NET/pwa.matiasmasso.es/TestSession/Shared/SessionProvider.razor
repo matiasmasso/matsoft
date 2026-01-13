@@ -1,0 +1,44 @@
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
+@inject AppState AppState
+
+
+@if (isLoaded)
+{
+    <CascadingValue Value="@this">
+        @ChildContent
+    </CascadingValue>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    public Session? Session { get; set; }
+    public bool isLoaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var result = await ProtectedSessionStore.GetAsync<Guid>("sessionId");
+            if (result.Success)
+                Session = AppState.Session(result.Value);
+            else
+            {
+                Session = AppState.AddSession();
+                await ProtectedSessionStore.SetAsync("sessionId", Session.Guid);
+            }
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+
+    //public void AuthenticationStateChanged(UserModel userAccount)
+    //{
+    //    Session!.User = userAccount;
+    //}
+}

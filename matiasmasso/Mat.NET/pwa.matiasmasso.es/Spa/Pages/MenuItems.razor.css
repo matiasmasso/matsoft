@@ -1,0 +1,9 @@
+﻿.Grid {
+    margin-top:15px;
+}
+
+.Item {
+    display: flex;
+    justify-content:start;
+    gap:10px;
+}

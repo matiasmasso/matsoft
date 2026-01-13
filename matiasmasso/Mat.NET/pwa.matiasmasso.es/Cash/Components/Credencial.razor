@@ -1,0 +1,136 @@
+﻿@inject ApiService ApiService
+
+<div class="Wrapper">
+    @if (Model != null)
+    {
+        <Title Value="Credencial" CloseRequest="CloseRequestHandler"></Title>
+
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="UpdateRequestHandler"
+                      CancelRequest="CloseRequestHandler"
+                      DeleteRequest="DeleteRequestHandler"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    }
+
+
+@*     <div class="Sharing">Compartir</div>
+    @if (Model?.Owners?.Count == 0)
+    {
+        <div class="Info">
+            Credencial no compartida
+        </div>
+    }
+    else
+    {
+        <div class="Info">
+            Credencial compartida amb els següents usuaris:
+        </div>
+
+        @foreach (var owner in Model!.Owners)
+        {
+            <div>@owner.Nom</div>
+        }
+    }
+
+    <div>
+        <a href="#" @onclick:preventDefault>Afegir</a>
+    </div> *@
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public CredencialModel? Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<CredencialModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<CredencialModel> AfterDelete { get; set; }
+
+    CredencialModel? value;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Ref,
+        Url,
+        Usr,
+        Pwd,
+        Obs
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Model!.IsNew)
+            {
+                value = Model;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+                value = await ApiService.GetAsync<CredencialModel>("Credencial", Model.Guid.ToString());
+
+            propertyGrid = new PropertyGridModel();
+            propertyGrid.AddString("Referencia", value?.Referencia);
+            propertyGrid.AddString("Url", value?.Url);
+            propertyGrid.AddString("Usuari", value?.Usuari);
+            propertyGrid.AddPassword(value?.Password);
+            propertyGrid.AddTextArea("Observacions", value?.Obs);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Referencia = propertyGrid!.Value<string>((int)Fields.Ref);
+            value!.Url = propertyGrid!.Value<string>((int)Fields.Url);
+            value!.Usuari = propertyGrid!.Value<string>((int)Fields.Usr);
+            value!.Password = propertyGrid!.Value<string>((int)Fields.Pwd);
+            value!.Obs = propertyGrid!.Value<string>((int)Fields.Obs);
+
+            await ApiService.PostAsync<CredencialModel, bool>(value, "Credencial");
+            value.IsNew = false;
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Credencial/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void AddShare()
+    {
+
+    }
+}

@@ -1,0 +1,7 @@
+﻿.Grid {
+    width: max-content;
+}
+
+.Item {
+    position:relative;
+}

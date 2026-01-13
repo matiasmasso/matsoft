@@ -1,0 +1,98 @@
+﻿@inject CultureService culture
+@inject AtlasService atlasService
+
+<!-- requires a position:relative parent -->
+
+<div class="Wrapper">
+    @if (isSelecting)
+    {
+        <div class="SelectBox">
+
+            @if (atlasService.Contacts() == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <div class="DropShadow">
+                    <div class="Searchbox">
+                        <SearchBox @bind-Value="searchterm"></SearchBox>
+                    </div>
+
+                    <div class="Grid">
+                        @foreach (var item in FilteredValues() ?? new())
+                        {
+                            <a href="#" class="Item Nom" @onclick="@(()=>ItemClickAsync(item))" @onclick:preventDefault>
+                                @atlasService.Contact(item.Guid)?.FullNom
+                            </a>
+                        }
+                    </div>
+
+                    @if (!isShowingAll && (atlasService.Contacts() ?? new()).Count > compactCount)
+                    {
+                        <a class="ReadMore" @onclick="@(()=>isShowingAll=true)" @onclick:preventDefault>
+                            [@culture.Localize("ShowAll")]
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+
+    }
+    else if (Value == null || Value == Guid.Empty)
+    {
+        <a href="#" class="Nom" @onclick="@(()=>isSelecting=true)" @onclick:preventDefault>
+            [@culture.Localize("ClickToSelect")]
+        </a>
+    }
+    else
+    {
+        <a href="#" class="Nom" @onclick="@(()=>isShowingMenu=!isShowingMenu)" @onclick:preventDefault>
+            @atlasService.Contact((Guid)Value)?.FullNom
+        </a>
+
+        @if (isShowingMenu)
+        {
+            <div class="ContextMenu">
+                <a href="#" class="Item Nom" @onclick="Zoom" @onclick:preventDefault>
+                    @culture.Localize("Zoom")
+                </a>
+                <a href="#" class="Item Nom" @onclick="@(()=>{isShowingMenu=false;isSelecting=true;})" @onclick:preventDefault>
+                    @culture.Localize("Selection.Change")
+                </a>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public EmpModel? Emp { get; set; }
+    [Parameter] public EventCallback<Guid?> ValueChanged { get; set; }
+    bool isSelecting;
+    bool isShowingAll;
+    bool isShowingMenu;
+    int compactCount = 6;
+    string? searchterm;
+
+    List<ContactModel>? FilteredValues()
+    {
+        List<ContactModel>? retval = atlasService.Contacts();
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = atlasService.Contacts()?.Where(x => x.Emp == Emp?.Id && x.Matches(searchterm)).ToList();
+        if (!isShowingAll)
+            retval = retval?.Take(compactCount).ToList();
+        return retval;
+    }
+
+    async Task ItemClickAsync(ContactModel item)
+    {
+        isSelecting = false;
+        await ValueChanged.InvokeAsync(item.Guid);
+    }
+
+    void Zoom()
+    {
+        isShowingMenu = false;
+    }
+}

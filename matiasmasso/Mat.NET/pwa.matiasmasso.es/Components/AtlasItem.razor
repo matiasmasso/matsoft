@@ -1,0 +1,111 @@
+﻿@inherits _Base
+
+<div class="Item @(IsSelected?"Selected":"")">
+    <a class="Caption" href="#" @onclick="@ItemClick" @onclick:preventDefault="true">
+        @Caption()
+    </a>
+
+    <a class="Menu" href="#" @onclick="@(()=>{isShowingMenu = !isShowingMenu;})" @onclick:preventDefault="true">
+        <i class="fa-solid fa-ellipsis-vertical"></i>
+    </a>
+
+@*    <Nav IsShowing="@(isShowingMenu && IsSelected)"
+         nav="@Menu()"
+         Class="ContextMenu"
+         ActionRequest="@MenuActionRequest"></Nav>
+*@
+    @if (Item is CountryModel && IsSelected && isShowingPropertyGrid)
+    {
+        <WinformsWindow RequestToCancel="HidePropertyGrid" Title="@base.Tradueix("Pais","Pais","Country")">
+            <PgCountry Guid="@itemGuid"
+                   RequestToCancel="HidePropertyGrid"></PgCountry>
+        </WinformsWindow>
+    }
+    else if (Item is ZonaModel && IsSelected && isShowingPropertyGrid)
+    {
+        <WinformsWindow RequestToCancel="HidePropertyGrid" Title="@base.Tradueix("Zona","Zona","Zone")">
+            <Zona Guid="@itemGuid"
+                RequestToCancel="HidePropertyGrid"></Zona>
+        </WinformsWindow>
+    }
+    else if (Item is LocationModel && IsSelected && isShowingPropertyGrid)
+    {
+        <WinformsWindow RequestToCancel="HidePropertyGrid" Title="@base.Tradueix("Población","Població","Location")">
+            <PgLocation Guid="@itemGuid"
+                    RequestToCancel="HidePropertyGrid"></PgLocation>
+        </WinformsWindow>
+    }
+    else if (Item is ZipModel && IsSelected && isShowingPropertyGrid)
+    {
+        <WinformsWindow RequestToCancel="HidePropertyGrid" Title="@base.Tradueix("Código postal","Codi postal","Zip code")">
+            <PgZip Guid="@itemGuid"
+               RequestToCancel="HidePropertyGrid"></PgZip>
+        </WinformsWindow>
+    }
+</div>
+
+
+@code {
+    [Parameter] public BaseGuid? Item { get; set; }
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public EventCallback<BaseGuid> ItemClicked { get; set; }
+
+    private Guid? itemGuid = null;
+    private bool isShowingMenu = false;
+    private bool isShowingPropertyGrid = false;
+
+    private string Caption()
+    {
+        if (Item is CountryModel)
+            return ((CountryModel)Item)?.Nom?.Tradueix(base.Lang()) ?? "?";
+        else if (Item is ZonaModel)
+            return ((ZonaModel)Item)?.Nom ?? "?";
+        else if (Item is LocationModel)
+            return ((LocationModel)Item)?.Nom ?? "?";
+        else if (Item is ZipModel)
+            return ((ZipModel)Item)?.ZipCod ?? "?";
+        else
+            return "?";
+    }
+
+    private void ItemClick()
+    {
+        ItemClicked.InvokeAsync(Item);
+    }
+
+    private void MenuClick()
+    {
+        ItemClicked.InvokeAsync(Item);
+    }
+
+    private NavDTO Menu()
+    {
+        var retval = new NavDTO();
+        retval.AddAction("Zoom", "Ficha", "Fitxa", "Properties");
+        retval.AddAction("AddNew", "Añadir", "Afegir", "Add new");
+        return retval;
+    }
+
+    private void MenuActionRequest(string action)
+    {
+        isShowingMenu = false;
+        if (action == "Zoom") Zoom();
+        else if (action == "AddNew") AddNew();
+        StateHasChanged();
+    }
+
+    private void Zoom()
+    {
+        itemGuid = Item?.Guid;
+        isShowingPropertyGrid = true;
+    }
+
+    private void AddNew()
+    {
+        itemGuid = null;
+        isShowingPropertyGrid = true;
+    }
+
+    private void HidePropertyGrid() { isShowingPropertyGrid = false; }
+
+}

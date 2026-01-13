@@ -1,0 +1,109 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject CustomerDeptsService CustomerDeptsService
+
+<div class="PageWrapper600">
+    @if(selectedItem != null)
+    {
+        <div class="CustomerDept">
+        <CustomerDept Model="selectedItem" 
+        CloseRequest="@(()=>selectedItem = null)"    
+        ></CustomerDept>
+        </div>
+    } else
+    {
+
+        <PageOptions>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                @culture.Localize("AddNew")
+            </a>
+        </PageOptions>
+
+        <SearchBox @bind-Value="searchterm"></SearchBox>
+
+        @if(Items == null)
+        {
+            <Loading></Loading>
+        } else
+        {
+            <div class="Grid">
+                <div class="ColHeaders">
+                    <div>@culture.Localize("Code")</div>
+                    <div>@culture.Localize("Name")</div>
+                    <div>@culture.Localize("Products")</div>
+                </div>
+
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a href="#"
+                       class="Item"
+                    @onclick="@(()=>ItemClick(item))"
+                    @onclick:preventDefault>
+
+                        <div class="Label">@culture.Localize("Code")</div>
+                        <div class="Value">@item.Cod</div>
+                        <div class="Label">@culture.Localize("Name")</div>
+                        <div class="Value">@item.Nom</div>
+                        <div class="Label">@culture.Localize("Products")</div>
+                        <div class="Value Count">@item.Products.Count.ToString("N0")</div>
+                    </a>
+                }
+
+            </div>
+        }
+
+    }
+
+</div>
+
+@code {
+    [Parameter] public BaseGuid? Customer { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    CustomerDeptModel? selectedItem;
+
+    List<CustomerDeptModel>? Items;
+    string? searchterm;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        CustomerDeptsService.OnChange += Refresca;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        Items = CustomerDeptsService.Values?.Where(x => x.Customer == Customer?.Guid).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    void ItemClick(CustomerDeptModel item)
+    {
+        selectedItem = item;
+    }
+
+    List<CustomerDeptModel>? FilteredItems()
+    {
+        var retval = CustomerDeptsService.Values?.Where(x => x.Customer == Customer?.Guid).ToList();
+        if(!string.IsNullOrEmpty(searchterm))
+            retval = retval?.Where(x => x.Matches(searchterm)).ToList();
+        return retval;
+    }
+
+    void AddNew()
+    {
+        if(Customer != null)
+        {
+        selectedItem = CustomerDeptModel.Factory(Customer);
+            Items!.Add(selectedItem);
+        StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        CustomerDeptsService.OnChange -= Refresca;
+    }
+}

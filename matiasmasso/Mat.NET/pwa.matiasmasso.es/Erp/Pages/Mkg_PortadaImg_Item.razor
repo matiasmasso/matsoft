@@ -1,0 +1,117 @@
+﻿@inherits _ComponentBase
+
+@inject HttpClient http
+
+<div class="Wrapper">
+    <div class="Thumbnail">
+        <UxInputImg Src="@imgSrc" width="@Width" height="@Height" OnChange="FileDropped"></UxInputImg>
+    </div>
+    <div class="Title">
+        <input type="Text" @bind-value="title" @oninput="@(()=>{isDirty=true;})" placeholder="@Localizer("Description")" />
+    </div>
+    <div class="NavigateTo">
+        <input type="Text" @bind-value="navigateTo" @oninput="@(()=>{isDirty=true;})" placeholder="Landing page" />
+    </div>
+
+
+    <div class="Upload">
+        @if (isUploading)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <button class="Button ButtonOk" @onclick="UploadAsync" disabled=@(!isDirty)>
+                @Localizer("Upload")
+            </button>
+        }
+    </div>
+</div>
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    [Parameter] public PortadaImgModel.Ids Id { get; set; }
+    [Parameter] public List<PortadaImgModel> Values { get; set; }
+    [Parameter] public int Width { get; set; }
+    [Parameter] public int Height { get; set; }
+    [Parameter] public EventCallback<PortadaImgModel> ValueChanged { get; set; }
+    private ProblemDetails problemDetails;
+
+    IBrowserFile droppedFile;
+    PortadaImgModel model;
+    string? imgSrc;
+    string title;
+    string navigateTo;
+    bool isDirty;
+    bool isUploading;
+
+
+    protected override void OnParametersSet()
+    {
+        if (Values != null)
+        {
+            model = Values.FirstOrDefault(x => x.Id == Id.ToString());
+            if (model != null)
+            {
+                imgSrc = model.Src();
+                title = model.Title;
+                navigateTo = model.NavigateTo;
+            }
+        }
+        base.OnParametersSet();
+    }
+
+    async Task FileDropped(IBrowserFile file)
+    {
+        isDirty = true;
+        droppedFile = file;
+        using var stream = file.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        imgSrc = "data:" + file.ContentType + ";base64," + Convert.ToBase64String(ms.ToArray());
+    }
+
+    //async Task FileDropped(InputFileChangeEventArgs e)
+    //{
+    //    isDirty = true;
+    //    droppedFile = e.File;
+    //    using var stream = e.File.OpenReadStream();
+    //    using var ms = new MemoryStream();
+    //    await stream.CopyToAsync(ms);
+    //    imgSrc = "data:" + e.File.ContentType + ";base64," + Convert.ToBase64String(ms.ToArray());
+    //}
+
+    async Task UploadAsync()
+    {
+        if (isDirty)
+        {
+            isUploading = true;
+            model = ReadModelFromForm();
+            var apiresponse = await HttpService.PostMultipartAsync<PortadaImgModel, bool>(http, model, droppedFile, "PortadaImg");
+            if (apiresponse.Success())
+                isDirty = false;
+            else
+                problemDetails = apiresponse.ProblemDetails;
+            isUploading = false;
+        }
+    }
+
+    PortadaImgModel ReadModelFromForm()
+    {
+        var retval = model ?? new PortadaImgModel { Id = Id.ToString() };
+
+        if (droppedFile != null)
+        {
+            retval.Mime = (int)MimeHelper.MimeCod(droppedFile.Name);
+            if (retval.Mime == (int)MimeHelper.MimeCods.NotSet)
+                throw new Exception(string.Format("Fitxer {0} amb extensió desconeguda", droppedFile.Name));
+        }
+
+        retval.Title = title;
+        retval.NavigateTo = navigateTo;
+        return retval;
+    }
+
+
+}

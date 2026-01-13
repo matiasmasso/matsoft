@@ -1,0 +1,47 @@
+﻿@if (IsLoading)
+{
+    <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <style type="text/css">
+            .spinner_rect {
+                animation: spinner_Ctle .8s linear infinite;
+                animation-delay: -.8s
+            }
+
+            .spinner_rect2 {
+                animation-delay: -.65s
+            }
+
+            .spinner_rect3 {
+                animation-delay: -.5s
+            }
+
+            @@keyframes spinner_Ctle {
+                93.75%, 100% {
+                    opacity: .2
+                }
+            }
+        </style>
+        <rect class="spinner_rect" x="1" y="4" width="6" height="14" />
+        <rect class="spinner_rect spinner_rect2" x="9" y="4" width="6" height="14" />
+        <rect class="spinner_rect spinner_rect3" x="17" y="4" width="6" height="14" />
+    </svg>
+}
+else
+{
+    <a href="#" @onclick="AnchorClick" @onclick:preventDefault>
+        @ChildContent
+    </a>
+}
+
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    void AnchorClick()
+    {
+        IsLoading = true;
+        OnClick.InvokeAsync();
+    }
+}

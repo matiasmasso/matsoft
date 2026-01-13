@@ -1,0 +1,185 @@
+﻿@page "/video/{Segment}"
+@page "/{LangSegment}/video/{Segment}"
+@inherits _PageBase
+
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    @*    <link rel="canonical" href="@base.CanonicalUrl()" />
+    @if (model != null)
+    {
+    @foreach (var lang in LangDTO.All())
+    {
+    <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@base.CanonicalUrl(lang, routes.LangText(model?.Guid))" />
+    }
+
+    <meta name="description" content="@((MarkupString)Excerpt())">
+
+    <meta property="og:title" content="@model.Nom?.Tradueix(base.Lang())" />
+    <meta property="og:description" content="@model?.Excerpt?.Tradueix(base.Lang())" />
+    <meta property="og:image" content="@model?.ImageUrl()" />
+    <meta property="og:image:alt" content="@model.Nom?.Tradueix(base.Lang())" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@base.CanonicalUrl()" />
+    <meta property="og:site_name" content="4moms" />
+    <meta name="twitter:title" content="@model.Nom?.Tradueix(base.Lang())" />
+    <meta name="twitter:description" content="@model.Excerpt?.Tradueix(base.Lang())" />
+    <meta name="twitter:image" content="@Cache?.ImageUrl(model)" />
+    <meta name="twitter:image:alt" content="@model?.Nom?.Tradueix(base.Lang())" />
+    }
+    *@
+</HeadContent>
+
+<div class="Wrapper600"
+     itemscope="@(model?.GoogleSearchQualified() ?? false)"
+     itemtype="@((model?.GoogleSearchQualified() ?? false) ? "http://schema.org/VideoObject" : "")">
+
+    @if (model == null && problemDetails == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>Video: <span itemprop="name">@model?.Nom.Tradueix(base.Lang())</span></h1>
+
+        @if (model != null && model.GoogleSearchQualified())
+        {
+            <meta itemprop="uploadDate" content="@model.FchCreated.ToString("s")" />
+            <meta itemprop="embedUrl" content="@model.EmbedUrl()" />
+            <meta itemprop="duration" content="@(((TimeSpan)model.Duration).ToISO8601Duration())" />
+            <meta itemprop="thumbnail" content="@model?.ThumbnailUrl()" />
+        }
+
+        <div class='video-responsive'>
+            <iframe src='@model?.EmbedUrl()' frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture' allowfullscreen></iframe>
+        </div>
+
+        @if (model?.Excerpt != null)
+        {
+            <p itemprop="description">
+                @((MarkupString)model.Excerpt.Tradueix(base.Lang()))
+            </p>
+        }
+
+        <div class="Plugin">
+            @foreach (var item in products ?? new())
+            {
+                <div>
+                    <a class='ProductPluginItem' href='@LandingPageUrl(item)' title='@item.Nom?.Tradueix(base.Lang())'>
+                        <div>
+                            <img alt="@(item.Nom?.Tradueix(base.Lang()))" src="@item.ThumbnailUrl()" width="140" height="160" />
+                        </div>
+                        <div>@item.Nom?.Tradueix(base.Lang())</div>
+                        <div class='BuyIt'>@BuyItFor(item)</div>
+                    </a>
+
+                </div>
+            }
+        </div>
+
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+@code {
+    [Parameter] public string Segment { get; set; }
+
+    YouTubeMovieModel? model;
+    List<ProductCategoryModel>? categories;
+    List<ProductSkuModel>? skus;
+    List<ProductModel>? products;
+    List<GuidDecimal>? prices;
+    RouteModel.Collection? routes;
+    ProblemDetails? problemDetails;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var apiResponseVideo = await PostAsync<string, YouTubeMovieModel>(Segment, "YouTubeMovie/FromSegment");
+        problemDetails = apiResponseVideo.ProblemDetails;
+        model = apiResponseVideo.Value;
+        if (model != null)
+        {
+            var apiResponseSkus = await GetAsync<List<ProductSkuModel>>("Shop4moms/Skus");
+            var apiResponseCategories = await GetAsync<List<ProductCategoryModel>>("Shop4moms/Categories");
+            var apiResponsePrices = await GetAsync<List<GuidDecimal>>("Shop4moms/SkuRetails");
+            var apiResponseRoutes = await GetAsync<RouteModel.Collection>("Shop4moms/Routes");
+            skus = apiResponseSkus.Value;
+            categories = apiResponseCategories.Value;
+            prices = apiResponsePrices.Value;
+            routes = apiResponseRoutes.Value;
+
+            var allProducts = new List<ProductModel>();
+            allProducts.AddRange(skus ?? new());
+            allProducts.AddRange(categories ?? new());
+
+            products = new();
+            foreach (var guid in model.Products)
+            {
+                var sku = skus?.FirstOrDefault(x => x.Guid == guid);
+                if (sku == null)
+                {
+                    var category = categories?.FirstOrDefault(x => x.Guid == guid);
+                    if (category != null)
+                        products.AddRange(skus?.Where(x => x.Category == guid && !x.Obsoleto));
+                }
+                else
+                    products.Add(sku);
+            }
+        }
+    }
+
+    string BuyItFor(ProductModel product)
+    {
+        string retval = "";
+        if (product.Src == ProductModel.SourceCods.Sku)
+        {
+            var rrpp = prices?.FirstOrDefault(x => x.Guid == product.Guid)?.Value;
+            retval = BuyItFor(rrpp);
+        }
+        else if (product.Src == ProductModel.SourceCods.Category)
+        {
+            var categorySkus = skus?.Where(x => x.Category == product.Guid);
+            var rrpp = prices?.Where(x => categorySkus.Any(y => x.Guid == y.Guid)).Select(x => x.Value).ToList() ?? new();
+            retval = BuyItFor(rrpp);
+        }
+        return retval;
+    }
+
+    string BuyItFor(Decimal? value)
+    {
+        var retval = string.Format("{0} {1:N2} €", base.Lang().Tradueix("Comprar por", "Comprar per", "Buy it for"), value);
+        return retval;
+    }
+
+    string BuyItFor(List<Decimal> prices)
+    {
+        string retval;
+        var priceMin = prices?.Min();
+        var priceMax = prices?.Max();
+        if (priceMin == priceMax)
+            retval = BuyItFor(priceMin);
+        else
+            retval = string.Format("{0} {1:N2} €", base.Lang().Tradueix("Comprar desde", "Comprar des de", "Buy it from"), priceMin);
+        return retval;
+    }
+
+
+    string Src()
+    {
+        var retval = model?.EmbedUrl() + "?html5=True";
+        return retval;
+    }
+
+    private string? LandingPageUrl(ProductModel? product)
+    {
+        var lang = base.Lang();
+        var retval = product == null ? null : routes?.LangText(product.Guid)?.Tradueix(lang);
+        if (retval != null)
+        {
+            if (lang.IsCat() | lang.IsEng())
+                retval = string.Format("{0}/{1}", lang.Culture2Digits(), retval);
+        }
+        return retval;
+    }
+}

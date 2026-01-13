@@ -1,0 +1,162 @@
+﻿@page "/Stats/fromCustomer/{Customer:guid}"
+
+@inherits _ComponentBase
+@layout ProLayout
+
+<h1>Sellout</h1>
+
+@if (model == null)
+{
+    <span>Loading...</span>
+    <img src="/img/Spinner-24.gif" alt="loading..." />
+}
+else
+{
+    <div class="Grid">
+
+        @foreach (var item in SelectedItems)
+        {
+            <a href="#" @onclick="@(()=>Collapse(item))" @onclick:preventDefault class="Item Selected Truncate">
+                @item.Caption
+            </a>
+            <div class="Eur">@string.Format("{0:n0}",item.Qty)</div>
+            <div class="Eur">@string.Format("{0:n2} €",item.Eur)</div>
+            <a href="#" class="MenuButton" @onclick="@(()=>MenuIconClicked(item))" @onclick:preventDefault="true">
+                <i class="fa-solid fa-ellipsis-vertical" hidden="@(!item.DisplayContextMenu())"></i>
+            </a>
+            <img src="/img/Spinner-24.gif" alt="loading..." hidden="@(!item.IsLoading)" />
+
+            <div class="Line"></div>
+        }
+
+        @if (isShowingMenu && SelectedItems.Count > 0)
+        {
+            foreach (var menuItem in model.MenuItems(SelectedItems.Last()))
+            {
+                <a href="#" @onclick="@(() => MenuItemClicked(menuItem))" @onclick:preventDefault class="MenuItem">
+                    @menuItem.Caption
+                </a>
+            }
+        }
+
+        @foreach (var item in Items)
+        {
+            <a href="#" @onclick="@(()=>Expand(item))" @onclick:preventDefault class="Item Truncate">
+                @item.Caption
+            </a>
+            <div class="Eur">@string.Format("{0:n0}",item.Qty)</div>
+            <div class="Eur">@string.Format("{0:n2} €",item.Eur)</div>
+            <a href="#" class="MenuButton" @onclick="@(()=>MenuIconClicked(item))" @onclick:preventDefault="true">
+                <i class="fa-solid fa-ellipsis-vertical" hidden="@(!item.DisplayContextMenu())"></i>
+            </a>
+            <img src="/img/Spinner-24.gif" alt="loading..." hidden="@(!item.IsLoading)" />
+            <div class="Line"></div>
+        }
+    </div>
+}
+
+@code {
+    StatDTO? model;
+    private List<StatDTO.DisplayItem> SelectedItems { get; set; } = new();
+    private List<StatDTO.DisplayItem> Items { get; set; } = new();
+    private bool isShowingMenu = false;
+
+    [Parameter] public Guid? Customer { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var request = Request();
+            model = await PostAsync<StatDTO.StatRequest, StatDTO>(Request(), "Stat");
+            if (model != null)
+            {
+                model.Lang = base.Lang();
+                model.Cache = await base.Cache((int)EmpDTO.EmpIds.MatiasMasso);
+                var years = model.Years();
+                if (years.Count > 0)
+                {
+                    SelectedItems.Add(years.First());
+                    Items = model.Months(years.First());
+                }
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task Expand(StatDTO.DisplayItem item)
+    {
+        item.IsLoading = true;
+        isShowingMenu = false;
+        SelectedItems.Add(item);
+        Items = new List<StatDTO.DisplayItem>();
+        StateHasChanged();
+        await Task.Delay(1);  // allow time for the rendering
+
+        Items = model!.Expand(item);
+        item.IsLoading = false;
+        StateHasChanged();
+    }
+    private async Task Collapse(StatDTO.DisplayItem selectedItem)
+    {
+        selectedItem.IsLoading = true;
+        isShowingMenu = false;
+        var idx = SelectedItems.IndexOf(selectedItem);
+        SelectedItems = SelectedItems.Take(idx).ToList();
+        StateHasChanged();    // to be sure, probably not needed
+        await Task.Delay(1);  // allow time for the rendering
+
+        var parent = SelectedItems.Count == 0 ? null : SelectedItems.Last();
+        Items = model!.Expand(parent);
+        selectedItem.IsLoading = false;
+        StateHasChanged();
+    }
+    private void MenuIconClicked(StatDTO.DisplayItem item)
+    {
+        isShowingMenu = !isShowingMenu;
+        if (isShowingMenu)
+        {
+            //set item as last selectedItem
+            var idx = SelectedItems.IndexOf(item);
+            if (idx < 0)
+                SelectedItems.Add(item);
+            else if (item != SelectedItems.Last())
+                SelectedItems = SelectedItems.Take(idx).ToList();
+            Items = new List<StatDTO.DisplayItem>();
+            StateHasChanged();
+        }
+    }
+
+    private async Task MenuItemClicked(StatDTO.MenuItem menuitem)
+    {
+        menuitem.Target.IsLoading = true;
+        isShowingMenu = false;
+        StateHasChanged();
+        await Task.Delay(1);  // allow time for the rendering
+
+        var parent = SelectedItems.Last();
+        if (menuitem.Action == "Brands")
+            Items = model!.Brands(menuitem.Target);
+        else
+            Items = model!.Expand(menuitem);
+        menuitem.Target.IsLoading = false;
+        StateHasChanged();
+
+    }
+
+
+
+    private StatDTO.StatRequest Request()
+    {
+        var retval = new StatDTO.StatRequest
+            {
+                Emp = (int)EmpDTO.EmpIds.MatiasMasso,
+                Year = DateTime.Today.Year
+            };
+        if (Customer != null) retval.AddFilter(StatDTO.FilterCods.Marketplace, (Guid)Customer);
+        return retval;
+    }
+
+
+
+    }

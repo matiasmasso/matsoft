@@ -1,0 +1,26 @@
+﻿@inherits _Base
+
+@if (selectedItem == null)
+{
+    <div class="Grid">
+        @foreach (var item in Model.OrderBy(x=>x.StockHolder?.Nom ?? x.NadGy).ToList())
+        {
+            <a class="Item" href="#" @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                <div class="Fch">@string.Format("{0:dd/MM/yy}",item.FchDoc.Date)</div>
+                <div class="Nom Truncate">@(item.StockHolder?.Nom ?? item.NadGy)</div>
+                <div class="Doc Truncate">@item.DocNum</div>
+            </a>
+        }
+    </div>
+}
+else
+{
+    <EdiversaInvRptFile Model="selectedItem" CloseRequest="@(()=>selectedItem = null)"></EdiversaInvRptFile>
+}
+
+@code {
+    [Parameter] public List<EdiversaInvrptModel> Model { get; set; }
+    private bool isShowingSingleFile = false;
+    private EdiversaInvrptModel selectedItem = null;
+
+}

@@ -1,0 +1,27 @@
+﻿.Wrapper {
+    display:grid;
+    grid-template-areas: "logo ccc"
+        "logo bank"
+        "logo adr";
+    grid-template-columns: 48px 1fr;
+    grid-column-gap:10px;
+    font-size:0.7em;
+    padding:0 10px;
+}
+.Logo {
+    grid-area: logo;
+    width:48px;
+    height:48px;
+}
+.Logo img {
+    width:100%;
+}
+.Ccc {
+    grid-area: ccc;
+}
+.Bank {
+    grid-area: bank;
+}
+.Adr {
+    grid-area: adr;
+}

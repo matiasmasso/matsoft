@@ -1,0 +1,183 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper">
+    <h1>@Model?.Nom</h1>
+
+    <TabControl>
+        <TabPage Text="General">
+            @if (dbState == DbState.IsLoading)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                @if (value?.Repo != null)
+                {
+                    <div class="PageOptions">
+                        <PageOptions>
+                            <LoadingButton OnClick="PropagateRepoHandler" IsLoading="isPropagatingRepo">
+                                Propagate Repo
+                            </LoadingButton>
+                        </PageOptions>
+                    </div>
+                }
+
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>dbState = DbState.IsDirty)"
+                              ItemSelected="GridItemClick"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="dbState"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequestHandler"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+        </TabPage>
+
+        <TabPage Text="Fonts">
+            <DocSrcs Root="Model" ItemSelected="ItemSelectedHandler"></DocSrcs>
+        </TabPage>
+
+        <TabPage Text="Documents">
+            <SrcDocs Src="Model"
+                  AddNewRequest="RequestToAddNewDoc"
+                  ItemSelected="ItemSelectedHandler"></SrcDocs>
+        </TabPage>
+
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public DocSrcModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<IModel?> ItemSelected { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    private DocSrcModel? value;
+    private PropertyGridModel? gridModel;
+    // private List<PersonModel>? persons;
+    private DbState dbState;
+    // private int selectedTab = 1;
+    private bool isPropagatingRepo;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Parent,
+        Nom,
+        NomLlarg,
+        Url,
+        Repo
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddDropdown<DocSrcModel>((int)Fields.Parent, ApiService.PotentialParents(value), ApiService.DocSrc(value?.Parent), "Parent");
+        gridModel.AddString((int)Fields.Nom, value?.Nom, "Nom", 100);
+        gridModel.AddString((int)Fields.NomLlarg, value?.NomLlarg, "Nom llarg", 100);
+        gridModel.AddUrl((int)Fields.Url, value?.Url);
+        gridModel.AddDropdown<RepoModel>((int)Fields.Repo, ApiService.Repos() ?? new(), ApiService.Repo(value?.Repo), "Repositori");
+
+        //persons = personsService.Values?.Where(x => x.DocSrc == Model?.Guid).ToList();
+    }
+
+    private async Task UpdateRequest()
+    {
+        value!.Parent = gridModel!.GetValue<DocSrcModel>((int)Fields.Parent)?.Guid;
+        value.Nom = gridModel.GetString((int)Fields.Nom);
+        value.NomLlarg = gridModel.GetString((int)Fields.NomLlarg);
+        value.Url = gridModel.GetString((int)Fields.Url);
+        value.Repo = gridModel.GetValue<RepoModel>((int)Fields.Repo)?.Guid;
+
+        dbState = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        dbState = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private void GridItemClick(PropertyGridModel.Item item)
+    {
+        switch ((Fields)item.Field)
+        {
+            case Fields.Parent:
+                if (item.Value != null)
+                    ItemSelected.InvokeAsync((IModel)(item.Value));
+                break;
+        }
+    }
+
+    private void ItemSelectedHandler(IModel item)
+    {
+        ItemSelected.InvokeAsync((IModel)(item));
+    }
+
+    void RequestToAddNewDoc()
+    {
+        ItemSelected.InvokeAsync(Model!.DocFactory());
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+
+    async Task PropagateRepoHandler()
+    {
+        isPropagatingRepo = true;
+        await Task.Yield();
+        await PropagateRepo(value!, (Guid)value!.Repo!);
+        isPropagatingRepo = false;
+    }
+
+    async Task PropagateRepo(DocSrcModel parent, Guid repo)
+    {
+        var children = ApiService.DocSrcs()?.Where(x => x.Parent == parent.Guid).ToList() ?? new();
+        foreach (var item in children)
+        {
+            if (item.Repo == null)
+            {
+                item.Repo = repo;
+                try
+                {
+                    await ApiService.UpdateAsync(item);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            }
+            await PropagateRepo(item, repo);
+        }
+    }
+
+
+}

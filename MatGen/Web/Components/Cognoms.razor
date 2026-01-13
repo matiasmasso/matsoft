@@ -1,0 +1,244 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="Wrapper">
+    @if (ApiService.Cognoms() == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+             <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nou cognom</a>
+         </PageOptions>
+     </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+
+            @if (SelectedCognom() == null)
+            {
+                @foreach(var item in FilteredItems())
+                {
+                    
+                <div class="Item @(HasAncestor(item)?"Red":"")">
+@*                         <div class="Icon">
+                            <Icon Id="@(HasAncestor(item) ? Icon.Ids.Star : Icon.Ids.None)"></Icon>
+                        </div>
+ *@                        <ListItem Title="@item.Nom"
+                                  ContextMenu="@ContextMenu(item)"
+                                  Tag="@item"
+                                  MenuClick="ContextMenuClick"
+                                  OnClick="@(()=>ItemClick(item))"></ListItem>
+
+                    </div>
+                    <div class="GridRowDivider HideOnDesktop"></div>
+                }
+
+            }
+            else if (SelectedFirstnom() == null)
+            {
+                <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+
+                @foreach (var firstnom in Firstnoms() ?? new())
+                {
+                    <div class="Item">
+                        <div class="Icon">
+                            <Icon Id="@(HasAncestor(firstnom) ? Icon.Ids.Star : Icon.Ids.None)"></Icon>
+                        </div>
+
+                        <ListItem Title="@firstnom?.Nom"
+                                  ContextMenu="@ContextMenu(firstnom)"
+                                  Tag="@firstnom"
+                                  MenuClick="ContextMenuClick"
+                                  OnClick="@(()=>ItemClick(firstnom))"></ListItem>
+                    </div>
+                }
+
+            }
+            else
+            {
+                <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+
+                @foreach (var person in Persons() ?? new())
+                {
+                    <a class="Item" href="#" @onclick="@(()=>ItemClick(person))" @onclick:preventDefault>
+                        <div class="Icon">
+                            <Icon Id="@(HasAncestor(person) ? Icon.Ids.Star : Icon.Ids.None)"></Icon>
+                        </div>
+
+                        <ListItem Title="@person.FullNom2()"
+                                  ContextMenu="@ContextMenu(person)"
+                                  Tag="@person"
+                                  MenuClick="ContextMenuClick"
+                                  OnClick="@(()=>ItemClick(person))"></ListItem>
+
+                    </a>
+                }
+            }
+
+
+
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public PersonModel? Root { get; set; }
+    [Parameter] public EventCallback<object> ItemSelected { get; set; }
+
+    SelectedValues.Collection? selectedValues;
+
+    List<AncestorModel>? ancestors;
+    //IModel? selectedItem;
+    string? searchTerm;
+    Exception? exception;
+
+    private enum MenuKeys
+    {
+        Zoom,
+        AddNew
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+        ancestors = ApiService.RootAncestors();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    void ItemClick(IModel? item)
+    {
+        if (item is CognomModel)
+        {
+            selectedValues = new();
+            selectedValues.Add(item, ((CognomModel)item).Nom);
+        }
+        else if (item is FirstnomModel)
+        {
+            selectedValues!.Add(item, ((FirstnomModel)item).Nom);
+        }
+        else if (item is PersonModel)
+        {
+            ItemSelected.InvokeAsync(item);
+        }
+    }
+
+    void AddNew()
+    {
+        var value = CognomModel.Factory();
+        ItemSelected.InvokeAsync(value);
+    }
+
+    List<CognomModel> FilteredItems()
+    {
+        List<CognomModel>? retval = null;
+        var values = Root == null ? ApiService.Cognoms() : ApiService.Cognoms(Root, ApiService.Persons());
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = values;
+        else
+            retval = values?.Where(x => x.Matches(searchTerm)).ToList();
+        return retval ?? new();
+    }
+
+    bool HasAncestor(CognomModel item)=>ApiService.HasAncestors(item, ancestors);
+
+    bool HasAncestor(FirstnomModel? item)
+    {
+        return ancestors?.Any(x => x.Person.Cognom == SelectedCognom()?.Guid && x.Person.Firstnom == item?.Guid) ?? false;
+    }
+
+    bool HasAncestor(PersonModel item)
+    {
+        return ancestors?.Any(x => x.Person.Guid == item.Guid) ?? false;
+    }
+
+    List<FirstnomModel?>? Firstnoms()
+    {
+        //return all firstnoms from persons with such cognom
+        List<PersonModel>? persons;
+        if (Root == null)
+            persons = ApiService.Persons();
+        else
+        {
+            persons = Root.Ancestors(ApiService.Persons())
+            .Select(x => x.Person).ToList();
+        }
+
+        List<FirstnomModel?>? retval = persons?
+        .Where(x => x.Firstnom != null && x.Cognom != null && x.Cognom == SelectedCognom()?.Guid)
+        .Select(x => ApiService.Firstnom(x.Firstnom))
+        .Distinct()
+        .OrderBy(x => x?.Nom ?? "?").ToList();
+        return retval;
+    }
+
+    List<PersonModel>? Persons()
+    {
+        var retval = ApiService.Persons()?
+            .Where(x => x.Cognom == SelectedCognom()?.Guid && x.Firstnom == SelectedFirstnom()?.Guid).ToList();
+        return retval;
+    }
+
+    CognomModel? SelectedCognom() => (CognomModel?)selectedValues?.FirstOrDefault()?.Value;
+
+    FirstnomModel? SelectedFirstnom()
+    {
+        FirstnomModel? retval = null;
+        if (selectedValues != null && selectedValues.Count > 1)
+            retval = (FirstnomModel?)selectedValues[1].Value;
+        return retval;
+    }
+
+
+    ContextMenuModel ContextMenu(object? item)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, item);
+
+        if (item is CognomModel)
+            retval.AddItem("Afegir", (int)MenuKeys.AddNew, CognomModel.Factory());
+        else if (item is FirstnomModel)
+            retval.AddItem("Afegir", (int)MenuKeys.AddNew, FirstnomModel.Factory());
+        else if (item is PersonModel)
+        {
+            var person = PersonModel.Factory();
+            person.Sex = SelectedFirstnom()!.Sex;
+            retval.AddItem("Afegir", (int)MenuKeys.AddNew, person);
+        }
+        return retval;
+    }
+
+    void ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        var tag = args.Tag;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Zoom:
+            case MenuKeys.AddNew:
+                ItemSelected.InvokeAsync(args.Tag);
+                break;
+        }
+    }
+
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

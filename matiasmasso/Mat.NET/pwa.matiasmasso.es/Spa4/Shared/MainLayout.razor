@@ -1,0 +1,90 @@
+﻿@inherits LayoutComponentBase
+@inject HttpClient http
+@inject IJSRuntime JSRuntime
+
+
+<div class="MainLayout @(IsMenuVisible ? "MenuVisible" : "") @(HideMenuOnMobile ? "HiddeMenuOnMobile" : "")">
+    <header>
+        <Header ShowHamburger="@true" HamburgerClicked="HamburgerClicked" />
+    </header>
+
+    <main>
+        @Body
+    </main>
+
+    <aside class="Menu">
+        <MainNav nav="@model?.Nav" ShowButtonsBar="true" SelectedItemsChanged="SelectedItemsChanged" ItemsChanged="ItemsChanged"></MainNav>
+    </aside>
+
+    <aside class="Left">
+        <Gallery Boxes="@model?.BlogPosts"></Gallery>
+    </aside>
+
+    <aside class="Right">
+        <Gallery Boxes="@model?.News"></Gallery>
+    </aside>
+
+    <footer>
+        <Footer></Footer>
+    </footer>
+</div>
+
+@code {
+    private LayoutDTO? model;    //private ErrorBoundary errorBoundary;
+    private bool IsMenuVisible = false;
+    private bool HideMenuOnMobile = true;
+
+    private Task<AuthenticationState>? authenticationState;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationStateTask
+    {
+        get => authenticationState;
+        set
+        {
+            if (authenticationState == value) return;
+            authenticationState = value;
+            var httpHelper = new Helpers.HttpHelper(http, authenticationState!);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var httpHelper = new Helpers.HttpHelper(http, authenticationState!);
+            model = await httpHelper.GetAsync<LayoutDTO>("layout");
+            StateHasChanged();
+        }
+    }
+
+    private void HamburgerClicked()
+    {
+        IsMenuVisible = !IsMenuVisible;
+        HideMenuOnMobile = !HideMenuOnMobile;
+    }
+
+    private void MenuItemClicked(MenuItemModel menuItem)
+    {
+        HideMenuOnMobile = true;
+    }
+
+        private async Task SelectedItemsChanged(List<NavDTO.Model> selectedItems)
+    {
+        var content = Newtonsoft.Json.JsonConvert.SerializeObject(selectedItems);
+        await WriteCookie("navSelectedItems", content);
+    }
+
+    private async Task ItemsChanged(List<NavDTO.Model> items)
+    {
+        var content = Newtonsoft.Json.JsonConvert.SerializeObject(items);
+        await WriteCookie("navItems", content);
+    }
+
+        protected async Task WriteCookie(string cookieName, string cookieValue, int? daysDeadline = 0)
+    {
+        await JSRuntime.InvokeAsync<object>("WriteCookie.WriteCookie", cookieName, cookieValue, daysDeadline);
+    }
+
+
+}

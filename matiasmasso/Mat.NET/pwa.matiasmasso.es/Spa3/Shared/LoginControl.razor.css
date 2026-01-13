@@ -1,0 +1,19 @@
+﻿.Wrapper {
+    padding: 10px;
+}
+
+.LoginForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+
+input {
+    width: 100%;
+}
+
+.LoginButton {
+    text-align: right;
+}

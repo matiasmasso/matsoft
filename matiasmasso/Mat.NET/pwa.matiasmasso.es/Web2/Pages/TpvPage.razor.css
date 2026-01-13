@@ -1,0 +1,27 @@
+﻿.Grid {
+    display:flex;
+    flex-direction: column;
+}
+
+.Grid > label {
+    margin-top:10px;
+}
+
+.Grid > div {
+    margin-left:30px;
+}
+
+.Concept {
+    width: 100%;
+}
+
+.Eur {
+    width: 100px;
+    text-align: right;
+}
+
+.ButtonsBar {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}

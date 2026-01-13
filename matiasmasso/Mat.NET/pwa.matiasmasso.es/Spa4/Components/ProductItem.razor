@@ -1,0 +1,37 @@
+﻿<div class='@CssClass()'>
+    <a href="#" @onclick="ItemClick" @onclick:preventDefault="true">
+        @if (Product.Cod == CatalogDTO.Product.Cods.Sku)
+        {
+            <div class="SkuWrapper">
+                <div class="Thumbnail">
+                    <img src="@(((CatalogDTO.Sku)Product).ThumbnailUrl())" />
+                </div>
+                <div class="SkuDetails">
+                    @Product.Nom.Esp
+                </div>
+            </div>
+
+        }
+        else
+        {
+            <span>@Product.Nom.Esp</span>
+        }
+
+    </a>
+</div>
+
+
+@code {
+    [Parameter] public CatalogDTO.Product Product { get; set; }
+    [Parameter] public EventCallback<CatalogDTO.Product> ItemClicked { get; set; }
+    [Parameter] public bool Selected { get; set; } = false;
+
+    public bool Multiple { get; set; }
+    protected void ItemClick()
+    {
+        ItemClicked.InvokeAsync(Product);
+    }
+
+    private string CssClass() => Selected ? "Item Selected" : "Item";
+
+}

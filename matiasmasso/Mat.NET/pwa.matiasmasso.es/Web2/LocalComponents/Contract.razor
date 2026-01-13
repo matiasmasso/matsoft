@@ -1,0 +1,127 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject ContractsService contractsService
+
+<div class="Wrapper">
+    @if (Model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h3>@culture.Localize("Contract")</h3>
+
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("Details")">
+
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>state = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequest"
+                                RequestToUpdate="UpdateAsync"></ButtonsBar>
+                </div>
+            </TabPage>
+
+        </TabControl>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+@code {
+    [Parameter] public ContractModel? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Codi,
+        Nom,
+        Num,
+        FchFrom,
+        FchTo
+    }
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+        contractsService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        gridModel = new PropertyGridModel(Model);
+        gridModel.AddDropdown((int)Fields.Emp, session.Emps ?? new(), session.Emps?.FirstOrDefault(x=>x.Id==Model?.Emp), culture.Localize("Emp"));
+        gridModel.AddDropdown((int)Fields.Codi, contractsService?.Codis() ?? new(), contractsService?.Codi(Model?.Codi?.Guid), culture.Localize("Cod"));
+        gridModel.AddString((int)Fields.Nom, Model?.Nom, culture.Localize("Nom"));
+        gridModel.AddString((int)Fields.Num, Model?.Num, culture.Localize("Num"));
+        gridModel.AddFch((int)Fields.FchFrom, Model?.FchFrom, culture.Localize("FchFrom"));
+        gridModel.AddFch((int)Fields.FchTo, Model?.FchTo, culture.Localize("FchTo"));
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    async Task UpdateAsync()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            Model!.Emp = gridModel!.GetValue<EmpModel.EmpIds>((int)Fields.Emp);
+            Model.Codi = new ContractModel.CodiClass((Guid)gridModel!.GetModelGuid((int)Fields.Codi)!);
+            Model.Nom = gridModel.GetString((int)Fields.Nom);
+            Model.Num = gridModel.GetString((int)Fields.Num);
+            Model.FchFrom = gridModel!.GetValue<DateTime>((int)Fields.FchFrom);
+            Model.FchTo = gridModel!.GetValue<DateTime>((int)Fields.FchTo);
+            await contractsService.UpdateAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task DeleteAsync()
+    {
+        try
+        {
+            state = DbState.IsDeleting;
+            await contractsService.DeleteAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        contractsService.OnChange -= Refresca;
+    }
+
+}

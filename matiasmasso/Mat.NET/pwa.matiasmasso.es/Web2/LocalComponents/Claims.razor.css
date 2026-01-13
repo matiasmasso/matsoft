@@ -1,0 +1,15 @@
+﻿.Grid {
+    display:grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap:10px;
+}
+
+.Item {
+    display:contents;
+}
+
+.Nom, .Dsc {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}

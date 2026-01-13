@@ -1,0 +1,188 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager NavigationManager
+@inject CultureService Culture
+
+@if(Nav != null)
+{
+    <div class="ButtonsBar">
+        <a href="#" title="search menu..." hidden="@IsShowingSearchbox" @onclick="ShowSearchbox" @onclick:preventDefault="true">
+            <img src="img/Lupa-20.png" alt="search menu..." width="20" height="20" />
+        </a>
+        <div class="Lang" hidden="@IsShowingSearchbox">
+            <Lang Value="Culture.FromCookie()" ValueChanged="CultureChanged"></Lang>
+        </div>
+        <div class="Searchbox" hidden="@(!IsShowingSearchbox)">
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+        </div>
+    </div>
+
+    @if (string.IsNullOrEmpty(searchTerm))
+    {
+        @foreach (var selectedItem in SelectedMenuItems)
+        {
+            <a class="Item Selected" href="#" @onclick="() => SelectedItemClick(selectedItem)" @onclick:preventDefault="true">
+                @selectedItem.Nom.Tradueix(Culture.Lang())
+                <i class="fa-solid fa-xmark"></i>
+            </a>
+        }
+
+        @foreach (var item in MenuItems)
+        {
+            if (item.Mode == (int)NavDTO.Model.Modes.Navigation)
+            {
+                <a class="Item" href="@item.Action" target="_top">
+                    @item.Nom.Tradueix(Culture.Lang())
+                </a>
+            }
+            else if (item.Mode == (int)NavDTO.Model.Modes.Toggle)
+            {
+                <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                    <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off") />
+                    @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+                </a>
+            }
+            else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+            {
+                <div class="Spacer" href="#">
+                    &nbsp;
+                </div>
+            }
+            else if (item.Mode == (int)NavDTO.Model.Modes.Lang)
+            {
+                <div class="Spacer" href="#">
+                    &nbsp;
+                </div>
+            }
+            else
+            {
+                <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                    @item.Nom.Tradueix(Culture.Lang())
+                </a>
+            }
+        }
+
+    }
+    else
+    {
+        @foreach (var item in Nav.Items.Where(x => x.Nom.Contains(searchTerm)))
+        {
+
+            if (item.Mode == (int)NavDTO.Model.Modes.Toggle)
+            {
+                <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                    <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off") />
+                    @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+                </a>
+            }
+            else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+            {
+                <div class="Spacer" href="#">
+                    &nbsp;
+                </div>
+            }
+            else
+            {
+                <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                    @item.Nom.Tradueix(Culture.Lang())
+                </a>
+            }
+
+        }
+
+    }
+}
+
+
+@code {
+
+    ElementReference LogoutButton;
+    private string? searchTerm;
+    private bool isLoaded = false;
+    private bool IsShowingSearchbox = false;
+
+    public List<NavDTO.Model> MenuItems = new();
+    public List<NavDTO.Model> SelectedMenuItems = new();
+
+
+    [Parameter] public NavDTO? Nav { get; set; }
+    [Parameter] public EventCallback<List<NavDTO.Model>> SelectedItemsChanged { get; set; }
+    [Parameter] public EventCallback<List<NavDTO.Model>> ItemsChanged { get; set; }
+    [Parameter] public EventCallback<NavDTO.Model> MenuItemClicked { get; set; }
+
+
+    private void CultureChanged(CultureInfo value)
+    {
+        var cultureController = Culture.ResetUrl(value, NavigationManager.Uri);
+        NavigationManager.NavigateTo(cultureController, forceLoad: true);
+    }
+
+
+
+
+    private async Task SelectedItemClick(NavDTO.Model item)
+    {
+        var idx = SelectedMenuItems.IndexOf(item);
+        SelectedMenuItems.RemoveRange(idx, SelectedMenuItems.Count - idx);
+        MenuItems = Nav.Items.Where(x => x.Parent == item.Parent).OrderBy(y => y.Ord).ToList();
+        if(ItemsChanged.HasDelegate)        await ItemsChanged.InvokeAsync(MenuItems);
+        if(SelectedItemsChanged.HasDelegate) await SelectedItemsChanged.InvokeAsync(SelectedMenuItems);
+        StateHasChanged();
+    }
+
+    private async Task ItemClick(NavDTO.Model item)
+    {
+        switch ((NavDTO.Model.Modes)item.Mode)
+        {
+
+            case NavDTO.Model.Modes.Navigation:
+                NavigationManager.NavigateTo(item.Action ?? "#");
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            case NavDTO.Model.Modes.Logout:
+                //NavigationManager.NavigateTo("Logout");
+                //await sessionProvider!.LogoutAsync();
+                //if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            case NavDTO.Model.Modes.Login:
+                NavigationManager.NavigateTo("Login");
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            case NavDTO.Model.Modes.Toggle:
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            case NavDTO.Model.Modes.Action:
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            default:
+                var items = Nav.Items.Where(x => x.Parent == item.Guid).OrderBy(y => y.Ord).ToList();
+                if (items.Count > 0)
+                {
+                    MenuItems = items;
+                    SelectedMenuItems.Add(item);
+                }
+                break;
+        }
+
+        if(ItemsChanged.HasDelegate) await ItemsChanged.InvokeAsync(MenuItems);
+        if (SelectedItemsChanged.HasDelegate) await SelectedItemsChanged.InvokeAsync(SelectedMenuItems);
+    }
+
+    private void UseLocalApi()
+    {
+        Globals.UseLocalApi = !Globals.UseLocalApi;
+    }
+
+    private void ShowSearchbox()
+    {
+        IsShowingSearchbox = true;
+    }
+
+    async Task Logout()
+    {
+        //await LogoutAsync();
+    }
+
+}
+

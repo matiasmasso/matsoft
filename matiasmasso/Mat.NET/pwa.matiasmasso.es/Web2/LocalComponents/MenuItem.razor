@@ -1,0 +1,155 @@
+﻿@inject CultureService culture
+@inject NavService navService
+
+
+
+<div class="Wrapper">
+
+    @if (Model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <TabControl>
+            <TabPage Text="@culture.Localize("Details")">
+                <PropertyGrid Model="@gridModel"
+                          SetDirty="@(()=>state = DbState.IsDirty)"
+                          CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                            State="state"
+                            CanDelete="@(!(Model?.IsNew ?? false))"
+                            RequestToCancel="CancelRequest"
+                            RequestToDelete="DeleteRequest"
+                            RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+
+            </TabPage>
+            <TabPage Text="Emps">
+                <EmpsSelection Values = "Model.Emps" OnChange="@(()=>state=DbState.IsDirty)" ></EmpsSelection>
+            </TabPage>
+            <TabPage Text="Claims">
+                <ClaimsSelection Values="Model.Claims" OnChange="@(()=>state=DbState.IsDirty)"></ClaimsSelection>
+            </TabPage>
+            <TabPage Text="Rols">
+                <RolsSelection Values="Model.Rols" OnChange="@(()=>state=DbState.IsDirty)"></RolsSelection>
+            </TabPage>
+        </TabControl>
+    }
+
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    private Exception? exception;
+    [Parameter] public NavDTO.MenuItem? Model { get; set; }
+    [Parameter] public Guid? Parent { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+
+    private string? Esp, Cat, Eng, Por;
+
+    private List<NavDTO.MenuItem> Parents = new();
+    private List<UserModel.Rols>? AllRols;
+    private List<EmpModel.EmpIds>? AllEmps;
+
+    private List<Guid>? claims;
+    private List<EmpModel.EmpIds>? emps;
+    private List<UserModel.Rols>? rols;
+
+    private bool isSubmitting = false;
+    bool isDirty;
+    DbState state;
+    PropertyGridModel? gridModel;
+
+    private enum Fields
+    {
+        Parent,
+        Esp,
+        Cat,
+        Eng,
+        Por,
+        Mode,
+        Action
+    }
+
+    protected override void OnParametersSet()
+    {
+        try{
+            AllRols = Enum.GetValues<UserModel.Rols>().ToList();
+            AllEmps = Enum.GetValues<EmpModel.EmpIds>().ToList();
+
+            emps = Model?.Emps;
+            rols = Model?.Rols;
+            claims = Model?.Claims;
+
+            gridModel = new PropertyGridModel(Model);
+            gridModel.AddDropdown((int)Fields.Parent, navService.ParentCandidates(Model), navService.Parent(Model), culture.Localize("Parent"));
+            gridModel.AddString((int)Fields.Esp, Model?.Nom?.Esp, culture.Localize("Esp"));
+            gridModel.AddString((int)Fields.Cat, Model?.Nom?.Cat, culture.Localize("Cat"));
+            gridModel.AddString((int)Fields.Eng, Model?.Nom?.Eng, culture.Localize("Eng"));
+            gridModel.AddString((int)Fields.Por, Model?.Nom?.Por, culture.Localize("Por"));
+            gridModel.AddEnum((int)Fields.Mode, new NavDTO.MenuItem.Modes(), (int?)Model?.Mode ?? (int)MenuItemModel.Modes.None, culture.Localize("Mode"));
+            gridModel.AddString((int)Fields.Action, Model?.Action, culture.Localize("Action"));
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    private async Task CancelRequest()
+    {
+        await RequestToCancel.InvokeAsync();
+    }
+
+    private async Task UpdateRequest()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            Model!.Parent = gridModel!.GetModelGuid((int)Fields.Parent);
+            Model!.Nom!.Esp = gridModel!.GetString((int)Fields.Esp);
+            Model.Nom.Cat = gridModel!.GetString((int)Fields.Cat);
+            Model.Nom.Eng = gridModel!.GetString((int)Fields.Eng);
+            Model.Nom.Por = gridModel!.GetString((int)Fields.Por);
+            Model.Mode = (NavDTO.MenuItem.Modes)gridModel!.GetEnum((int)Fields.Mode);
+            Model.Action = gridModel!.GetString((int)Fields.Action);
+
+            Model.Emps = emps!;
+            Model.Rols = rols!;
+            Model.Claims = claims!;
+
+            await navService.UpdateAsync(Model);
+           // await AfterUpdate.InvokeAsync();
+            await CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+            state = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        try
+        {
+            state = DbState.IsDeleting;
+            await navService.DeleteAsync(Model!);
+            await RequestToCancel.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+}

@@ -1,0 +1,90 @@
+﻿.ColHeaders, .Item {
+    display: contents;
+}
+
+.Value {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+
+
+
+
+/*------------ mobiles -----------*/
+
+@media(max-width:599px) {
+    .Grid {
+        display: flex;
+        flex-direction:column;
+    }
+
+    .ColHeaders {
+        display:none;
+    }
+
+    .Item {
+        display:grid;
+        grid-template-columns: min-content 1fr;
+        grid-column-gap:10px;
+        padding: 10px;
+        border-bottom: 1px solid gray;
+    }
+
+    .Item .Label {
+        display:block;
+    }
+
+        .Item:last-child {
+            border-bottom: 1px solid white;
+        }
+
+
+
+}
+
+
+/*------------ desktop -------------*/
+
+@media(min-width:600px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content 1fr min-content;
+        grid-column-gap: 10px;
+    }
+
+        .Grid > div, .Grid > a {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ColHeaders div {
+            color: gray;
+            padding-bottom: 7px;
+        }
+
+    .Item:hover {
+        background-color: lightcyan;
+    }
+
+    .Item .Label {
+        display:none;
+    }
+
+    .Item div {
+        border-top: 1px solid white;
+        border-bottom: 1px solid white;
+    }
+
+    .Item:hover div {
+        border-top: 1px solid gray;
+        border-bottom: 1px solid gray;
+    }
+
+    .Count {
+        text-align: right;
+    }
+
+}

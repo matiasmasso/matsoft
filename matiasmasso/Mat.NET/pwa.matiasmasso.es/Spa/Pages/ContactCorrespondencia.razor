@@ -1,0 +1,51 @@
+﻿@page "/ContactCorrespondencia/{Guid:guid}"
+
+@using Spa.Shared
+@using Spa.ViewModels
+@layout ProLayout
+@inject HttpClient Http
+@inject AppState AppState
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ContactCorrespondencia> Loc
+
+
+@if (viewModel!.LoadStatus == Globals.LoadStatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <h1>@Loc["Title"]</h1>
+        <h2>@viewModel.Model.Contact.FullNom</h2>
+        <SearchBox @bind-Value="@viewModel.SearchTerm"></SearchBox>
+
+        <Virtualize Items="@viewModel.Items()" Context="item">
+            <a class="Item" href="@item.DownloadUrl()" target="_blank">
+                <div class="Ico">
+                    <img src=@(item.HasPdf ? "img/pdf-36-red.png" : "img/pdf-36.png")/>
+                </div>
+                <div class="Nom Truncate">
+                    @item.Subject
+                </div>
+                <div class="Details Truncate">
+                    @string.Format("{0:dd/MM/yy} {1}",item.Fch, item.Subject)
+                </div>
+            </a>
+        </Virtualize>
+    </div>
+}
+
+
+
+
+@code {
+    [Parameter]
+    public Guid Guid { get; set; }
+
+    private ContactCorrespondenciaViewModel? viewModel;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        viewModel = new ContactCorrespondenciaViewModel(Http, AppState, Guid);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+    }
+}

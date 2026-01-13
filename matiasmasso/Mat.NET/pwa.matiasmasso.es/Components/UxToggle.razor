@@ -1,0 +1,36 @@
+﻿
+
+<a href="#"
+   @onclick="@Toggle"
+   @onclick:preventDefault="true">
+
+    @if ((bool?)Value ?? false == true)
+    {
+        <span>@TrueText</span>
+    }
+    else
+    {
+        <span>@FalseText</span>
+    }
+</a>
+
+@code {
+    [Parameter] public Object? Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; } = true;
+    [Parameter] public string TrueText { get; set; } = "Yes";
+    [Parameter] public string FalseText { get; set; } = "No";
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+
+    private void Toggle()
+    {
+        if (CanEdit)
+        {
+            bool value = (bool?)Value ?? false;
+            if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                ObjChanged.InvokeAsync(!value);
+            else
+                ValueChanged.InvokeAsync(!value);
+        }
+    }
+}

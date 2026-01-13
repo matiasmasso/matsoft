@@ -1,0 +1,116 @@
+﻿@inject CultureService culture
+@inject ProductsService productsService
+
+@if (SelectedBrand() == null)
+{
+    @if (isSelectingBrands)
+    {
+        <div class="Modal">
+
+            <div class="Header">
+                <div class="Info">@culture.Localize("Select.Brand")</div>
+                <a href="#" @onclick="@(()=>isSelectingBrands = false)" @onclick:preventDefault>
+                    <Icon Id="Icon.Ids.Xmark"></Icon>
+                </a>
+            </div>
+
+            <div>
+                <PageOptions>
+                    <ToggleObsolets @bind-Value="isShowingObsoletBrands"></ToggleObsolets>
+                    <a href="#" @onclick="AddNewBrand" @onclick:preventDefault>
+                        @culture.Localize("AddNew")
+                    </a>
+                </PageOptions>
+
+                <SearchBox @bind-Value="brandSearchterm"></SearchBox>
+            </div>
+
+            <div class="Brands">
+
+                @foreach (var item in FilteredBrands() ?? new())
+                {
+                    <a href="#" @onclick="@(()=>BrandClick(item))" @onclick:preventDefault>
+                        @item.Nom?.Tradueix(culture.Lang())
+                    </a>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <a href="#" @onclick="@(()=>isSelectingBrands = !isSelectingBrands)" @onclick:preventDefault>
+            [Click to select a brand]
+        </a>
+    }
+}
+else
+{
+    <div class="Display">
+        <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+         <a href="#" @onclick="@(()=>isVisibleMenu = !isVisibleMenu)" @onclick:preventDefault>
+             <Icon Id="Icon.Ids.HEllipsis"></Icon>
+         </a>
+     </div>
+    @if (isVisibleMenu)
+    {
+        <div class="ContextMenu Modal">
+            <a href="#" @onclick="Zoom" @onclick:preventDefault>
+                zoom
+            </a>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public ProductBrandModel? Value { get; set; }
+    [Parameter] public EventCallback<ProductBrandModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+
+    SelectedValues.Collection? selectedValues;
+    bool isVisibleMenu;
+    bool isSelectingBrands;
+    bool isShowingObsoletBrands;
+    string? brandSearchterm;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Value != null)
+        {
+            selectedValues = new();
+            selectedValues.Add(Value, Value.Nom.Tradueix(culture.Lang()));
+
+        }
+    }
+
+    ProductBrandModel? SelectedBrand() => (ProductBrandModel?)selectedValues?.FirstOrDefault()?.Value;
+
+    List<ProductBrandModel>? FilteredBrands()
+    {
+        var retval = productsService.Brands(false)?
+        .Where(x => x.Matches(brandSearchterm) && (isShowingObsoletBrands || !x.Obsoleto))
+        .ToList();
+        return retval;
+    }
+
+    void BrandClick(ProductBrandModel value)
+    {
+        selectedValues = new();
+        selectedValues.Add(value, value.Nom.Tradueix(culture.Lang()));
+    }
+
+    async Task AddNewBrand()
+    {
+        ProductBrandModel value = new();
+        var breadcrumb = new ModelEditor.Breadcrumb(value, culture.Localize("New.Brand"));
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    async Task Zoom()
+
+    {
+        var breadcrumb = new ModelEditor.Breadcrumb(Value, Value?.Nom?.Tradueix(culture.Lang()) ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+        isVisibleMenu = false;
+    }
+}

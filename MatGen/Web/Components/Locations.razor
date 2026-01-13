@@ -1,0 +1,175 @@
+﻿@implements IDisposable
+
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+
+    @if (ApiService.Locations() == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+             <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nova població</a>
+         </PageOptions>
+     </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+
+            @if (string.IsNullOrEmpty(searchTerm))
+            {
+                <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+
+                @foreach (var child in Children() ?? new())
+                {
+                    <div class="Item">
+
+                        <div class="Icon" >
+                            <Icon Id="@(HasChildren(child) ? Icon.Ids.ChevronDown : Icon.Ids.None)"></Icon>
+                        </div>
+
+                        <ListItem Title="@child.Nom"
+                                  ContextMenu="@ContextMenu(child)"
+                                  Tag="@child"
+                                  MenuClick="ContextMenuClick"
+                                  OnClick="@(()=>ItemClick(child))"></ListItem>
+
+                    </div>
+                }
+            }
+            else
+            {
+                <Virtualize Items="@(FilteredItems() ?? new())" Context="item">
+                        <ListItem Title="@item.NomLlarg"
+                                  ContextMenu="@ContextMenu(item)"
+                                  Tag="@item"
+                                  MenuClick="ContextMenuClick"
+                              OnClick="@(()=>SelectItem(item))"></ListItem>
+                    <div class="GridRowDivider HideOnDesktop"></div>
+                </Virtualize>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public LocationModel? Root { get; set; }
+    [Parameter] public EventCallback<object> ItemSelected { get; set; }
+
+    List<LocationModel>? parents;
+    //IModel? selectedItem;
+    SelectedValues.Collection selectedValues = new();
+
+
+    string? searchTerm;
+    Exception? exception;
+
+    private enum MenuKeys
+    {
+        Zoom,
+        AddNew
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        //parents = new List<LocationModel>();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    // void ParentClick(LocationModel item)
+    // {
+    //     var parentsCollection = new List<LocationModel>();
+    //     var idx = parents?.IndexOf(item);
+    //     for (var i = 0; i < idx; i++)
+    //     {
+    //         parentsCollection.Add(parents![i]);
+    //     }
+    //     parents = parentsCollection;
+    //     StateHasChanged();
+    // }
+
+    void ItemClick(LocationModel item)
+    {
+        selectedValues.Add(item, item.Nom);
+    }
+
+    void SelectItem(LocationModel item)
+    {
+        ItemSelected.InvokeAsync(item);
+    }
+
+    void AddNew()
+    {
+        var item = new LocationModel();
+        item.Nom = "(nova població)";
+        item.Parent = parents?.LastOrDefault()?.Guid ?? Root?.Guid;
+        ItemClick(item);
+    }
+
+    bool HasChildren(LocationModel item)
+    {
+        return ApiService.Locations()?.Any(x => x.Parent == item.Guid) ?? false;
+    }
+
+    List<LocationModel>? Children()
+    {
+        var parent = selectedValues.LastOrDefault();
+        LocationModel? root =parent == null ? Root : (LocationModel)parent.Value;
+        var retval = ApiService.Locations()?.Where(x => x.Parent == root?.Guid).ToList();
+        return retval;
+    }
+
+    List<LocationModel>? FilteredItems()
+    {
+        var allValues = ApiService.RecursiveChildren(Root);
+        if (string.IsNullOrEmpty(searchTerm))
+            return allValues;
+        else
+            return allValues?.Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+
+    ContextMenuModel ContextMenu(object? item)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, item);
+        retval.AddItem("Afegir", (int)MenuKeys.AddNew, LocationModel.Factory((LocationModel?)item));
+        return retval;
+    }
+
+    void ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        var tag = args.Tag;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Zoom:
+            case MenuKeys.AddNew:
+                ItemSelected.InvokeAsync(args.Tag);
+                break;
+        }
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+}

@@ -1,0 +1,119 @@
+﻿@page "/ProductSkus_Page"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("ProductSkus")</h1>
+
+    <PageOptions IsShowingOptions>
+        <ProductBrandLookup HideEllipsis
+                            Value="@brand"
+                            ValueChanged="BrandChanged">
+        </ProductBrandLookup>
+        <ProductCategoryLookup HideEllipsis
+                            Value="@category"
+                            ValueChanged="CategoryChanged">
+        </ProductCategoryLookup>
+
+        <UxToggle @bind-Value="@IsShowingObsolets"
+                  TrueText="OutdatedIncluded"
+                  FalseText="OutdatedNotIncluded"></UxToggle>
+
+        <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+    </PageOptions>
+
+    @if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("ProductSkus.Found",model.Count(),model.Where(x=>x.Obsoleto == false).Count())
+        </div>
+
+        <ProductSkus_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></ProductSkus_List>
+
+    }
+    else
+    {
+        <ProductSku Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></ProductSku>
+    }
+
+
+
+</div>
+
+@code {
+    List<ProductSkuModel>? model;
+    CacheDTO? cache;
+    string searchTerm;
+    bool IsShowingObsolets = false;
+    ProductBrandModel brand;
+    ProductCategoryModel category;
+    ProductSkuModel? selectedItem = null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        category = cache.Category(ProductCategoryModel.Wellknown(ProductCategoryModel.Wellknowns.dualfix_iSize).Guid);
+        brand = cache.Brand(category.Brand);
+        model = cache.Skus;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Stp);
+        model = cache.Skus;
+    }
+
+    List<ProductSkuModel> FilteredItems()
+    {
+        var retval = model.Where(x => x.Category == category.Guid).ToList();
+        if (!string.IsNullOrEmpty(searchTerm))
+            retval = retval.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.Obsoleto == false).ToList();
+        retval = retval.OrderBy(x => x.Obsoleto).ToList();
+        return retval;
+    }
+
+    private void ItemClick(ProductSkuModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new ProductSkuModel
+            {
+                Category = category.Guid
+            };
+    }
+
+    private void OnUpdate(ProductSkuModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(ProductSkuModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void BrandChanged(ProductBrandModel args)
+    {
+        brand = args;
+        category = cache.Categories.FirstOrDefault(x => x.Brand == brand.Guid);
+    }
+    private void CategoryChanged(ProductCategoryModel args)
+    {
+        category = args;
+    }
+
+}

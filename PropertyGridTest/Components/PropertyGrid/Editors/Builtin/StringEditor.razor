@@ -1,0 +1,22 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+
+<input class="pg-input"
+       value="@Value"
+       @oninput="OnInput" />
+
+@code {
+    [CascadingParameter] public EditContext EditContext { get; set; }
+
+    [Parameter] public string Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter] public FieldIdentifier Field { get; set; }
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString();
+
+        await ValueChanged.InvokeAsync(newValue);
+        EditContext?.NotifyFieldChanged(Field);
+    }
+}

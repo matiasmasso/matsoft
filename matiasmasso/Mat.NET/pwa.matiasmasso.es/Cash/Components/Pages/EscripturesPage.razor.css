@@ -1,0 +1,66 @@
+﻿.Grid {
+    display:flex;
+    flex-direction:column;
+}
+
+    .Item.Baixa div {
+        color: gray;
+    }
+
+
+
+    .Nom {
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow: ellipsis;
+    }
+
+@media(max-width:599px){
+    .Item {
+        padding: 10px;
+        display: grid;
+        grid-template-columns: 32px 1fr;
+        grid-template-areas: "icon fch" "icon nom";
+        grid-column-gap:10px;
+    }
+    .Item:not(:last-child) {
+        border-bottom:1px solid gray;
+    }
+
+    .Icon {
+        grid-area: icon;
+    }
+
+    .Fch {
+        grid-area: fch;
+    }
+
+    .Nom {
+        grid-area: nom;
+    }
+}
+
+@media(min-width:599px) {
+    .Item > * {
+        padding: 4px 0 2px;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 20px min-content 1fr;
+        grid-column-gap: 10px;
+    }
+
+    .Icon {
+        width: 1rem;
+    }
+}
+
+
+
+
+
+
+
+
+

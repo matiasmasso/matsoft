@@ -1,0 +1,97 @@
+﻿@inherits _ComponentBase
+
+<div class="Wrapper">
+    <div class="Value @(isEditing ? "Hidden" : "")" href="#" @onclick="@ValueClicked" @onclick:preventDefault="true">
+
+        @if(Item!.Cod == Helpers.PropertyGridModel.Cods.Boolean){
+            if((bool)(Item!.Value) == true) {
+                <i class="fa-solid fa-check"></i>
+            } else {
+                <span>&nbsp;</span>
+            }
+        } else if (string.IsNullOrEmpty(Item!.DisplayText)){
+            <span>&nbsp;</span>
+        } else {
+            <span>@Item!.DisplayText</span>
+        }
+    </div>
+
+    <div class="Selector">
+        <UxSelector Options="Options"
+                    IsShowing="@isShowingSelector"
+                    Value="@Item?.Id"
+                    ValueChanged="SelectorOptionChanged"></UxSelector>
+    </div>
+
+    <input type="Text"
+           @bind="Item!.DisplayText"
+           @onblur="@(() => TextEdited())"
+           class="StringEditor @(isEditingText ? "" : "Hidden")" />
+
+</div>
+
+@code {
+
+    [Parameter] public Helpers.PropertyGridModel.Item? Item { get; set; }
+    [Parameter] public List<Option>? Options { get; set; }
+    [Parameter] public EventCallback RequestToSave { get; set; }
+    [Parameter] public Func<Helpers.PropertyGridModel.Item, Task<List<Option>>> GetOptions { get; set; }
+
+    private bool isEditing = false;
+    private bool isEditingText = false;
+    private bool isShowingSelector = false;
+    private bool isDirty = false;
+
+    private void SelectorOptionChanged(Option option)
+    {
+        isShowingSelector = false;
+        isDirty = true;
+        Item.Value = option.Tag;
+        Item.Id = option.Id;
+        Item.DisplayText = option.Nom;
+    }
+
+    private async void ValueClicked()
+    {
+        if (Item!.Cod == Helpers.PropertyGridModel.Cods.Dropdown)
+        {
+            if (Options == null)
+                Options = await GetOptions(Item);
+
+            isShowingSelector = true;
+        }
+        else if (Item!.Cod == Helpers.PropertyGridModel.Cods.Boolean){
+            if((bool)Item!.Value){
+                Item!.Value = false;
+                Item.Id = "False";
+                Item.DisplayText = Item.Id;
+            } else {
+                Item!.Value = true;
+                Item.Id = "True";
+                Item.DisplayText = Item.Id;
+            }
+        }
+        else
+        {
+            isEditing = true;
+            isEditingText = true;
+        }
+    }
+
+
+    private void TextEdited()
+    {
+        isEditing = false;
+        isEditingText = false;
+        Item.Value = Item.DisplayText;
+        Item.Id = Item.DisplayText;
+    }
+
+    private void SaveRequest()
+    {
+        RequestToSave.InvokeAsync();
+        isDirty = false;
+    }
+
+
+}

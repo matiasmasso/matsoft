@@ -1,0 +1,96 @@
+﻿.Wrapper {
+    position: relative;
+    width:100%;
+}
+
+input[type=text] {
+    box-sizing: border-box;
+    width: 100%;
+    /*padding: 2px 7px 2px 10px;*/
+    border: none;
+    font-size: inherit;
+    cursor: pointer;
+    /*border: 1px solid #DDDDDD;*/
+}
+
+    input[type=text]:focus {
+        outline: none;
+    }
+
+.ClearButton {
+    position: absolute;
+    right: 5px;
+    top: 4px;
+    z-index: 2;
+}
+
+.Dropdown {
+    position: absolute;
+    top: 1.4em;
+    left: 0;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border-left: 1px solid #DDDDDD;
+    border-right: 1px solid #DDDDDD;
+    border-bottom: 1px solid #DDDDDD;
+    background-color: white;
+    min-width: 50px;
+    width: fit-content;
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+}
+
+
+
+/*        .ButtonsBar > *:first-child {
+            padding: 0 10px 0 0;
+            text-align: left;
+        }
+
+        .ButtonsBar > *:not(:first-child) {
+            border-left: 1px solid black;
+        }*/
+
+
+.Item {
+    display: block;
+    text-decoration: none;
+    color: black;
+    padding: 4px 7px 2px 10px;
+}
+
+.Truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ButtonsBar {
+    /*display: none;*/
+}
+
+@media(max-width:599px) {
+    .Item {
+        padding: 12px 10px 12px 10px;
+        border-bottom: 1px solid #DDDDDD;
+    }
+
+    .ButtonsBar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 5px;
+    }
+
+        .ButtonsBar > * {
+            padding: 2px 10px;
+            white-space: nowrap;
+            width: 100%;
+        }
+
+    .ButtonsBar > * {
+        padding: 10px;
+    }
+}
+
+

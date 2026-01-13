@@ -1,0 +1,17 @@
+﻿.Summary {
+    margin-top: 10px;
+}
+
+.Item {
+    display: block;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+    .Item:not(:first-child) {
+        border-top: 1px solid gray;
+    }
+
+.User {
+    color: gray;
+}

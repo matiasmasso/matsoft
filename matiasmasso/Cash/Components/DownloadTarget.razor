@@ -1,0 +1,105 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+
+    <Title Value="fitxer" CloseRequest="HandleCloseRequest"></Title>
+
+    @if(value == null)
+    {
+        <Loading></Loading>
+    } else
+    {
+
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="HandleUpdateRequest"
+                      CancelRequest="HandleCloseRequest"
+                      DeleteRequest="HandleDeleteRequest"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+
+    }
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public DownloadTargetModel? Value { get; set; }
+    [Parameter] public EventCallback<DownloadTargetModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    private DownloadTargetModel? value;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Nom,
+        fch,
+        Docfile
+    }
+
+    protected override void OnParametersSet()
+    {
+        Refresca();
+        value = Value;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddString("Nom", value?.DocFile?.Nom);
+        retval.AddDateTime("Data", value?.DocFile?.Fch);
+        retval.AddDocfile(value?.DocFile);
+        return retval;
+    }
+
+    async Task HandleCloseRequest()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task HandleUpdateRequest()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.DocFile = propertyGrid!.GetDocfile((int)Fields.Docfile);
+            value.DocFile!.Nom = propertyGrid.GetString((int)Fields.Nom);
+            value.DocFile.Fch = propertyGrid.GetDateTime((int)Fields.fch);
+            await ApiService.PostMultipartAsync<DownloadTargetModel, bool>(value!.DocFile, value, "DownloadTarget");
+            await AfterUpdate.InvokeAsync(value);
+            await CloseRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task HandleDeleteRequest()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            // await ApiService.GetAsync<bool>("DocfileSrc/delete", value!.Guid.ToString());
+            // await AfterDelete.InvokeAsync(value);
+            // await CloseRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+}

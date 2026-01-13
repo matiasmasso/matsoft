@@ -1,0 +1,12 @@
+﻿TO DO: =======================================================
+
+PurchaseOrder.razor tancar i tornar enrera sense carregar de nou
+Delivery.razor tancar i tornar enrera sense carregar de nou
+
+Done: ========================================================
+
+Directory -> Key Accounts -> El Corte Ingles Stocks per producte, per centre i detall dels fitxers rebuts. Seleccio de data.
+Directory -> Adreçes email -> buscar per email, relació de sortejos en que ha participat i comentaris que ha deixat al blog/noticies
+Arxiu -> Comandes
+Arxiu -> Albarans
+Arxiu -> Incidencies

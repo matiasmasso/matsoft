@@ -1,0 +1,78 @@
+﻿@page "/rrhh"
+@page "/{LangSegment}/rrhh"
+@layout ProLayout
+@inject CultureService culture
+
+
+
+@if (isImportingNominas)
+{
+    <NominasFactory CloseRequest="@(()=>isImportingNominas = false)"
+        ShowPdf="ShowPdfHandler"
+    ></NominasFactory>
+}
+else if (selectedPdf != null)
+{
+    <PdfViewer Value="selectedPdf"></PdfViewer>
+}
+else if (breadcrumbs.Count > 0)
+{
+    <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+}
+else
+{
+    <div class="PageWrapper900">
+        <h3>@culture.Localize("RRHH")</h3>
+
+        <PageOptions>
+            <a href="#" @onclick="@(()=>isImportingNominas = true)" @onclick:preventDefault>@culture.Localize("Nominas.Import")</a>
+        </PageOptions>
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("Staff")">
+                <RRHHStaffs Emp="emp" ItemSelected="StaffClick"></RRHHStaffs>
+            </TabPage>
+            <TabPage Text="@culture.Localize("JornadasLaborals")">
+                <RRHHJornadasLaborals Emp="emp"></RRHHJornadasLaborals>
+            </TabPage>
+            <TabPage Text="@culture.Localize("Nominas")">
+                <RRHHNominas Emp="emp"></RRHHNominas>
+            </TabPage>
+            <TabPage Text="@culture.Localize("CertificatsIrpf")">
+                <RRHHCertificatsIrpf Emp="emp"></RRHHCertificatsIrpf>
+            </TabPage>
+        </TabControl>
+    </div>
+
+}
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    byte[]? selectedPdf;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    EmpModel? emp;
+    bool isImportingNominas;
+
+    void EmpChanged(EmpModel? emp)
+    {
+        this.emp = emp;
+    }
+
+    private void ShowPdfHandler(byte[] pdfBytes)
+    {
+        selectedPdf = pdfBytes;
+    }
+
+
+    private void StaffClick(StaffModel value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value.ToString()));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+}

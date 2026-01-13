@@ -1,0 +1,278 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+@inject CatalogService CatalogService
+
+<div class="PageWrapper">
+
+    @if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+        AfterUpdate="SelectItemUpdated"
+        CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>@value?.Caption()</h1>
+
+        <TabControl SelectedTab="(int)selectedTab">
+            <TabPage Text="General">
+                @if (state == DbState.IsLoading)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <PropertyGrid Model="@gridModel"
+                    SetDirty="PropertyGridItemChanged"
+                    ItemSelected="GridItemSelectedHandler"
+                    RequestToAddNew="AddNewRequest"
+                    CanEdit="true"></PropertyGrid>
+
+                    <div class="ButtonsBar">
+                        <ButtonsBar CanEdit="true"
+                        State="state"
+                        CanDelete="@(!(value?.IsNew ?? false))"
+                        RequestToCancel="CancelRequestHandler"
+                        RequestToDelete="DeleteRequest"
+                        RequestToUpdate="UpdateRequest"></ButtonsBar>
+                    </div>
+                }
+            </TabPage>
+
+            <TabPage Text="Imatge">
+
+                <div class="Thumbnail">
+                    <Filedrop Value="@docfile" ValueChanged="DocFileChanged"></Filedrop>
+                </div>
+
+            </TabPage>
+
+            <TabPage Text="Transcripció">
+                <Textarea CanEdit="true"
+                @bind-Value="value!.Transcripcio"
+                SetDirty="@(()=>state = DbState.IsDirty)"></Textarea>
+            </TabPage>
+
+
+            <TabPage Text="Contactes">
+                <Doc_Targets Doc="value"
+                ItemSelected="SelectItem"></Doc_Targets>
+            </TabPage>
+        </TabControl>
+
+        <Error @bind-Exception="exception"></Error>
+    }
+
+
+</div>
+
+@code {
+    [Parameter] public DocModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+
+    //private string? caption;
+    private DocModel? value;
+    private PropertyGridModel? gridModel;
+    //private List<DocModel>? docs;
+    //private List<DocSrcModel>? docSrcs;
+    //private List<DocCodModel>? docCods;
+    private DbState state;
+    private bool isDirtyDropfile = false;
+    private Tabs selectedTab;
+    private DocfileModel? docfile;
+    private object? selectedItem;
+    //private DocTargetModel? selectedDocTarget;
+    Fields? editingField;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Title,
+        Fch,
+        DocSrc,
+        DocCod,
+        Detail,
+        UrlExterna
+    }
+
+    private enum Tabs
+    {
+        None,
+        General,
+        Docfile,
+        Transcript,
+        Targets
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        selectedTab = Tabs.General;
+        ApiService.OnChange += Refresca;
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        //keeps track of edited value before persisting
+        value = (DocModel?)ApiService.CurrentModels.FirstOrDefault(x => x.Guid == Model!.Guid);
+        if (value == null)
+        {
+            value = Model.DeepCopy()!;
+            ApiService.CurrentModels.Add(value);
+        }
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddString((int)Fields.Title, value!.Tit, "Titol",100);
+        gridModel.AddString((int)Fields.Fch, value.Fch, "Data", 8);
+        gridModel.AddDropdown<DocSrcModel>((int)Fields.DocSrc, ApiService.DocSrcs() ?? new(), ApiService.DocSrc(value.Src), "Font documental");
+        gridModel.AddDropdown<DocCodModel>((int)Fields.DocCod, ApiService.DocCods() ?? new(), ApiService.DocCod(value.Cod), "Codi de document");
+        gridModel.AddString((int)Fields.Detail, value.SrcDetail, "Detalls");
+        gridModel.AddUrl((int)Fields.UrlExterna, value.ExternalUrl, "Url externa");
+        docfile = value.DocFile;
+    }
+
+    private void ReadFromForm()
+    {
+        value!.Tit = gridModel!.GetString((int)Fields.Title);
+        value.Fch = gridModel!.GetString((int)Fields.Fch);
+        value.Src = gridModel.GetModelGuid((int)Fields.DocSrc);
+        value.Cod = gridModel.GetModelGuid((int)Fields.DocCod);
+        value.SrcDetail = gridModel!.GetString((int)Fields.Detail);
+        value.ExternalUrl = gridModel!.GetString((int)Fields.UrlExterna);
+
+        if (docfile != null & isDirtyDropfile) value.DocFile = docfile;
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        ReadFromForm();
+        state = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value!);
+            await AfterUpdate.InvokeAsync(value);
+            await CancelRequest.InvokeAsync(value);
+            ApiService.CurrentModels.Remove(value!);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+            ApiService.CurrentModels.Remove(value!);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+        ApiService.CurrentModels.Remove(value!);
+    }
+
+    private void DocFileChanged(DocfileModel args)
+    {
+        docfile = args;
+        state = DbState.IsDirty;
+        isDirtyDropfile = true;
+        StateHasChanged();
+    }
+
+    private void SelectItem(Object item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNewRequest(PropertyGridModel.Item item)
+    {
+        switch (item.Field)
+        {
+            case (int)Fields.DocSrc:
+                selectedItem = new DocSrcModel();
+                break;
+            case (int)Fields.DocCod:
+                selectedItem = new DocCodModel();
+                break;
+        }
+    }
+
+    private void GridItemSelectedHandler(PropertyGridModel.Item item)
+    {
+        switch (item.Field)
+        {
+            case (int)Fields.DocSrc:
+            case (int)Fields.DocCod:
+                selectedItem = (IModel?)item.Value;
+                break;
+        }
+    }
+
+    private void PropertyGridItemChanged(PropertyGridModel.Item args)
+    {
+        ReadFromForm();
+        state = DbState.IsDirty;
+        Refresca();
+    }
+
+
+    private void SelectItemUpdated(object args)
+    {
+        if (args is DocTargetModel)
+        {
+            selectedItem = null;
+            selectedTab = Tabs.Targets;
+            Refresca();
+        }
+        else
+        {
+            switch (editingField)
+            {
+
+                case Fields.DocSrc:
+                    value!.Src = ((DocSrcModel)args).Guid;
+                    break;
+                case Fields.DocCod:
+                    value!.Cod = ((DocCodModel)args).Guid;
+                    break;
+            }
+            selectedItem = null;
+            editingField = null;
+            state = DbState.IsDirty;
+            Refresca();
+        }
+    }
+
+
+
+
+
+    public void Dispose()
+    {
+        ReadFromForm();
+        ApiService.OnChange -= Refresca;
+    }
+
+
+}

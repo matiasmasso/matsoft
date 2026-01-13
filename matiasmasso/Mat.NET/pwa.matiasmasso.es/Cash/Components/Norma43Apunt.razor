@@ -1,0 +1,233 @@
+﻿@using DTO.Integracions.Banca
+@using System.Security.Claims
+@using System.Text.RegularExpressions
+
+@inject ApiService ApiService
+@inject AuthenticationService AuthenticationService
+
+@if (template != null)
+{
+    <Norma43Template Value="template"
+                     AfterUpdate="AfterTemplateUpdateHandler"
+                     CloseRequest="@(()=>template=null)"></Norma43Template>
+}
+else
+{
+
+    <div class="PageWrapper600">
+        <div class="Header">
+            <h3>Entrar Apunt</h3>
+            <a href="#" class="CloseButton" @onclick="CloseRequestHandler" @onclick:preventDefault>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z" />
+                </svg>
+            </a>
+        </div>
+
+
+        <div class="PropertyGrid">
+            <div class="Label">Data</div>
+            <div class="Value">@($"{Model!.Fch:dd/MM/yy}")</div>
+            <div class="Label">Data valor</div>
+            <div class="Value">@($"{Model!.FchValor:dd/MM/yy}")</div>
+            <div class="Label">Import</div>
+            <div class="Value">@($"{Model!.Import:N2} €")</div>
+            <div class="Label">Codi</div>
+            <div class="Value">@Model!.ConceptoPropio?.ToString() + @Model!.ConceptoComun.ToString()</div>
+            <div class="Label">Document</div>
+            <div class="Value">@Model!.RegMovimiento?.DocNum</div>
+            <div class="Label">Referencias</div>
+            <div class="Value">@Model!.Referencias()</div>
+            <div class="Label">Conceptes</div>
+            <div class="Value">@Model!.Conceptos()</div>
+            <div class="Label">Complements</div>
+            <div class="Value">@Model!.Complementos()</div>
+        </div>
+
+        @if (pnds.Count == 0)
+        {
+            <div class="PropertyGrid2">
+                <PropertyGrid Model="propertyGrid"
+                              UpdateRequest="Submit"
+                              CancelRequest="CloseRequestHandler"
+                              UpdateState="updateState">
+                </PropertyGrid>
+
+            </div>
+            <div><a href="#" @onclick:preventDefault @onclick="@(()=> template = BuildTemplate())">Registra plantilla</a></div>
+        }
+        else 
+@*         if(pnds.Count == 1)
+ *@        {
+            <div class="Info">
+                S'ha trobat la factura 
+                @pnds[0].Fra 
+                del
+                @($"{pnds[0].Fch.ToString():dd/MM/yy}")
+                per aquest import amb venciment
+                @($"{pnds[0].Vto.ToString():dd/MM/yy}")
+                Es aquesta?
+            </div>
+            <div class="ButtonsBar">
+                <a href="#" class="Button" @onclick:preventDefault @onclick="@(()=>pnds.Clear())">
+                    No.
+                </a>
+                <a href="#" class="Button ButtonOk" @onclick:preventDefault @onclick="@(()=>SelectPndAsync(pnds[0]))">
+                    Si!
+                </a>
+            </div>
+
+        }
+@*         else
+        {
+            <div class="Info">
+                Hi ha mes d'una factura pendent amb aquest import i aixó no està impkementat encara'
+                </div>
+        }
+ *@
+        <Error @bind-Value="exception"></Error>
+    </div>
+
+}
+
+@code {
+    [Parameter] public Norma43.Apunt? Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback<Norma43.Template> AfterTemplateUpdate { get; set; }
+
+    [Parameter] public List<GuidNom>? Projectes { get; set; }
+    [Parameter] public List<PgcCtaModel>? Ctas { get; set; }
+    [Parameter] public EmpModel.EmpIds? Emp { get; set; }
+    //[Parameter] public List<GuidNom>? Contacts { get; set; }
+    [Parameter] public List<Norma43.Template>? Patterns { get; set; }
+    [Parameter] public BancModel? Banc { get; set; }
+    [Parameter] public UserModel? User { get; set; }
+
+    PgcCtaModel? cta;
+    Guid? contact;
+    EmpModel.EmpIds? emp;
+    string? concept;
+    GuidNom? selectedProjecte;
+    Norma43.Template? template;
+    List<PndModel> pnds = new();
+    PndModel? selectedPnd;
+
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+
+    Exception? exception;
+
+    enum Fields
+    {
+        Concept,
+        Cta,
+        Contact,
+        Projecte
+    }
+
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+        emp = Emp;
+        concept = @Model!.Concept;
+
+        var pattern = Patterns?.FirstOrDefault(x => x.Emp == Emp && (concept?.Contains(x.Pattern!) ?? false) );
+        if (pattern != null)
+        {
+            concept = pattern.Concepte;
+            cta = Ctas?.FirstOrDefault(x => x.Guid == pattern.Cta);
+            contact =  pattern.Contact;
+            selectedProjecte = Projectes?.FirstOrDefault(x => x.Guid == pattern.Projecte);
+
+            if ((cta?.Id == "40000" || cta?.Id == "41000") && contact != null)
+            {
+                pnds = await ApiService.GetAsync<List<PndModel>>("Pnds/pending", contact!.ToString()!);
+                pnds = pnds?.Where(x => x.Eur == Model.Import)?.ToList();
+            }
+        }
+        else
+        {
+
+        }
+
+        propertyGrid = new PropertyGridModel();
+        propertyGrid.AddString("Concepte", concept, 62);
+        propertyGrid.AddGuidnom("Compte", cta?.ToGuidNom(), Ctas?.Select(x => x.ToGuidNom()).ToList());
+        propertyGrid.AddGuidnom("Subcompte", contact, ApiService.GetContacts(emp));
+        propertyGrid.AddGuidnom("Projecte", selectedProjecte, Projectes);
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    async Task Submit()
+    {
+        if (propertyGrid!.GetGuidNom((int)Fields.Cta) == null)
+        {
+            exception = new Exception("Compte buit");
+        } else
+        {
+            updateState = CrudButton.States.Loading;
+            cta = Ctas?.FirstOrDefault(x => x.Guid == propertyGrid!.GetGuidNom((int)Fields.Cta)?.Guid);
+            var cca = CcaModel.Factory(emp, User!, CcaModel.CcdEnum.Manual, Model!.Fch);
+            cca.Concept = propertyGrid.Value<string>((int)Fields.Concept);
+            cca.Projecte = propertyGrid.GetGuidNom((int)Fields.Projecte)?.Guid;
+            contact = propertyGrid.GetGuid((int)Fields.Contact);
+            if (Model.Dh == Norma43.DHs.debe)
+                cca.AddDebit(Model.Import, cta!, contact);
+            else
+                cca.AddCredit(Model.Import, cta!, contact);
+
+            var cta572 = Ctas!.FirstOrDefault(x => x.Cod == PgcCtaModel.Cods.Bancs);
+            cca.AddSaldo(cta572!, Banc?.Guid);
+            try
+            {
+                await ApiService.PostMultipartAsync<CcaModel, bool>(cca, "cca");
+                await ApiService.PostAsync<Guid, bool>(cca.Guid, "Norma43/assign", Model.Guid.ToString());
+                if (selectedPnd != null)
+                {
+                    selectedPnd.Result = cca.Guid;
+                    selectedPnd.Status = PndModel.Statuses.saldat;
+                    await ApiService.PostAsync<PndModel, bool>(selectedPnd, "pnd");
+                }
+                await AfterUpdate.InvokeAsync();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+                updateState = CrudButton.States.StandBy;
+            }
+        }
+    }
+
+    Norma43.Template BuildTemplate()
+    {
+        return new Norma43.Template
+            {
+                Emp = emp,
+                Pattern = concept,
+                Concepte = propertyGrid.Value<string>((int)Fields.Concept),
+                Cta = Ctas?.FirstOrDefault(x => x.Guid == propertyGrid!.GetGuidNom((int)Fields.Cta)?.Guid)?.Guid,
+                Contact = propertyGrid.GetGuid((int)Fields.Contact),
+                Projecte = propertyGrid.GetGuidNom((int)Fields.Projecte)?.Guid
+            };
+    }
+
+    void AfterTemplateUpdateHandler(Norma43.Template pattern)
+    {
+        AfterTemplateUpdate.InvokeAsync(pattern);
+        template = null;
+    }
+
+    async Task SelectPndAsync(PndModel pnd)
+    {
+        selectedPnd = pnd;
+        pnds.Clear();
+        //await Submit();
+    }
+}

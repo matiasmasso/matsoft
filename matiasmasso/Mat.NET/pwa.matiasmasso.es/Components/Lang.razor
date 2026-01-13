@@ -1,0 +1,37 @@
+﻿
+@using System.Globalization
+@using DTO
+@inject CultureService culture
+
+
+@*<select value="@Value?.Culture2Digits()" @onchange="@CultureChanged">
+    @foreach (var lang in langs)
+    {
+        <option value="@lang.Culture2Digits()">@lang.Nom(culture.GetLang())</option>
+    }
+</select>*@
+
+@code {
+    [Parameter] public LangDTO? Value { get; set; }
+    [Parameter] public EventCallback<LangDTO> ValueChanged { get; set; }
+
+
+    List<LangDTO> langs = new List<LangDTO>
+    {
+    LangDTO.Esp(),
+    LangDTO.Cat(),
+    LangDTO.Eng(),
+    LangDTO.Por()
+    };
+
+
+    public async Task CultureChanged(ChangeEventArgs args)
+    {
+        if (ValueChanged.HasDelegate)
+        {
+            var cc = args.Value?.ToString() ?? "es";
+            var lang = LangDTO.FromCultureInfo(cc);
+            await ValueChanged.InvokeAsync(lang);
+        }
+    }
+}

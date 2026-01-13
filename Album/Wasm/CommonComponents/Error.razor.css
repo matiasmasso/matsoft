@@ -1,0 +1,85 @@
+﻿/* Container */
+.Wrapper {
+    background: #b00020; /* Material Design error red */
+    color: #fff;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    animation: fadeIn 0.25s ease-out;
+    max-width: 600px;
+    margin: 0 auto 20px auto;
+}
+
+/* Icon + text layout */
+.IconText {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+/* Icon */
+.IconContainer {
+    width: 36px;
+    min-width: 36px;
+    opacity: 0.9;
+}
+
+/* Text */
+.Wrapper p {
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* Buttons */
+.ButtonsBar {
+    text-align: right;
+    margin-top: 12px;
+}
+
+    .ButtonsBar a {
+        padding: 8px 14px;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #fff;
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.25);
+        transition: background 0.15s ease, border 0.15s ease;
+    }
+
+        .ButtonsBar a:hover {
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.35);
+        }
+
+/* Toggle links */
+.SeeMore,
+.SeeLess {
+    color: #ffe9e9;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+    .SeeMore:hover,
+    .SeeLess:hover {
+        color: #ffffff;
+    }
+
+/* Hidden blocks */
+.Hidden {
+    display: none;
+}
+
+/* Smooth fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

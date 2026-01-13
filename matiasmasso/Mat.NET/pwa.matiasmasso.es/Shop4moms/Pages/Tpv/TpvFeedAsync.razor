@@ -1,0 +1,13 @@
+﻿@page "/tpv/feed"
+@inject PostFormService PostFormService;
+@code {
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        // PostFormService.Form will be null if the page is not requested by 
+        // a POST method
+        var data = PostFormService.Form?["data"];
+        Console.WriteLine(data);
+    }
+}

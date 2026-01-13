@@ -1,0 +1,70 @@
+﻿@inherits _ComponentBase
+
+
+<a class="Wrapper" href="#" @onclick="@(()=>{isShowingSelector = true;})" @onclick:preventDefault="true">
+    <div class="@Class">
+        @DisplayNom()
+    </div>
+
+    <UxSelector IsShowing="@isShowingSelector" 
+                    Options="@Options()"
+                    Value="@Value?.Guid.ToString()"
+                    ValueChanged="SelectedValueChanged"></UxSelector>
+
+@*    <div class="Selector @(isShowingSelector ? "":"Hidden")">
+        <UxSelector Options="@Options()"
+                    Value="@Value?.Guid.ToString()"
+                    ValueChanged="SelectedValueChanged"
+                    RequestToAddNew="RequestToAddNew"
+                    RequestToClose="@(()=>{isShowingSelector = false;})"></UxSelector>
+    </div>
+*@</a>
+
+
+@code {
+    [Parameter] public AtlasModel? Atlas { get; set; }
+    [Parameter] public ZonaModel? Zona { get; set; }
+    [Parameter] public LocationModel? Value { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public EventCallback<LocationModel> ValueChanged { get; set; }
+    private bool isShowingSelector = false;
+
+    private string DisplayNom()
+    {
+        if (Value == null || Zona == null || Zona.Guid != Value.Zona)
+            return base.Tradueix("(seleccionar población)", "(sel·leccionar població)", "(select a location)");
+        else
+            return Value!.Nom ?? "nom?";
+    }
+
+    private List<Option> Options()
+    {
+        if (Zona == null)
+            return new List<Option>();
+        else
+            return Atlas?.Locations
+            .Where(x => x.Zona == Zona.Guid)
+            .Select(x => new Option
+                {
+                    Id = x.Guid.ToString(),
+                    Nom = x.Nom ?? "?",
+                    Tag = x
+                })
+                .OrderBy(x => x.Nom)
+                .ToList() ?? new();
+    }
+
+
+    private void SelectedValueChanged(object item)
+    {
+        isShowingSelector = false;
+        Value = (LocationModel)item;
+        StateHasChanged();
+        ValueChanged.InvokeAsync(Value);
+    }
+
+    private void RequestToAddNew()
+    {
+
+    }
+}

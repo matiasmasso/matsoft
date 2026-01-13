@@ -1,0 +1,101 @@
+﻿@page "/contacts"
+@implements IDisposable
+@inject ApiService ApiService
+
+<PageTitle>Cash</PageTitle>
+
+@if (contacts == null)
+{
+    <h3>Contactes</h3>
+    <div>Loading...</div>
+}
+else if (selectedContact != null)
+{
+    <Contact Value="selectedContact" CloseRequest="@(()=>selectedContact = null)"></Contact>
+}
+else
+{
+    <div class="PageWrapper600">
+        <h3>Contactes</h3>
+
+        <PageOptions>
+            <LookupEmp Values="availableEmps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+            <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir</a>
+            <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+        </PageOptions>
+
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            <Virtualize Items="FilteredValues()" Context="item">
+                <a class="Item" href="#" @onclick="@(()=>selectedContact = item)" @onclick:preventDefault>@item.FullNom</a>
+            </Virtualize>
+        </div>
+    </div>
+}
+
+
+<Error @bind-Value="exception"></Error>
+@code {
+    List<EmpModel.EmpIds>? availableEmps;
+    EmpModel.EmpIds? emp;
+    List<ContactModel>? contacts;
+    ContactModel? selectedContact;
+    string? searchterm;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        emp = ApiService.Emp;
+        ApiService.OnChange += Refresca;
+        Refresca();
+    }
+
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        contacts = ApiService.GetContacts();
+        availableEmps = contacts?.Select(x => x.Emp).Distinct().ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    private List<ContactModel> FilteredValues()
+    {
+        List<ContactModel>? retval = null;
+
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = contacts?
+           .Where(x => x.Emp == emp && x.Matches(searchterm)).ToList();
+
+        if (!isShowingObsolets)
+            retval = retval?.Where(x => !x.Obsoleto).ToList();
+
+        retval = retval?.OrderBy(x => x.FullNom).ToList() ?? new();
+        return retval;
+    }
+
+    private void AddNew()
+    {
+        selectedContact = new ContactModel
+            {
+                Emp = (EmpModel.EmpIds)emp!,
+                RaoSocial = "(nou contacte)"
+            };
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

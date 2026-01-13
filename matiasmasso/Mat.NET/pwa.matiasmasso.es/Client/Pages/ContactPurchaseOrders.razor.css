@@ -1,0 +1,37 @@
+﻿.Wrapper {
+
+}
+.Item {
+    display:grid;
+    grid-template-areas: "ico id fch amt"
+                         "ico concept concept concept";
+    grid-template-columns: 48px 50px 80px 1fr;
+    column-gap:10px;
+    margin-bottom: 10px;
+}
+
+.Ico {
+    grid-area: ico;
+    justify-self: start;
+}
+
+    .Ico img {
+        height: 100%;
+        width: auto;
+    }
+.Id {
+    grid-area: id;
+    justify-self: center;
+}
+.Fch {
+    grid-area: fch;
+    justify-self: center;
+}
+.Concept {
+    grid-area: concept;
+    justify-self: start;
+}
+.Amt {
+    grid-area: amt;
+    justify-self: end;
+}

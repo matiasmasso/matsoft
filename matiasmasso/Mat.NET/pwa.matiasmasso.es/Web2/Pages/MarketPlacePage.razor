@@ -1,0 +1,103 @@
+﻿@page "/marketplace/{Guid:guid}"
+@page "/{LangSegment}/marketplace/{Guid:guid}"
+
+@implements IDisposable
+@inject CultureService culture
+@inject MarketPlacesService marketPlacesService
+
+<div class="PageWrapper600">
+    @if(guid == DTO.MarketPlaceModel.Wellknown(MarketPlaceModel.Wellknowns.Miravia)!.Guid){
+        <Miravia></Miravia>
+    } else
+    {
+        <h3>@model?.Nom</h3>
+        <TabControl>
+            <TabPage Text="@culture.Localize("General")">
+
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>state = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(model?.IsNew ?? false))"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+
+            </TabPage>
+        </TabControl>
+    }
+
+    <Error  Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    MarketPlaceModel? model;
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    private enum Fields
+    {
+        Nom
+    }
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        marketPlacesService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+
+        model = (guid == Guid.Empty) ? MarketPlaceModel.Factory() : marketPlacesService.GetValue(guid);
+        gridModel = new PropertyGridModel(model);
+        gridModel.AddString((int)Fields.Nom, model?.Nom, culture.Localize("Nom"));
+        StateHasChanged();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task UpdateRequest()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            model!.Nom = gridModel!.GetString((int)Fields.Nom);
+            await marketPlacesService.UpdateAsync(model);
+            state = DbState.StandBy;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            state = DbState.Failed;
+        }
+    }
+
+    async Task DeleteRequest()
+    {
+        try
+        {
+            await marketPlacesService.DeleteAsync(model);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        marketPlacesService.OnChange -= Refresca;
+    }
+}

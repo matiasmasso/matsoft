@@ -1,0 +1,74 @@
+﻿<div class="Wrapper">
+
+    @if (CanEdit && isEditing)
+    {
+
+        <input type="text" autofocus
+        @bind-value="@_innerControlValue"
+        @onblur="@(()=>{isEditing = false;})" />
+    }
+    else
+    {
+        <a class="Display" href="#" @onclick="OnClickHandler" @onclick:preventDefault="true">
+
+            @if (string.IsNullOrEmpty(_innerControlValue))
+            {
+                <div class="Text">&nbsp;</div>
+            }
+            else
+            {
+                <div class="Text">@_innerControlValue</div>
+            }
+        </a>
+    }
+
+    <div class="ButtonsBar">
+        @if (IsUrlValid)
+        {
+            <a href="@Value" target="_blank">
+                <Icon Id="Icon.Ids.Link"></Icon>
+            </a>
+        }
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public Object? Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; } = true;
+    [Parameter] public bool IsEditing { get; set; }
+
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+    private bool isEditing = false;
+
+    protected override void OnParametersSet()
+    {
+        isEditing = IsEditing;
+    }
+
+    bool IsUrlValid => Uri.TryCreate((string?)Value, UriKind.Absolute, out _);
+
+    private string _innerControlValue
+    {
+        get => Value?.ToString() ?? "";
+        set
+        {
+            if (Value?.ToString() != value)
+            {
+                Value = value;
+
+                if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                    ObjChanged.InvokeAsync(value);
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    void OnClickHandler(){
+        isEditing = true;
+    }
+
+}
+

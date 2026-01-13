@@ -1,0 +1,48 @@
+﻿.Wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+    border: 1px solid gray;
+    border-radius: 4px;
+    box-shadow: 1px 1px;
+    background-color:#FEFEFE;
+    width:265px;
+}
+
+.CloseButton {
+    display:flex;
+    justify-content: flex-end;
+    padding:10px;
+}
+
+.Catalog {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.Item, .Brand, .Category, .Sku {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid gray;
+    padding: 10px;
+}
+
+
+.Brands.HasSelection .Brand:not(.Active) {
+    display: none;
+}
+
+.Brand.Active, .Category.Active, .Sku.Active {
+    font-weight: 600;
+    background-color: lightgray;
+}
+
+
+
+.Categories.HasSelection .Category:not(.Active) {
+    display: none;
+}

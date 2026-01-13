@@ -1,0 +1,13 @@
+﻿.Options a {
+    display:block;
+}
+
+@media(max-width:599px){
+    .Options a {
+        padding:10px;
+    }
+
+    .Options a:not(:first-child){
+        border-top:1px solid gray;
+    }
+}

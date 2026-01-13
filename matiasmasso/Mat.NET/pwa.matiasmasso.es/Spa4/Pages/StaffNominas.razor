@@ -1,0 +1,70 @@
+﻿@page "/Staff/nominas/{staff:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+<div class="Wrapper">
+
+    <h1>@base.Tradueix("Nóminas","Nómines","Payroll")</h1>
+
+    @if (model == null)
+    {
+        <div>
+            <img src="/img/Spinner-24.gif" alt="loading..." />
+        </div>
+    }
+    else
+    {
+        <div class="Summary">
+            @string.Format(base.Tradueix("Se han encontrado {0} hojas de nómina",
+            "S'han trobat {0} fulls de nómina",
+            "{0} payroll sheets found"
+            ),model.Count())
+        </div>
+
+        <div class="Grid">
+            @if (model != null)
+            {
+                foreach (var item in model)
+                {
+                    <a href="@(Globals.ApiUrl("staff/nomina/pdf",item.Guid.ToString()))" target="_blank" class="Item">
+                        <div class="Ico">
+                            <img src="img/pdf-36.png" alt="nómina" height="36" width="36" />
+                        </div>
+
+                        <div class="Details">
+                            <div class="FirstRow">
+                                <div class="Fch">@(string.Format("{0:dd/MM/yy}",item.Fch))</div>
+                                <div class="Devengat">@(string.Format("{0}: {1:n2} €",base.Tradueix("Devengado","Devengat") ,item.Devengat))</div>
+                            </div>
+                            <div class="Liquid">@(string.Format("{0}: {1:n2} €",base.Tradueix("Liquido","Liquid") ,item.Liquid))</div>
+                        </div>
+                    </a>
+                }
+            }
+            else
+            {
+                <div>loading...</div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Staff { get; set; }
+
+    private List<NominaModel>? model;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = await base.GetAsync<List<NominaModel>>("Staff/nominas", Staff.ToString());
+            StateHasChanged();
+        };
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+
+}

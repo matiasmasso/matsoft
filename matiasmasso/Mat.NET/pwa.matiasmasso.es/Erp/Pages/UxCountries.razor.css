@@ -1,0 +1,31 @@
+﻿.Wrapper {
+    display:flex;
+    flex-direction: column;
+}
+.Caption {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+
+
+.Item {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.Ico {
+    width:20px;
+    min-width: 20px;
+    text-align:left;
+}
+
+.Caption .Ico {
+    text-align: right;
+}
+
+.fa-check {
+    color:green;
+}

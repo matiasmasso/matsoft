@@ -1,0 +1,16 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @foreach (var item in Model)
+    {
+        <a href="@item.Url" title="@item.Caption" class="@(string.IsNullOrEmpty(item.Url)?"":"Anchor")">
+            @item.Caption
+        </a>
+    }
+</div>
+
+
+@code {
+    [Parameter] public List<Box> Model { get; set; } = new();
+
+}

@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+@inject AppStateService appstate
+
+<div class="Layout 
+    @(isShowingMenuOnDesktop ? "" : "HideMenuOnDesktop")
+    @(isShowingMenuOnMobile ? "" : "HideMenuOnMobile")
+    ">
+
+    <div class="Header">
+        <Header ToggleMenu="HamburgerClick"></Header>
+    </div>
+
+    <main class="Body">
+            @Body
+    </main>
+
+    <aside class="Menu">
+        <NavMenu CloseRequestOnMobile="CloseOnMobileMenuHandler"
+></NavMenu>
+    </aside>
+
+</div>
+
+<span>[appstate live from @appstate.FchFrom.ToString("dd/MM/yy HH:mm:ss")]</span>
+
+
+
+@code {
+    private bool isShowingMenuOnMobile = false;
+    private bool isShowingMenuOnDesktop = true;
+
+    void HamburgerClick()
+    {
+        isShowingMenuOnMobile = !isShowingMenuOnMobile;
+        isShowingMenuOnDesktop = !isShowingMenuOnDesktop;
+    }
+
+    void CloseOnMobileMenuHandler()
+    {
+        //close menu on mobile after item click
+        isShowingMenuOnMobile = false;
+    }
+
+}

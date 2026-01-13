@@ -1,0 +1,137 @@
+﻿@page "/Locations_Page"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("Locations")</h1>
+
+    <PageOptions IsShowingOptions>
+
+        <CountryLookup HideEllipsis
+                       Value="@country"
+                       ValueChanged="CountryChanged">
+        </CountryLookup>
+
+        @if (zona != null)
+        {
+            <ZonaLookup HideEllipsis
+                    Value="@zona"
+                    ValueChanged="ZonaChanged">
+            </ZonaLookup>
+
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+        }
+
+    </PageOptions>
+
+    @if (zona == null & requestToAddNewZona)
+    {
+        var zona = new ZonaModel { Country = country.Guid };
+        <Zona Model="zona" RequestToCancel="@(()=>requestToAddNewZona = false)" OnUpdate="OnZonaAdded"></Zona>
+    }
+    else if (zona == null)
+    {
+        <div>No zonas available on @country.Nom.Tradueix(base.Lang()) </div>
+        <a href="#" @onclick="@(()=>requestToAddNewZona = true)" @onclick:preventDefault>@Localizer("AddNew")</a>
+    }
+    else if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("Locations.Found",model.Count(), ZonaLocations().Count(), zona.Nom)
+        </div>
+
+        <Locations_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></Locations_List>
+    }
+    else
+    {
+        <Location Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></Location>
+    }
+
+
+
+</div>
+
+@code {
+    List<LocationModel> model;
+    CacheDTO cache;
+    string searchTerm;
+    CountryModel country;
+    ZonaModel zona;
+    LocationModel selectedItem = null;
+    bool requestToAddNewZona = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        country = cache.Country(CountryModel.Wellknown(CountryModel.Wellknowns.Spain).Guid);
+        zona = cache.Zonas.Where(x => x.Country == country.Guid).FirstOrDefault();
+        model = cache.Locations;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Country, CacheDTO.Table.TableIds.Location);
+        model = cache.Locations;
+    }
+
+    List<LocationModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+            return ZonaLocations();
+        else
+            return ZonaLocations().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<LocationModel> ZonaLocations() => model.Where(x => x.Zona == zona.Guid).ToList();
+
+    private void ItemClick(LocationModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new LocationModel()
+            {
+                Zona = zona.Guid,
+            };
+    }
+
+    private void OnUpdate(LocationModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.Nom).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(LocationModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void CountryChanged(CountryModel args)
+    {
+        country = args;
+        zona = cache.Zonas.FirstOrDefault(x => x.Country == country.Guid);
+    }
+
+    private void ZonaChanged(ZonaModel args)
+    {
+        zona = args;
+    }
+
+    private void OnZonaAdded(ZonaModel args)
+    {
+        zona = args;
+        cache.Zonas.Add(zona);
+        cache.Zonas = cache.Zonas.OrderBy(x => x.Nom).ToList();
+        requestToAddNewZona = false;
+    }
+}

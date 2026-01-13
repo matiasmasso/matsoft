@@ -1,0 +1,114 @@
+﻿@page "/Contracts"
+@page "/Contratos"
+@page "/Contractes"
+
+@using Client.Shared
+@using Client.ViewModels
+@layout ProLayout
+@inject AppState AppState
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Contracts> Loc
+
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <h1>@Loc["Title"]</h1>
+
+        @if(viewModel.SelectedCodi == null)
+        {
+            <Virtualize Items="@viewModel.Codis()" Context="codi">
+                <a href="#" class="Codi" @onclick="() => viewModel.SelectCodi(codi)"  @onclick:preventDefault >
+                    @codi.Nom
+                </a>
+            </Virtualize>
+        } else
+        {
+            <a href="#" class="SelectedCodi" @onclick="() => viewModel.SelectedCodi = null"  @onclick:preventDefault >
+                @viewModel.SelectedCodi!.Nom
+            </a>
+
+            <Virtualize Items="@viewModel.Items()" Context="item">
+                <a class="Item" href="@item.DownloadUrl()" target="_blank">
+                    <div class="Ico">
+                        <img src="img/pdf-36-red.png"/>
+                    </div>
+                    <div class="Nom Truncate">
+                        @string.Format("{0:dd/MM/yy} {1}",item.FchFrom, item.Contact?.FullNom ?? "")
+                    </div>
+                    <div class="Details Truncate">
+                        @string.Format("{0} {1}",item.Nom, "")
+                    </div>
+                </a>
+            </Virtualize>
+
+        }
+
+        <!--
+
+
+
+        <SearchBox @bind-Value="@viewModel.SearchTerm"></SearchBox>
+
+
+        if(@string.IsNullOrEmpty(viewModel.SearchTerm) {
+            if(@viewModel.SelectedCodi == null) {
+                <Virtualize Items="@viewModel.Codis()" Context="codi">
+                    <a href="#" onclick="SelectCodi">
+                        @codi.Nom
+                    </a>
+                </Virtualize>
+            } else {
+                <a href="#" onclick="SelectCodi">
+                    @viewModel.SelectedCodi!.Nom
+                </a>
+               <Virtualize Items="@viewModel.Items()" Context="item">
+                    <a class="Item" href="@item.DownloadUrl()" target="_blank">
+                        <div class="Ico">
+                            <img src="img/pdf-36-red.png"/>
+                        </div>
+                        <div class="Nom Truncate">
+                            @item.Nom
+                        </div>
+                        <div class="Details Truncate">
+                            @string.Format("{0:dd/MM/yy} {1}",item.FchFrom, item.Contact?.FullNom ?? "")
+                        </div>
+                    </a>
+                </Virtualize>
+            }
+
+        } else {
+            <Virtualize Items="@viewModel.Items()" Context="item">
+                <a class="Item" href="@item.DownloadUrl()" target="_blank">
+                    <div class="Ico">
+                        <img src="img/pdf-36-red.png"/>
+                    </div>
+                    <div class="Nom Truncate">
+                        @item.Nom
+                    </div>
+                    <div class="Details Truncate">
+                        @string.Format("{0:dd/MM/yy} {1}",item.FchFrom, item.Contact?.FullNom ?? "")
+                    </div>
+                </a>
+            </Virtualize>
+        }
+        -->
+    </div>
+}
+
+
+
+
+@code {
+
+    private ContractsViewModel? viewModel;
+
+    protected override  Task OnInitializedAsync()
+    {
+        viewModel = new ContractsViewModel(AppState);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+        return base.OnInitializedAsync();
+    }
+}

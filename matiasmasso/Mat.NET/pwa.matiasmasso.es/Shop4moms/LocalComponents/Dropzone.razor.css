@@ -1,0 +1,56 @@
+﻿.Wrapper label {
+    border:1px dashed gray;
+    display:flex;
+    gap:10px;
+    width:100%;
+    height:100%;
+    cursor:pointer;
+    padding:6px 10px;
+    align-items: center;
+}
+
+    .Wrapper label:hover, .Wrapper label.Hover {
+        border: 1px solid black;
+        background-color: lightcyan;
+    }
+
+    .Wrapper label.Warning {
+        background-color: #FFEEEE;
+    }
+
+    .Warning {
+        width:20px;
+    }
+
+    .Wrapper ::deep input[type=file] {
+        width: 0;
+        height: 0;
+    }
+
+    .Grid {
+        margin-top: 10px;
+    }
+
+    .Item {
+        display:flex;
+        align-items: center;
+        gap:20px;
+        padding:5px 0;
+    }
+
+    .Item .Icon {
+        position:relative;
+        width:30px;
+    }
+
+        .Item .Icon .Remove {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 20px;
+            cursor: pointer;
+        }
+
+    .Item .Features {
+        width:1fr;
+    }

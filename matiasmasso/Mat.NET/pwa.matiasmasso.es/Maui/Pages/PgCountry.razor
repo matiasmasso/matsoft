@@ -1,0 +1,124 @@
+﻿@inherits _ComponentBase
+
+<PropertyGrid model="@gridModel"
+              RequestToUpdate="SaveRequest"
+              RequestToDelete="DeleteRequest"
+              RequestToCancel="CancelRequest"
+              ErrorMessage="@errorMessage"
+              GetOptions="GetOptions"></PropertyGrid>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private CountryModel? value;
+    private PropertyGridModel? gridModel;
+    private AtlasModel? atlas;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        Iso,
+        NomEsp,
+        NomCat,
+        NomEng,
+        NomPor,
+        Lang,
+        ExportCod,
+        PrefixeTel
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (value == null)
+        {
+            atlas = await base.Atlas();
+            value = Guid == null ? (new CountryModel()) : atlas.Country((Guid)Guid);
+                var model = new PropertyGridModel();
+                model.AddString((int)Fields.Iso, value!.ISO ?? "", "ISO 3166-2");
+                model.AddString((int)Fields.NomEsp, value.Nom?.Esp ?? "", "Español", "Espanyol", "Spanish");
+                model.AddString((int)Fields.NomCat, value.Nom?.Cat ?? "", "Catalán", "Català", "Catalan");
+                model.AddString((int)Fields.NomEng, value.Nom?.Eng ?? "", "Inglés", "Anglès", "English");
+                model.AddString((int)Fields.NomPor, value.Nom?.Por ?? "", "Portugués", "Portuguès", "Portuguese");
+                model.AddEnum((int)Fields.Lang, value.Lang, value.Lang?.Id.ToString() ?? "", value.Lang?.Nom(base.Lang()) ?? "", "Idioma", "Idioma", "Language");
+                model.AddEnum((int)Fields.ExportCod, value.ExportCod, ((int)value.ExportCod!).ToString(), ((CountryModel.ExportCods)(value.ExportCod)).ToString(), "Cod.Exportación", "Cod.Exportació", "Export code");
+                model.AddString((int)Fields.PrefixeTel, value.PrefixeTelefonic ?? "", "Prefijo tel.", "Prefixe tel.", "Phone prefix");
+                gridModel = model;
+                StateHasChanged();
+        }
+    }
+
+
+    private async Task SaveRequest()
+    {
+        value!.ISO = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Iso)?.Value?.ToString();
+        value!.Nom!.Esp = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomEsp)?.Value?.ToString();
+        value!.Nom!.Cat = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomCat)?.Value?.ToString();
+        value!.Nom!.Eng = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomEng)?.Value?.ToString();
+        value!.Nom!.Por = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.NomPor)?.Value?.ToString();
+        value!.Lang = (LangDTO)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Lang)?.Value;
+        value!.ExportCod = (int)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.ExportCod)?.Value;
+        value!.PrefixeTelefonic = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.PrefixeTel)?.Value?.ToString();
+
+        if (await PostAsync<CountryModel, bool>(value, "Country"))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Country/delete", value!.Guid.ToString())) {
+            atlas!.Countries.Remove(value);
+            CancelRequest();
+        }
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+    public async Task<List<Option>> GetOptions(PropertyGridModel.Item item)
+    {
+        List<Option> retval = new();
+        if (item.Field == (int)Fields.Lang)
+        {
+            retval = Enum.GetValues(typeof(LangDTO.Ids))
+            .Cast<LangDTO.Ids>()
+            .Where(x => x != LangDTO.Ids.Unknown)
+            .Select(x => new Option
+                {
+                    Id = x.ToString(),
+                    Nom = (new LangDTO(x)).Nom(base.Lang()),
+                    Tag = new LangDTO(x)
+                }).ToList();
+        }
+        else if (item.Field == (int)Fields.ExportCod)
+        {
+            retval.Add(new Option
+                {
+                    Id = ((int)CountryModel.ExportCods.Nacional).ToString(),
+                    Nom = base.Tradueix("Nacional", "Nacional", "National"),
+                    Tag = (int)CountryModel.ExportCods.Nacional
+                });
+            retval.Add(new Option
+                {
+                    Id = ((int)CountryModel.ExportCods.Intracomunitario).ToString(),
+                    Nom = base.Tradueix("Intracomunitario", "Intracomunitari", "EU"),
+                    Tag = (int)CountryModel.ExportCods.Intracomunitario
+                });
+            retval.Add(new Option
+                {
+                    Id = ((int)CountryModel.ExportCods.Extracomunitario).ToString(),
+                    Nom = base.Tradueix("Extracomunitario", "Extracomunitari", "Off-EU"),
+                    Tag = (int)CountryModel.ExportCods.Extracomunitario
+                });
+        }
+
+        return retval;
+    }
+}

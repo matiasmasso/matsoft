@@ -1,0 +1,979 @@
+﻿@implements IDisposable
+
+@inject ApiService ApiService
+
+@if (dbState == DbState.IsLoading)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="ActionBar">
+        Afegir:
+
+        @if (Doc != null)
+        {
+            if (ShouldOffer(DocRelModel.Wellknowns.Difunt))
+            {
+                <a href="#" @onclick="AddDifunt" @onclick:preventDefault>difunt</a>
+            }
+            if (ShouldOffer(DocRelModel.Wellknowns.Batejat))
+            {
+                <a href="#" @onclick="AddBatejat" @onclick:preventDefault>batejat</a>
+            }
+            if (ShouldOffer(DocRelModel.Wellknowns.Batejada))
+            {
+                <a href="#" @onclick="AddBatejada" @onclick:preventDefault>batejada</a>
+            }
+            if (ShouldOffer(DocRelModel.Wellknowns.Nebot))
+            {
+                <a href="#" @onclick="AddNebot" @onclick:preventDefault>nebot</a>
+            }
+            if (ShouldOffer(DocRelModel.Wellknowns.Oncle))
+            {
+                <a href="#" @onclick="AddOncle" @onclick:preventDefault>oncle</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.Nuvi))
+            {
+                <a href="#" @onclick="AddNuvi" @onclick:preventDefault>nuvi</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.Nuvia))
+            {
+                <a href="#" @onclick="AddNuvia" @onclick:preventDefault>nuvia</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.PareDelNuvi))
+            {
+                <a href="#" @onclick="AddPareDelNuvi" @onclick:preventDefault>pare del nuvi</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.MareDelNuvi))
+            {
+                <a href="#" @onclick="AddMareDelNuvi" @onclick:preventDefault>mare del nuvi</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.PareDeLaNuvia))
+            {
+                <a href="#" @onclick="AddPareDeLaNuvia" @onclick:preventDefault>pare de la nuvia</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.MareDeLaNuvia))
+            {
+                <a href="#" @onclick="AddMareDeLaNuvia" @onclick:preventDefault>mare de la nuvia</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.Testador))
+            {
+                <a href="#" @onclick="AddTestador" @onclick:preventDefault>testador</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.Testadora))
+            {
+                <a href="#" @onclick="AddTestadora" @onclick:preventDefault>testadora</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.Pare))
+            {
+                <a href="#" @onclick="AddPare" @onclick:preventDefault>pare</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.Mare))
+            {
+                <a href="#" @onclick="AddMare" @onclick:preventDefault>mare</a>
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.Fill))
+            {
+                <a href="#" class="DropdownContainer" @onclick="@(() => showFills = !showFills)" @onclick:preventDefault>fills</a>
+                @if (showFills)
+                {
+                    <div class="Dropdown">
+                    @foreach(var fill in ApiService.Children(DocTarget(DocRelModel.Wellknowns.Testador)?.Target) ?? new())
+                    {
+                        if (!items?.Any(x => x.Target == fill.Guid) ?? false)
+                        {
+                                <a href="#" class="Item" @onclick="@(async ()=> await AddFill(fill))" @onclick:preventDefault>@fill.Nom</a>
+                        }
+                    }
+                    </div>
+                }
+            }
+            @if (ShouldOffer(DocRelModel.Wellknowns.Cita))
+            {
+                <a href="#" @onclick="AddCita" @onclick:preventDefault>cita</a>
+            }
+            <a href="#" @onclick="AddLocation" @onclick:preventDefault>ubicació</a>
+        }
+        <a href="#" @onclick="AddNew" @onclick:preventDefault>altres</a>
+    </div>
+
+    <div class="Grid">
+        @foreach (var item in items ?? new())
+        {
+            <div class="Item">
+
+                <div class="Ico">
+                    <Icon Id="@(item.Difunt ? Icon.Ids.Cross : Icon.Ids.None)" Width="12" />
+                </div>
+
+                <a class="DocRel" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    @DocRel(item)
+                </a>
+
+                <div class="Nom @(IsAncestor(item.Target) ? "Ancestor" : HasGrau(item.Target) ? "HasGrau": "")">
+                    <ListItem Title="@TargetNom(item)"
+                              Tooltip="@Tooltip(item)"
+                    ContextMenu="@ContextMenu(item)"
+                    Tag="@item"
+                    MenuClick="ContextMenuClick"
+                    OnClick="@(()=>ItemClick(item))"></ListItem>
+                </div>
+            </div>
+        }
+    </div>
+
+}
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public DocModel? Doc { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    //[Parameter] public EventCallback<DocTargetModel> ItemSelected { get; set; } // to deprecate
+    [Parameter] public EventCallback<Object> ItemSelected { get; set; }
+
+    private List<DocTargetModel>? items;
+    //private IModel? selectedItem;
+    //private DocTargetModel? selectedItem;
+    private List<PersonModel>? persons;
+    private List<LocationModel>? locations;
+    private List<DocRelModel>? docRels;
+    // private bool isShowingMenu;
+    private bool showFills;
+    private DbState dbState;
+    //MenuModel? contextMenu;
+    //DocTargetModel? contextmenuItem;
+    Exception? exception;
+
+    enum MenuKeys
+    {
+        None,
+        Zoom,
+        Add,
+        AddPares,
+        AddAvis,
+        AddAviPatern,
+        AddAviaPaterna,
+        AddAviMatern,
+        AddAviaMaterna,
+        AddGermans,
+        AddCosinsGermans,
+        AddConjuge,
+        AddFills,
+        AddNebots,
+        AddOncles,
+        AddSogres,
+        AddCunyats,
+        AddGendres,
+        AddNets
+
+    }
+
+    protected override void OnInitialized()
+    {
+        persons = ApiService.Persons();
+        locations = ApiService.Locations();
+        docRels = ApiService.DocRels();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        items = ApiService.DocTargets(Doc)?
+        .OrderByDescending(x => x.SubjectePassiu)
+        .ThenBy(x => ApiService.DocRel(x.Rel)?.Ord)
+        .ToList();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    string? DocRel(DocTargetModel item) => docRels?.FirstOrDefault(x => x.Guid == item.Rel)?.Nom;
+    string? TargetNom(DocTargetModel item) => persons?.FirstOrDefault(x => x.Guid == item.Target)?.Nom ?? locations?.FirstOrDefault(x => x.Guid == item.Target)?.NomLlarg;
+    string? Tooltip(DocTargetModel item) => persons?.FirstOrDefault(x => x.Guid == item.Target)?.FullNom2() ?? locations?.FirstOrDefault(x => x.Guid == item.Target)?.NomLlarg;
+
+    ContextMenuModel ContextMenu(DocTargetModel item)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom);
+        var addnew = retval.AddItem("Afegir", (int)MenuKeys.Add);
+
+        if (item.TargetCod == DocTargetModel.TargetCods.Person)
+        {
+            var person = ApiService.Person(item.Target);
+
+            var pares = ApiService.Pares(person);
+            if (pares.Count > 0)
+            {
+                var addPares = addnew.AddItem("Pares");
+                var pare = ApiService.Person(person?.Pare);
+                var mare = ApiService.Person(person?.Mare);
+                if (pare != null) addPares.AddItem(pare.Nom ?? "?", (int)MenuKeys.AddPares, pare);
+                if (mare != null) addPares.AddItem(mare.Nom ?? "?", (int)MenuKeys.AddPares, mare);
+
+            }
+
+            var avis = ApiService.Avis(person);
+            if (avis.Count > 0)
+            {
+                var addAvis = addnew.AddItem("Avis");
+                var avipatern = ApiService.AviPatern(person);
+                var aviapaterna = ApiService.AviaPaterna(person);
+                var avimatern = ApiService.AviMatern(person);
+                var aviamaterna = ApiService.AviaMaterna(person);
+                if (avipatern != null) addAvis.AddItem(avipatern.Nom ?? "?", (int)MenuKeys.AddAviPatern);
+                if (aviapaterna != null) addAvis.AddItem(aviapaterna.Nom ?? "?", (int)MenuKeys.AddAviaPaterna);
+                if (avimatern != null) addAvis.AddItem(avimatern.Nom ?? "?", (int)MenuKeys.AddAviMatern);
+                if (aviamaterna != null) addAvis.AddItem(aviamaterna.Nom ?? "?", (int)MenuKeys.AddAviaMaterna);
+            }
+
+            var addGermans = addnew.AddItem("Germans/germanes");
+            foreach (var px in ApiService.Germans(item.Target) ?? new())
+            {
+                if (!items?.Any(x => x.Target == px.Guid) ?? false)
+                {
+                    addGermans.AddItem(px?.Nom ?? "?", (int)MenuKeys.AddGermans, px);
+                }
+            }
+
+            var addCosinsGermans = addnew.AddItem("Cosins germans");
+            foreach (var px in ApiService.CosinsGermans(item.Target) ?? new())
+            {
+                if (!items?.Any(x => x.Target == px.Guid) ?? false)
+                {
+                    addCosinsGermans.AddItem(px?.Nom ?? "?", (int)MenuKeys.AddCosinsGermans, px);
+                }
+            }
+
+            var addNebots = addnew.AddItem("Nebots/nebodes");
+            foreach (var px in ApiService.Nebots(item.Target) ?? new())
+            {
+                if (!items?.Any(x => x.Target == px.Guid) ?? false)
+                {
+                    addNebots.AddItem(px?.Nom ?? "?", (int)MenuKeys.AddNebots, px);
+                }
+            }
+
+            var addOncles = addnew.AddItem("Oncles/tietes");
+            foreach (var px in ApiService.Oncles(item.Target) ?? new())
+            {
+                if (!items?.Any(x => x.Target == px.Guid) ?? false)
+                {
+                    addOncles.AddItem(px?.Nom ?? "?", (int)MenuKeys.AddOncles, px);
+                }
+            }
+
+            var addSogres = addnew.AddItem("Sogres");
+            var sogres = ApiService.Sogres(item.Target) ?? new();
+            foreach (var px in sogres)
+            {
+                if (!items?.Any(x => x.Target == px.Guid) ?? false)
+                {
+                    addSogres.AddItem(px?.Nom ?? "?", (int)MenuKeys.AddSogres, px);
+                }
+            }
+
+            var addCunyats = addnew.AddItem("Cunyats/cunyades");
+            var cunyats = ApiService.Cunyats(item.Target) ?? new();
+            foreach (var px in cunyats)
+            {
+                if (!items?.Any(x => x.Target == px.Guid) ?? false)
+                {
+                    addCunyats.AddItem(px?.Nom ?? "?", (int)MenuKeys.AddCunyats, px);
+                }
+            }
+
+            var addGendres = addnew.AddItem("Gendres/nores");
+            var gendres = ApiService.Gendres(item.Target) ?? new();
+            foreach (var px in gendres)
+            {
+                if (!items?.Any(x => x.Target == px.Guid) ?? false)
+                {
+                    addGendres.AddItem(px?.Nom ?? "?", (int)MenuKeys.AddGendres, px);
+                }
+            }
+
+            var conjuges = ApiService.Conjuges(item.Target);
+            if (conjuges?.Count > 0)
+            {
+                var addConjuges = addnew.AddItem("Conjuges");
+                foreach (var guid in conjuges)
+                {
+                    var conjuge = ApiService.Person(guid);
+                    addConjuges.AddItem(conjuge?.Nom ?? "?", (int)MenuKeys.AddConjuge, conjuge);
+                }
+            }
+
+            var fills = ApiService.Children(item.Target);
+            if (fills?.Count > 0)
+            {
+                var addFills = addnew.AddItem("Fills");
+                foreach (var fill in fills)
+                {
+                    addFills.AddItem(fill?.Nom ?? "?", (int)MenuKeys.AddFills, fill);
+                }
+            }
+
+            var nets = ApiService.Nets(item.Target);
+            if (fills?.Count > 0)
+            {
+                var addNets = addnew.AddItem("Nets");
+                foreach (var net in nets ?? new())
+                {
+                    addNets.AddItem(net?.Nom ?? "?", (int)MenuKeys.AddNets, net);
+                }
+            }
+        }
+
+        return retval;
+    }
+
+    void ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        var person = args.Tag is PersonModel ? (PersonModel)args.Tag : null;
+        // if person == null && args.Tag is DocTarget{
+
+        // }
+        var target = (DocTargetModel?)args.Target;
+        if (person == null && target?.TargetCod == DocTargetModel.TargetCods.Person)
+            person = ApiService.Person(target.Target);
+        DocRelModel.Wellknowns rel;
+        DocTargetModel retval;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.AddPares:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Pare : DocRelModel.Wellknowns.Mare;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = person?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddAviPatern:
+                rel = DocRelModel.Wellknowns.AviPatern;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                var avipatern = ApiService.AviPatern(person);
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = avipatern?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = avipatern?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddAviaPaterna:
+                rel = DocRelModel.Wellknowns.AviaPaterna;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                var aviapaterna = ApiService.AviaPaterna(person);
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = aviapaterna?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = aviapaterna?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddAviMatern:
+                rel = DocRelModel.Wellknowns.AviMatern;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                var avimatern = ApiService.AviMatern(person);
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = avimatern?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = avimatern?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddAviaMaterna:
+                rel = DocRelModel.Wellknowns.AviaMaterna;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                var aviamaterna = ApiService.AviaMaterna(person);
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = aviamaterna?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = aviamaterna?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddGermans:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Germa : DocRelModel.Wellknowns.Germana;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = person?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddCosinsGermans:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.CosiGerma : DocRelModel.Wellknowns.CosinaGermana;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                retval = new DocTargetModel
+                {
+                    Doc = Doc?.Guid,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Target = person?.Guid,
+                    Rel = DocRelModel.Wellknown(rel)?.Guid,
+                    Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddNebots:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Nebot : DocRelModel.Wellknowns.Neboda;
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = person?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddOncles:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Oncle : DocRelModel.Wellknowns.Tieta;
+                retval = new DocTargetModel
+                {
+                    Doc = Doc?.Guid,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Target = person?.Guid,
+                    Rel = DocRelModel.Wellknown(rel)?.Guid,
+                    Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddSogres:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Sogre : DocRelModel.Wellknowns.Sogra;
+                retval = new DocTargetModel
+                {
+                    Doc = Doc?.Guid,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Target = person?.Guid,
+                    Rel = DocRelModel.Wellknown(rel)?.Guid,
+                    Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddCunyats:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Cunyat : DocRelModel.Wellknowns.Cunyada;
+                retval = new DocTargetModel
+                {
+                    Doc = Doc?.Guid,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Target = person?.Guid,
+                    Rel = DocRelModel.Wellknown(rel)?.Guid,
+                    Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddGendres:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Gendre : DocRelModel.Wellknowns.Nora;
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = person?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddConjuge:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Marit : DocRelModel.Wellknowns.Muller;
+                if (IsFill(target)) rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Gendre : DocRelModel.Wellknowns.Nora;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = person?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddFills:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Fill : DocRelModel.Wellknowns.Filla;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = person?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+            case MenuKeys.AddNets:
+                rel = person?.Sex == PersonModel.Sexs.Male ? DocRelModel.Wellknowns.Net : DocRelModel.Wellknowns.Neta;
+                if (Doc!.IsDispensaMatrimonial()) rel = DocRelModel.Wellknowns.Cita;
+                retval = new DocTargetModel
+                    {
+                        Doc = Doc?.Guid,
+                        TargetCod = DocTargetModel.TargetCods.Person,
+                        Target = person?.Guid,
+                        Rel = DocRelModel.Wellknown(rel)?.Guid,
+                        Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+                    };
+                ItemSelected.InvokeAsync(retval);
+                break;
+        }
+    }
+
+    private bool IsFill(DocTargetModel? candidate)
+    {
+        var candidatePerson = ApiService.Person(candidate?.Target);
+        var candidatePares = ApiService.Pares(candidatePerson).Select(x => x.Guid).ToList();
+        var retval = items?.Any(x => x.SubjectePassiu && candidatePares.Contains((Guid)x.Target!)) ?? false;
+        return retval;
+    }
+
+    private bool IsAncestor(Guid? target)
+    {
+        var retval = target == null ? false : ApiService.RootAncestorGuids()?.Contains((Guid)target) ?? false;
+        return retval;
+    }
+
+    private bool HasGrau(Guid? target)
+    {
+        bool retval = false;
+        var person = ApiService.Person(target);
+        if (person != null) retval = ApiService.HasGrau(person);
+        return retval;
+    }
+
+    async Task ItemClick(DocTargetModel args)
+    {
+        await ItemSelected.InvokeAsync(args);
+    }
+
+    DocTargetModel? DocTarget(DocRelModel.Wellknowns relId) => items?.FirstOrDefault(x => x.Rel == DocRelModel.Wellknown(relId)!.Guid);
+
+    async Task AddTarget(DocRelModel.Wellknowns? rel = null, bool subjectePassiu = false, bool difunt = false)
+    {
+        var item = TargetBuilder(rel, subjectePassiu, difunt);
+        await AddTarget(item);
+    }
+
+    async Task AddTarget(DocTargetModel item)
+    {
+        await ItemSelected.InvokeAsync(item);
+    }
+
+    DocTargetModel TargetBuilder(DocRelModel.Wellknowns? rel = null, bool subjectePassiu = false, bool difunt = false)
+    {
+        var item = new DocTargetModel { Doc = Doc!.Guid };
+        if (rel != null)
+            item.Rel = DocRelModel.Wellknown((DocRelModel.Wellknowns)rel!)!.Guid;
+        item.SubjectePassiu = subjectePassiu;
+        return item;
+    }
+
+    async Task AddNew() => await AddTarget();
+    async Task AddBatejat() => await AddTarget(DocRelModel.Wellknowns.Batejat, true);
+    async Task AddBatejada() => await AddTarget(DocRelModel.Wellknowns.Batejada, true);
+
+    async Task AddNebot()
+    {
+        var item = TargetBuilder(DocRelModel.Wellknowns.Nebot, true);
+        await AddTarget(item);
+    }
+
+    async Task AddOncle()
+    {
+        var item = TargetBuilder(DocRelModel.Wellknowns.Oncle, true);
+        await AddTarget(item);
+    }
+    async Task AddNuvi() => await AddTarget(DocRelModel.Wellknowns.Nuvi, true);
+    async Task AddNuvia()
+    {
+        var item = TargetBuilder(DocRelModel.Wellknowns.Nuvia, true);
+
+        //preselect current wife if there is one and only one
+        var nuviTarget = DocTarget(DocRelModel.Wellknowns.Nuvi);
+        var nuvi = persons?.FirstOrDefault(x => x.Guid == nuviTarget?.Target);
+        var conjuges = ApiService.Conjuges(nuvi);
+        if (conjuges?.Count == 1) item.Target = conjuges.First();
+
+        await AddTarget(item);
+    }
+    async Task AddPareDelNuvi()
+    {
+        var nuviTarget = DocTarget(DocRelModel.Wellknowns.Nuvi);
+        var item = TargetBuilder(DocRelModel.Wellknowns.PareDelNuvi);
+        item.Target = persons?.FirstOrDefault(x => x.Guid == nuviTarget?.Target)?.Pare;
+
+        await AddTarget(item);
+    }
+    async Task AddMareDelNuvi()
+    {
+        var nuviTarget = DocTarget(DocRelModel.Wellknowns.Nuvi);
+        var item = TargetBuilder(DocRelModel.Wellknowns.MareDelNuvi);
+        item.Target = persons?.FirstOrDefault(x => x.Guid == nuviTarget?.Target)?.Mare;
+
+        await AddTarget(item);
+    }
+    async Task AddPareDeLaNuvia()
+    {
+        var nuviaTarget = DocTarget(DocRelModel.Wellknowns.Nuvia);
+        var item = TargetBuilder(DocRelModel.Wellknowns.PareDeLaNuvia);
+        item.Target = persons?.FirstOrDefault(x => x.Guid == nuviaTarget?.Target)?.Pare;
+        await AddTarget(item);
+    }
+    async Task AddMareDeLaNuvia()
+    {
+        var nuviaTarget = DocTarget(DocRelModel.Wellknowns.Nuvia);
+        var item = TargetBuilder(DocRelModel.Wellknowns.MareDeLaNuvia);
+        item.Target = persons?.FirstOrDefault(x => x.Guid == nuviaTarget?.Target)?.Mare;
+        await AddTarget(item);
+    }
+
+    async Task AddTestador() => await AddTarget(DocRelModel.Wellknowns.Testador, true);
+
+    async Task AddTestadora() => await AddTarget(DocRelModel.Wellknowns.Testadora, true);
+
+    async Task AddPare()
+    {
+        var subjecte = DocTarget(DocRelModel.Wellknowns.Testador)
+        ?? DocTarget(DocRelModel.Wellknowns.Testadora)
+        ?? DocTarget(DocRelModel.Wellknowns.Difunt)
+        ?? DocTarget(DocRelModel.Wellknowns.Batejat)
+        ?? DocTarget(DocRelModel.Wellknowns.Batejada);
+
+        var item = TargetBuilder(DocRelModel.Wellknowns.Pare);
+        item.Target = persons?.FirstOrDefault(x => x.Guid == subjecte?.Target)?.Pare;
+        await AddTarget(item);
+    }
+
+    async Task AddMare()
+    {
+        var subjecte = DocTarget(DocRelModel.Wellknowns.Testador)
+        ?? DocTarget(DocRelModel.Wellknowns.Testadora)
+         ?? DocTarget(DocRelModel.Wellknowns.Difunt)
+       ?? DocTarget(DocRelModel.Wellknowns.Batejat)
+        ?? DocTarget(DocRelModel.Wellknowns.Batejada);
+
+        var item = TargetBuilder(DocRelModel.Wellknowns.Mare);
+        item.Target = persons?.FirstOrDefault(x => x.Guid == subjecte?.Target)?.Mare;
+        await AddTarget(item);
+    }
+
+
+    async Task AddFill(PersonModel fill)
+    {
+        var docRel = fill.Sex == PersonModel.Sexs.Female ? DocRelModel.Wellknowns.Filla : DocRelModel.Wellknowns.Fill;
+        var item = TargetBuilder(docRel);
+        item.Target = fill.Guid;
+        await AddTarget(item);
+    }
+
+    async Task AddCita() => await AddTarget(DocRelModel.Wellknowns.Cita);
+    async Task AddDifunt() => await AddTarget(DocRelModel.Wellknowns.Difunt, true, true);
+
+    async Task AddLocation()
+    {
+        var item = TargetBuilder(DocRelModel.Wellknowns.Cita);
+        item.TargetCod = DocTargetModel.TargetCods.Location;
+        await AddTarget(item);
+    }
+
+
+
+    // MenuModel ContextMenu(DocTargetModel item)
+    // {
+    //     var retval = new MenuModel();
+    //     var root = retval.AddItem("afegir...");
+    //     var menuItemDel = retval.AddItem("eliminar", MenuModel.Modes.CustomAction);
+    //     menuItemDel.Action = new Action(async () => await DeleteItem(item, menuItemDel));
+
+    //     var person = persons?.FirstOrDefault(x => x.Guid == item.Target);
+
+    //     var pare = person?.Pare == null ? null : persons?.FirstOrDefault(x => x.Guid == person.Pare);
+    //     var mare = person?.Mare == null ? null : persons?.FirstOrDefault(x => x.Guid == person.Mare);
+    //     if (pare != null | mare != null)
+    //     {
+    //         var pares = root.AddItem("pares");
+    //         if (pare != null) pares.AddItem(pare.Nom, new Action(async () => await AddRel(pare, DocRelModel.Wellknowns.Pare)));
+    //         if (mare != null) pares.AddItem(mare.Nom, new Action(async () => await AddRel(mare, DocRelModel.Wellknowns.Mare)));
+
+    //         var aviPatern = pare?.Pare == null ? null : persons?.FirstOrDefault(x => x.Guid == pare.Pare);
+    //         var aviaPaterna = pare?.Mare == null ? null : persons?.FirstOrDefault(x => x.Guid == pare.Mare);
+    //         var aviMatern = mare?.Pare == null ? null : persons?.FirstOrDefault(x => x.Guid == mare.Pare);
+    //         var aviaMaterna = mare?.Mare == null ? null : persons?.FirstOrDefault(x => x.Guid == mare.Pare);
+    //         if (aviPatern != null | aviaPaterna != null | aviMatern != null | aviaMaterna != null)
+    //         {
+    //             var avis = root.AddItem("avis");
+    //             if (aviPatern != null) avis.AddItem(aviPatern.Nom, new Action(async () => await AddRel(aviPatern, DocRelModel.Wellknowns.AviPatern)));
+    //             if (aviaPaterna != null) avis.AddItem(aviaPaterna.Nom, new Action(async () => await AddRel(aviaPaterna, DocRelModel.Wellknowns.AviaPaterna)));
+    //             if (aviMatern != null) avis.AddItem(aviMatern.Nom, new Action(async () => await AddRel(aviMatern, DocRelModel.Wellknowns.AviMatern)));
+    //             if (aviaMaterna != null) avis.AddItem(aviaMaterna.Nom, new Action(async () => await AddRel(aviaMaterna, DocRelModel.Wellknowns.AviaMaterna)));
+    //         }
+    //     }
+    //     return retval;
+    // }
+
+    async Task AddRel(PersonModel person, DocRelModel.Wellknowns rel)
+    {
+        dbState = DbState.IsUpdating;
+        try
+        {
+            //menuItem.IsBusy = true;
+            var docTarget = new DocTargetModel
+                {
+                    Doc = Doc!.Guid,
+                    Rel = DocRelModel.Wellknown(rel)!.Guid,
+                    Target = person.Guid,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Difunt = person.IsDifuntAt(Doc?.Fch)
+                };
+
+            await ApiService.PostAsync<DocTargetModel, bool>(docTarget, "DocTarget");
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+
+        //menuItem.IsBusy = false;
+        // isShowingMenu = false;
+        StateHasChanged();
+    }
+
+    async Task DeleteItem(DocTargetModel item, MenuModel.Item menuItem)
+    {
+        dbState = DbState.IsDeleting;
+        menuItem.IsBusy = true;
+        try
+        {
+            await ApiService.GetAsync<bool>("DocTarget/delete", item.Guid.ToString());
+            menuItem.IsBusy = false;
+            await AfterUpdate.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    void EllipsysClick(DocTargetModel item)
+    {
+        // isShowingMenu = true;
+        //contextmenuItem = item;
+    }
+
+    bool ShouldOffer(DocRelModel.Wellknowns id)
+    {
+        bool retval = false;
+        if (Doc!.Cod == DocCodModel.Wellknown(DocCodModel.Wellknowns.CapitolsMatrimonials)!.Guid
+        || Doc!.Cod == DocCodModel.Wellknown(DocCodModel.Wellknowns.RegistreParroquialMatrimoni)!.Guid
+        || Doc!.Cod == DocCodModel.Wellknown(DocCodModel.Wellknowns.ExpedientMatrimonial)!.Guid
+        || Doc!.Cod == DocCodModel.Wellknown(DocCodModel.Wellknowns.Llinatge)!.Guid)
+        {
+            if (!HasRel(id))
+            {
+                if (id == DocRelModel.Wellknowns.Nuvi) retval = true;
+                else if (id == DocRelModel.Wellknowns.Nuvia) retval = true;
+                else if (id == DocRelModel.Wellknowns.PareDelNuvi && HasRel(DocRelModel.Wellknowns.Nuvi)) retval = true;
+                else if (id == DocRelModel.Wellknowns.MareDelNuvi && HasRel(DocRelModel.Wellknowns.Nuvi)) retval = true;
+                else if (id == DocRelModel.Wellknowns.PareDeLaNuvia && HasRel(DocRelModel.Wellknowns.Nuvia)) retval = true;
+                else if (id == DocRelModel.Wellknowns.MareDeLaNuvia && HasRel(DocRelModel.Wellknowns.Nuvia)) retval = true;
+            }
+        }
+        else if (Doc.Cod == DocCodModel.Wellknown(DocCodModel.Wellknowns.DispensaMatrimonial)!.Guid)
+        {
+            if (id == DocRelModel.Wellknowns.Cita)
+                retval = true;
+            else if (!HasRel(id))
+            {
+                if (id == DocRelModel.Wellknowns.Nuvi) retval = true;
+                else if (id == DocRelModel.Wellknowns.Nuvia) retval = true;
+            }
+        }
+        else if (Doc.Cod == DocCodModel.Wellknown(DocCodModel.Wellknowns.Testament)!.Guid)
+        {
+            if (!HasRel(DocRelModel.Wellknowns.Testador) && !HasRel(DocRelModel.Wellknowns.Testadora))
+            {
+                if (id == DocRelModel.Wellknowns.Testador || id == DocRelModel.Wellknowns.Testadora) retval = true;
+            }
+            else
+            {
+                switch (id)
+                {
+                    case DocRelModel.Wellknowns.Pare:
+                    case DocRelModel.Wellknowns.Mare:
+                        retval = (!HasRel(id));
+                        break;
+                    case DocRelModel.Wellknowns.Conjuge:
+                    case DocRelModel.Wellknowns.Fill:
+                    case DocRelModel.Wellknowns.Germa:
+                        retval = true;
+                        break;
+                }
+            }
+
+        }
+        else if (Doc.Cod == DocCodModel.Wellknown(DocCodModel.Wellknowns.Bateig)!.Guid)
+        {
+            if (!HasRel(DocRelModel.Wellknowns.Batejat) && !HasRel(DocRelModel.Wellknowns.Batejada))
+            {
+                if (id == DocRelModel.Wellknowns.Batejat || id == DocRelModel.Wellknowns.Batejada) retval = true;
+            }
+            else
+            {
+                switch (id)
+                {
+                    case DocRelModel.Wellknowns.Pare:
+                    case DocRelModel.Wellknowns.Mare:
+                        retval = (!HasRel(id));
+                        break;
+                }
+            }
+
+        }
+        else if (Doc.Cod == DocCodModel.Wellknown(DocCodModel.Wellknowns.RegistreParroquialObit)!.Guid)
+        {
+            switch (id)
+            {
+                case DocRelModel.Wellknowns.Difunt:
+                case DocRelModel.Wellknowns.Pare:
+                case DocRelModel.Wellknowns.Mare:
+                    retval = (!HasRel(id));
+                    break;
+                case DocRelModel.Wellknowns.Conjuge:
+                case DocRelModel.Wellknowns.Fill:
+                case DocRelModel.Wellknowns.Germa:
+                    retval = true;
+                    break;
+            }
+
+        }
+        return retval;
+    }
+
+    bool HasRel(DocRelModel.Wellknowns id) => items?.Any(x => x.Rel == DocRelModel.Wellknown(id)!.Guid) ?? false;
+
+    // async Task MenuItemClick(ItemClickEventArgs e)
+    // {
+    //     try
+    //     {
+    //         var item = (DocTargetModel)e.Data;
+    //         var target = item.Target;
+    //         var person = persons?.FirstOrDefault(x => x.Guid == item.Target);
+    //         DocTargetModel? doctarget = null;
+    //         var key = e.MenuItem.Attributes["Key"].ToString();
+    //         switch (key)
+    //         {
+    //             case "Zoom":
+    //                 await ItemSelected.InvokeAsync(item);
+    //                 break;
+
+    //             case "AddPare":
+    //                 await ItemSelected.InvokeAsync(DocTarget(item, DocRelModel.Wellknowns.Pare));
+    //                 break;
+
+    //             case "AddMare":
+    //                 await ItemSelected.InvokeAsync(DocTarget(item, DocRelModel.Wellknowns.Mare));
+    //                 break;
+
+    //             case "AddAviPatern":
+    //                 await ItemSelected.InvokeAsync(DocTarget(item, DocRelModel.Wellknowns.AviPatern));
+    //                 break;
+
+    //             case "AddAviaPaterna":
+    //                 await ItemSelected.InvokeAsync(DocTarget(item, DocRelModel.Wellknowns.AviaPaterna));
+    //                 break;
+
+    //             case "AddAviMatern":
+    //                 await ItemSelected.InvokeAsync(DocTarget(item, DocRelModel.Wellknowns.AviMatern));
+    //                 break;
+
+    //             case "AddAviaMaterna":
+    //                 await ItemSelected.InvokeAsync(DocTarget(DocRelModel.Wellknowns.AviaMaterna));
+    //                 break;
+
+    //             case "Delete":
+    //                 var rc = await appState.GetAsync<bool>("DocTarget/delete", item.Guid.ToString());
+    //                 items = await appState.GetAsync<List<DocTargetModel>>("DocTargets/fromDoc", Doc!.Guid.ToString());
+    //                 break;
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     { exception = ex; }
+    // }
+
+    DocTargetModel DocTarget(DocTargetModel src, DocRelModel.Wellknowns rel)
+    {
+        var person = persons?.FirstOrDefault(x => x.Guid == src.Target);
+        DocTargetModel retval = new DocTargetModel
+            {
+                Doc = Doc?.Guid,
+                TargetCod = DocTargetModel.TargetCods.Person,
+                Rel = DocRelModel.Wellknown(rel)!.Guid,
+                Difunt = person?.IsDifuntAt(Doc?.Fch) ?? false
+            };
+
+        switch (rel)
+        {
+            case DocRelModel.Wellknowns.Pare:
+                retval.Target = person?.Pare;
+                break;
+            case DocRelModel.Wellknowns.Mare:
+                retval.Target = person?.Mare;
+                break;
+            case DocRelModel.Wellknowns.AviPatern:
+                retval.Target = persons?.FirstOrDefault(x => x.Guid == person?.Pare)?.Pare;
+                break;
+            case DocRelModel.Wellknowns.AviaPaterna:
+                retval.Target = persons?.FirstOrDefault(x => x.Guid == person?.Pare)?.Mare;
+                break;
+            case DocRelModel.Wellknowns.AviMatern:
+                retval.Target = persons?.FirstOrDefault(x => x.Guid == person?.Mare)?.Pare;
+                break;
+            case DocRelModel.Wellknowns.AviaMaterna:
+                retval.Target = persons?.FirstOrDefault(x => x.Guid == person?.Mare)?.Mare;
+                break;
+        }
+        return retval;
+    }
+
+    //async Task EllipsisClicked(MouseEventArgs args, DocTargetModel item)
+    //{
+    //    await blazorContextMenuService.ShowMenu("myMenu", (int)args.ClientX, (int)args.ClientY);
+    //}
+
+    // private void OnContextMenuBlur(FocusEventArgs args)
+    // {
+    //     isShowingContextMenu = false;
+    // }
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

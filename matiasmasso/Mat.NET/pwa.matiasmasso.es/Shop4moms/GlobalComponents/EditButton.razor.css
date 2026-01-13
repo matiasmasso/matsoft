@@ -1,0 +1,27 @@
+﻿.EditButton {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 70px;
+    height: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+    color: lightgray;
+    fill: lightgray;
+    padding:3px;
+}
+
+    .EditButton:hover {
+        background-color: white;
+        color: #DA4567;
+        fill: #DA4567;
+    }
+
+.Editing {
+    background-color: #DA4567;
+    color: white;
+    fill: white;
+    border:1px solid red;
+    border-radius:5px;
+}

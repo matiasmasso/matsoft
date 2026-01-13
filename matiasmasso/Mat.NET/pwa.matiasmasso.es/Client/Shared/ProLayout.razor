@@ -1,0 +1,46 @@
+﻿@inherits LayoutComponentBase
+@using System.Globalization
+@using Client.Shared
+@using Client.Components
+@using DTO
+@inject AppState AppState
+@inject HttpClient Http
+@inject NavigationManager _navigation
+@inject IJSRuntime Js
+
+<div class="ProLayout @(AppState.IsMenuVisible ? "MenuVisible" : "")">
+    <header>
+        <Header ShowHamburger = "@false"></Header>
+    </header>
+
+    <aside>
+        <NavMenu SelectedTab = "@defaultTab"></NavMenu>
+    </aside>
+
+    <main>
+        <ErrorBoundary>
+            @Body
+        </ErrorBoundary>
+    </main>
+
+    <footer>
+        <Footer></Footer>
+    </footer>
+</div>
+
+@code {
+    private int defaultTab = 2;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var localStorage = new LocalStorage(Js);
+        var userToken = await localStorage.GetAsync<Guid?>("Token");
+        var lang = LangDTO.FromCultureInfo(CultureInfo.CurrentCulture.Name);
+        AppState.Init(Http, userToken, lang);
+        AppState.IsMenuVisible = false; //initial set for mobiles
+        AppState.OnStateChange += StateHasChanged;
+        AppState.Fetch();
+    }
+
+
+}

@@ -1,0 +1,23 @@
+﻿@page "/DocSrcs"
+
+<div class="PageWrapper">
+    @if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>Fonts documentals</h1>
+        <DocSrcs ItemSelected="ItemSelectedHandler"></DocSrcs>
+    }
+</div>
+
+@code {
+    IModel? selectedItem;
+
+    void ItemSelectedHandler(IModel item)
+    {
+        selectedItem = item;
+    }
+}

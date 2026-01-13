@@ -1,0 +1,18 @@
+﻿.Wrapper {
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    max-width:100%;
+}
+
+.SearchBox {
+    max-width:450px;
+}
+
+.ColumnHeaders {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 24px;
+    gap: 5px;
+    font-weight:600;
+    margin-bottom:5px;
+}

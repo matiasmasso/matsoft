@@ -1,0 +1,85 @@
+﻿.Wrapper {
+    display: grid;
+    grid-template-areas: "banner banner banner"
+        "brand1 brand2 brand3"
+        "raffle raffle raffle";
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.Banner {
+    grid-area: banner;
+}
+
+.BannerPlaceHolder img {
+    width:100%;
+}
+
+.BrandsH {
+    display: none;
+}
+
+.News0 {
+    grid-area: news0;
+}
+
+.News1 {
+    grid-area: news1;
+}
+
+.Brand1 {
+    display: block;
+    grid-area: brand1;
+    max-width: 100%;
+}
+
+.Brand2 {
+    display: block;
+    grid-area: brand2;
+}
+
+.Brand3 {
+    display: block;
+    grid-area: brand3;
+}
+
+.Raffle {
+    grid-area: raffle;
+}
+
+
+    .Brand1 img, .Brand2 img, .Brand3 img, .Raffle img {
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+    }
+
+.ShowOnMobile {
+    display:none;
+}
+
+@media screen and (max-width: 600px) {
+    .Wrapper {
+        display: grid;
+        grid-template-areas: "banner banner"
+            "news0 news1"
+            "brand1 brand1"
+            "brand2 brand2"
+            "brand3 brand3"
+            "raffle raffle";
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .BrandsV {
+        display: none;
+    }
+
+    .BrandsH {
+        display: block;
+    }
+
+    .ShowOnMobile {
+        display: block;
+    }
+}

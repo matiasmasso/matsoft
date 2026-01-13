@@ -1,0 +1,135 @@
+﻿@page "/raffle/play/{Guid:guid}"
+@page "/{LangSegment}/raffle/play/{Guid:guid}"
+
+@implements IDisposable
+
+@inject CultureService culture
+@inject SessionStateService session
+@inject RafflesService rafflesService
+
+<div class="PageWrapper600">
+    <AuthorizeView>
+        <Authorized>
+            @if (participant == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <h1 class="Title">@raffle?.Title</h1>
+
+                <div class="Banner">
+                    <img src="@raffle?.ImgBanner600Url()" alt="@raffle?.Title" width="600" height="200" />
+                </div>
+
+                if (isGivingThanks)
+                {
+                    <RafflePlayThanks Participant="participant"></RafflePlayThanks>
+                }
+                else
+                {
+                    <div class="Steps">
+
+                        @if (!raffle?.IsOver() ?? true) @*TO DO: revert raffle.IsOver() *@
+                        {
+                            <div class="GameOver">
+                                <GameOver Participant="participant"></GameOver>
+                            </div>
+                        }
+                        else
+                        {
+                            <Steps SelectedStep="@initialStep">
+                                <Step Caption="@culture.Localize("Raffle.ParticipantDetails")">
+                                    <ParticipantDetails Participant="participant"></ParticipantDetails>
+                                </Step>
+
+                                <Step Caption="@culture.Localize("Raffle.GiveUsAnAnswer")">
+                                    <Question Participant="participant"></Question>
+                                </Step>
+
+                                <Step Caption="@culture.Localize("Raffle.SelectADistributor")">
+                                    <DistributorSelector Participant="participant"></DistributorSelector>
+                                </Step>
+
+                                <Step Caption="@culture.Localize("Raffle.AcceptAndSubmit")">
+                                    <RafflePlaySubmit Participant="participant"
+                                          SubmitRequest="SubmitRequestHandler"></RafflePlaySubmit>
+                                </Step>
+                            </Steps>
+                        }
+
+                    </div>
+                }
+            }
+
+        </Authorized>
+        <NotAuthorized>
+
+            <div class="SignIn">
+                <SignIn></SignIn>
+            </div>
+
+        </NotAuthorized>
+        <Authorizing>
+            <Loading></Loading>
+        </Authorizing>
+    </AuthorizeView>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [CascadingParameter] private Steps? Parent { get; set; }
+    [Parameter] public Guid Guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    RaffleModel? raffle;
+    RaffleModel.Participant? participant;
+    bool isGivingThanks;
+    int initialStep = 1;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        session.OnChange += Refresca;
+        rafflesService.OnChange += Refresca;
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        raffle = rafflesService.GetValue(Guid);
+        participant = rafflesService.CreateParticipant(raffle, session.User);
+        if (participant?.HasValidNomAndCognoms() ?? false) initialStep = 2;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        if (participant == null || participant.Lead != session.User)
+            participant = rafflesService.CreateParticipant(raffle, session.User);
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task SubmitRequestHandler()
+    {
+        try
+        {
+            await rafflesService.Submit(participant);
+            isGivingThanks = true;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        session.OnChange -= Refresca;
+        rafflesService.OnChange -= Refresca;
+    }
+
+}

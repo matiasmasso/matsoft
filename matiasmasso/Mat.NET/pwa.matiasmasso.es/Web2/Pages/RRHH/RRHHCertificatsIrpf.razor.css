@@ -1,0 +1,26 @@
+﻿.Grid {
+    display:flex;
+    flex-direction: column;
+    gap:5px;
+}
+
+.Year {
+    border-bottom: 1px solid gray;
+}
+
+
+.Year.Selected {
+    font-weight: 600;
+    background-color: #E5BA73;
+    padding:10px 0;
+}
+
+.Item {
+    display:flex;
+    flex-direction: row;
+}
+
+.Ico {
+    width:30px;
+}
+

@@ -1,0 +1,358 @@
+﻿@page "/Catalog"
+@inherits _ComponentBase
+
+<h1>@base.Tradueix("Catálogo","Cataleg","Catalogue")</h1>
+@if (cache == null || AppState.IsLoadingCatalog)
+{
+    <Loading></Loading>
+}
+else
+{
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="ShowObsolets">
+        <Toggle Label="@base.Tradueix("Incluir obsoletos","Inclou obsolets","Include outdated")"
+            @bind-Value="@IsShowingObsolets"></Toggle>
+    </div>
+
+    <div class="Catalog">
+        <div class="BrandsWrapper">
+            <div class="Brands">
+                <div class="Item ColumnHeader HideOnMobile">
+                    @base.Tradueix("Marca","Marca","Brand")
+                </div>
+                @foreach (var item in FilteredBrands())
+                {
+                    var isSelected = IsSelected(item);
+
+                    <a href="#"
+               class="Item Nom @(isSelected?"Selected":"") @(selectedBrand != null && item != selectedBrand ? "HideOnMobile":"")"
+               @onclick="(()=>BrandClick(item))"
+               @onclick:preventDefault="true"
+               @oncontextmenu="(()=>ContextMenu(item))"
+               @oncontextmenu:preventDefault="true">
+                        @item.Nom.Tradueix(base.Lang())
+                    </a>
+
+                    @if (isSelected & IsShowingContextMenuBrand)
+                    {
+                        <div class="ContextMenu">
+                            <Nav nav="@item.ContextMenu()" />
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+        <div class="CategoriesWrapper">
+            <div class="Categories">
+                <div class="Item ColumnHeader HideOnMobile">
+                    @base.Tradueix("Categoría","Categoría","Category")
+                </div>
+
+                @if (selectedBrand != null)
+                {
+                    @foreach (var item in FilteredCategories())
+                    {
+                        var isSelected = IsSelected(item);
+
+                        <a href="#"
+               class="Item Nom @(IsSelected(item)?"Selected":"") @(HideOnMobile(item) ? "HideOnMobile":"")"
+               @onclick="(()=>CategoryClick(item))"
+               @onclick:preventDefault="true"
+               @oncontextmenu="(()=>ContextMenu(item))"
+               @oncontextmenu:preventDefault="true">
+                            @item.Nom.Tradueix(base.Lang())
+                        </a>
+
+                        @if (isSelected & IsShowingContextMenuCategory)
+                        {
+                            <div class="ContextMenu">
+                                <Nav nav="@item.ContextMenu()" />
+                            </div>
+                        }
+
+                    }
+                }
+            </div>
+        </div>
+        <div class="SkusWrapper">
+            <div class="Skus">
+                <div class="ColumnHeaders HideOnMobile">
+                    <div class="ColumnHeader Ref">
+                        @base.Tradueix("Ref")
+                    </div>
+                    <div class="ColumnHeader Nom">
+                        @base.Tradueix("Producto","Producte","Product")
+                    </div>
+                    <div class="ColumnHeader Ico">
+                        &nbsp;
+                    </div>
+                    <div class="ColumnHeader Stk">
+                        @base.Tradueix("Stock")
+                    </div>
+                    <div class="ColumnHeader Cli">
+                        @base.Tradueix("Clientes","Clients","Cust.")
+                    </div>
+                    <div class="ColumnHeader Prg">
+                        @base.Tradueix("Prog")
+                    </div>
+                    <div class="ColumnHeader Pvp">
+                        @base.Tradueix("Pvp","Pvp","Rrpp")
+                    </div>
+                    <div class="ColumnHeader Img">
+                        &nbsp;
+                    </div>
+                    <div class="ColumnHeader Prv">
+                        @base.Tradueix("Prov","Prov","Sup")
+                    </div>
+                </div>
+
+                @if (selectedCategory != null)
+                {
+                    @foreach (var item in FilteredSkus())
+                    {
+                        var sku = (ProductSkuModel)item;
+                        var pnc = cache.SkuPnc(sku.Guid);
+                        var stock = cache.SkuStock(sku.Guid);
+                        var available = stock?.Available(pnc) ?? 0;
+                        var price = cache.SkuPrice(sku.Guid);
+                        var bgColor = BgColor(sku, stock?.Stock ?? 0, pnc);
+                        var isSelected = IsSelected(item);
+
+                        <div
+               class="Item @(IsSelected(item)?"Selected":"") @(HideOnMobile(item) ? "HideOnMobile":"")"
+               @onclick="(()=>SkuClick(item))"
+               @onclick:preventDefault="true"
+               @oncontextmenu="(()=>ContextMenu(item))"
+               @oncontextmenu:preventDefault="true">
+
+                            <div class="HideOnDesktop BgColor @bgColor">&nbsp;</div>
+                            <div class="HideOnDesktop Thumbnail">
+                                <img width="@ProductSkuModel.THUMBNAILWIDTH"
+                         height="@ProductSkuModel.THUMBNAILHEIGHT"
+                         src="@sku.ThumbnailUrl()"
+                         alt="@item.NomLlarg.Tradueix(base.Lang())" />
+                            </div>
+
+                            <div class="Ref @bgColor">
+                                <span class="HideOnDesktop">Ref.:</span>
+                                @item.Id.ToString()
+                            </div>
+                            <div class="Nom @bgColor">
+                                @item.Nom.Tradueix(base.Lang())
+
+                                @if (isSelected & IsShowingContextMenuSku)
+                                {
+                                    <div class="ContextMenu">
+                                        <Nav nav="@item.ContextMenu()" />
+                                    </div>
+                                }
+                            </div>
+                            <div class="Ico">
+                                &nbsp;
+                            </div>
+                            <div class="Stk @bgColor">
+                                <span class="HideOnMobile">
+                                    @((stock?.Stock ?? 0) == 0 ? "" : string.Format("{0:N0}", stock.Stock))
+                                </span>
+
+                                @if (available == 0)
+                                {
+                                    <span class="HideOnDesktop">
+                                        @base.Tradueix("Producto agotado","Producte esgotat","Out of stock")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="HideOnDesktop">
+                                        @string.Format(base.Tradueix("{0:N0} en stock","{0:N0} en stock","{0:N0} units available"),available)
+                                    </span>
+                                }
+                            </div>
+                            <div class="Cli @bgColor">
+                                @((pnc?.Clients ?? 0) == 0 ? "" : string.Format("{0:N0}", pnc!.Clients))
+                            </div>
+                            <div class="Prg @bgColor">
+                                @((pnc?.ClientsEnProgramacio ?? 0) == 0 ? "" : string.Format("{0:N0}", pnc!.ClientsEnProgramacio))
+                            </div>
+                            <div class="Pvp @bgColor">
+                                <span class="HideOnDesktop">
+                                    @base.Tradueix("PVR:","PVR:","RRPP:")
+                                </span>
+                                @((price ?? 0) == 0 ? "" : string.Format("{0:N2} €", price))
+                            </div>
+                            <div class="Img @(sku.ImgExists ? "HasImg" : "")">
+                                &nbsp;
+                            </div>
+                            <div class="Prv">
+                                @((pnc?.Proveidors ?? 0) == 0 ? "" : string.Format("{0:N0}", pnc!.Proveidors))
+                            </div>
+
+                            <div class="HideOnDesktop Line"></div>
+
+                        </div>
+
+
+
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}
+@code {
+    private string searchTerm = "";
+    private bool IsShowingObsolets = false;
+    private bool IsShowingContextMenuBrand = false;
+    private bool IsShowingContextMenuCategory = false;
+    private bool IsShowingContextMenuSku = false;
+    private ProductBrandModel? selectedBrand = null;
+    private ProductCategoryModel? selectedCategory = null;
+    private ProductSkuModel? selectedSku = null;
+    private CacheDTO? cache;
+    private Guid mgz = MgzDTO.Wellknown(MgzDTO.Wellknowns.vivaceLliça).Guid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.CatalogJustLoaded += HandleCatalogJustLoaded;
+        cache = await base.Catalog();
+        HandleCatalogJustLoaded(this, new EventArgs());
+    }
+
+    private void HandleCatalogJustLoaded(object sender, EventArgs e)
+    {
+        selectedCategory = cache.Category(ProductCategoryModel.Default());
+        if (selectedCategory != null) selectedBrand = cache.Brand(selectedCategory.Brand);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        AppState.CatalogJustLoaded -= HandleCatalogJustLoaded; 
+    }
+
+
+    private List<ProductBrandModel> FilteredBrands()
+    {
+        var retval = AppState.DefaultCache().Brands.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.Obsoleto == false).ToList();
+        return retval
+        .OrderBy(x => x.Obsoleto)
+        .ThenBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+    }
+
+    private List<ProductCategoryModel> FilteredCategories()
+    {
+        var retval = new List<ProductCategoryModel>();
+        if (selectedBrand != null)
+        {
+            retval = AppState.DefaultCache().Categories.Where(x => x.Brand == selectedBrand.Guid && x.Matches(searchTerm)).ToList();
+            if (!IsShowingObsolets)
+                retval = retval.Where(x => x.Obsoleto == false).ToList();
+        }
+        return retval
+        .OrderBy(x => x.Obsoleto)
+        .ThenBy(x => x.Codi)
+        .ThenBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+    }
+
+    private List<ProductSkuModel> FilteredSkus()
+    {
+        var retval = new List<ProductSkuModel>();
+        if (selectedCategory != null)
+        {
+            retval = AppState.DefaultCache().Skus.Where(x => x.Category == selectedCategory.Guid && x.Matches(searchTerm)).ToList();
+            if (!IsShowingObsolets)
+                retval = retval.Where(x => x.Obsoleto == false).ToList();
+        }
+        return retval
+        .OrderBy(x => x.Obsoleto)
+        .ThenBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+    }
+
+    private void BrandClick(ProductBrandModel item)
+    {
+        selectedBrand = selectedBrand == item ? null : item;
+        selectedCategory = FilteredCategories().FirstOrDefault();
+        CloseContextMenus();
+    }
+
+    private void CategoryClick(ProductCategoryModel item)
+    {
+        selectedCategory = selectedCategory == item ? null : item;
+        CloseContextMenus();
+    }
+
+    private void SkuClick(ProductSkuModel item)
+    {
+        selectedSku = selectedSku == item ? null : item;
+        CloseContextMenus();
+    }
+
+    private void ContextMenu(ProductModel item)
+    {
+        if (item is ProductBrandModel)
+        {
+            selectedBrand = (ProductBrandModel)item;
+            IsShowingContextMenuBrand = true;
+        }
+        else if (item is ProductCategoryModel)
+        {
+            selectedCategory = (ProductCategoryModel)item;
+            IsShowingContextMenuCategory = true;
+        }
+        else if(item is ProductSkuModel)
+        {
+            selectedSku = (ProductSkuModel)item;
+            IsShowingContextMenuSku = true;
+        }
+    }
+
+    private bool IsSelected(ProductModel item)
+    {
+        var retval = false;
+        if (selectedBrand != null && selectedBrand.Guid == item.Guid)
+            retval = true;
+        else if (selectedCategory != null && selectedCategory.Guid == item.Guid)
+            retval = true;
+        else if (selectedSku != null && selectedSku.Guid == item.Guid)
+            retval = true;
+        return retval;
+    }
+
+    private string BgColor(ProductSkuModel sku, int stock, SkuPncDTO pnc)
+    {
+        var retval = "";
+        if (stock > 0)
+        {
+            retval = stock >= (pnc?.Clients ?? 0) ? "BgGreen" : "BgYellow";
+        }
+        else
+        {
+            retval = sku.Obsoleto ? "BgGray" : "BgSalmon";
+        }
+        return retval;
+    }
+
+
+    private bool HideOnMobile(ProductCategoryModel item)
+    {
+        return selectedCategory != null && item != selectedCategory
+        || IsShowingContextMenuBrand == true;
+    }
+
+    private bool HideOnMobile(ProductSkuModel item)
+    {
+        return selectedSku != null && item != selectedSku
+        || IsShowingContextMenuBrand == true
+        || IsShowingContextMenuCategory == true;
+    }
+
+    private void CloseContextMenus() {
+        IsShowingContextMenuBrand = false;
+        IsShowingContextMenuCategory = false;
+        IsShowingContextMenuSku = false;
+    }
+
+}

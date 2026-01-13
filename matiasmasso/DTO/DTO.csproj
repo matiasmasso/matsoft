@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<IsPublishable>false</IsPublishable>
+
+		<!--net9.0;net9.0-windows10.0.19041.0;-->
+		<TargetFrameworks>net10.0</TargetFrameworks>
+		<!--<TargetFrameworks>net6.0;net6.0-windows10.0.19041.0;net6.0-android</TargetFrameworks>-->
+		<!--<TargetFramework>net7.0</TargetFramework>-->
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="CatalogModel.cs" />
+		<Compile Remove="DeliveryListDTO.cs" />
+		<Compile Remove="Extensions\IFormFileExtensions.cs" />
+		<Compile Remove="MailSettings.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.105.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="System.Drawing.Common" Version="10.0.1" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="EventArgs\" />
+	</ItemGroup>
+
+</Project>

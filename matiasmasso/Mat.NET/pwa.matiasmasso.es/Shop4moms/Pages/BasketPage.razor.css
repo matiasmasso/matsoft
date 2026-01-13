@@ -1,0 +1,146 @@
+﻿.Wrapper {
+    padding:10px;
+    max-width: 600px;
+    margin:auto;
+}
+
+.NoItems {
+    display:flex;
+    flex-direction: column;
+    padding:30px;
+}
+
+    .NoItems p, .NoItems .KeepPurchasing {
+        text-align: center;
+    }
+
+.CallToAction {
+    display: flex;
+    justify-content: space-between;
+    padding:0 0 10px;
+    border-bottom: 1px solid #DDDDDD;
+}
+
+.CallToAction a, .NoItems > * {
+    display:flex;
+    gap:10px;
+    align-items: center;
+}
+
+.CallToAction img, .NoItems img {
+    height: 1em;
+}
+
+.Grid {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: 100px 1fr min-content 70px 70px 20px;
+    grid-column-gap: 10px;
+    align-items:center; /*center cells vertically*/
+}
+
+.ColumnHeaders {
+    font-weight: 600;
+    color:gray;
+    padding-bottom:10px;
+}
+
+
+
+.Item {
+    display: contents;
+}
+
+    .Item.Total {
+/*        grid-template-columns: 100px 1fr 70px;
+        grid-template-areas: "thumbnail nom amount"
+*/    }
+
+.Thumbnail {
+/*    width:100px;
+*/}
+
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.Qty, .Price, .Amount {
+    text-align: right;
+    white-space: nowrap;
+}
+
+
+.Del {
+    opacity:0.5;
+}
+
+    .Del:hover {
+        opacity: 1.0;
+        
+    }
+
+
+/*--------------- mobiles --------------------*/
+
+@media(max-width:599px) {
+    .Grid {
+        display:flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 100px 1fr 70px 70px 20px;
+        grid-template-areas: "thumbnail nom nom nom"
+            "thumbnail qty price amount"
+    }
+
+    .Thumbnail{
+        grid-area:thumbnail;
+    }
+    .Nom {
+        grid-area:nom;
+        align-self: center;
+    }
+    .Qty {
+        grid-area:qty;
+    }
+    .Price {
+        grid-area: price;
+    }
+    .Amount {
+        grid-area: amount;
+    }
+    .Del {
+        display:none;
+    }
+/*    .Item {
+        grid-template-columns: 100px 1fr 70px 70px 20px;
+        grid-template-areas: "thumbnail nom nom nom del"
+            "thumbnail qty price amount del"
+    }
+
+        .Item.Total {
+            grid-template-columns: 100px 1fr 70px 20px;
+            grid-template-areas: "thumbnail nom amount del"
+        }
+
+    .ColumnHeaders .Qty, .ColumnHeaders.Amount {
+        visibility: hidden;
+    }
+*/}
+/*--------------- desktop --------------------*/
+
+@media(min-width:600px) {
+    .Grid {
+/*        grid-template-areas: "thumbnail nom qty price amount del"
+*/    }
+
+}

@@ -1,0 +1,17 @@
+﻿@page "/ConsumerDept/{Guid:guid}"
+@inject IJSRuntime JSRuntime;
+
+<ConsumerDept Guid="Guid" ></ConsumerDept>
+
+<AnchorNavigation ScrollRequest="ScrollToFragment"></AnchorNavigation>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+
+    async Task ScrollToFragment(string elementId)
+    {
+        //allows Blazor anchor navigation within same page
+        await JSRuntime.InvokeVoidAsync("BlazorScrollToId", elementId);
+    }
+
+}

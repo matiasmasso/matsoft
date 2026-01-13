@@ -1,0 +1,95 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject SocialNetworksService rrss
+@inject RafflesService rafflesService
+
+<div class="Contingut">
+    <div>
+        <p>
+            @culture.Lang().Tradueix("Enhorabuena, has completado correctamente el proceso de inscripción", "Enhorabona, has completat correctament el procés de inscripció", "Congratulations, you successfully completed the subscription process", "Parabéns, completas-te corretamente o processo de inscrição.")
+        </p>
+        <p>
+            @culture.Lang().Tradueix("Acabamos de enviarte un correo electrónico confirmando tu participación.", "Acabem de enviar-te un email confirmant la teva participació.", "We've just sent you an email confirming your enrollment.", "Acabamos de te enviar um correio eletrónico a confirmar a tua participação.")
+        </p>
+        <p>
+            @culture.Lang().Tradueix("Una vez celebrado el sorteo, publicaremos el ganador en", "Un cop celebrat el sorteig, publicarem el guanyador a", "Once the raffle is over, we will publish the winner at", "Uma vez se celebre o sorteio, publicaremos o nome do ganhador/a em ")
+            <a href='@rafflesUrl'>@rafflesUrl</a>
+        </p>
+        <p>
+            @culture.Lang().Tradueix("Si te toca el premio, tienes 30 días para ponerte en contacto con nosotros en ", "Si et toca el premi, tens 30 dies per posar-te en contacte amb nosaltres a ", "If your name becomes published, you have 30 days to confirm your acceptance at ", "Se te toca o prémio, tens 30 dias para nos contactar em ")
+            <a href='mailto:marketing@matiasmasso.@culture.Lang().Tradueix("es", "es", "es", "pt")'>marketing@matiasmasso.@culture.Lang().Tradueix("es", "es", "es", "pt")</a>
+        </p>
+        <p class="FbWarn">
+            <span>
+                @((MarkupString)(culture.Lang().Tradueix("Recuerda que este es un sorteo exclusivo para seguidores de nuestros perfiles en Facebook y/o Instagram. Si aún no lo eres puedes seguirnos haciendo clic en los botones <b>Me gusta</b> (Facebook) o <b>Seguir</b> (Instagram)  en las siguientes páginas:",
+                    "Recorda que aquest és un sorteig exclusiu per seguidors dels nostres perfils a Facebook i/o Instagram. Si encara no ens segueixes, fes clic als botons <b>M'agrada</b> (Facebook) o <b>Seguir</b>(Instagram) a les següents pàgines:",
+                    "Please note this is a raffle restricted to our Facebook/Instagram followers. If you are not following us yet, you may clic <b>Like button</b> (Facebook) or <b>Follow</b> (Instagram) on next pages:",
+                    "Recorda que este sorteio é exclusivo para os seguidores dos nossos perfis em Facebook/Instagram. Se ainda não o és, podes seguir-nos clicando no botão <b>Gosto</b> (Facebook) ou <b>Seguir</b> (Instagram) nas seguintes páginas:")))
+
+            </span>
+        </p>
+        <p>
+            <a href="https://@rrss.Url( SocialNetworksService.RRSS.Facebook)">@rrss.Url( SocialNetworksService.RRSS.Facebook)</a>
+            <br />
+            <a href="https://@rrss.Url( SocialNetworksService.RRSS.Instagram)">@rrss.Url( SocialNetworksService.RRSS.Instagram)</a>
+            <br />
+            @if (!string.IsNullOrEmpty(brandFacebook))
+            {
+                <a href="https://@(brandFacebook)">@brandFacebook</a>
+                <br />
+            }
+            @if (!string.IsNullOrEmpty(brandInstagram))
+            {
+                <a href="https://@(brandInstagram)">brandInstagram</a>
+            }
+        </p>
+
+        <p>
+            @culture.Lang().Tradueix("Gracias por participar", "Gracies per participar", "Thanks for participating", "Agradecemos a tua participação.")
+        </p>
+    </div>
+
+    <Error @bind-Exception ="exception"></Error>
+</div>
+
+
+
+
+
+
+@code {
+    [Parameter] public RaffleModel.Participant? Participant { get; set; }
+
+    string? rafflesUrl;
+    string? brandFacebook;
+    string? brandInstagram;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        rafflesService.OnChange += Refresca;
+
+        rafflesUrl = rafflesService.CanonicalUrl(culture);
+
+        var brand = rafflesService.Brand(Participant?.Raffle);
+        if (brand != null)
+        {
+            brandFacebook = rrss.Url(SocialNetworksService.RRSS.Facebook, brand);
+            brandInstagram = rrss.Url(SocialNetworksService.RRSS.Instagram, brand);
+        }
+
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        rafflesService.OnChange -= Refresca;
+    }
+}
+

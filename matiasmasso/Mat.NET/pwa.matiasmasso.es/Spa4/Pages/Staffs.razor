@@ -1,0 +1,67 @@
+﻿@page "/Staffs"
+@inherits _ComponentBase
+@layout ProLayout
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Empleados","Empleats","Employees")</h1>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    @if (model == null)
+    {
+        <div>
+            <img src="/img/Spinner-24.gif" alt="loading..." />
+        </div>
+    }
+    else
+    {
+        <div class="Summary">
+            @string.Format("S'han trobat {0} empleats, {1} en actiu",model.Count(), model.Where(x => x.FchTo == null).Count())
+        </div>
+
+        <div class="Grid">
+            @if (base.IsLoaded)
+            {
+                foreach (var item in model.Where(x => x.Matches(searchTerm) && x.FchTo == null).OrderBy(y => y.Abr))
+                {
+                    <a href=@("/Staffmenu/"+item.Guid.ToString()) class='Item'>
+                        <div class="Abr Truncate">@item.Abr</div>
+                        @if (item.Position != null)
+                        {
+                            <div class="Position Truncate">@item.Position.Nom?.Tradueix(base.Lang())</div>
+                        }
+
+                        <div class="Age">@(string.Format("{0} anys, {1} en actiu",item.Age(), item.InNomina()))</div>
+                    </a>
+                }
+            }
+            else
+            {
+                <div>loading...</div>
+            }
+        </div>
+    }
+
+</div>
+
+
+
+
+@code {
+    private List<StaffModel>? model;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = await base.GetAsync<List<StaffModel>>("Staffs", ((int)EmpDTO.EmpIds.MatiasMasso).ToString());
+            StateHasChanged();
+        };
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+
+}

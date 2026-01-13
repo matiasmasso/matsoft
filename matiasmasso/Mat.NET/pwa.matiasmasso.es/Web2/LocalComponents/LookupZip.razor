@@ -1,0 +1,359 @@
+﻿@using System.Diagnostics;
+@using Web.GlobalComponents;
+@implements IDisposable
+@inject CultureService culture
+@inject AtlasService atlas
+
+<div class="Wrapper">
+    @if (value != null)
+    {
+        <a class="HasValue" href="#" @onclick="@(()=>value=null)" @onclick:preventDefault>
+            @atlas.ZipyCit(value)
+            @if (Required)
+            {
+                <Icon Id="Icon.Ids.CheckGreenCircle"></Icon>
+            }
+        </a>
+    }
+    else if (countries == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Modal">
+            <div class="Title">
+                @culture.Localize("Zip.Lookup")
+                <CloseButton CloseRequest="CloseRequestHandler"></CloseButton>
+            </div>
+
+            <SelectedValues @bind-Values="selectedValues" Nested></SelectedValues>
+
+            <div class="Grid">
+                @if (SelectedCountry() == null)
+                {
+                    <div class="Info">@culture.Localize("Select.Country")</div>
+                    <div class="Countries">
+
+                        @foreach (var country in Countries() ?? new())
+                        {
+                            <a ref="#" class="Item" title="@(country.Nom?.Tradueix(culture.Lang()) ?? "?")" @onclick="@(()=>selectedValues.Add(country, country.Nom?.Tradueix(culture.Lang())))" @onclick:preventDefault>
+                                @(country.Nom?.Tradueix(culture.Lang()) ?? "?")
+                            </a>
+                        }
+                    </div>
+
+                    <div class="ButtonsBar">
+                        <a class="SeeMore" href="#" @onclick="@(()=>isShowingAllCountries = !isShowingAllCountries)" @onclick:preventDefault>
+                            [@culture.Localize(isShowingAllCountries ? "SeeLess" : "seeMore")]
+                        </a>
+                    </div>
+
+                }
+                else if (SelectedZona() == null)
+                {
+                    @if (isAddingZona)
+                    {
+                        <div>Nova zona:</div>
+                        <div>
+                            <input type="text" @bind-value="nom">
+                        </div>
+                        <div class="ButtonsBar">
+                            @if (isUpdating)
+                            {
+                                <Loading></Loading>
+                            }
+                            else
+                            {
+                                <a href="#" @onclick="SaveZona" @onclick:preventDefault>
+                                    [@culture.Localize("Save")]
+                                </a>
+                            }
+                            <a href="#" @onclick="@(()=>isAddingZona=false)" @onclick:preventDefault>
+                                [@culture.Localize("Cancel")]
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="Info">@culture.Localize("Select.Zona")</div>
+                        <div class="Zonas">
+                            @foreach (var zona in atlas.Zonas(SelectedCountry()) ?? new())
+                            {
+                                <a ref="#" class="Item" title="@(zona.Nom ?? "?")" @onclick="@(()=>selectedValues.Add(zona, zona.Nom))" @onclick:preventDefault>
+                                    @(zona.Nom ?? "?")
+                                </a>
+                            }
+                        </div>
+
+                        <div class="ButtonsBar">
+                            @if (isSyncronizing)
+                            {
+                                <Loading></Loading>
+                            }
+                            else
+                            {
+                                <a href="#" @onclick="Sync" @onclick:preventDefault>
+                                    [@culture.Localize("Sync")]
+                                </a>
+                            }
+                            <a class="AddButton" @onclick="@(()=>isAddingZona=true)" @onclick:preventDefault>
+                                [@culture.Localize("Zona.Add")]
+                            </a>
+                        </div>
+                    }
+                }
+                else if (SelectedLocation() == null)
+                {
+                    @if (isAddingLocation)
+                    {
+                        <div>Nova població:</div>
+                        <div>
+                            <input type="text" @bind-value="nom">
+                        </div>
+                        <div class="ButtonsBar">
+                            @if (isUpdating)
+                            {
+                                <Loading></Loading>
+                            }
+                            else
+                            {
+                                <a href="#" @onclick="SaveLocation" @onclick:preventDefault>
+                                    [@culture.Localize("Save")]
+                                </a>
+                            }
+                            <a href="#" @onclick="@(()=>isAddingLocation=false)" @onclick:preventDefault>
+                                [@culture.Localize("Cancel")]
+                            </a>
+                        </div>
+
+                    }
+                    else
+                    {
+                        <div class="Info">@culture.Localize("Select.Location")</div>
+                        <div class="Locations">
+                            @foreach (var location in atlas.Locations(SelectedZona()) ?? new())
+                            {
+                                <a ref="#" class="Item" title="@(location.Nom ?? "?")" @onclick="@(()=>selectedValues.Add(location, location.Nom))" @onclick:preventDefault>
+                                    @(location.Nom ?? "?")
+                                </a>
+                            }
+                        </div>
+
+                        <div class="ButtonsBar">
+                            @if (isSyncronizing)
+                            {
+                                <Loading></Loading>
+                            }
+                            else
+                            {
+                                <a href="#" @onclick="Sync" @onclick:preventDefault>
+                                    [@culture.Localize("Sync")]
+                                </a>
+                            }
+                            <a class="AddButton" @onclick="@(()=>isAddingLocation=true)" @onclick:preventDefault>
+                                [@culture.Localize("Location.Add")]
+                            </a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    @if (isAddingZip || atlas.Zips(SelectedLocation())?.Count == 0)
+                    {
+                        <div>Nou codi postal:</div>
+                        <div>
+                            <input type="text" @bind-value="nom">
+                        </div>
+                        <div class="ButtonsBar">
+                            @if (isUpdating)
+                            {
+                                <Loading></Loading>
+                            }
+                            else
+                            {
+                                <a href="#" @onclick="SaveZip" @onclick:preventDefault>
+                                    [@culture.Localize("Save")]
+                                </a>
+                            }
+                            <a href="#" @onclick="@(()=>isAddingZip=false)" @onclick:preventDefault>
+                                [@culture.Localize("Cancel")]
+                            </a>
+                        </div>
+
+                    }
+                    else
+                    {
+                        <div class="Info">@culture.Localize("Select.Zip")</div>
+                        <div class="Zips">
+
+                            @foreach (var zip in atlas.Zips(SelectedLocation()) ?? new())
+                            {
+                                <a ref="#" class="Item" title="@($"{zip.ZipCod} {SelectedLocation()!.Nom}")" @onclick="@(()=>ZipClick(zip))" @onclick:preventDefault>
+                                    @(zip.ZipCod ?? "?")
+                                </a>
+                            }
+
+                        </div>
+                        <div class="ButtonsBar">
+                            @if (isSyncronizing)
+                            {
+                                <Loading></Loading>
+                            }
+                            else
+                            {
+                                <a href="#" @onclick="Sync" @onclick:preventDefault>
+                                    [@culture.Localize("Sync")]
+                                </a>
+                            }
+                            <a class="AddButton" @onclick="@(()=>isAddingZip=true)" @onclick:preventDefault>
+                                [@culture.Localize("Zip.Add")]
+                            </a>
+                        </div>
+                    }
+
+                }
+            </div>
+
+
+        </div>
+
+    }
+
+</div>
+
+@code {
+    [Parameter] public ZipModel? Value { get; set; }
+    [Parameter] public CountryModel? DefaultCountry { get; set; }
+    [Parameter] public ZonaModel? DefaultZona { get; set; }
+    [Parameter] public LocationModel? DefaultLocation { get; set; }
+    [Parameter] public EventCallback<ZipModel> ValueChanged { get; set; }
+    [Parameter] public bool Required { get; set; }
+
+    ZipModel? value;
+    List<CountryModel>? countries;
+
+    SelectedValues.Collection selectedValues = new();
+    string? nom;
+    bool isSyncronizing;
+    bool isUpdating;
+    bool isAddingZona;
+    bool isAddingLocation;
+    bool isAddingZip;
+    bool isShowingAllCountries;
+    bool defaultAreasSet;
+    Exception? exception;
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        atlas.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        value = Value;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        countries = atlas.Countries();
+        if (!defaultAreasSet)
+        {
+            if (DefaultCountry != null) selectedValues.Add(DefaultCountry, DefaultCountry?.Nom?.Tradueix(culture.Lang()));
+            if (DefaultZona != null) selectedValues.Add(DefaultZona, DefaultZona.Nom);
+            if (DefaultLocation != null) selectedValues.Add(DefaultLocation, DefaultLocation.Nom);
+            defaultAreasSet = true;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task Sync()
+    {
+        isSyncronizing = true;
+        await atlas.FetchAsync();
+        isSyncronizing = false;
+        //await InvokeAsync(StateHasChanged);
+    }
+
+    async Task SaveZona()
+    {
+        try
+        {
+            isUpdating = true;
+            var zona = ZonaModel.Factory(SelectedCountry(), nom);
+            await atlas.UpdateZonaAsync(zona);
+            nom = string.Empty;
+            isUpdating = false;
+            isAddingLocation = false;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task SaveLocation()
+    {
+        try
+        {
+            isUpdating = true;
+            var location = LocationModel.Factory(SelectedZona(), nom);
+            await atlas.UpdateLocationAsync(location);
+            nom = string.Empty;
+            isUpdating = false;
+            isAddingLocation = false;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task SaveZip()
+    {
+        try
+        {
+            isUpdating = true;
+            var zip = ZipModel.Factory(SelectedLocation(), nom);
+            await atlas.UpdateZipAsync(zip);
+            nom = string.Empty;
+            isUpdating = false;
+            isAddingZip = false;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    public void Dispose()
+    {
+        atlas.OnChange -= Refresca;
+    }
+
+    CountryModel? SelectedCountry() => (CountryModel?)selectedValues.FirstOrDefault(x => x.Value is CountryModel)?.Value;
+    ZonaModel? SelectedZona() => (ZonaModel?)selectedValues.FirstOrDefault(x => x.Value is ZonaModel)?.Value;
+    LocationModel? SelectedLocation() => (LocationModel?)selectedValues.FirstOrDefault(x => x.Value is LocationModel)?.Value;
+    ZipModel? SelectedZip() => (ZipModel?)selectedValues.FirstOrDefault(x => x.Value is ZipModel)?.Value;
+
+
+
+    List<CountryModel>? Countries() =>  atlas.Countries(isShowingAllCountries);
+
+    async Task ZipClick(ZipModel? zip)
+    {
+        await ValueChanged.InvokeAsync(zip);
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await ZipClick(value);
+    }
+
+}

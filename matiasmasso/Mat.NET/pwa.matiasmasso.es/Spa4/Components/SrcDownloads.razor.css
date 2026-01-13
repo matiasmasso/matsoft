@@ -1,0 +1,12 @@
+﻿.Item {
+    display: block;
+    padding: 5px;
+}
+
+    .Item:not(:first-child) {
+        border-top: 1px solid gray;
+    }
+
+.Features {
+    color: gray;
+}

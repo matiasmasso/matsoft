@@ -1,0 +1,208 @@
+﻿@page "/MenuItem/AddFromRoot"
+@page "/MenuItem/AddFromParent/{parent:guid}"
+@page "/MenuItem/{Guid:guid}"
+@inherits _ComponentBase
+
+<div class="Wrapper">
+
+    @if (Model == null){
+        <Loading></Loading>
+    } else
+    {
+
+        <EditForm Model="@Model" OnValidSubmit=@ValidFormSubmitted>
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                Parent
+                <InputSelect @bind-Value="Model.Parent" class="form-control">
+                    <option value="">(seleccionar parent)</option>
+                    @foreach (var parent in Parents)
+                    {
+                    <option value="@parent.Guid.ToString()">@parent.Nom.Tradueix(base.Lang())</option>
+                    }
+            </InputSelect>
+        </div>
+
+        <div class="form-group">
+            @base.Lang().Tradueix("Modo","Modo","Mode")
+
+            <InputSelect @bind-Value="Model.Mode" class="form-control">
+                @foreach (var mod in Enum.GetValues<NavDTO.Model.Modes>())
+                    {
+                    <option value="@((int)mod)">@mod.ToString()</option>
+                    }
+            </InputSelect>
+        </div>
+
+
+
+        <div class="form-group">
+            @base.Lang().Tradueix("Español","Espanyol","Spanish")
+            <InputText @bind-Value="Esp" class="form-control" />
+        </div>
+        <div class="form-group">
+            @base.Lang().Tradueix("Catalan","Català","Catalan")
+            <InputText @bind-Value="Cat" class="form-control" />
+        </div>
+        <div class="form-group">
+            @base.Lang().Tradueix("Inglés","Anglès","English")
+            <InputText @bind-Value="Eng" class="form-control" />
+        </div>
+        <div class="form-group">
+            @base.Lang().Tradueix("Portugués","Portuguès","Portuguese")
+            <InputText @bind-Value="Por" class="form-control" />
+        </div>
+        <div class="form-group">
+            @base.Lang().Tradueix("Acción","Acció","Action")
+            <InputText @bind-Value="Model.Action" class="form-control" />
+        </div>
+            <div class="form-group">
+                @base.Lang().Tradueix("IcoSmall")
+                <InputText @bind-Value="Model.IcoSmall" class="form-control" />
+            </div>
+            <div class="form-group">
+                @base.Lang().Tradueix("IcoBig")
+                <InputText @bind-Value="Model.IcoBig" class="form-control" />
+            </div>
+
+        <div class="form-group">
+            Rols:
+
+            <CheckBoxList AllItems="@AllRols"
+                          TextField="@((item)=>item.GetDisplayName())"
+                          ValueField="@((item)=>((int)item).ToString())"
+                          @bind-SelectedValues="@Model.Rols">
+            </CheckBoxList>
+
+        </div>
+
+        <div class="form-group">
+            Empreses:
+
+            <CheckBoxList AllItems="@AllEmps"
+                          TextField="@((item)=>item.GetDisplayName())"
+                          ValueField="@((item)=>((int)item).ToString())"
+                          @bind-SelectedValues="@Model.Emps">
+            </CheckBoxList>
+
+        </div>
+
+        <br />
+
+        <div class="Buttons">
+            <!--<button type="submit" form="my-form-ref" class="btn btn-success" value="Update"/>-->
+            @if(isSubmitting){
+                <Loading></Loading>
+            } else {
+                    <button type="submit" class="Button ButtonOk">Update</button>
+                }
+            <input type="button" class="btn btn-secondary" @onclick=Delete value="Delete" />
+            <input type="button" class="btn btn-secondary" @onclick=Cancel value="Cancel" />
+        </div>
+
+    </EditForm>
+    }
+
+</div>
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    private ProblemDetails problemDetails;
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    [Parameter]
+    public Guid? Parent { get; set; }
+
+    private string Esp, Cat, Eng, Por;
+
+    private NavDTO.Model? Model;
+    private List<NavDTO.Model> Parents = new();
+    private List<UserModel.Rols> AllRols;
+    private List<EmpModel.EmpIds> AllEmps;
+
+    private bool isSubmitting = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var parentsDto = await base.GetAsync<NavDTO>("navs");
+            Parents = parentsDto.Items;
+
+            if (Guid == null)
+            {
+                var siblings = Parents.Where(x => x.Parent == Parent).ToList();
+                Model = new NavDTO.Model();
+                Model.Parent = Parent;
+                if (siblings.Count > 0) Model.Ord = siblings.Max(y => y.Ord) + 1;
+                Model.Emps.Add((int)EmpModel.EmpIds.MatiasMasso);
+            }
+            else
+                Model = await base.GetAsync<NavDTO.Model>("nav", Guid!.ToString());
+
+            Esp = Model.Nom?.Esp ?? "";
+            Cat = Model.Nom?.Cat ?? "";
+            Eng = Model.Nom?.Eng ?? "";
+            Por = Model.Nom?.Por ?? "";
+            AllRols = Enum.GetValues<UserModel.Rols>().ToList();
+            AllEmps = Enum.GetValues<EmpModel.EmpIds>().ToList();
+            StateHasChanged();
+        }
+    }
+
+    protected async Task ValidFormSubmitted(EditContext editContext)
+    {
+        isSubmitting = true;
+        Model!.Nom.Load(Esp, Cat, Eng, Por);
+        if (await PostAsync<NavDTO.Model,bool>(Model,"nav"))
+        {
+            base.navigationManager?.NavigateTo("/MenuItems", true);
+        }
+        else
+        {
+            isSubmitting = false;
+            //base.ShowError(base.problemDetails);
+        }
+    }
+
+    private async Task Delete()
+    {
+        var guid = (Guid)Guid!;
+        if(await GetAsync<bool>("nav/"+Model!.Guid.ToString()))
+       {
+            base.navigationManager?.NavigateTo("MenuItems", true);
+        }
+        StateHasChanged();
+    }
+
+    private void Cancel()
+    {
+        base.navigationManager?.NavigateTo("/Menuitems", true);
+    }
+
+    void CheckedValuesChanged(List<UserModel.Rols> rols)
+    {
+        StateHasChanged();
+    }
+
+    protected class RolNom
+    {
+        public string Id { get; set; }
+        public string Nom { get; set; }
+
+        public static List<RolNom> Collection()
+        {
+            var retval = Enum.GetValues<UserModel.Rols>().Select(x => new RolNom
+                {
+                    Id = ((int)x).ToString(),
+                    Nom = x.GetDisplayName()
+                }).ToList();
+            return retval;
+        }
+    }
+
+}

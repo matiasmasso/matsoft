@@ -1,0 +1,70 @@
+﻿@ModelType list(Of maxisrvr.DTONuevaRedOficialInglesina)
+@Code
+    ViewData("Title") = "NuevaRedOficialInglesinaConfirmacionRegistro"
+    Layout = "~/Views/mail/_Layout.vbhtml"
+    
+    Dim sUrl As String = "https://www.matiasmasso.es/NuevaRedOficialInglesina"
+    BLL.WebPageHelper.addParam(sUrl, "utm_source", "newspro")
+    BLL.WebPageHelper.addParam(sUrl, "utm_medium", "email")
+    BLL.WebPageHelper.addParam(sUrl, "utm_campaign", "NuevaRedOficialInglesina")
+
+End Code
+
+<div>
+
+    @If Model.count = 0 Then
+        @<p>
+            Confirmamos que no ha registrado ninguno de sus establecimientos en la nueva red de Inglesina
+        </p>
+        @<p>
+            Si decide cambiar de opinión puede hacerlo volviendo al mismo enlace:<br />
+            <a href="@sUrl">www.matiasmasso.es/NuevaRedOficialInglesina</a>
+        </p>
+        @<p>
+            Si decide mantenerse al margen aun puede suministrarse de productos Inglesina en existencia <b>hasta el 31 de Diciembre de 2014</b>.
+        </p>
+    Else
+        @<p>
+            Gracias por registrarse en la nueva Red Comercial de Distribuidores Oficiales de Inglesina.
+            Confirmamos que ha asignado los siguientes establecimientos:
+        </p>
+
+        @For Each item As MaxiSrvr.DTONuevaRedOficialInglesina In Model
+            @<div>
+                 <p>
+                     <b>@item.Contact.Nom_o_NomComercial</b>
+                     <br />@Html.Raw(item.Contact.Adr.ToHTML)
+                     <br />superficie: <b>
+                         @If (item.Category = 1) Then
+                             @Html.Raw("más de 500m2")
+                         ElseIf (item.Category = 2) Then
+                             @Html.Raw("de 100 a 500m2")
+                         ElseIf (item.Category = 3) Then
+                             @Html.Raw("menos de 100m2")
+                         End If
+                     </b>
+                 </p>
+            </div>
+        Next
+    End If
+
+    <p>
+        A continuación puede consultar una tabla con los mínimos de exposición permanente solicitados por el fabricante. Si su exposición no alcanza los mínimos conforme a la superficie de su tienda por favor contacte con nuestro representante para ponerla al día.
+    </p>
+
+    <table class=MsoNormalTable border=0 cellspacing=0 cellpadding=0 style='border-collapse:collapse;font-family: Helvetica Neue, Helvetica, Arial, sans-serif; font-size: 19px; line-height: 1.4em;'>
+        <tr><td style='text-align:left;width:400px;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;background:#F2F2F2;'><p class=MsoNormal><span style='color:black;mso-fareast-language:ES'>Categoría de establecimiento<o:p></o:p></span></p></td><td nowrap valign=bottom style='width:100px;border:solid windowtext 1.0px;border-left:none;background:#F2F2F2;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>C<o:p></o:p></span></p></td><td nowrap valign=bottom style='width:100px;border:solid windowtext 1.0px;border-left:none;background:#F2F2F2;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>B<o:p></o:p></span></p></td><td nowrap valign=bottom style='width:100px;border:solid windowtext 1.0px;border-left:none;background:#F2F2F2;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>A<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;background:#E7E6E6;'><p class=MsoNormal><span style='color:black;mso-fareast-language:ES'>Superficie<o:p></o:p></span></p></td><td nowrap valign=bottom style='padding:4px 7px 2px 4px;border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E7E6E6;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&lt;100 m2<o:p></o:p></span></p></td><td nowrap valign=bottom style='padding:4px 7px 2px 4px;border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E7E6E6;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>100-500 m2<o:p></o:p></span></p></td><td nowrap valign=bottom style='padding:4px 7px 2px 4px;border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E7E6E6;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&gt; 500 m2<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/trilogy"><span style='color:#0563C1'>Cochecito de paseo Trilogy</span></a><o:p></o:p></span></u></p></td><td nowrap rowspan=2 style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#FFF2CC;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td><td nowrap rowspan=2 style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#DDEBF7;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E2EFDA;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/OTUTTO_DELUXE"><span style='color:#0563C1'>Cochecito de paseo Otutto</span></a><o:p></o:p></span></u></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E2EFDA;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/CLASSICA"><span style='color:#0563C1'>Cochecito de paseo Classica</span></a><o:p></o:p></span></u></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td><td nowrap rowspan=3 style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E2EFDA;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/QUAD"><span style='color:#0563C1'>Cochecito de paseo Quad</span></a><o:p></o:p></span></u></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/VITTORIA"><span style='color:#0563C1'>Cochecito de paseo Vittoria</span></a><o:p></o:p></span></u></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/TRIP"><span style='color:#0563C1'>Sillita de paseo Trip</span></a><o:p></o:p></span></u></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#FFF2CC;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#DDEBF7;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E2EFDA;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/GUSTO"><span style='color:#0563C1'>Trona Gusto</span></a><o:p></o:p></span></u></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td><td nowrap rowspan=2 style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#DDEBF7;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E2EFDA;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/ZUMA"><span style='color:#0563C1'>Trona Zuma</span></a><o:p></o:p></span></u></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E2EFDA;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td></tr>
+        <tr><td style='text-align:left;padding:4px 7px 2px 4px;border:solid windowtext 1.0px;border-top:none;'><p class=MsoNormal><u><span style='color:#0563C1;mso-fareast-language:ES'><a href="https://www.matiasmasso.es/inglesina/LODGE"><span style='color:#0563C1'>Cuna Lodge</span></a><o:p></o:p></span></u></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>&nbsp;<o:p></o:p></span></p></td><td nowrap valign=bottom style='border-top:none;border-left:none;border-bottom:solid windowtext 1.0px;border-right:solid windowtext 1.0px;background:#E2EFDA;'><p class=MsoNormal align=center style='text-align:center'><span style='color:black;mso-fareast-language:ES'>X<o:p></o:p></span></p></td></tr>
+    </table>
+
+
+</div>

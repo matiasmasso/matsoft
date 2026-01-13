@@ -1,0 +1,126 @@
+﻿<div class="Wrapper">
+    <div class="Grid">
+        @foreach (var item in Model?.Items ?? new())
+        {
+            <div class="Item">
+
+                <div class="Label">
+                    @item.Caption
+                </div>
+
+                <div class="Value">
+                    @if (item.Format == PropertyGridModel.Formats.String
+                   || item.Format == PropertyGridModel.Formats.Password
+                   || item.Format == PropertyGridModel.Formats.TextArea
+                   || item.Format == PropertyGridModel.Formats.Integer
+                   || item.Format == PropertyGridModel.Formats.Decimal
+                   || item.Format == PropertyGridModel.Formats.Eur
+                   || item.Format == PropertyGridModel.Formats.DateTime
+                   || item.Format == PropertyGridModel.Formats.DateOnly)
+                    {
+                        <PropertyGridItem Item="item" T="string"
+                            ItemUpdated="ItemUpdatedHandler"
+                                          ItemChanged="ItemChangedHandler"></PropertyGridItem>
+                    }
+                    else if (item.Format == PropertyGridModel.Formats.Guidnom)
+                    {
+                        <PropertyGridItem Item="item" T="GuidNom"
+                                          ItemChanged="ItemChangedHandler"></PropertyGridItem>
+                    }
+                    else if (item.Format == PropertyGridModel.Formats.IdNom)
+                    {
+                        <PropertyGridItem Item="item" T="IdNom"
+                                          ItemChanged="ItemChangedHandler"></PropertyGridItem>
+                    }
+                    else if (item.Format == PropertyGridModel.Formats.EmpId)
+                    {
+                        <PropertyGridItem Item="item" T="EmpModel.EmpIds"
+                                          ItemChanged="ItemChangedHandler"></PropertyGridItem>
+                    }
+                    else if (item.Format == PropertyGridModel.Formats.Docfile)
+                    {
+                        <PropertyGridItem Item="item" T="DocfileModel"
+                                          ItemChanged="ItemChangedHandler"></PropertyGridItem>
+                    }
+                </div>
+
+            </div>
+        }
+    </div>
+
+    <div class="ButtonsBar">
+        @if (DeleteRequest.HasDelegate && DeleteState != CrudButton.States.Hidden)
+        {
+            <CrudButton Mode="CrudButton.Modes.Delete"
+                        OnClick="ButtonClick"
+                        State="deleteState"></CrudButton>
+        }
+        @if (CancelRequest.HasDelegate && CancelState != CrudButton.States.Hidden)
+        {
+            <CrudButton Mode="CrudButton.Modes.Cancel"
+                        OnClick="ButtonClick"
+                        State="cancelState"></CrudButton>
+        }
+        @if (UpdateRequest.HasDelegate && UpdateState != CrudButton.States.Hidden)
+        {
+            <CrudButton Mode="CrudButton.Modes.Update"
+                        OnClick="ButtonClick"
+                        State="updateState"></CrudButton>
+        }
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public PropertyGridModel? Model { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> ItemChanged { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> ItemUpdated { get; set; }
+
+    [Parameter] public EventCallback UpdateRequest { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback DeleteRequest { get; set; }
+
+    [Parameter] public CrudButton.States UpdateState { get; set; }
+    [Parameter] public CrudButton.States CancelState { get; set; }
+    [Parameter] public CrudButton.States DeleteState { get; set; }
+
+    CrudButton.States updateState;
+    CrudButton.States cancelState;
+    CrudButton.States deleteState;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        updateState = UpdateState;
+        cancelState = CancelState;
+        deleteState = DeleteState;
+    }
+    async Task ButtonClick(CrudButton.Modes mode)
+    {
+        switch (mode)
+        {
+            case CrudButton.Modes.Update:
+                await UpdateRequest.InvokeAsync();
+                break;
+            case CrudButton.Modes.Delete:
+                deleteState = CrudButton.States.Loading;
+                await DeleteRequest.InvokeAsync();
+                deleteState = CrudButton.States.StandBy;
+                break;
+            default:
+                await CancelRequest.InvokeAsync();
+                break;
+        }
+    }
+
+    void ItemChangedHandler(PropertyGridModel.Item args)
+    {
+        ItemChanged.InvokeAsync(args);
+    }
+
+    void ItemUpdatedHandler(PropertyGridModel.Item args)
+    {
+        ItemUpdated.InvokeAsync(args);
+    }
+
+}

@@ -1,0 +1,28 @@
+﻿<LookupIdNoms AvailableValues="availableValues" 
+    SelectedValues="selectedValues"
+    SelectedValuesChanged="HandleSelectedValuesChanged"
+    ></LookupIdNoms>
+
+@code {
+    [Parameter] public List<UserModel.Rols>? AvailableValues { get; set; }
+    [Parameter] public List<UserModel.Rols>? SelectedValues { get; set; }
+    [Parameter] public EventCallback<List<UserModel.Rols>> SelectedValuesChanged { get; set; }
+
+    List<IdNom> availableValues = new();
+    List<IdNom> selectedValues = new();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        availableValues = IdNoms.FromEnum<UserModel.Rols>(AvailableValues);
+        selectedValues = IdNoms.FromEnum<UserModel.Rols>(SelectedValues);
+        var idsToRemove = new HashSet<int>(selectedValues.Select(b => b.Id));
+        availableValues.RemoveAll(a => idsToRemove.Contains(a.Id));
+    }
+
+    void HandleSelectedValuesChanged(List<IdNom> args)
+    {
+        var selectedValues = args.Select(x => (UserModel.Rols)x.Id).ToList();
+        SelectedValuesChanged.InvokeAsync(selectedValues);
+    }
+}

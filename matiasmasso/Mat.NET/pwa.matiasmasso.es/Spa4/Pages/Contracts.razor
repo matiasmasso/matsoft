@@ -1,0 +1,76 @@
+﻿@page "/Contracts"
+@inherits _ComponentBase
+@layout ProLayout
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Contratos","Contractes","Contracts")</h1>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Grid">
+        @if (base.IsLoaded)
+        {
+
+            if (selectedCodi == null)
+            {
+                foreach(var item in Codis())
+                {
+                <a href="#" @onclick="() => CodiSelected(item)" @onclick:preventDefault="true" class="Codi Truncate">
+                    @item.Nom
+                </a>
+                }
+            }
+            else
+            {
+                <a href="#" @onclick="() => CodiSelected(selectedCodi)" @onclick:preventDefault="true" class="Codi Truncate">
+                    @selectedCodi.Nom
+                </a>
+                foreach(var item in CodiContracts())
+                {
+                 <a href="@item.DownloadUrl()" class='Row @(item.FchTo == null ? "Obsoleto" : "")'>
+                    <div class="Truncate">@item.Contact.FullNom</div>
+                    <div  class="Truncate">@item.Nom</div>
+                    <div>@item.FchFrom</div>
+                </a>
+                }
+            }
+        }
+        else
+        {
+            <div>loading...</div>
+        }
+    </div>
+</div>
+
+
+
+
+@code {
+    private List<ContractDTO>? model;
+    private ContractDTO.CodiClass? selectedCodi;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            await Fetch();
+            StateHasChanged();
+        };
+    }
+
+    private List<ContractDTO.CodiClass> Codis() => model!.GroupBy(x => x.Codi.Guid).Select(y => y.First().Codi).ToList();
+    private List<ContractDTO> CodiContracts() => model!.Where(x => x.Codi.Guid.Equals(selectedCodi!.Guid)).ToList();
+
+    private async Task CodiSelected(ContractDTO.CodiClass codi)
+    {
+        selectedCodi = (codi == selectedCodi) ? null : codi;
+    }
+
+    private async Task Fetch()
+    {
+        model = await base.GetAsync<List<ContractDTO>>("Contracts");
+    }
+
+}

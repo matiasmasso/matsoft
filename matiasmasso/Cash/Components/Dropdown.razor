@@ -1,0 +1,234 @@
+﻿@using System.Globalization
+
+<div class="Wrapper ContextMenuContainer" 
+@oncontextmenu:preventDefault 
+@oncontextmenu="@((e)=>HandleContextMenu(e))"
+@ontouchstart="HandleTouchStart"
+@ontouchend="HandleTouchEnd" >
+
+    <input type="text" value="@Value"
+    placeholder="@PlaceHolder"
+    @oninput="HandleOnInput"
+    @onkeydown="HandleKeyDown"
+    @onclick="HandleCaptionClick" />
+
+    @if (isDropping)
+    {
+        <div class="Dropdown">
+            @if (ShouldShowButtonsBar())
+            {
+                <div class="ButtonsBar">
+                    <button disabled="@ShouldDisableButtonZoom()" @onclick="RequestToZoomHandler">zoom</button>
+                    <button disabled="@ShouldDisableButtonAdd()" @onclick="RequestToAddHandler">afegir</button>
+                    <button disabled="@ShouldDisableButtonClear()" @onclick="RequestToClearHandler">clear</button>
+                </div>
+            }
+
+            @foreach (var value in filteredValues)
+            {
+                if (filteredValues.IndexOf(value) < 10 || isShowingAll)
+                {
+                    <a href="#" class="Item Truncate" title="@value.ToString()"
+                    @onclick="@(()=>ItemClick(value))" @onclick:preventDefault>
+                        @value.ToString()
+                    </a>
+                }
+            }
+
+            @if (!isShowingAll && filteredValues.Count > 10)
+            {
+                <a href="#" class="Item" @onclick="@(()=>isShowingAll = true)" @onclick:preventDefault>
+                    [veure-ho tot]
+                </a>
+            }
+        </div>
+    }
+    else if (isShowingContextMenu & ShouldShowButtonsBar())
+    {
+        <div class="ContextMenu" style="left:@(contextMenuOffset)px">
+            @if (!ShouldDisableButtonZoom())
+            {
+                <a href="#" @onclick:preventDefault @onclick="RequestToZoomHandler">
+                    Zoom
+                </a>
+            }
+            @if (!ShouldDisableButtonZoom())
+            {
+                <a href="#" @onclick:preventDefault @onclick="RequestToAddHandler">
+                    Afegir
+                </a>
+            }
+            @if (!ShouldDisableButtonZoom())
+            {
+                <a href="#" @onclick:preventDefault @onclick="RequestToClearHandler">
+                    Clear
+                </a>
+            }
+        </div>
+
+    }
+
+</div>
+
+@code {
+    [Parameter] public object[]? Values { get; set; }
+    [Parameter] public object? Value { get; set; }
+    [Parameter] public EventCallback<object> ValueChanged { get; set; }
+    [Parameter] public EventCallback RequestToAdd { get; set; }
+    [Parameter] public EventCallback<object> ZoomRequest { get; set; }
+    [Parameter] public string? PlaceHolder { get; set; }
+    [Parameter] public bool AllowToClear { get; set; } = true;
+
+    bool isDropping;
+    bool isShowingAll;
+    bool isShowingContextMenu;
+    double contextMenuOffset;
+    CompareInfo compareInfo = CultureInfo.InvariantCulture.CompareInfo;
+    CompareOptions compareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreSymbols | CompareOptions.IgnoreNonSpace;
+    Gesture? gesture;
+    List<object> filteredValues = new();
+
+    void HandleCaptionClick()
+    {
+        filteredValues = Values?
+        // .OrderBy(x => x.ToString())
+        .ToList() ?? new();
+        isDropping = true;
+    }
+
+    void HandleOnInput(ChangeEventArgs args)
+    {
+        var searchterms = SplitSearchterms(args.Value?.ToString());
+        filteredValues = FilterValuesBy(searchterms);
+        isDropping = true;
+    }
+
+    void HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "F4")
+        {
+            filteredValues = Values?
+            // .OrderBy(x => x.ToString())
+            .ToList() ?? new();
+            isDropping = true;
+        }
+        else if (args.Key == "Escape")
+        {
+            isDropping = false;
+            StateHasChanged();
+        }
+    }
+
+    void HandleTouchStart(TouchEventArgs args)
+    {
+        gesture = new Gesture(args.Touches[0].ClientX, args.Touches[0].ClientY);
+    }
+
+    void HandleTouchEnd(TouchEventArgs args)
+    {
+        var direction = gesture!.Close(args.ChangedTouches[0].ClientX, args.ChangedTouches[0].ClientY);
+        if (direction == Gesture.Directions.Right)
+        {
+            filteredValues = Values?
+            // .OrderBy(x => x.ToString())
+            .ToList() ?? new();
+            isDropping = true;
+        }
+        else if (direction == Gesture.Directions.Left)
+        {
+            isDropping = false;
+        }
+
+    }
+
+    void HandleContextMenu(MouseEventArgs eventArgs)
+    {
+        isShowingContextMenu = !isShowingContextMenu;
+        contextMenuOffset = eventArgs.OffsetX;
+    }
+
+    void ItemClick(object args)
+    {
+        ValueChanged.InvokeAsync(args);
+        isDropping = false;
+    }
+
+    void RequestToClearHandler()
+    {
+        ValueChanged.InvokeAsync();
+        isDropping = false;
+    }
+
+    void RequestToAddHandler()
+    {
+        RequestToAdd.InvokeAsync();
+    }
+
+    void RequestToZoomHandler()
+    {
+        ZoomRequest.InvokeAsync(Value);
+    }
+
+    List<object> FilterValuesBy(List<string> searchterms) => Values?
+        .Where(x => searchterms.All(y => compareInfo.IndexOf(x.ToString(), y.ToString(), compareOptions) >= 0))
+        // .OrderBy(x => x.ToString())
+        .ToList() ?? new();
+
+    List<string> SplitSearchterms(string? src) => src?.Split("+", StringSplitOptions.RemoveEmptyEntries).ToList() ?? new();
+
+    bool ShouldDisableButtonAdd() => !RequestToAdd.HasDelegate;
+    bool ShouldDisableButtonZoom() => string.IsNullOrEmpty(Value?.ToString()) | !ZoomRequest.HasDelegate;
+    bool ShouldDisableButtonClear() => !AllowToClear || string.IsNullOrEmpty(Value?.ToString());
+    //bool ShouldShowButtonsBar() => !ShouldDisableButtonAdd() | !ShouldDisableButtonZoom() | !ShouldDisableButtonClear();
+    bool ShouldShowButtonsBar()
+    {
+        var a = !ShouldDisableButtonAdd();
+        var b = !ShouldDisableButtonZoom();
+        var c =!ShouldDisableButtonClear();
+        var retval = a | b | c;
+        return retval;
+    }
+
+    class Gesture
+    {
+        public double X1 { get; set; }
+        public double Y1 { get; set; }
+        public double X2 { get; set; }
+        public double Y2 { get; set; }
+
+        public enum Directions
+        {
+            Up,
+            Down,
+            Left,
+            Right
+        }
+
+        public Gesture(double x, double y)
+        {
+            X1 = x;
+            Y1 = y;
+        }
+
+        public Directions Close(double x, double y)
+        {
+            Directions retval;
+            X2 = x;
+            Y2 = y;
+            var deltaH = X2 - X1;
+            var deltaY = Y2 - Y1;
+
+            if (Math.Abs(deltaH) > Math.Abs(deltaY))
+            {
+                retval = deltaH > 0 ? Directions.Right : Directions.Left;
+            }
+            else
+            {
+                retval = deltaY > 0 ? Directions.Down : Directions.Up;
+            }
+            return retval;
+
+        }
+
+    }
+}

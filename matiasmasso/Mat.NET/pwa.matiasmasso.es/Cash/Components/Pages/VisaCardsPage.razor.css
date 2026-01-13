@@ -1,0 +1,66 @@
+﻿
+
+.Nom, .Digits {
+    white-space: nowrap;
+}
+
+@media(max-width:599px) {
+    .HideOnMobile {
+        display: none;
+    }
+
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 50px 1fr;
+        grid-template-areas: "ico nom" "ico digits";
+        padding: 10px 0;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid gray;
+        }
+
+    .Ico {
+        grid-area: ico;
+    }
+
+    .Ico ::deep .Svg {
+        width: 40px;
+        min-width: 40px;
+    }
+
+    .Nom {
+        grid-area: nom
+    }
+
+    .Digits {
+        grid-area: digits;
+    }
+}
+
+
+@media(min-width:600px) {
+    .HideOnDesktop {
+        display: none;
+    }
+
+    .Grid {
+        display: grid;
+        grid-template-columns: 32px min-content 1fr min-content;
+        grid-column-gap: 10px;
+        grid-row-gap: 5px;
+    }
+
+    .ColHeaders > * {
+        padding-bottom: 10px;
+    }
+
+    .Item, .ColHeaders {
+        display: contents;
+    }
+}

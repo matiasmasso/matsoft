@@ -1,0 +1,75 @@
+﻿@inject ApiEndpointService _endpointService
+
+
+<div class="thumb"
+     draggable="true"
+     @onclick="HandleClick"
+     @ondragstart="HandleDragStart"
+     @ondragover:preventDefault
+     @ondrop="HandleDrop">
+
+    <img src="@ThumbUrl(Item)" class="thumb-img" draggable="false" />
+
+    @if (Item.IsVideo())
+    {
+        <div class="thumb-play">
+            <i class="bi bi-play-fill"></i>
+        </div>
+    }
+
+    @if (IsSelected)
+    {
+        <div class="thumb-check">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16">
+                <circle cx="8" cy="8" r="7" fill="#0A84FF" stroke="white" stroke-width="1.5" />
+                <path fill="white" d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-4 5a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l1.094 1.093 3.473-4.425z" />
+            </svg>
+
+
+
+            @* <i class="bi bi-check-circle-fill"></i> *@
+        </div>
+    }
+
+    @if (Item.IsVideo() && Item.Duration is not null)
+    {
+        <div class="thumb-duration">
+            @FormatDuration(Item.Duration.Value)
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Item.Title))
+    {
+        <div class="thumb-title">@Item.Title</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public AlbumModel.Item Item { get; set; } = default!;
+    [Parameter] public bool IsSelected { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public EventCallback OnSelect { get; set; }
+    [Parameter] public EventCallback OnDragStart { get; set; }
+    [Parameter] public EventCallback OnDrop { get; set; }
+
+    private Task HandleClick() => OnClick.InvokeAsync();
+    private Task HandleDragStart() => OnDragStart.InvokeAsync();
+    private Task HandleDrop() => OnDrop.InvokeAsync();
+
+
+    private string ThumbUrl(AlbumModel.Item item)
+    {
+        var uri = new Uri(new Uri(_endpointService.CurrentBaseUrl!), item.ThumbUrl);
+        return uri.ToString();
+    }
+
+    private static string FormatDuration(TimeSpan ts)
+    {
+        if (ts.TotalHours >= 1)
+            return ts.ToString(@"h\:mm\:ss");
+
+        return ts.ToString(@"m\:ss");
+    }
+
+}

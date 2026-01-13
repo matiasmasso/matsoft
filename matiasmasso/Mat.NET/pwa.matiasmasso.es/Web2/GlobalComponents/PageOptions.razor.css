@@ -1,0 +1,36 @@
+﻿    .Wrapper {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+        .Toggle {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .Bar {
+            display: flex;
+            justify-content: flex-start;
+            align-items:center;
+        }
+
+    ::deep .Bar > * {
+        padding: 0 10px;
+        white-space:nowrap;
+    }
+
+    ::deep .Bar > *:first-child {
+        padding: 0 10px 0 0;
+        text-align:left;
+    }
+
+               ::deep .Bar > *:not(:first-child) {
+                    border-left: 1px solid black;
+                }
+
+/*------------------------ desktop ----------------------*/
+
+@media (min-width:600px) {
+}

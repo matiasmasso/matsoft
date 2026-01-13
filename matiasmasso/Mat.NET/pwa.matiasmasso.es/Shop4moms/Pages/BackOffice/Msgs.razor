@@ -1,0 +1,322 @@
+﻿@page "/backoffice/msgs"
+@inherits _PageBase
+@inject AppStateService appState
+@inject CultureService culture
+<div class="WrapperFullWidth">
+
+    @if (items == null)
+    {
+        <h3>@Title()</h3>
+
+        <Loading></Loading>
+    }
+    else if (selectedUser != null)
+    {
+        <User Value="selectedUser" RequestToCancel="@(()=>selectedUser=null)"
+          RequestToLogin="LoginRequest"></User>
+    }
+    else if (selectedItem != null)
+    {
+
+        <h3>@Title()</h3>
+
+        <div class="Message">
+            <div class="Features">
+                <span>@string.Format("{0:dd/MM/yy HH:mm}",selectedItem.Fch)</span>
+                <a href="#" @onclick="@(()=>selectedUser=selectedItem.User)" @onclick:preventDefault>
+                    @selectedItem.User?.NomiCognomsOrNicknameOrEmailAddress()
+                </a>
+                @if (selectedItem.AnsweringMsg != null)
+                {
+                    <span>en resposta a</span>
+                    <span>@string.Format("{0:dd/MM/yy HH:mm}", selectedItem.FirstAnswer()!.Fch)</span>
+                    <span>@selectedItem.AnsweringMsg!.User?.NomiCognomsOrNicknameOrEmailAddress()</span>
+                }
+            </div>
+            <div class="Body @(selectedItem.AnsweringMsg == null ? "Rebut" : "Enviat")">
+                @((MarkupString)(selectedItem.Text?.Html() ?? ""))
+            </div>
+
+            <a class="Avatar"
+               href="#"
+           @onclick="@(()=>selectedUser=selectedItem?.User)"
+            @onclick:preventDefault>
+                <Gravatar User="selectedItem?.User" Size="100"></Gravatar>
+            </a>
+        </div>
+
+        @if (selectedItem?.HasAnswers ?? false)
+        {
+            <div class="Message">
+                <div class="Features">
+                    <span>@string.Format("{0:dd/MM/yy HH:mm}",selectedItem.FirstAnswer()!.Fch)</span>
+                    contestat per
+                    <span>@selectedItem.FirstAnswer()!.User!.NomiCognomsOrNicknameOrEmailAddress()</span>
+                </div>
+                <div class="Body Enviat">
+                    @((MarkupString)(selectedItem.FirstAnswer()?.Text?.Html() ?? ""))
+                </div>
+
+                <a class="Avatar" href="#"
+           @onclick="@(()=>selectedUser=selectedItem.FirstAnswer()!.User)"
+                @onclick:preventDefault>
+                    <Gravatar User="selectedItem.FirstAnswer()!.User" Size="100"></Gravatar>
+                </a>
+            </div>
+
+        }
+        else if (selectedItem?.Answering == null ) //avoid asking for an answer if it is already an answer
+        {
+            <div class="Message">
+                <div class="Features">
+                    <span>la meva resposta</span>
+                </div>
+                <div class="Body">
+                    <UxTextarea @bind-Value="answer" SetDirty="@(()=>state=DbState.IsDirty)"
+                        CanEdit="@(!(selectedItem?.HasAnswers ?? false))"></UxTextarea>
+                </div>
+
+                <a class="Avatar" href="#"
+           @onclick="@(()=>selectedUser=base.CurrentUser())"
+                @onclick:preventDefault>
+                    <Gravatar User="base.CurrentUser()" Size="100"></Gravatar>
+                </a>
+            </div>
+        }
+
+        <div class="ButtonsBar">
+            <ButtonsBar CanEdit="true"
+                      State="state"
+                      CanDelete="true"
+                      RequestToCancel="@(()=>selectedItem=null)"
+                      RequestToDelete="Delete"
+                      RequestToUpdate="Answer"></ButtonsBar>
+        </div>
+
+    }
+    else
+    {
+        <h3 class="Center">@Title()</h3>
+
+        @if (isHiddingAnswereds && items.Count == 0)
+        {
+            <div class="NoPendingMessages">
+
+
+                <div class="Info">
+                    <Icon Id="Icon.Ids.CircleInfo" />
+                    @base.Lang().Tradueix("No quedan mensajes pendientes de contestar"
+            ,"No queden missatges pendents de contestar"
+            , "No unanswered messages left"
+            ,"Não há mensagens para responder")
+                </div>
+
+                <div class="ShowAllMsgs Button">
+                    <a href="#" @onclick="HideAnswereds" @onclick:preventDefault>
+                        @base.Lang().Tradueix("Muestra los mensajes ya contestados"
+                ,"Mostra els missatges ja contestats"
+                , "Show answered messages"
+                ,"Apresenta as mensagens respondidas")
+                    </a>
+                </div>
+            </div>
+
+        }
+        else
+        {
+            <PageOptions IsShowingOptions>
+            <a href="#" @onclick="HideAnswereds" @onclick:preventDefault>mostra els missatges contestats</a>
+        </PageOptions>
+
+            <SearchBox @bind-Value="searchTerm"></SearchBox>
+
+            <div class="Grid @(isHiddingAnswereds ? "IsHiddingAnswereds" : "")">
+                <div class="ColumnHeaders">
+                    <div class="Ico @(isHiddingAnswereds ? "Hidden" : "")">&nbsp;</div>
+                    <div class="Fch">data</div>
+                    <div class="Remitent">remitent</div>
+                    <div class="Consulta">consulta</div>
+                    @if (!isHiddingAnswereds)
+                    {
+                        <div class="Answerer">respost per</div>
+                        <div class="Answer">resposta</div>
+                    }
+
+                </div>
+                @foreach (var item in FilteredItems())
+                {
+                    <a class="Item" @onclick="@(()=>ItemSelected(item))" @onclick:preventDefault>
+                        <div class="Ico @(isHiddingAnswereds ? "Hidden" : "")">
+                            <Icon Id="@(item.HasAnswers ? Icon.Ids.CheckGreenCircle : Icon.Ids.None)"></Icon>
+                        </div>
+                        <div class="Fch">@string.Format("{0:dd/MM/yy HH:mm}",item.Fch)</div>
+                        <div class="Remitent">@item.User?.NomiCognomsOrNicknameOrEmailAddress()</div>
+                        <div class="Consulta">@item.Text</div>
+                        @if (!isHiddingAnswereds)
+                        {
+                            <div class="Answerer">@Answerer(item)</div>
+                            <div class="Answer">@Answer(item)</div>
+                        }
+                    </a>
+                }
+
+            </div>
+        }
+
+    }
+</div>
+<Error Exception="exception"></Error>
+
+
+
+
+@code {
+    Exception? exception;
+    List<ContentModel.Comment>? items;
+    ContentModel.Comment? selectedItem;
+    UserModel? selectedUser;
+    UserModel? currentUser;
+    bool isHiddingAnswereds = true;
+    DbState state;
+    string? answer;
+    string? searchTerm;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = base.CurrentUser();
+        await LoadData();
+    }
+
+    async Task LoadData()
+    {
+        state = DbState.IsLoading;
+        try
+        {
+            var segment = isHiddingAnswereds ? "Comments/openfromSrc" : "Comments/fromSrc";
+            items = await appState.GetAsync<List<ContentModel.Comment>>(segment, ((int)ContentModel.Comment.Srcs.Contact4moms).ToString());
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task Answer()
+    {
+        if (!string.IsNullOrEmpty(answer))
+        {
+            state = DbState.IsUpdating;
+            try
+            {
+                var comment = new ContentModel.Comment();
+                comment.ContentSrc = ContentModel.Comment.Srcs.Contact4moms;
+                comment.Answering = selectedItem!.Guid;
+                comment.User = base.CurrentUser()!;
+                comment.Fch = DateTime.Now;
+                comment.FchApproved = DateTime.Now;
+                comment.Text = answer;
+                comment.Lang = base.Lang();
+
+                await Post2Async<ContentModel.Comment, bool>(comment, "Comment");
+
+                var subject = selectedItem.Lang?.Tradueix("4moms responde", "4moms respon", "4moms answers", "4moms responde");
+                var answerUrl = base.CanonicalUrl(base.Lang(), new LangTextModel("contacto", "contacte", "contact", "contato"))+"/"+comment.Guid.ToString();
+                var body = comment.Text + "<p>En respuesta a su mensaje:</p><p>" + selectedItem.Text + "</p><div style='text-align:center'><a href='" + answerUrl + "' style='padding:5px 10px;border-radius: .25rem;border:1px solid gray;'>" + base.Lang().Tradueix("Responder", "Contestar", "Answer", "Responder") + "</a></div>";
+                var templatedBody = Shop4moms.Services.MailService.TemplatedBody(body.Html());
+                await Shop4moms.Services.MailService.SendEmailAsync(selectedItem.User!.EmailAddress!, subject!, templatedBody);
+                answer = "";
+                selectedItem = null;
+                await LoadData();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+            state = DbState.StandBy;
+
+        }
+    }
+
+    async Task Delete()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await appState.GetAsync<bool>("Comment/delete", selectedItem!.Guid.ToString());
+            selectedItem = null;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task HideAnswereds()
+    {
+        isHiddingAnswereds = !isHiddingAnswereds;
+        await LoadData();
+    }
+
+    async Task ItemSelected(ContentModel.Comment item)
+    {
+        try
+        {
+            selectedItem = await appState.GetAsync<ContentModel.Comment>("comment", item.Guid.ToString());
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task LoginRequest(UserModel user)
+    {
+        await ((CustomAuthenticationStateProvider)authStateProvider).LoginAsync(user);
+    }
+
+    List<ContentModel.Comment> FilteredItems()
+    {
+        List<ContentModel.Comment> retval;
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = items?.Where(x => x.Answering == null).ToList() ?? new();
+        else
+            retval = items?.Where(x => x.Answering == null && x.Matches(searchTerm)).ToList() ?? new();
+        return retval;
+    }
+
+    string? Answerer(ContentModel.Comment item)
+    {
+        string? retval = null;
+        var answer = items?.Where(x => x.Answering == item.Guid).OrderByDescending(x => x.Fch).FirstOrDefault();
+        if (answer != null)
+        {
+            retval = answer.User?.NomiCognomsOrNicknameOrEmailAddress();
+        }
+        return retval;
+    }
+
+    string? Answer(ContentModel.Comment item)
+    {
+        string? retval = null;
+        var answer = items?.Where(x => x.Answering == item.Guid).OrderByDescending(x => x.Fch).FirstOrDefault();
+        if (answer != null)
+        {
+            retval = answer.Text;
+        }
+        return retval;
+    }
+
+    string Title()
+    {
+        string retval;
+        if(currentUser?.isStaff() ?? false)
+            retval = selectedItem == null ? culture.Localize("ConsumerMessages") : culture.Localize("ConsumerMessage");
+            else
+            retval = selectedItem == null ? culture.Localize("MyMessages") : culture.Localize("MyMessage");
+        return retval;
+
+    }
+}

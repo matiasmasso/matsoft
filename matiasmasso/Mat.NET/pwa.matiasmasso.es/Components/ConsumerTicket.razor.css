@@ -1,0 +1,160 @@
+﻿.Wrapper {
+    padding: 10px;
+    max-width: 600px;
+    margin: auto;
+}
+
+.Header{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:center;
+}
+
+
+    .Header .CloseIcon {
+        display: block;
+    }
+
+        .Header .CloseIcon:hover ::deep path.fa-secondary {
+            opacity: 0.1;
+        }
+
+.Grid {
+    display: flex;
+    flex-direction:column;
+    column-gap: 10px;
+}
+
+.ColumnHeaders {
+    display: contents;
+    font-weight: 600;
+    color: gray;
+    padding-bottom: 10px;
+}
+
+.Item {
+    display: grid;
+}
+
+    .Item.Total {
+        grid-template-columns: 100px 1fr 70px 20px;
+        grid-template-areas: "thumbnail nom amount del"
+    }
+
+
+    .Amount {
+        white-space: nowrap;
+        text-align: right;
+    }
+.Thumbnail {
+    width: 100px;
+    height:114px;
+    vertical-align:top;
+    grid-area: thumbnail;
+}
+
+    .Thumbnail img {
+        width: 100%;
+        height: auto;
+    }
+
+
+
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-self: center;
+    grid-area: nom;
+}
+
+.Qty {
+    grid-area: 1ty;
+}
+
+.Price {
+    grid-area: price;
+}
+
+.Amount {
+    grid-area: amount;
+}
+
+.Qty input {
+    width: 50px;
+    align-self: center;
+    text-align: right;
+}
+
+.Qty, .Price, .Amount {
+    text-align: right;
+    white-space: nowrap;
+    align-self: center;
+}
+
+
+.Del {
+    background-size: 15px auto;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('/img/trash-can-thin.svg');
+    align-self: center;
+    grid-area: del;
+}
+
+    .Del:hover {
+        background-image: url('/img/trash-can-solid.svg');
+    }
+
+    .Tracking {
+        display:grid;
+        grid-template-columns: 100px 1fr;
+        grid-column-gap:10px;
+    }
+
+/*--------------- mobiles --------------------*/
+
+@media(max-width:599px) {
+    .Item {
+        grid-template-columns: 100px 1fr 70px 70px 20px;
+        grid-template-areas: "thumbnail nom nom nom nom"
+            "thumbnail qty price amount del"
+    }
+
+        .Item.Total {
+            grid-template-columns: 100px 1fr 70px 20px;
+            grid-template-areas: "thumbnail nom amount del"
+        }
+
+    .ColumnHeaders .Qty, .ColumnHeaders.Amount {
+        visibility: hidden;
+    }
+
+    .Header .CloseIcon {
+        width: 40px;
+        height: 40px;
+    }
+
+
+        .Header .CloseIcon ::deep path.fa-secondary {
+            opacity: 0.1;
+        }
+}
+/*--------------- desktop --------------------*/
+
+@media(min-width:600px) {
+    .Item {
+        grid-template-columns: 100px 1fr 70px 70px 70px 20px;
+        grid-template-areas: "thumbnail nom qty price amount del"
+    }
+
+    .Header .CloseIcon {
+        width: 36px;
+        height: 36px;
+    }
+
+        .Header .CloseIcon ::deep path.fa-secondary {
+            opacity: 0.0;
+        }
+}

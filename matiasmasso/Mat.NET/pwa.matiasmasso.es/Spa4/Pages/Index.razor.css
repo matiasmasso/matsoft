@@ -1,0 +1,78 @@
+﻿.Wrapper {
+    display: grid;
+    grid-template-areas: "banner banner banner"
+        "brand1 brand2 brand3"
+        "raffle raffle raffle";
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.Banner {
+    grid-area: banner;
+}
+.Brand1 {
+    grid-area: brand1;
+}
+.Brand2 {
+    grid-area: brand2;
+}
+.Brand3 {
+    grid-area: brand3;
+}
+.News0 {
+    grid-area: news0;
+}
+.News1 {
+    grid-area: news1;
+}
+.Raffle {
+    grid-area: raffle;
+}
+
+.ShowOnMobile {
+    display:none;
+}
+
+.Brand1 img, .Brand2 img, .Brand3 img, .News0 img, .News1 img, .Raffle img {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+}
+
+.BrandsV {
+    display: block;
+}
+
+.BrandsH {
+    display: none;
+}
+
+
+
+@media screen and (max-width: 600px) {
+    .Wrapper {
+        display: grid;
+        grid-template-areas: "banner banner"
+            "news0 news1"
+            "brand1 brand1"
+            "brand2 brand2"
+            "brand3 brand3"
+            "raffle raffle";
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+
+    .BrandsV {
+        display: none;
+    }
+
+    .BrandsH, .News0, .News1 {
+        display: block;
+    }
+
+
+    .News0, .News1 {
+        font-size:0.8em;
+    }
+}

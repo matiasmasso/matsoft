@@ -1,0 +1,14 @@
+﻿<a href="#" @onclick:preventDefault @onclick="@(()=>OnClick())">
+    <Icon Id="@(Value ? Icon.Ids.ToggleOn : Icon.Ids.ToggleOff)" />
+</a>
+
+@code {
+    [Parameter] public bool Value { get; set; } = false;
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+
+    void OnClick()
+    {
+        var value = !Value;
+        ValueChanged.InvokeAsync(value);
+    }
+}

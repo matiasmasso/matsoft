@@ -1,0 +1,252 @@
+﻿@inherits _Base
+
+<div class="Wrapper600">
+    <div class="Header">
+        <h2>
+            @base.Lang().Tradueix(
+            "mi pedido",
+            "la meva comanda",
+            "my purchase order",
+            "a minha encomenda"
+            )
+            @consumerTicket?.OrderNum
+        </h2>
+        <a class="CloseIcon" href="#" @onclick="RequestToCancel" @onclick:preventDefault title="@Localizer("Close")">
+            <Icon Id="Icon.Ids.XmarkSquare"></Icon>
+        </a>
+    </div>
+    @if (consumerTicket == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <TabControl>
+            <TabPage Text="@Localizer("Details")">
+                <PropertyGrid model="@gridModel" CanEdit="false"></PropertyGrid>
+            </TabPage>
+
+            <TabPage Text="@Localizer("Products")">
+                <div class="Grid">
+                    <div class="Item ColumnHeaders">
+                        <div>&nbsp;</div>
+                        <div class="Nom">&nbsp;</div>
+                        <div class="Qty">@Localizer("Units")</div>
+                        <div class="Price">@Localizer("Price")</div>
+                        <div class="Amount">@Localizer("Amount")</div>
+                    </div>
+
+                    @if ((Value?.Items.Count ?? 0) > 1)
+                    {
+                        <div class="Item Totals">
+                            <div>&nbsp;</div>
+                            <div class="Nom">
+                                @Localizer("Total")
+                            </div>
+                            <div class="Qty">&nbsp;</div>
+                            <div class="Price">&nbsp;</div>
+                            <div class="Amount">@string.Format("{0:N2} €",Value?.Cash())</div>
+                        </div>
+                    }
+
+                    @foreach (var item in delivery?.Items ?? new())
+                    {
+                        <div class="Item">
+                            <div class="Thumbnail">
+                                <a href="@SkuUrl(item)" title="">
+
+                                    <img src="@SkuImageUrl(item)" alt=">@SkuFullNom(item)" onerror="this.onerror=null;this.src='/img/camera-slash-regular.svg'" />
+                                </a>
+                            </div>
+                            <div class="Nom">
+                                @CategoryNom(item)
+                                <br />
+                                @SkuNom(item)
+                            </div>
+                            <div class="Qty">
+                                @item.Qty
+                            </div>
+                            <div class="Price">@string.Format("{0:N2} €",UnitPriceVatIncluded(item))</div>
+                            <div class="Amount">@string.Format("{0:N2} €",AmtVatIncluded(item))</div>
+                        </div>
+                    }
+                </div>
+            </TabPage>
+            <TabPage Text="@base.Lang().Tradueix("Seguimiento","Seguiment","Follow up","Seguimento")">
+                <div class="Tracking">
+                    @foreach (var item in trace.Items)
+                    {
+                        <div>@string.Format("{0:dd/MM/yy HH:mm}",item.Fch)</div>
+                        <div>@item.Caption</div>
+                    }
+                </div>
+            </TabPage>
+        </TabControl>
+
+    }
+
+    <Error Exception="exception"></Error>
+</div>
+
+<PageTitle>
+    @base.Lang().Tradueix(
+    "4moms | pedido",
+    "4moms | comanda",
+    "4moms | purchase order",
+    "4moms | encomenda"
+    )
+    @consumerTicket?.OrderNum
+</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+
+
+
+@code {
+    [Parameter] public ConsumerTicketModel? Value { get; set; }
+    [Parameter] public string? OrderNum { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+
+    LangDTO lang;
+
+    DeliveryModel? delivery;
+    ConsumerTicketModel? consumerTicket;
+    PropertyGridModel? gridModel;
+
+    List<ProductSkuModel> skus = new();
+    List<ProductSkuModel> categorySkus = new();
+    List<ProductCategoryModel> categories = new();
+    List<TaxModel> taxes = new();
+    RouteModel.Collection routes = new();
+    DTO.Integracions.Vivace.Trace trace;
+    Exception? exception;
+
+    private enum Fields : int
+    {
+        OrderNum,
+        Fch,
+        Nom,
+        Address,
+        ZipyCit,
+        Tel,
+        BaseImponible,
+        VatAmt,
+        Cash
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            lang = base.Lang();
+            if (Value == null)
+            {
+                if (string.IsNullOrEmpty(OrderNum))
+                    throw new Exception("missing order number");
+                else
+                {
+                    consumerTicket = await Get2Async<ConsumerTicketModel>("ConsumerTicket/fromOrderNum", OrderNum);
+                    if (consumerTicket == null) throw new Exception("Order not found");
+                }
+
+            }
+            else
+                consumerTicket = await Get2Async<ConsumerTicketModel>("ConsumerTicket", Value.Guid.ToString());
+
+            if (consumerTicket?.Delivery != null)
+            {
+                delivery = await Get2Async<DeliveryModel>("Delivery", consumerTicket.Delivery.Guid.ToString());
+                routes = await Get2Async<RouteModel.Collection>("Shop4moms/routes") ?? new();
+                categories = await Get2Async<List<ProductCategoryModel>>("Shop4moms/Categories") ?? new();
+                skus = await Get2Async<List<ProductSkuModel>>("Shop4moms/Skus") ?? new();
+                taxes = await Get2Async<List<TaxModel>>("Taxes") ?? new();
+                trace = await Helpers.Tracking.TraceAsync(delivery);
+
+                var _gridModel = new PropertyGridModel(consumerTicket);
+                _gridModel.AddString((int)Fields.OrderNum, consumerTicket.OrderNum, Localizer("Order"));
+                _gridModel.AddFch((int)Fields.Fch, consumerTicket.Fch, Localizer("Fch"));
+                _gridModel.AddString((int)Fields.Nom, delivery.Nom, Localizer("Destination"));
+                _gridModel.AddString((int)Fields.Address, delivery.Address.Text, Localizer("Address"));
+                _gridModel.AddString((int)Fields.ZipyCit, delivery.Address.FullNom(base.Lang()), Localizer("Location"));
+                _gridModel.AddString((int)Fields.Tel, consumerTicket.Tel, Localizer("Tel"));
+                _gridModel.AddString((int)Fields.BaseImponible, (new Amt(delivery.BaseImponible())).CurFormatted(), Localizer("BaseImponible"));
+                _gridModel.AddString((int)Fields.VatAmt, (new Amt(delivery.VatAmt(taxes))).CurFormatted(), Localizer("Vat"));
+                _gridModel.AddString((int)Fields.Cash, (new Amt(delivery.Cash(taxes))).CurFormatted(), Localizer("Total"));
+                gridModel = _gridModel;
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task RequestToCancel()
+    {
+        await CancelRequest.InvokeAsync();
+    }
+
+    decimal UnitPriceVatIncluded(DeliveryModel.Item item)
+    {
+        return item.UnitPriceVatIncluded(taxes, delivery!.HasIva(), delivery.HasReq());
+    }
+
+    decimal AmtVatIncluded(DeliveryModel.Item item)
+    {
+        return item.AmtVatIncluded(taxes, delivery!.HasIva(), delivery.HasReq());
+    }
+
+    string SkuImageUrl(DeliveryModel.Item item)
+    {
+        var sku = skus.FirstOrDefault(x => x.Guid == item.Sku);
+        var retval = sku?.ImageUrl() ?? "";
+        return retval;
+    }
+
+    string? SkuUrl(DeliveryModel.Item item)
+    {
+        var retval = base.RelativeUrl(routes?.LangText(item.Sku) ?? new());
+        return retval;
+    }
+
+    string? SkuFullNom(DeliveryModel.Item item)
+    {
+        string? retval = null;
+        var sku = skus.FirstOrDefault(x => x.Guid == item.Sku);
+        if (sku != null)
+        {
+            var category = categories.FirstOrDefault(x => x.Guid == sku.Category);
+            retval = string.Format("{0} {1}", category?.Nom?.Tradueix(lang), sku?.Nom?.Tradueix(lang));
+        }
+        return retval;
+    }
+
+    string? CategoryNom(DeliveryModel.Item item)
+    {
+        var category = Category(item);
+        return category?.Nom?.Tradueix(base.Lang());
+    }
+
+    string? SkuNom(DeliveryModel.Item item)
+    {
+        var sku = Sku(item);
+        return sku?.Nom?.Tradueix(base.Lang());
+    }
+
+    ProductCategoryModel? Category(DeliveryModel.Item item)
+    {
+        var sku = Sku(item);
+        return categories.FirstOrDefault(x => x.Guid == sku?.Category);
+    }
+
+    ProductSkuModel? Sku(DeliveryModel.Item item)
+    {
+        return skus.FirstOrDefault(x => x.Guid == item.Sku);
+    }
+
+
+}

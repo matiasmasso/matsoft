@@ -1,0 +1,113 @@
+﻿@page "/bancs"
+@inject ApiService ApiService
+
+<PageTitle>Cash bancs</PageTitle>
+
+@if (selectedExtracte != null)
+{
+    <Extracte Value="selectedExtracte"
+              CloseRequest="@(()=>selectedExtracte = null)"></Extracte>
+}
+else
+{
+    <div class="PageWrapper600">
+        <h3>Bancs</h3>
+        @if (values == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <PageOptions>
+                <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+            </PageOptions>
+
+            <div class="Grid">
+                @foreach (var emp in Emps() ?? new())
+                {
+                    <div class="Emp">@EmpNom(emp)</div>
+
+                    @foreach (var item in FilteredValues(emp) ?? new())
+                    {
+                        <div class="Item">
+                            <a href="#" @onclick=@(()=>ItemClick(item)) @onclick:preventDefault>
+                                <div class="Txt Nom">@item.Abr</div>
+                            </a>
+                            <a href="#" @onclick=@(()=>ItemClick(item)) @onclick:preventDefault>
+                                <div class="Txt Ccc">@item.FormatedCcc()</div>
+                            </a>
+                            <div class="Ico">
+                                <CopyButton Value="@item.Ccc"></CopyButton>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+
+@code {
+    List<BancModel>? values;
+    List<EmpModel>? emps;
+    PgcCtaModel.Extracte? selectedExtracte;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var rawValues = await ApiService.GetAsync<List<BancModel>>("bancs");
+            var userEmps = ApiService.CurrentUser()?.Emps ?? new();
+            values = rawValues?.Where(x => userEmps.Any(y => x.Emp == y)).ToList();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    List<EmpModel>? Emps()
+    {
+        if (isShowingObsolets)
+            return values?
+            .GroupBy(x => x.Emp)
+            .Where(x => ApiService.GetEmp(x.Key) != null)
+            .Select(x => ApiService.GetEmp(x.Key)!)
+            .OrderBy(x => x.Id)?.ToList();
+        else
+            return values?
+            .Where(x => x.Obsoleto == false)
+            .GroupBy(x => x.Emp)
+            .Where(x => ApiService.GetEmp(x.Key) != null)
+            .Select(x => ApiService.GetEmp(x.Key)!)
+            .OrderBy(x => x.Id)?.ToList();
+    }
+
+    List<BancModel>? FilteredValues(EmpModel emp)
+    {
+        if (isShowingObsolets)
+            return values?.Where(x => x.Emp == emp.Id)
+            .OrderBy(x => x.Obsoleto).ThenBy(x => x.Abr).ToList();
+        else
+            return values?.Where(x => x.Emp == emp.Id && x.Obsoleto == false)
+            .OrderBy(x => x.Abr).ToList();
+    }
+
+    string EmpNom(EmpModel? emp) => emp?.Nom ?? emp?.Abr ?? "?";
+
+    void ItemClick(BancModel args)
+    {
+        selectedExtracte = new PgcCtaModel.Extracte
+            {
+                Emp = args.Emp,
+                Cta = ApiService.GetPgcCta(PgcCtaModel.Cods.Bancs)?.Guid,
+                Contact = args.Guid,
+                Year = DateTime.Today.Year
+            };
+    }
+}

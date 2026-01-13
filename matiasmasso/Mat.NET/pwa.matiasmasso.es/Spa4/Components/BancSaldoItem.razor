@@ -1,0 +1,41 @@
+﻿
+
+<a href="#" class='Item' @onclick="ItemSelected" @onclick:preventDefault="true">
+    <div class="Ico">
+        <img src="@Item.LogoUrl()" alt="@Item.Abr" height="48" width="48" />
+    </div>
+
+    <div class="Details">
+        <div class="Abr Truncate">
+            @Item.Abr
+            <span hidden="@(!ShowEmp)">@string.Format(" ({0})", ((EmpDTO.EmpIds)Item.Emp).GetDisplayName())</span>
+        </div>
+
+        <div class="Ccc Truncate">
+            @Item.FormattedCcc()
+        </div>
+
+        <div class="Saldo">
+            <div class="Truncate">
+                @string.Format("Saldo a {0:dd/MM/yy HH:mm}",Item.Fch)
+            </div>
+            <div class="Eur">
+                @string.Format("{0:n2} €",Item.Eur)
+            </div>
+        </div>
+
+    </div>
+</a>
+
+@code {
+    [Parameter] public BancDTO.Saldo Item { get; set; }
+    [Parameter] public bool ShowEmp { get; set; }
+    [Parameter] public EventCallback<BancDTO.Saldo> ItemClicked { get; set; }
+
+    private void ItemSelected()
+    {
+        if (ItemClicked.HasDelegate)
+            ItemClicked.InvokeAsync(Item);
+    }
+
+}

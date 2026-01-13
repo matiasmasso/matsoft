@@ -1,0 +1,64 @@
+﻿.Info {
+    margin-bottom: 15px;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    grid-template-areas: "thumb details "
+        "thumb details";
+    grid-column-gap: 10px;
+}
+
+.Details {
+    grid-area: details;
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    grid-template-rows: 3em min-content min-content;
+    grid-column-gap: 10px;
+    align-items: center;
+}
+
+.Details.HasDiscount {
+    grid-template-columns: 1fr 80px 60px 80px;
+}
+
+
+.Thumbnail{
+    grid-area:thumb;
+}
+
+.Thumbnail img {
+    width: 100%;
+    height: auto;
+}
+
+.Nom {
+    grid-column:1/-1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.Qty {
+    display:flex;
+    justify-content: flex-end;
+}
+
+.Price {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}
+
+.Dto {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}
+
+.Amt {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}

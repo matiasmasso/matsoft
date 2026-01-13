@@ -1,0 +1,70 @@
+﻿
+@inherits _Base
+
+@if (model == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="Wrapper">
+
+        <div class="Content">
+            <h1>@model.Caption.Tradueix(base.Lang())</h1>
+
+            @((MarkupString)(content ?? ""))
+        </div>
+
+        <div class="OtherNews HideOnDesktop">
+            @Localizer("News.OtherNews")
+        </div>
+
+        <div class="Boxes">
+            <NoticiasGallery VisibleCount="4" HideThis="model.Guid"></NoticiasGallery>
+        </div>
+
+    </div>
+}
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    [Parameter] public string? Url1 { get; set; }
+    [Parameter] public string? Url2 { get; set; }
+    [Parameter] public string? Url3 { get; set; }
+    [Parameter] public string? Url4 { get; set; }
+    [Parameter] public string? Url5 { get; set; }
+    private NoticiaModel? model;
+    private string? content;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await base.RequestCacheAsync(CacheDTO.Table.TableIds.Noticia);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        string[] segments = { Url1, Url2, Url3, Url4, Url5 };
+        string url = string.Join("/", segments.Where(x => !string.IsNullOrEmpty(x)));
+        string urlSegment = url.Replace(".html", "");
+
+        //prevent ignoring source changes on same page
+        if (model != null && !model.UrlSegment.Contains(urlSegment)) model = null;
+
+        //if (model == null && IsLoadingCache() == false)
+        //{
+        //    var apiResponse = await PostAsync<string, NoticiaModel>(urlSegment, "Noticia/LandingPage");
+        //    if (apiResponse.Value != null)
+        //    {
+        //        model = apiResponse.Value;
+        //        content = Cache?.ExpandPlugins(model?.Html(base.Lang()), base.Lang());
+        //    }
+        //    else
+        //        problemDetails = apiResponse.ProblemDetails;
+        //}
+    }
+
+
+}

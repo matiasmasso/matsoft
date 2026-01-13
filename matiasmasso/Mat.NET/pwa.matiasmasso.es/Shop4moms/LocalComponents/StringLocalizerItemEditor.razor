@@ -1,0 +1,20 @@
+﻿<Textbox2 Multiline Value="data" ValueChanged="ValueChangedHandler" CanEdit="true"></Textbox2>
+
+
+@code {
+    [Parameter] public StringLocalizerModel.Item Value { get; set; }
+    [Parameter] public EventCallback<StringLocalizerModel.Item> ValueChanged { get; set; }
+    string data;
+
+    protected override void OnParametersSet()
+    {
+        data = Value.Value;
+    }
+
+    async Task ValueChangedHandler(string args)
+    {
+        var value = new StringLocalizerModel.Item(Value.LangTag, args);
+        await ValueChanged.InvokeAsync(value);
+    }
+
+}

@@ -1,0 +1,50 @@
+﻿@page "/CertificatsIrpf/{Guid:guid}"
+@page "/CertificatsIrpf"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@Localizer("CertsIrpf") @model.Properties.Abr</h1>
+
+        <div class="Grid">
+            @foreach (var item in model.CertificatsIrpf)
+            {
+                <a class="Item" href="@item.PdfUrl()" target="_blank">
+                    <div class="Pdf">&nbsp;</div>
+                    <div class="Year">@item.Year.ToString()</div>
+                </a>
+                <div class="GridRowDivider"></div>
+            }
+        </div>
+    }
+</div>
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+
+@code {
+    StaffDTO? model;
+    [Parameter] public Guid? Guid { get; set; }
+    private ProblemDetails problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (model == null)
+        {
+            if (Guid == null)
+            {
+                model = await base.GetAsync<StaffDTO>("staff/CertificatsIrpf");
+            }
+            else
+            {
+                model = await base.GetAsync<StaffDTO>("staff/CertificatsIrpf", Guid.ToString());
+            }
+        }
+    }
+}

@@ -1,0 +1,63 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    <PageOptions>
+        <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir</a>
+    </PageOptions>
+
+    <div class="Grid">
+        <div class="ColHeaders HideOnMobile">
+            <div class="Fch">Data</div>
+            <div class="Num">Expedient</div>
+            <div class="Eur">Import</div>
+            <div class="Pagat">Pagat</div>
+        </div>
+
+        @foreach (var value in values ?? new())
+        {
+            <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>ItemClick(value))">
+                <div class="Fch">@value.Fch</div>
+                <div class="Num">@value.Expedient</div>
+                <div class="Eur">@value.Amt</div>
+                <div class="Pagat">@value.Pagat</div>
+            </a>
+        }
+    </div>
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public VehicleModel? Vehicle { get; set; }
+    [Parameter] public EventCallback<MultaModel> ValueSelected { get; set; }
+    List<MultaModel>? values;
+    MultaModel? selectedValue;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            values = await ApiService.GetAsync<List<MultaModel>>("Multas", Vehicle!.Guid.ToString());
+        }
+        catch (Exception? ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void ItemClick(MultaModel args)
+    {
+        ValueSelected.InvokeAsync(args);
+    }
+
+    void AddNew()
+    {
+        var value = new MultaModel
+            {
+                Subjecte = Vehicle!.Guid,
+                Fch = DateOnly.FromDateTime(DateTime.Today)
+            };
+        ValueSelected.InvokeAsync(value);
+    }
+}

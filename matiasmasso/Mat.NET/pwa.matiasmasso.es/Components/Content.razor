@@ -1,0 +1,56 @@
+﻿@inherits _Base
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+<PageTitle>4moms | @model?.Caption.Tradueix(base.Lang())</PageTitle>
+
+
+<div class="Wrapper600">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@model.Caption.Tradueix(base.Lang())</h1>
+        <div class="Content">
+            @((MarkupString)Normalized(model.Content.Tradueix(base.Lang())))
+        </div>
+    }
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    ContentModel? model;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var apiResponse = await base.GetAsync<ContentModel>("shop4moms/content", Guid.ToString());
+        model = apiResponse.Value;
+        problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private string Normalized(string text)
+    {
+        string retval;
+        if (text.StartsWith("<table>", StringComparison.CurrentCultureIgnoreCase))
+        {
+            var endTag = "</table>";
+            var tableEnd = text.IndexOf(endTag, StringComparison.CurrentCultureIgnoreCase) + endTag.Length;
+            retval = text.Substring(0, tableEnd) + "<p>" + text.Substring(tableEnd + 1)
+                .Replace(Environment.NewLine + Environment.NewLine, "</p><p>")
+                .Replace(Environment.NewLine, "<br />")
+                .Replace("</p><p>", "</p>" + Environment.NewLine + "<p>") + "</p>";
+        }
+        else
+            retval = "<p>" + text
+                .Replace(Environment.NewLine + Environment.NewLine, "</p><p>")
+                .Replace(Environment.NewLine, "<br />")
+                .Replace("</p><p>", "</p>" + Environment.NewLine + "<p>") + "</p>";
+        return retval;
+    }
+}

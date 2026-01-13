@@ -1,0 +1,51 @@
+﻿.Wrapper {
+    padding:10px;
+}
+
+.Gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+    grid-gap:10px;
+    padding: 10px 0;
+    margin-bottom:15px;
+}
+
+.Item {
+    display: block;
+    text-align: center;
+}
+
+h1 {
+    text-align:center;
+    padding:0 10px;
+}
+
+
+    .Item .Caption {
+        font-size: 30px;
+        color: #555555;
+    }
+
+        .Item .Caption:hover, .Item .Excerpt:hover {
+            color: black;
+        }
+
+    .Item .Excerpt {
+        padding: 0 10px;
+        color: #555555;
+    }
+
+    .Item img {
+        max-width: 100%;
+        height: auto;
+    }
+
+@media(max-width:499px){
+    .Gallery {
+        display: flex;
+        flex-direction:column;
+        gap:10px;
+        justify-content: center;
+        margin:auto;
+    }
+}

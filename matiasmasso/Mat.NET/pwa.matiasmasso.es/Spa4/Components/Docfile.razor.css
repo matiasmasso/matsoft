@@ -1,0 +1,12 @@
+﻿.DocWrapper {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.Thumbnail img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    border: 1px solid gray;
+}

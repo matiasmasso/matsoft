@@ -1,0 +1,21 @@
+﻿@inject AppState AppState
+
+<div class="Wrapper">
+        @foreach(var item in Items)
+        {
+            <a href="@item.Url">
+                <div>
+                    <img src = "@item.ImageUrl"/>
+                </div>
+                <div class="Caption">
+                    @item.Caption
+                </div>
+            </a>
+        }
+</div>
+
+@code {
+    [Parameter]
+    public List<Box>Items { get; set; }
+
+}

@@ -1,0 +1,104 @@
+﻿.MatBox180 {
+    position: relative;
+    border: 1px solid darkgray;
+    width: 180px;
+    height: 150px;
+    padding:0px;
+
+}
+.MatBox305 {
+        display: block;
+    position: relative;
+    width: 305px;
+    height: 150px;
+    padding:0px;
+    margin: 0 4px 4px 0;
+}
+
+    .MatBoxHeaderOrange {
+        display: block;
+        width:100%;
+        height: 24px;
+        background-color: #DD5500;
+        color: #FFFFFF;
+        padding: 4px 7px 2px 4px;
+        overflow:hidden;
+        font-size: 1em;
+        margin: 0px;
+    }
+
+    .MatBoxHeaderGreen {
+        display: block;
+        width: 100%;
+        height: 24px;
+        background-color: #72A58B;
+        color: #FFFFFF;
+        padding: 4px 7px 2px 4px;
+        overflow: hidden;
+        font-size:1em;
+        margin: 0;
+    }
+
+    .MatBoxHeaderPurple {
+        display: block;
+        width: 100%;
+        height: 24px;
+        background-color: #CC0066;
+        color: #FFFFFF;
+        padding: 4px 7px 2px 4px;
+        overflow: hidden;
+        font-size:1em;
+        margin: 0;
+
+    }
+
+    .MatBoxHeaderBlue {
+        display: block;
+        width: 100%;
+        height: 24px;
+        background-color: #0072C6;
+        color: #FFFFFF;
+        padding: 4px 7px 2px 4px;
+        overflow: hidden;
+        font-size:1em;
+        margin: 0;
+    }
+
+    .MatBox180 img,.MatBox180 frame {
+        width: 178px;
+        height: auto;
+        display: block;
+        padding: 0;
+        margin-top: 0;
+    }
+
+    .MatBox180 a {
+        text-decoration:none;
+    }
+
+    .MatBox305 img {
+        width: 100%;
+        height: auto;
+        display: block;
+        padding: 0;
+        margin-top: 0;
+    }
+
+    .MatBoxFooter {
+        display: block;
+        position: absolute;
+        top: 115px;
+        left: 0px;
+        width:100%;
+        height: 35px;
+        background-color: #555555;
+        color: #DDDDDD;
+        z-index: 1;
+        padding: 4px 7px 2px 4px;
+        overflow:hidden;
+        font-size:0.7em;
+    }
+
+    .MatBoxFooter:hover {
+        background-color: red;
+    }

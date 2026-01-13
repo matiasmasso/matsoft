@@ -1,0 +1,224 @@
+﻿@inject ApiService ApiService
+@implements IDisposable
+
+
+@if (value == null)
+{
+    <Loading></Loading>
+}
+else if (selectedTab == Tabs.Detalls)
+{
+    <div class="PageWrapper600">
+        <Title Value="@Value?.FullNom" CloseRequest="HandleCloseRequest"></Title>
+
+        <Tabs Value="(int?)selectedTab" ValueChanged="HandleTabChanged" Captions="Detalls, Comptes, Correspondencia, Documents"></Tabs>
+
+        <PropertyGrid Model="propertyGrid"
+                      CancelRequest="HandleCloseRequest"
+                      UpdateRequest="HandleUpdateRequestAsync"
+                      DeleteRequest="HandleDeleteRequestAsync"
+                      ItemChanged="HandleItemChanged"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+
+    </div>
+}
+else if (selectedTab == Tabs.Comptes)
+{
+    <ContactCtas Contact="Value" CloseRequest="HandleCloseRequest"></ContactCtas>
+}
+
+else if (selectedTab == Tabs.Correspondencia)
+{
+    <ContactCorrespondencia Contact="Value" CloseRequest="HandleCloseRequest"></ContactCorrespondencia>
+}
+else if (selectedTab == Tabs.Documents)
+{
+    <ContactDocs Contact="Value" CloseRequest="HandleCloseRequest"></ContactDocs>
+}
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public ContactModel? Value { get; set; }
+    [Parameter] public EventCallback<ContactModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<ContactModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    ContactModel? value;
+    List<ContactClassModel>? contactClasses;
+    Tabs? selectedTab = Tabs.Detalls;
+    Options? option;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Tabs
+    {
+        Detalls,
+        Comptes,
+        Correspondencia,
+        Documents
+    }
+
+    enum Fields
+    {
+        Emp,
+        RaoSocial,
+        NomComercial,
+        Nif,
+        ContactClass,
+        Adr,
+        Zip,
+        Obsolet
+    }
+
+
+    public enum Options
+    {
+        Comptes,
+        Correspondencia
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+                value = value ?? await ApiService.GetAsync<ContactModel>("Contact", Value.Guid.ToString());
+
+            if (contactClasses == null) contactClasses = await ApiService.GetAsync<List<ContactClassModel>>("ContactClasses");
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value?.Emp);
+        retval.AddString("Rao social", value?.RaoSocial);
+        retval.AddString("Nom comercial", value?.NomComercial);
+        retval.AddString("Nif", value?.Nifs.FirstOrDefault()?.Value);
+        retval.AddGuidnom("Classe", value?.ContactClass, contactClasses);
+        retval.AddString("Adreça", value?.Address?.Text);
+        retval.AddGuidnom("Població", value?.Address?.Zip?.Guid, ApiService.GetZipNoms());
+        retval.AddBool("Obsolet", value?.Obsoleto);
+        return retval;
+    }
+
+    void HandleTabChanged(int args)
+    {
+        selectedTab = (Tabs)args;
+    }
+
+    async Task HandleCloseRequest()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    async Task HandleUpdateRequestAsync()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            var nif = propertyGrid!.GetString((int)Fields.Nif); // TO DO
+            if (value!.Nifs.Count == 0 && !string.IsNullOrEmpty(nif))
+                value.Nifs.Add(new ContactModel.Nif
+                    {
+                        Cod = (int)ContactModel.Nif.Cods.Nif,
+                        Value = nif
+                    });
+            value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            value.RaoSocial = propertyGrid.GetString((int)Fields.RaoSocial);
+            value.NomComercial = propertyGrid.GetString((int)Fields.NomComercial);
+            value.ContactClass = propertyGrid.GetGuid((int)Fields.ContactClass);
+            string? adr = propertyGrid.GetString((int)Fields.Adr);
+            Guid? zip = propertyGrid.GetGuid((int)Fields.Zip);
+            value.Obsoleto = propertyGrid.GetBool((int)Fields.Obsolet);
+            if (zip != null)
+            {
+                value.Address = new AddressModel
+                    {
+                        Text = adr,
+                        ZipGuid = zip,
+                        Cod = AddressModel.Cods.Fiscal,
+                        Contact = value.Guid
+                    };
+            }
+            value.FullNom = ApiService.BuildContactFullNom(value);
+            await ApiService.PostAsync<ContactModel, bool>(value, "Contact");
+            value.IsNew = false;
+
+            var contacts = ApiService.GetContacts();
+            if (contacts?.Any(x => x.Guid == value.Guid) ?? false)
+            {
+                var oldValue = contacts.First(x => x.Guid == value.Guid);
+                var idx = contacts.IndexOf(oldValue);
+                contacts[idx] = value;
+            }
+            else
+                contacts?.Add(value);
+
+            contacts = contacts?.OrderBy(x => x.FullNom)?.ToList();
+            await HandleCloseRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task HandleDeleteRequestAsync()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Contact/delete", value!.Guid.ToString());
+            var contacts = ApiService.GetContacts();
+            contacts?.Remove(value);
+            await HandleCloseRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            value!.Emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

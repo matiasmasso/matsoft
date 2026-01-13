@@ -1,0 +1,77 @@
+﻿@inject CultureService culture
+@inject AtlasService atlas
+
+
+@if (Value != null)
+{
+    <div class="info">
+        destinació:
+        @if (Values?.Count > 1)
+        {
+            <a href="#" @onclick="RemoveSelection" @onclick:preventDefault>
+                [canviar]
+            </a>
+        }
+
+        <div class="SelectedItem">
+            @atlas.Contact(Value)?.RaoSocialAndNomComercial()
+            @foreach (var line in atlas.DeliveryAddress(Value))
+            {
+                <div>@line</div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="info">
+        Selecciona una destinació:
+    </div>
+    @foreach (var guid in Values ?? new())
+    {
+        <a href="#" class="Item" @onclick="@(()=>ItemClick(guid))" @onclick:preventDefault>
+            @atlas.Contact(guid)?.RaoSocialAndNomComercial()
+            @foreach (var line in atlas.DeliveryAddress(guid))
+            {
+                <div>@line</div>
+            }
+        </a>
+    }
+}
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public EventCallback<Guid?> ValueChanged { get; set; }
+    [Parameter] public List<Guid>? Values { get; set; }
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        atlas.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void RemoveSelection()
+    {
+        ValueChanged.InvokeAsync(null);
+    }
+
+    void ItemClick(Guid x)
+    {
+        ValueChanged.InvokeAsync(x);
+    }
+
+    public void Dispose()
+    {
+        atlas.OnChange -= Refresca;
+    }
+
+}

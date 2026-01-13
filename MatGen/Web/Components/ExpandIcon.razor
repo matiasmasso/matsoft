@@ -1,0 +1,27 @@
+﻿<a href="#" class="Ico @(HasChildren ? "" : "Hidden")" @onclick="OnClick" @onclick:preventDefault>
+    <Icon Id="@(IsExpanded ? Icon.Ids.Minus : Icon.Ids.Plus)"></Icon>
+</a>
+
+<div class="Ico @(HasChildren ? "Hidden" : "")">
+    &nbsp;
+</div>
+
+
+@code {
+    [Parameter] public bool HasChildren { get; set; }
+    [Parameter] public bool IsExpanded { get; set; }
+    [Parameter] public EventCallback<bool> IsExpandedChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    void OnClick(){
+        if (HasChildren)
+        {
+            IsExpandedChanged.InvokeAsync(!IsExpanded);
+            //StateHasChanged();
+        }
+    }
+}

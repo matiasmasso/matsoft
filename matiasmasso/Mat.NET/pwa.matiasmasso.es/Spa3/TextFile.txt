@@ -1,0 +1,6 @@
+﻿Authorisation from https://blazorhelpwebsite.com/ViewBlogPost/36
+- Create Blazor Server App without authentication
+- Add next nuget packages:
+	Microsoft.AspNetCore.Authorization
+	Microsoft.AspNetCore.Http
+	Microsoft.AspNetCore.Identity

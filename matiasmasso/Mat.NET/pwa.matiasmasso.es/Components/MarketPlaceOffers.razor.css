@@ -1,0 +1,54 @@
+﻿.EditRow {
+    display:grid;
+    grid-template-columns:1fr 70px 140px;
+    grid-column-gap:10px;
+}
+
+input[type=number]{
+    height:28px;
+    text-align:right;
+}
+
+.ButtonCell {
+    text-align:center;
+}
+
+.ButtonAddRow {
+    height: 28px !important;
+    padding-top: 0 !important;
+    width:100%;
+}
+
+.Grid {
+    margin-top:15px;
+    display: grid;
+    grid-template-columns: 1fr 70px 70px 50px 20px;
+    grid-column-gap: 10px;
+}
+
+.Product {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+
+.Pvp, .Offer, .Dto {
+    text-align:right;
+}
+
+.Del {
+    background-size: 15px auto;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('/img/trash-can-thin.svg');
+}
+
+    .Del:hover {
+        background-image: url('/img/trash-can-solid.svg');
+    }
+
+    .Del.Deleting {
+        background-image: url('/img/spinner-200px.svg');
+    }
+

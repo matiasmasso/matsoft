@@ -1,0 +1,115 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+
+        <h3>@Title()</h3>
+
+        <PropertyGrid Model="propertyGrid"
+                  UpdateRequest="UpdateRequestHandler"
+                  CancelRequest="HandleCancelRequest"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+
+    <Error @bind-Value="exception"></Error>
+</div>
+@code {
+    [Parameter] public CustomerInvoiceModel.Item? Value { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    // [Parameter] public EventCallback<IModel> ZoomRequest { get; set; }
+    [Parameter] public EventCallback<CustomerInvoiceModel.Item> AfterUpdate { get; set; }
+    // [Parameter] public EventCallback<CustomerInvoiceModel> DeleteRequest { get; set; }
+
+    CustomerInvoiceModel.Item? value;
+    List<PgcCtaModel>? ctas;
+    List<ContactModel>? allContacts;
+    List<ContactModel>? contacts;
+    ContactModel? contactToAdd;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    private CustomerInvoiceModel.Item? selectedItem;
+    private List<CustomerInvoiceModel.Template> templates;
+
+    Exception? exception;
+
+    enum Fields
+    {
+        Concept,
+        Price
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        value = Value;
+        Refresca();
+    }
+
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+        InvokeAsync(StateHasChanged);
+    }
+
+    string Title()
+    {
+        return (value?.Cod == CustomerInvoiceModel.Item.Cods.Linia ? "Linia de factura" : "Nota al final de la factura");
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddString("Concepte", value?.Concept);
+        if (value?.Cod == CustomerInvoiceModel.Item.Cods.Linia)
+            retval.AddEur("Preu", value?.Price);
+
+        return retval;
+    }
+
+    CustomerInvoiceModel.Item? CurrentValue()
+    {
+        var retval = value;
+        if (retval != null)
+        {
+            retval.Concept = propertyGrid!.GetString((int)Fields.Concept);
+            if(retval.Cod == CustomerInvoiceModel.Item.Cods.Linia)
+                retval.Price = propertyGrid!.GetEur((int)Fields.Price);
+        }
+        return retval;
+    }
+
+    void UpdateRequestHandler()
+    {
+        AfterUpdate.InvokeAsync(CurrentValue());
+    }
+
+
+    async Task DeleteRequestHandler()
+    {
+        //await DeleteRequest.InvokeAsync(Value);
+    }
+
+    void HandleCancelRequest()
+    {
+        CancelRequest.InvokeAsync();
+    }
+
+
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+}
+

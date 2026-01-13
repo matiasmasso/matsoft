@@ -1,0 +1,147 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+
+<!-- requires a position:relative parent -->
+
+<div class="Wrapper">
+    @if (isSelecting)
+    {
+        <div class="SelectBox">
+
+            @if (session.Emps == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <div class="DropShadow">
+                    @if (session.Emps.Count > compactCount)
+                    {
+                        <div class="Searchbox">
+                            <SearchBox @bind-Value="searchterm"></SearchBox>
+                        </div>
+                    }
+
+                    <div class="Grid">
+                        @foreach (var item in FilteredValues() ?? new())
+                        {
+                            <a href="#" class="Item Nom" @onclick="@(()=>ItemClickAsync(item))" @onclick:preventDefault>
+                                @item.Abr
+                            </a>
+                        }
+                    </div>
+
+                    @if (!isShowingAll && (session.Emps ?? new()).Count > compactCount)
+                    {
+                        <a class="ReadMore" @onclick="@(()=>isShowingAll=true)" @onclick:preventDefault>
+                            [@culture.Localize("ShowAll")]
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+
+    }
+    else if (Value == null)
+    {
+        <a href="#" class="Nom" @onclick="@(()=>isSelecting=true)" @onclick:preventDefault>
+            [@culture.Localize("Emp.ClickToSelect")]
+        </a>
+    }
+    else
+    {
+        <a href="#" class="Nom" @onclick="@(()=>isShowingMenu=!isShowingMenu)" @onclick:preventDefault>
+            @Value.Abr
+        </a>
+        @if (isShowingMenu)
+        {
+            <div class="ContextMenu">
+                <a href="#" class="Item Nom" @onclick="Zoom" @onclick:preventDefault>
+                    @culture.Localize("Zoom")
+                </a>
+
+                <hr/>
+
+                @if (session.Emps?.Count > compactCount)
+                {
+                    <div class="Searchbox">
+                        <SearchBox @bind-Value="searchterm"></SearchBox>
+                    </div>
+                }
+
+                <div class="Grid">
+                    @foreach (var item in FilteredValues() ?? new())
+                    {
+                        <a href="#" class="Item Nom" @onclick="@(()=>ItemClickAsync(item))" @onclick:preventDefault>
+                            @item.Abr
+                        </a>
+                    }
+                </div>
+
+                @if (!isShowingAll && (session.Emps ?? new()).Count > compactCount)
+                {
+                    <a class="ReadMore" @onclick="@(()=>isShowingAll=true)" @onclick:preventDefault>
+                        [@culture.Localize("ShowAll")]
+                    </a>
+                }
+            </div>
+        }
+    }
+
+</div>
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public EmpModel? Value { get; set; }
+    [Parameter] public EventCallback<EmpModel?> ValueChanged { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+
+    bool isSelecting;
+    bool isShowingAll;
+    bool isShowingMenu;
+    int compactCount = 20;
+    string? searchterm;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+    List<EmpModel>? FilteredValues()
+    {
+        List<EmpModel>? retval = session.Emps;
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = session.Emps?.Where(x => x.Matches(searchterm)).ToList();
+        if (!isShowingAll)
+            retval = retval?.Take(compactCount).ToList();
+        return retval;
+    }
+
+    async Task ItemClickAsync(EmpModel item)
+    {
+        isSelecting = false;
+        isShowingMenu = false;
+        await ValueChanged.InvokeAsync(item);
+    }
+
+    async Task Zoom()
+    {
+        var breadcrumb = new ModelEditor.Breadcrumb(Value, Value?.Abr ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+        isShowingMenu = false;
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+    }
+
+}

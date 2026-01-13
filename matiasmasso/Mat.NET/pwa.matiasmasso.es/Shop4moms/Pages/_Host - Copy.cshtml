@@ -1,0 +1,186 @@
+﻿@page "/{**path}"
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Localization;
+@using System.Globalization;
+@using Microsoft.AspNetCore.Mvc.RazorPages;
+@using Shop4moms.Services;
+@using Microsoft.AspNetCore.Http.Extensions;
+
+@inject Components.Services.CultureService culture;
+
+@namespace Shop4moms.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!-- ignore anti-forgery token for external post requests -->
+@attribute [IgnoreAntiforgeryToken]
+
+<!-- specify model for the page -->
+@model HostPageModel
+
+<!DOCTYPE html>
+<html lang="@culture.GetLang(new Uri(HttpContext.Request.GetDisplayUrl())).Culture2Digits()">
+@*<html lang="@SEOHelper.Culture2Digits(HttpContext.Request.GetDisplayUrl())">*@
+<head>
+
+    <!-- Google tag (gtag.js) 4moms.pt -->
+    @*    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MCQ1J0Y4SH"></script>
+    <script>window.dataLayer = window.dataLayer || [];
+    function gtag() {
+    dataLayer.push(arguments);
+    } gtag('js', new Date()); gtag('config', 'G-MCQ1J0Y4SH');</script>
+    *@    <!-- Google tag end -->
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="~/" />
+    @*    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />*@
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="css/mat.css" rel="stylesheet" />
+    <link href="css/ProductPlugin.css" rel="stylesheet" />
+    <link href="Shop4moms.styles.css" rel="stylesheet" />
+    <link href="_content/Blazor.ContextMenu/blazorContextMenu.min.css" rel="stylesheet" />
+    <link href='favicon.ico' rel='shortcut icon' type='image/x-icon' />
+    <link href="favicon.ico" rel="icon" type="image/x-icon" />
+
+    <!--added for Pwa-->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#FFFFFF" />
+
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+</head>
+<body>
+
+    <component type="typeof(App)" render-mode="ServerPrerendered" />
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script type="text/javascript" src="js/mat.js"></script>
+
+    <!--added on 22/1/23 to auto refresh the page when blazor reconnection to the circuit fails-->
+    <!--<script src="_framework/blazor.server.js"></script>-->
+    <script type="text/javascript" src="_framework/blazor.server.js" autostart="false"></script>
+
+    <!--added for Pwa-->
+    <script type="text/javascript">
+        navigator.serviceWorker.register('service-worker.js');
+    </script>
+
+    <script type="text/javascript" src="_content/Blazor.ContextMenu/blazorContextMenu.min.js"></script>
+    <script type="text/javascript" src="_content/Blazor-Analytics/blazor-analytics.js"></script>
+    <script type="application/ld+json">
+        {
+          "@@context": "https://schema.org",
+          "@@type": "Organization",
+          "name": "4moms",
+          "url": "@culture.Url()",
+          "logo": "@culture.Url("img/logo.svg")"
+        }
+    </script>
+@*    <script type="application/ld+json">
+        {
+          "@@context": "https://schema.org",
+          "@@type": "Organization",
+          "name": "4moms",
+          "url": "@culture.BaseUri(culture.GetLang(new Uri(HttpContext.Request.GetDisplayUrl()))).ToString()",
+          "logo": "@culture.BaseUri(culture.GetLang(new Uri(HttpContext.Request.GetDisplayUrl()))).ToString()img/logo.svg",
+          "address": "Diagonal 403 - 08008 Barcelona",
+          "email": "4moms@matiasmasso.es",
+          "telephone": "+34 932541522",
+                "contactPoint": [
+                {
+            "@@type": "ContactPoint",
+            "telephone": "+34 932541522",
+            "email": "4moms@matiasmasso.es",
+            "url": "@(culture.IsPor() ? "https://www.4moms.pt/contato" : "https://www.4moms.es/contacto")",
+            "contactType": "sales"
+        },
+                {
+            "@@type": "ContactPoint",
+            "telephone": "+34 932541525",
+            "email": "sat@matiasmasso.es",
+            "url": "@(culture.IsPor() ? "https://www.4moms.pt/contato" : "https://www.4moms.es/contacto")",
+            "contactType": "customer service"
+        }],
+                "sameAs": [
+                "@(culture.IsPor() ? "https://www.facebook.com/4moms.pt/" : "https://www.facebook.com/4momsES/")",
+                "@(culture.IsPor() ? "https://www.instagram.com/4moms_pt/" : "https://www.instagram.com/4moms_es/")"
+        ]
+        }
+    </script>
+*@
+    <script type="text/javascript">
+        async function connectionDown(options) {
+            console.log("Connection Down - you could do some UI here...");
+            for (let i = 0; i < options.maxRetries; i++) {
+                console.log("Waiting for reconnect attempt #" + (i + 1) + " ...");
+                await this.delay(options.retryIntervalMilliseconds);
+                if (this.isDisposed) {
+                    break;
+                }
+
+                try {
+                    // reconnectCallback will asynchronously return:
+                    // - true to mean success
+                    // - false to mean we reached the server, but it rejected the connection (e.g., unknown circuit ID)
+                    // - exception to mean we didn't reach the server (this can be sync or async)
+                    console.log("Starting Reconnect attempt #" + (i + 1) + " ...");
+                    const result = await window.Blazor.reconnect();
+                    if (!result) {
+                        // If the server responded and refused to reconnect, log it
+                        console.error("Server Rejected");
+                    } else {
+                        // Reconnected!
+                        return;
+                    }
+                } catch (err) {
+                    // We got an exception so will try again
+                    console.error(err);
+                }
+            }
+            // all attempts failed - let's try a full reload
+            // This could be a UI change instead or something more complicated
+            location.reload();
+        }
+
+        function delay(durationMilliseconds) {
+            return new Promise(resolve => setTimeout(resolve, durationMilliseconds));
+        }
+
+        function connectionUp(e) {
+            // Reconnected
+            console.log("Connection UP!");
+            // if you have a UI to hide/change you can do that here.
+        }
+
+        window.Blazor.start({
+            reconnectionOptions: {
+                maxRetries: 30,
+                retryIntervalMilliseconds: 500,
+            },
+            reconnectionHandler: {
+                onConnectionDown: e => connectionDown(e),
+                onConnectionUp: e => connectionUp(e)
+            }
+        });
+    </script>
+    @*    <script>
+    Blazor.start({
+    reconnectionHandler: {
+    onConnectionDown: (options, error) => console.error(error),
+    onConnectionUp: () => console.log("Up, up, and away!")
+    }
+    });
+    </script>
+    *@
+</body>
+</html>
+

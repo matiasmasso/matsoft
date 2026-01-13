@@ -1,0 +1,45 @@
+﻿#Feedback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 1px solid gray;
+    padding: 20px 0 10px;
+
+}
+
+#Feedback .Icons {
+    display: flex;
+    flex-direction: row;
+    margin: 10px auto;
+    justify-content: space-between;
+    column-gap: 20px;
+}
+
+    #Feedback .Spinner64 {
+        display: none;
+        align-self: center;
+    }
+
+    #Feedback .Comment {
+        display: none;
+        flex-direction: column;
+        border: 1px solid gray;
+        padding: 15px 20px 5px 20px;
+        background-color: seashell;
+    }
+
+    #Feedback .Comment textarea {
+        width: 100%;
+        box-sizing: border-box;
+        height: 5em;
+    }
+
+        #Feedback .Comment .Submit {
+            align-self: flex-end;
+        }
+
+        #Feedback .Comment input[type=button] {
+            margin: 15px 0;
+            padding: 5px 15px;
+        }
+

@@ -1,0 +1,140 @@
+﻿.Wrapper {
+    padding:10px;
+    max-width: 600px;
+    margin:auto;
+}
+
+.NoItems {
+    display:flex;
+    flex-direction: column;
+    padding:30px;
+}
+
+    .NoItems p, .NoItems .KeepPurchasing {
+        text-align: center;
+    }
+
+.CallToAction {
+    display: flex;
+    justify-content: space-between;
+    padding:0 0 10px;
+    border-bottom: 1px solid #DDDDDD;
+}
+
+.CallToAction a, .NoItems > * {
+    display:flex;
+    gap:10px;
+    align-items: center;
+}
+
+.CallToAction img, .NoItems img {
+    height: 1em;
+}
+
+.Grid {
+    margin-top: 15px;
+    display:flex;
+    flex-direction:column;
+}
+
+.ColumnHeaders {
+    font-weight: 600;
+    color:gray;
+    padding-bottom:10px;
+}
+
+.Item {
+        display: grid;
+    grid-column-gap: 10px;
+
+}
+
+    .Item.Total {
+        grid-template-columns: 100px 1fr 70px 20px;
+        grid-template-areas: "thumbnail nom amount del"
+    }
+
+.Thumbnail {
+    width:100px;
+    grid-area:thumbnail;
+}
+
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-self:center;
+    grid-area:nom;
+}
+
+.Qty {
+    grid-area: 1ty;
+}
+
+.Price {
+    grid-area: price;
+}
+
+.Amount {
+    grid-area:amount;
+}
+
+.Qty input {
+    width: 50px;
+    align-self: center;
+    text-align:right;
+}
+
+.Qty, .Price, .Amount {
+    text-align: right;
+    white-space: nowrap;
+    align-self: center;
+}
+
+
+.Del {
+    background-size: 15px auto;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-image: url('/img/trash-can-thin.svg');
+    align-self: center;
+    grid-area: del;
+}
+
+    .Del:hover {
+        background-image: url('/img/trash-can-solid.svg');
+    }
+
+
+
+/*--------------- mobiles --------------------*/
+
+@media(max-width:599px) {
+    .Item {
+        grid-template-columns: 100px 1fr 70px 70px 20px;
+        grid-template-areas: "thumbnail nom nom nom nom"
+            "thumbnail qty price amount del"
+    }
+
+        .Item.Total {
+            grid-template-columns: 100px 1fr 70px 20px;
+            grid-template-areas: "thumbnail nom amount del"
+        }
+
+    .ColumnHeaders .Qty, .ColumnHeaders.Amount {
+        visibility: hidden;
+    }
+}
+/*--------------- desktop --------------------*/
+
+@media(min-width:600px) {
+    .Item {
+        grid-template-columns: 100px 1fr 70px 70px 70px 20px;
+        grid-template-areas: "thumbnail nom qty price amount del"
+    }
+
+}

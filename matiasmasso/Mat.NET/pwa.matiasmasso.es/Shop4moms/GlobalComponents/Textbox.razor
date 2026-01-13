@@ -1,0 +1,131 @@
+﻿<div class="Wrapper">
+    @if (CanEdit && isEditing)
+    {
+        @if (Multiline)
+        {
+            <textarea @ref="MultiLineEditor"
+              @oninput="TextareaChange"
+              @onblur="@(()=>{isEditing = false;})">
+                @((MarkupString)_innerControlValue.Replace(Environment.NewLine, "<br/>"))
+                                            </textarea>
+        }
+        else
+        {
+            <input type="@(IsPassword & !isShowingPassword ? "password" : "text")"
+                   autofocus
+                   maxlength="@(MaxLength == null? "524288" : MaxLength)"
+           @ref="SingleLineEditor"
+           @bind-value="@_innerControlValue"
+           @onblur="@(()=>{isEditing = false;})" />
+        }
+    }
+    else
+    {
+        <a class="Display" href="#" @onclick="ItemClick" @onclick:preventDefault="true">
+            @if (string.IsNullOrEmpty(_innerControlValue))
+            {
+                <input type="text" value=" " />
+            }
+            else if (IsPassword & !isShowingPassword)
+            {
+                <input type="text" value="@(new string('*', _innerControlValue.Length))" />
+            }
+            else if (Multiline)
+            {
+                <div class="@(Multiline  ? "Multiline":"Text")">
+                    @((MarkupString)_innerControlValue.Replace(Environment.NewLine, "<br/>"))
+                </div>
+            }
+            else
+            {
+                <input type="text" value="@((MarkupString)_innerControlValue)" />
+            }
+        </a>
+    }
+
+    <div class="ButtonsBar">
+        @if (IsPassword)
+        {
+            <a href="#" @onclick="@(()=>{isShowingPassword = !isShowingPassword;})" @onclick:preventDefault="true">
+                <i class="fa-solid fa-eye"></i>
+            </a>
+        }
+    </div>
+
+</div>
+
+@code {
+    //[Parameter] public string? Value { get; set; }
+    [Parameter] public Object? Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsEditing { get; set; }
+    [Parameter] public bool IsPassword { get; set; } = false;
+
+    [Parameter] public bool Multiline { get; set; }
+    [Parameter] public int? Cols { get; set; } = 20;
+    [Parameter] public int? Rows { get; set; } = 2;
+    [Parameter] public int? MaxLength { get; set; }
+
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+
+    private bool isShowingPassword = false;
+    private bool isEditing = false;
+    private ElementReference? SingleLineEditor;
+    private ElementReference? MultiLineEditor;
+    private bool editorHasFocus;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (isEditing && !editorHasFocus)
+            {
+                editorHasFocus = true;
+                if (MultiLineEditor != null)
+                    await ((ElementReference)MultiLineEditor).FocusAsync();
+                else if (SingleLineEditor != null)
+                    await ((ElementReference)SingleLineEditor).FocusAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            isEditing = IsEditing;
+        }
+    }
+
+    private string _innerControlValue
+    {
+        get => Value?.ToString() ?? "";
+        set
+        {
+            if (Value?.ToString() != value)
+            {
+                Value = value;
+
+                if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                    ObjChanged.InvokeAsync(value);
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    private void TextareaChange(ChangeEventArgs args)
+    {
+        var value = (args?.Value?.ToString() ?? "").Replace("<br/>", Environment.NewLine);
+        if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+            ObjChanged.InvokeAsync(value);
+        if (ValueChanged.HasDelegate)
+            ValueChanged.InvokeAsync(value);
+    }
+
+    private void ItemClick()
+    {
+        isEditing = true;
+    }
+
+
+
+}

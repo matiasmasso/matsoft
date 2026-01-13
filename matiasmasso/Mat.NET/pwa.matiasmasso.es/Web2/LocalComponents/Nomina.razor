@@ -1,0 +1,48 @@
+﻿@inject CultureService culture
+@inject StaffsService staffsService
+
+<div class="Header">
+    <h3>Nomina</h3>
+    <CloseButton CloseRequest="CloseRequestHandler"></CloseButton>
+
+    <TabControl>
+        <TabPage Text="@culture.Localize("General")">
+            <PropertyGrid Model="pgModel"></PropertyGrid>
+        </TabPage>
+        <TabPage Text="@culture.Localize("Pdf")">
+            <div class="Pdf">
+                <img src="" />
+            </div>
+        </TabPage>
+    </TabControl>
+</div>
+
+@code {
+    [Parameter] public NominaModel? Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    PropertyGridModel? pgModel;
+
+    private enum Fields
+    {
+        Fch,
+        Staff,
+        Devengat,
+        Liquid
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        pgModel = new PropertyGridModel(Model);
+        pgModel.AddFch((int)Fields.Fch, Model!.Cca?.Fch, culture.Localize("Fch"));
+        pgModel.AddString((int)Fields.Staff, staffsService.GetValue(Model!.Staff)?.Abr, culture.Localize("Staff"));
+        pgModel.AddDecimal((int)Fields.Devengat, Model!.Devengat, culture.Localize("Devengat"));
+        pgModel.AddDecimal((int)Fields.Liquid, Model!.Liquid, culture.Localize("Liquid"));
+    }
+
+    void CloseRequestHandler()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}

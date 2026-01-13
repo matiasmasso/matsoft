@@ -1,0 +1,97 @@
+﻿<div class="Wrapper" @onkeydown="@KeyHandlerTb">
+    <div class="Caption Nom" title="@Title" @oncontextmenu="@(()=>isShowingMenu = !isShowingMenu)" @oncontextmenu:preventDefault>
+        <a href="#" @onclick="TitleClick" @onclick:preventDefault>@Title</a>
+
+        <a href="#" class="HideOnDesktop" @onclick="@(()=>isShowingMenu = !isShowingMenu)" @onclick:preventDefault>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 512">
+                <!--! vertical ellipsis regular -->
+                <path d="M64 368a48 48 0 1 0 0 96 48 48 0 1 0 0-96zm0-160a48 48 0 1 0 0 96 48 48 0 1 0 0-96zM112 96A48 48 0 1 0 16 96a48 48 0 1 0 96 0z" />
+            </svg>
+        </a>
+    </div>
+
+    @if (isShowingMenu)
+    {
+
+        <div class="Dropdown">
+
+            @foreach (var item in SelectedItems ?? new())
+            {
+                <a href="#" class="Item Selected" @onclick="@(()=>SelectedMenuItemClick(item))" @onclick:preventDefault>
+                    <div class="Nom">@item.Caption</div>
+
+                    <div class="XMark">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                            <!--! xMark -->
+                            <path d="M326.6 166.6L349.3 144 304 98.7l-22.6 22.6L192 210.7l-89.4-89.4L80 98.7 34.7 144l22.6 22.6L146.7 256 57.4 345.4 34.7 368 80 413.3l22.6-22.6L192 301.3l89.4 89.4L304 413.3 349.3 368l-22.6-22.6L237.3 256l89.4-89.4z" />
+                        </svg>
+                    </div>
+                </a>
+            }
+
+            @foreach (var item in DisplayItems() ?? new())
+            {
+                <a href="#" @onclick="@(()=>MenuItemClick(item))" class="Item" @onclick:preventDefault>
+                    @item.Caption
+                </a>
+            }
+        </div>
+    }
+
+</div>
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public Object? Tag { get; set; }
+    [Parameter] public ContextMenu? ContextMenu { get; set; }
+    [Parameter] public EventCallback<Object?> OnClick { get; set; }
+    [Parameter] public EventCallback<ContextMenu.ClickEventArgs> MenuClick { get; set; }
+
+    List<ContextMenu.Item> SelectedItems = new();
+    bool isShowingMenu;
+
+    void TitleClick()
+    {
+        OnClick.InvokeAsync(Tag);
+    }
+
+    List<ContextMenu.Item>? DisplayItems()
+    {
+        var retval = ContextMenu?.Items
+        .Where(x => x.Parent == SelectedItems.LastOrDefault()).ToList();
+
+        return retval;
+    }
+
+    void SelectedMenuItemClick(ContextMenu.Item item)
+    {
+        var idx = SelectedItems.IndexOf(item);
+        var removeFrom = idx;
+        var removeCount = SelectedItems.Count - removeFrom;
+        SelectedItems.RemoveRange(removeFrom, removeCount);
+    }
+
+    void MenuItemClick(ContextMenu.Item item)
+    {
+        if (ContextMenu!.Items.Any(x => x.Parent == item))
+            SelectedItems.Add(item);
+        else
+        {
+            var args = new ContextMenu.ClickEventArgs
+                {
+                    Tag = item.ContextMenu.Tag,
+                    Key = item.Key
+                };
+            MenuClick.InvokeAsync(args);
+            isShowingMenu = false;
+            SelectedItems = new();
+        }
+    }
+
+    void KeyHandlerTb(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            isShowingMenu = false;
+        }
+    }
+}

@@ -1,0 +1,62 @@
+﻿@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<InputFile OnChange="@OnChange" @ref="inputFile" ></InputFile>
+<div @ref="dropZoneElement" class="drop-zone" >
+    <p>Engantxa aquí la imatge</p>
+    <img src="@Src" />
+</div>
+
+@* Display the uploaded image *@
+
+
+@code {
+    [Parameter] public string Src {get; set;}
+    [Parameter] public EventCallback<IBrowserFile> FileDropped { get; set; }
+
+    ElementReference dropZoneElement;
+    InputFile inputFile;
+
+    IJSObjectReference _module;
+    IJSObjectReference _dropZoneInstance;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load the JS file
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/dropZone.js");
+
+            // Initialize the drop zone
+            _dropZoneInstance = await _module.InvokeAsync<IJSObjectReference>("initializeFileDropZone", dropZoneElement, inputFile.Element);
+        }
+    }
+
+    // Called when a new file is uploaded
+    async Task OnChange(InputFileChangeEventArgs e)
+    {
+        using var stream = e.File.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        Src = "data:" + e.File.ContentType + ";base64," + Convert.ToBase64String(ms.ToArray());
+        await FileDropped.InvokeAsync(e.File);
+    }
+
+    // Unregister the drop zone events
+    public async ValueTask DisposeAsync()
+    {
+        if (_dropZoneInstance != null)
+        {
+            await _dropZoneInstance.InvokeVoidAsync("dispose");
+            await _dropZoneInstance.DisposeAsync();
+        }
+
+        if (_module != null)
+        {
+            await _module.DisposeAsync();
+        }
+    }
+
+
+
+}

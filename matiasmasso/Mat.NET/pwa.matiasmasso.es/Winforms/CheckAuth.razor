@@ -1,0 +1,81 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using System.Net.Http.Headers;
+@inject HttpClient http
+@inject AuthenticationStateProvider authStateProvider
+
+
+
+<CascadingAuthenticationState>
+    @if (isLoaded)
+{
+    <AuthorizeView>
+        <Authorized>
+            <Home User="@user"></Home>
+        </Authorized>
+        <NotAuthorized>
+            <Login Authenticated="OnLogin"></Login>
+        </NotAuthorized>
+        <Authorizing>
+            <Loading></Loading>
+        </Authorizing>
+    </AuthorizeView>
+}
+else
+{
+    <Loading></Loading>
+}
+</CascadingAuthenticationState>
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    bool isLoaded;
+    UserModel? user;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            ((CustomAuthenticationStateProvider)authStateProvider).TokenChangedAsync += OnAuthenticatedAsync;
+            var state = await authStateProvider.GetAuthenticationStateAsync();
+            isLoaded = true;
+            StateHasChanged();
+        }
+        //    var previousToken = await cookie.GetValue("token");
+        //    if (!string.IsNullOrEmpty(previousToken))
+        //    {
+        //        var previousUser = UserModel.FromToken(previousToken);
+        //        if (previousUser != null)
+        //        {
+        //            var apiResponse = await HttpService.PostAsync<string, string>(http, previousUser.Hash, "token/1");
+        //            if (apiResponse.Value != null)
+        //                await OnAuthenticatedAsync(apiResponse.Value);
+        //            else
+        //                problemDetails = apiResponse.ProblemDetails;
+        //        }
+        //    }
+        //    isLoaded = true;
+        //    StateHasChanged();
+    }
+
+    async Task OnLogin(string token)
+    {
+        await ((CustomAuthenticationStateProvider)authStateProvider).UpdateAuthenticationStateAsync(token);
+    }
+
+    async Task OnAuthenticatedAsync(object? sender, EventArgs args)
+    {
+        var token = ((DTO.Helpers.MatEventArgs<string>)args)?.Value;
+
+        //to update http request authorization header
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        //for greetings
+        user = UserModel.FromToken(token);
+        StateHasChanged();
+    }
+
+
+
+}

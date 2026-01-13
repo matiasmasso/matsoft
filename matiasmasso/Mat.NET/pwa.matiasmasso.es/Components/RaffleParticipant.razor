@@ -1,0 +1,142 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <h1>
+        @Localizer("RaffleParticipant")
+    </h1>
+
+
+    <TabControl TabChanged="TabChanged">
+        <TabPage Text="@Localizer("Details")">
+
+            <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          ></PropertyGrid>
+
+        </TabPage>
+
+     </TabControl>
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private RaffleModel.Participant value;
+    private PropertyGridModel gridModel;
+    private Media media;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    new ProblemDetails problemDetails;
+
+    private enum Fields : int
+    {
+        EmailAddress,
+        LeadNom,
+        RaffleTitle,
+        Fch,
+        Answer,
+        Distributor
+
+    }
+
+    private enum Tabs
+    {
+        General,
+        Raffles
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        ApiResponse<RaffleModel.Participant> apiResponse = await GetAsync<RaffleModel.Participant>( "RaffleParticipant", Guid.ToString());
+            if (apiResponse.Success())
+                value = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+
+        if (value != null)
+        {
+            var model = new PropertyGridModel(value);
+            model.AddString((int)Fields.EmailAddress, value.Lead.EmailAddress, Localizer("EmailAddress"));
+            model.AddString((int)Fields.LeadNom, value.Lead.NomiCognomsOrNickname(), Localizer("Nom"));
+            model.AddString((int)Fields.RaffleTitle, value.Raffle.Title, Localizer("Raffle"));
+            model.AddFch((int)Fields.Fch, value.Fch, Localizer("Fch"));
+            model.AddString((int)Fields.Answer, value.Raffle.Answer((int)value.Answer!), Localizer("Answer"));
+            model.AddString((int)Fields.Distributor, value.FormattedDistributor(), Localizer("Distributor"));
+            gridModel = model;
+            StateHasChanged();
+        }
+
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        isUpdating = true;
+        //value.EmailAddress = gridModel.GetString((int)Fields.EmailAddress);
+        //value.Nickname = gridModel.GetString((int)Fields.Nickname);
+        //value.Nom = gridModel.GetString((int)Fields.Nom);
+        //value.Cognoms = gridModel.GetString((int)Fields.Cognoms);
+        //var apiResponse = await PostAsync<UserModel, bool>(value, "user");
+        //if (apiResponse.Value)
+        //    CancelRequest();
+        //else
+        //    problemDetails = apiResponse.ProblemDetails;
+        isUpdating = false;
+    }
+
+
+    private async Task LoadOptionsRequest(PropertyGridModel.Item item)
+    {
+        ApiResponse<GuidNom[]> apiResponse = null;
+        switch ((Fields)item.Field)
+        {
+            default:
+                break;
+        }
+
+        if (apiResponse != null)
+        {
+            if (apiResponse.Fail())
+                problemDetails = apiResponse.ProblemDetails;
+            else
+            {
+                List<IModel> values = apiResponse.Value.OrderBy(x => x.Nom).ToList<IModel>();
+                gridModel.Items.First(x => x.Field == item.Field).Values = values;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<ApiResponse<bool>>( "user/delete", value!.Guid.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        //base.BackToLastPage();
+    }
+
+
+
+    private async Task TabChanged(int idx)
+    {
+
+        switch ((Tabs)idx)
+        {
+            default:
+                break;
+
+        }
+    }
+
+}
+

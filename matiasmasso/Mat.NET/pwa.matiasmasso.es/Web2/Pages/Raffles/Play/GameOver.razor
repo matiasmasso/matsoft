@@ -1,0 +1,18 @@
+﻿@inject CultureService culture
+
+@if (Participant?.Raffle?.FchTo != null)
+{
+<p>
+    @culture.Tradueix("Este sorteo caducó el ", "Aquest sorteig va caducar el ", "This raffle is over since ", "Este sorteio caducou a ")
+        @(((DateTime)Participant.Raffle.FchTo).ToString("d", System.Globalization.CultureInfo.CreateSpecificCulture("es-ES")))
+    <br />
+    @culture.Tradueix("Comprueba si hay alguno en marcha en ", "Comprova si n'hi ha algun en marxa a ", "Check for active raffles on ", "Confirma se há algum ativo actualmente em ")
+    <a href="https://www.matiasmasso.es/sorteos">www.matiasmasso.es/sorteos</a>
+</p>    
+}
+
+
+@code {
+    [Parameter] public RaffleModel.Participant? Participant { get; set; }
+
+}

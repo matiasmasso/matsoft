@@ -1,0 +1,39 @@
+﻿@inherits _Base
+
+@if (isEditing)
+{
+    <div class="Editor">
+        <StringLocalizerEditor Model="Model" RequestToClose="@(()=>isEditing=false)"></StringLocalizerEditor>
+    </div>
+}
+
+<a href="#" @onclick="OnClick" @onclick:preventDefault>
+    @Localizer(Value)
+</a>
+
+
+
+@code {
+    [Parameter]
+    public string? Value { get; set; }
+
+    private StringLocalizerModel? Model;
+
+    private bool isEditor;
+    private bool isEditing;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var user = await base.GetUser();
+        isEditor = (user.isMainboard() || user.Rol == UserModel.Rols.marketing);
+    }
+
+    void OnClick()
+    {
+        if (isEditor)
+        {
+            Model = Cache.StringsLocalizer.FirstOrDefault(x => x.StringKey == Value);
+            isEditing = true;
+        }
+    }
+}

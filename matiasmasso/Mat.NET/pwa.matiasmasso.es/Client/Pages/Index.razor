@@ -1,0 +1,45 @@
+﻿@page "/"
+@layout HomeLayout
+@inject AppState AppState
+@inject HttpClient Http
+@using DTO
+ <div class="Wrapper">
+    @if(viewModel?.IsLoaded() ?? false)
+    {
+
+        <div class="Banner">
+            <BannerRotator Banners="@viewModel!.Model!.RotatingBanners"></BannerRotator>
+        </div>
+
+        <div class="Brand1">
+            <img src="@viewModel.Model.Brand1.ImageUrl"/>
+        </div>
+        <div class="Brand2">
+            <img src="@viewModel.Model.Brand2.ImageUrl"/>
+        </div>
+        <div class="Brand3">
+            <img src="@viewModel.Model.Brand3.ImageUrl"/>
+        </div>
+
+        <div class="Raffle">
+            <a href="@viewModel.Model.Raffle.Url" title="viewModel.Model.Raffle.Caption">
+                <img src="@viewModel.Model.Raffle.ImageUrl" alt="@viewModel.Model.Raffle.Caption" width="@RaffleDTO.BANNER600WIDTH" height="@RaffleDTO.BANNER600HEIGHT"/>
+            </a>
+        </div>
+    } else
+    {
+        <span>loading...</span>
+    }
+</div>   
+
+
+@code {
+    HomeViewModel? viewModel;
+
+    protected override void OnInitialized()
+    {
+        viewModel = new HomeViewModel(Http, AppState);
+        viewModel.OnStateChange += StateHasChanged;
+    }
+
+}

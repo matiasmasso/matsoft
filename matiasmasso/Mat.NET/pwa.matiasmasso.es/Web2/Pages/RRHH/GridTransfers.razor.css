@@ -1,0 +1,68 @@
+﻿.Transfer {
+    display: grid;
+    grid-template-columns: min-content 100px 1fr 100px;
+    grid-template-areas: "toggle emp banc eur";
+    grid-column-gap: 10px;
+    padding: 10px 0;
+    margin: 30px 0 20px;
+    border-top: 1px solid #DDDDDD;
+    border-bottom: 1px solid #DDDDDD;
+}
+
+.Transfer .Emp {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    grid-area:emp;
+}
+
+.Transfer .Banc {
+    display:flex;
+    gap:10px;
+    grid-area:banc;
+}
+
+.Transfer select {
+    width:100%;
+}
+
+
+.Item {
+    display:grid;
+    grid-template-columns: min-content 1fr 100px;
+    grid-template-areas: "toggle nom eur"
+        "toggle ccc ccc";
+    grid-column-gap:10px;
+    margin-bottom:10px;
+}
+
+
+
+.Toggle {
+    grid-area: toggle;
+    display:flex;
+    justify-content:left;
+}
+
+.Nom {
+    grid-area: nom;
+}
+
+.Item.Disabled .Nom, .Item.Disabled .Ccc {
+    color: gray;
+}
+
+.Eur {
+    white-space: nowrap;
+    display: flex;
+    justify-content: flex-end;
+    column-gap:10px;
+    grid-area: eur;
+}
+
+
+
+.Ccc {
+    grid-area: ccc;
+    padding-left: 15px;
+}

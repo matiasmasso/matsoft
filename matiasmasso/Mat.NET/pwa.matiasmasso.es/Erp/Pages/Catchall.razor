@@ -1,0 +1,68 @@
+﻿@page "/{url1}/{url2?}/{url3?}/{url4?}/{url5?}"
+@inherits _ComponentBase
+@implements IDisposable
+
+
+@if (cache == null)
+{
+    <Loading></Loading>
+}
+
+@code {
+    [Parameter] public string? Url1 { get; set; }
+    [Parameter] public string? Url2 { get; set; }
+    [Parameter] public string? Url3 { get; set; }
+    [Parameter] public string? Url4 { get; set; }
+    [Parameter] public string? Url5 { get; set; }
+    private bool isNavigating = false;
+    private CacheDTO? cache;
+    private ProductModel? model;
+
+    protected override void OnInitialized()
+    {
+        appState!.CacheJustLoaded += HandleCacheJustLoadedAsync;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (appState!.IsLoadedCache)
+        {
+            cache = AppState.DefaultCache();
+            NavigateNext();
+        }
+    }
+
+    private void NavigateNext()
+
+    {
+        if (!string.IsNullOrEmpty(Url1) && cache != null && appState!.IsLoadedCache && isNavigating == false)
+        {
+            isNavigating = true;
+            string?[] segments = { Url1, Url2, Url3, Url4, Url5 };
+            string url = string.Join("/", segments.Where(x => !string.IsNullOrEmpty(x)));
+            model = AppState.DefaultCache().ProductFromUrl(url);
+            if (model == null)
+                base.navigationManager?.NavigateTo(Globals.PageUrl("ErrPageNotFound", url));
+            else
+            {
+                if (model.Src == ProductModel.SourceCods.Brand)
+                    base.navigationManager?.NavigateTo(Globals.PageUrl("ConsumerBrand", model.Guid.ToString()));
+                if (model.Src == ProductModel.SourceCods.Dept)
+                    base.navigationManager?.NavigateTo(Globals.PageUrl("ConsumerDept", model.Guid.ToString()));
+                if (model.Src == ProductModel.SourceCods.Category)
+                    base.navigationManager?.NavigateTo(Globals.PageUrl("ConsumerCategory", model.Guid.ToString()));
+                if (model.Src == ProductModel.SourceCods.Sku)
+                    base.navigationManager?.NavigateTo(Globals.PageUrl("ConsumerSku", model.Guid.ToString()));
+            }
+        }
+    }
+
+
+    private async Task HandleCacheJustLoadedAsync(object? sender, EventArgs e)
+    {
+        NavigateNext();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void IDisposable.Dispose() => appState!.CacheJustLoaded -= HandleCacheJustLoadedAsync;
+}

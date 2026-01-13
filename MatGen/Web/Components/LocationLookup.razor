@@ -1,0 +1,55 @@
+﻿@inject CatalogService Catalog
+
+<Dropdown  
+    GenericType="IModel"
+          Values="Values"
+          Value="Value"
+          OnClick="LocationClicked"
+          RequestToAddNew="AddNewRequest"
+          ValueChanged="OnValueChanged" ></Dropdown>
+
+
+@code {
+    [Parameter] public LocationModel? Value { get; set; }
+    [Parameter] public List<IModel>? Values { get; set; }
+    [Parameter] public EventCallback<LocationModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback RequestToAddNew { get; set; }
+    [Parameter] public EventCallback<LocationModel> ItemSelected { get; set; }
+    [Parameter] public bool? CanEdit { get; set; }
+    //Dropdown? dropdown;
+
+    private MenuModel? contextMenu;
+    // private bool isEditing;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        contextMenu =  MenuModel.Factory(Value);
+    }
+
+    void OnValueChanged(IModel value)
+    {
+        ValueChanged.InvokeAsync((LocationModel)value);
+    }
+
+    void Clear()
+    {
+        ValueChanged.InvokeAsync(null);
+    }
+
+    void SetEditMode()
+    {
+        //dropdown.SetEditingMode();
+    }
+
+    void AddNewRequest()
+    {
+        RequestToAddNew.InvokeAsync();
+    }
+
+    void LocationClicked()
+    {
+        ItemSelected.InvokeAsync(Value);
+    }
+
+}

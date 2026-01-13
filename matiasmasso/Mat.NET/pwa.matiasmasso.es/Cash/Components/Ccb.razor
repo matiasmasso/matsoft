@@ -1,0 +1,123 @@
+﻿@inject ApiService ApiService
+@implements IDisposable
+
+
+    <PropertyGrid Model="propertyGrid"
+                  UpdateRequest="UpdateRequestHandler"
+                  CancelRequest="HandleCloseRequest"
+                  DeleteRequest="DeleteRequestHandler"
+                  ItemChanged="HandleItemChanged"
+                  UpdateState="updateState"
+                  DeleteState="deleteState">
+    </PropertyGrid>
+
+@code {
+    [Parameter] public CcaModel? Cca { get; set; }
+    [Parameter] public CcaModel.Item? Value { get; set; }
+    [Parameter] public EventCallback<CcaModel.Item> ValueChanged { get; set; }
+    [Parameter] public EventCallback<CcaModel.Item> DeleteRequest { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    List<PgcCtaModel>? ctas;
+    List<ContactModel>? contacts;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Cta,
+        Contact,
+        Eur,
+        Dh
+    }
+
+
+    protected override void OnInitialized()
+    {
+        ApiService.OnChange += Refresca;
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        ctas = ApiService.GetCurrentPgcCtas();
+        contacts = ApiService.GetContacts();
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        contacts = contacts?.Where(x => x.Emp == Cca?.Emp).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddGuidnom("Compte", Value?.Cta, ctas);
+        retval.AddGuidnom("Subcompte", Value?.Contact, contacts);
+        retval.AddEur("Import", Value?.Eur);
+        retval.AddIdNom("Signe", ((int?)Value?.Dh)-1, new string[]{"deure","haver"});
+        return retval;
+    }
+
+    async Task HandleCloseRequest()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    void UpdateRequestHandler()
+    {
+        var cta = propertyGrid!.GetGuid((int)Fields.Cta);
+        var eur = propertyGrid!.GetEur((int)Fields.Eur);
+        if (cta != null && eur != null)
+        {
+            var contact = propertyGrid.GetGuid((int)Fields.Contact);
+            var dh = propertyGrid.GetId((int)Fields.Dh);
+
+            var value = Value!;
+            value.Cta = (Guid)cta;
+            value.Contact = contact;
+            value.Eur = (decimal)eur;
+            value.Dh = (CcaModel.Item.DhEnum)(dh! + 1);
+            ValueChanged.InvokeAsync(value);
+        }
+        else
+            exception = new Exception("Compte o import buits");
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        await DeleteRequest.InvokeAsync(Value);
+    }
+
+    void AfterAddDespesa(CcaModel args)
+    {
+        // year = ((DateOnly)args.Fch!).Year;
+        // tab = Tabs.Extracte;
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        // if (args.Format == PropertyGridModel.Formats.EmpId)
+        // {
+        //     value!.Emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+        //     propertyGrid = PropertyGrid();
+        // }
+    }
+
+    void HandleCcaRequest(CcaModel args)
+    {
+        // selectedCca = args;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}
+

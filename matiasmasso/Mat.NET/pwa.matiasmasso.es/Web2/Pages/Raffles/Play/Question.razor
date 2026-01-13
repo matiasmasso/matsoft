@@ -1,0 +1,58 @@
+﻿@implements IDisposable
+
+@inject CultureService culture
+
+<p>
+    <span id="QuizQuestion">@((MarkupString)(Participant?.Raffle?.Question ?? ""))</span>
+</p>
+
+
+    @foreach (var answer in answers)
+    {
+        <div class="Item">
+            <input type="radio" name="QuizAnswer" 
+                value="@(answers.IndexOf(answer))"
+                @onchange="@(()=>AnswerClick(answer))" />
+            @answer
+        </div>
+    }
+
+
+
+@code {
+    [CascadingParameter] private Steps? Parent { get; set; }
+    [Parameter] public RaffleModel.Participant? Participant { get; set; }
+
+    private List<string> answers = new();
+    private int? selectedAnswer;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        answers = Participant?.Raffle?.AnswerList() ?? new();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    void AnswerClick(string answer)
+    {
+        selectedAnswer = answers.IndexOf(answer);
+        Participant!.Answer = selectedAnswer;
+        Parent!.ActiveStep!.Completed = true;
+        Parent?.NextStep();
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+    }
+
+
+}

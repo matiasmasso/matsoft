@@ -1,0 +1,148 @@
+﻿@page "/Lloguers"
+@using System.Globalization
+@inject ApiService ApiService
+
+<PageTitle>Lloguers'</PageTitle>
+
+@if (selectedItem == null)
+{
+    <div class="PageWrapper600">
+        <h3>Lloguers</h3>
+
+        <div class="PageOptions">
+            <PageOptions>
+                <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChangedAsync"></LookupEmp>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir</a>
+            </PageOptions>
+        </div>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                    <div class="Item">
+                        <a href="#" class="Nom" title="clic aquí per obrir la fitxa"
+                           @onclick="@(()=>selectedItem = item)"
+                        @onclick:preventDefault>
+                            <div class="Truncate">@item.Customer.RaoSocial</div>
+                        </a>
+                    </div>
+            }
+        </div>
+
+    </div>
+}
+else
+{
+    <Lloguer Value="selectedItem"
+         CloseRequest="@(()=> selectedItem = null)"
+         AfterUpdate="AfterUpdateHandler"
+         AfterDelete="AfterDeleteHandler"></Lloguer>
+
+}
+<Error @bind-Value="exception"></Error>
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds? emp;
+
+    List<LloguerModel>? values;
+    LloguerModel? selectedItem;
+    string? searchterm;
+    string? title;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    enum Ids
+    {
+        Delete,
+        Browse,
+        CopyUrl
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        try
+        {
+            emps = values?.Select(x => x.EmpId).Distinct().ToList();
+            emp = ApiService.Emp;
+            await FetchAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            values = await ApiService.GetAsync<List<LloguerModel>>("Lloguers", $"{emp}");
+            values = values?.OrderBy(x => x.Customer.RaoSocial)
+            .ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    private List<LloguerModel>? FilteredItems()
+    {
+        var retval = values?.Where(x => x.Matches(searchterm)).ToList();
+        return retval;
+    }
+
+
+    private async Task EmpChangedAsync(EmpModel.EmpIds args)
+    {
+        emp = args;
+        await FetchAsync();
+    }
+
+    private void ItemClick(LloguerModel item)
+    {
+        selectedItem = item;
+    }
+
+
+    private void AddNew()
+    {
+        selectedItem = new LloguerModel
+            {
+                EmpId = (EmpModel.EmpIds)emp!,
+            };
+    }
+
+    private void AfterUpdateHandler(LloguerModel args)
+    {
+        var idx = values!.IndexOf(values.FirstOrDefault(x => x.Guid == args.Guid));
+        if (idx >= 0)
+            values[idx] = args;
+        else
+            values!.Add(args);
+
+        values = values?.OrderBy(x => x.Customer.RaoSocial).ToList();
+        selectedItem = null;
+    }
+
+    private void AfterDeleteHandler(LloguerModel args)
+    {
+        values!.Remove(args);
+        selectedItem = null;
+    }
+
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+}

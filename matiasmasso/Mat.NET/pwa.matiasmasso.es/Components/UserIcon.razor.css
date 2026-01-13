@@ -1,0 +1,9 @@
+﻿
+a svg {
+    height:37px;
+    fill:gray;
+}
+
+a:hover svg {
+    fill: white;
+}

@@ -1,0 +1,7 @@
+﻿@page "/InvoiceSent/{Guid:guid}"
+
+<InvoiceSent Guid="guid"></InvoiceSent>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+}

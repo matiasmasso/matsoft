@@ -1,0 +1,132 @@
+﻿@inject ApiService ApiService
+<div class="PageWrapper600">
+
+    <Title Value="Assignar fitxer a un immoble" CloseRequest="HandleCloseRequest"></Title>
+
+    <PropertyGrid Model="propertyGrid"
+                  ItemChanged="ItemChanged"
+                  UpdateRequest="UpdateAsync"
+                  DeleteRequest="DeleteAsync"
+                  CancelRequest="HandleCloseRequest"
+                  UpdateState="UpdateState()"
+                  DeleteState="deleteState">
+    </PropertyGrid>
+
+    <Error @bind-Value="exception"></Error>
+</div>
+@code {
+    [Parameter] public DocfileSrcModel? Value { get; set; }
+    [Parameter] public EventCallback<DocfileSrcModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<DocfileSrcModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    private DocfileSrcModel? value;
+    private DocfileModel? docfile;
+    private PropertyGridModel? propertyGrid;
+    private CrudButton.States updateState;
+    private CrudButton.States deleteState;
+    private EmpModel.EmpIds emp;
+    private List<ImmobleModel>? allImmobles;
+
+    private Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Immoble,
+        Fch,
+        Nom,
+        Docfile
+    }
+
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        value = Value;
+         await FetchAsync();
+        var immoble = allImmobles?.FirstOrDefault(x => x.Guid == value?.Target);
+        emp = immoble?.Emp ?? (EmpModel.EmpIds)ApiService.Emp!;
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var immobles = allImmobles?.Where(x => x.Emp == emp).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddEmp(emp);
+        retval.AddGuidnom("Immoble", value?.Target, immobles);
+        retval.AddDateTime("Data", value?.Docfile?.Fch ?? DateTime.Now);
+        retval.AddString("Concepte", value?.Docfile?.Nom, 60);
+        retval.AddDocfile(value?.Docfile);
+        propertyGrid = retval;
+        return retval;
+    }
+
+    void ItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+
+    async Task UpdateAsync()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Docfile = propertyGrid!.GetDocfile((int)Fields.Docfile);
+            value!.Docfile!.Fch = propertyGrid!.GetDateTime((int)Fields.Fch);
+            value.Docfile.Nom = propertyGrid!.Value<string>((int)Fields.Nom);
+            value.Target = (Guid)Immoble()!;
+            value.Cod = DocfileModel.Cods.download;
+            await ApiService.PostMultipartAsync<DocfileSrcModel, bool>(value.Docfile, value, "DocFileSrc");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+            updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteAsync()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.PostAsync<DocfileSrcModel, bool>(value!, "DocFileSrc/delete");
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+            deleteState = CrudButton.States.StandBy;
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            if (allImmobles == null)
+            allImmobles = await ApiService.GetAsync<List<ImmobleModel>>("Immobles");
+            propertyGrid = PropertyGrid();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    CrudButton.States UpdateState() => Immoble() == null ? CrudButton.States.Disabled : updateState;
+    Guid? Immoble() => propertyGrid?.GetGuid((int)Fields.Immoble);
+
+    void HandleCloseRequest()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}

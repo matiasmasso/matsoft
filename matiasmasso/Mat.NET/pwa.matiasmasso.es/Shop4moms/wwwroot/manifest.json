@@ -1,0 +1,17 @@
+{
+  "name": "Shop4moms",
+  "short_name": "Shop4moms",
+  "start_url": "https://www.4moms.es/",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "https://www.4moms.es/",
+  "theme_color": "#03173d",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

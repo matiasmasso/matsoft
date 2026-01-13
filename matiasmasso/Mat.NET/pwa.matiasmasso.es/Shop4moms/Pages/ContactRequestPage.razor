@@ -1,0 +1,81 @@
+﻿@page "/ContactRequest"
+@page "/Contacto/{Referencia:guid?}"
+@page "/Contacte/{Referencia:guid?}"
+@page "/Contact/{Referencia:guid?}"
+@page "/Contato/{Referencia:guid?}"
+@page "/Contact_us"
+@page "/{LangSegment}/Contacto"
+@page "/{LangSegment}/Contacte"
+@page "/{LangSegment}/Contact"
+@page "/{LangSegment}/Contato"
+@page "/{LangSegment}/Contact_us"
+
+@inherits _PageBase
+@inject CultureService culture
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@base.CanonicalUrl()" />
+
+    @foreach (var lang in LangDTO.All())
+    {
+        <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@base.CanonicalUrl(lang,new LangTextModel("contacto","contacte","contact","contato"))" />
+    }
+</HeadContent>
+
+<div class="Wrapper">
+    <h2>@culture.Localize("ContactRequest")</h2>
+
+    <AuthorizeView>
+        <Authorized>
+
+            <ContactRequest Referencia="Referencia"></ContactRequest>
+
+        </Authorized>
+        <NotAuthorized>
+
+            <div class="SignIn">
+                <SignIn Success="SignInSuccess" Fail="SignInFail"></SignIn>
+            </div>
+
+        </NotAuthorized>
+        <Authorizing>
+            <Loading></Loading>
+        </Authorizing>
+    </AuthorizeView>
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+
+<PageTitle>4moms | @culture.Localize("ContactRequest")</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@CanonicalUrl()" />
+    @foreach (var lang in LangDTO.All())
+    {
+        <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@CanonicalUrl(lang)" />
+    }
+
+</HeadContent>
+
+@code {
+    [Parameter] public Guid? Referencia { get; set; }
+    ProblemDetails? problemDetails;
+
+    void SignInSuccess(UserModel user)
+    {
+        base.navigationManager?.NavigateTo(base.navigationManager.Uri, true);
+    }
+
+    void SignInFail(ProblemDetails args)
+    {
+        problemDetails = args;
+    }
+
+    string CanonicalUrl(LangDTO? lang = null)
+    {
+        if(lang == null) lang = base.Lang();
+        return base.Culture.CanonicalUrl(lang, lang.Tradueix("Contacto", "Contacte", "Contact", "Contato"));
+    }
+}

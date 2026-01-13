@@ -1,0 +1,23 @@
+﻿@page "/Backoffice/sitemaps"
+@page "/{LangSegment}/Backoffice/sitemaps"
+@inherits _PageBase
+
+<div class="Wrapper600">
+<h1>Sitemaps</h1>
+
+    @foreach(var sitemap in sitemaps ?? new())
+    {
+        <a href="@sitemap" target="_blank">
+            @sitemap
+        </a>
+    }
+</div>
+@code {
+    List<string>? sitemaps;
+
+    protected override void OnInitialized()
+    {
+        sitemaps = SitemapService.SitemapPaths()
+            .Select(x => base.CanonicalUrl(base.Lang(), new LangTextModel($"sitemaps/{x}"))).ToList();
+    }
+}

@@ -1,0 +1,80 @@
+﻿@inherits _Base
+
+<div>
+
+    @if (Model != null)
+    {
+
+        <span>TO DO: implement property grid</span>
+@*        <EditForm Model="@Model" OnValidSubmit=@ValidFormSubmitted >
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                Referencia: <InputText @bind-Value="Model.Referencia" class="form-control" />
+            </div>
+            <div class="form-group">
+                Url: <InputText @bind-Value="Model.Url" class="form-control" />
+            </div>
+            <div class="form-group">
+                Usuari: <InputText @bind-Value="Model.Usuari" class="form-control" />
+            </div>
+            <div class="form-group">
+                Clau de pas: <InputText type=password @bind-Value="Model.Password" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                Observacions: <InputText id="obs" @bind-Value="Model.Obs" class="form-control" />
+            </div>
+
+            <br />
+
+            <div class="Buttons">
+                <!--<button type="submit" form="my-form-ref" class="btn btn-success" value="Update"/>-->
+                <button type="submit" class="btn btn-success">Update</button>
+                <input type="button" class="btn btn-secondary" value="Delete" />
+                <input type="button" class="btn btn-secondary" value="Cancel" />
+            </div>
+
+        </EditForm>
+*@    }
+
+</div>
+@code {
+
+    private CredencialModel _model;
+
+    [Parameter] public CredencialModel? Model
+    {
+        get => _model;
+        set
+        {
+            if (_model == value ) return;
+            _model = value;
+            ModelChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<CredencialModel> ModelChanged { get; set; }   
+
+    [Parameter]
+    public EventCallback<CredencialModel> SaveRequest { get; set; }   
+
+
+    //async void ValidFormSubmitted(EditContext editContext)
+    //{
+    //    if(editContext.IsModified())
+    //    {
+    //        CredencialModel model = (CredencialModel)editContext.Model;
+    //        base.LoadUsrLog(model.UsrLog);
+    //        if (await base.PostAsync<CredencialModel, bool>(model, "Credencial"))
+    //            NavigationManager.NavigateTo("Credencials");
+    //        else
+    //            throw new Exception("error on updating credential");
+    //    }
+    //}
+
+
+
+}

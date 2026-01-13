@@ -1,0 +1,327 @@
+﻿@page "/mayborn/stocks"
+@layout EmptyLayout
+@implements IDisposable
+@inject CultureService culture
+@inject MgzInventoryService mgzInventoryService
+@inject IJSRuntime JSRuntime
+
+<div class="PageWrapper900">
+    <AuthorizeView>
+        <Authorized>
+            @if (model == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <h3>@culture.Localize("Inventory")</h3>
+
+                <PageOptions>
+                    <div class="Fch">
+                        <input type="date" value="@mgzInventoryService.Fch.ToString("yyyy-MM-dd")" @onchange="FchChanged" />
+                    </div>
+                    <a href="#" @onclick="@(()=>mgzInventoryService.IsShowingEmptySkus = !mgzInventoryService.IsShowingEmptySkus)" @onclick:preventDefault>
+                        @culture.Localize(mgzInventoryService.IsShowingEmptySkus ? "HideEmptySkus" : "ShowEmptySkus")
+                    </a>
+                    @if (isWritingExcel)
+                    {
+                        <Loading></Loading>
+                    }
+                    else
+                    {
+                        <a href="#" @onclick="Excel" @onclick:preventDefault>
+                            @culture.Localize("Excel")
+                        </a>
+                    }
+                </PageOptions>
+
+                <div class="Grid @(isDepreciating?"IsDepreciating":"")">
+                    <div class="ColHeaders">
+                        <div>&nbsp;</div>
+                        <div>@culture.Localize("Concept")</div>
+                        <div class="Num">@culture.Localize("Stock")</div>
+                        <div class="Num">@culture.Localize("Inventory")</div>
+                        @if (isDepreciating)
+                        {
+                            <div class="Num">@culture.Localize("Depreciation")</div>
+                            <div class="Num">@culture.Localize("Net")</div>
+                        }
+                    </div>
+
+                    @*             <div class="Total">
+                <div>&nbsp;</div>
+                <div>@culture.Localize("Totals")</div>
+                <div>&nbsp;</div>
+                <div class="Num">@string.Format("{0:N2} €",mgzInventoryService.Total.Eur)</div>
+                @if (isDepreciating)
+                {
+                <div class="Num">@string.Format("{0:N2} €",mgzInventoryService.Total.DeprecValue)</div>
+                <div class="Num">@string.Format("{0:N2} €",mgzInventoryService.Total.Net())</div>
+                }
+                </div>
+                *@
+                    @if (selectedBrand == null)
+                    {
+                        @foreach (var brand in mgzInventoryService.Brands()?.Where(x => x.Product?.Guid == tommeetippee.Guid).ToList() ?? new())
+                        {
+                            <a href="#" class="Brand" @onclick="@(()=>BrandClick(brand))" @onclick:preventDefault>
+                                <div>&nbsp;</div>
+                                <div class="Nom">@brand.Product!.Nom.Tradueix(culture.Lang())</div>
+                                <div>&nbsp;</div>
+                                <div class="Num">@string.Format("{0:N2} €",brand.Eur)</div>
+                                @if (isDepreciating)
+                                {
+                                    <div class="Num">@string.Format("{0:N2} €",brand.DeprecValue)</div>
+                                    <div class="Num">@string.Format("{0:N2} €",brand.Net())</div>
+                                }
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <a href="#" class="Brand Selected" @onclick="@(()=>BrandClick(selectedBrand))" @onclick:preventDefault>
+                            <Icon Id="Icon.Ids.Xmark"></Icon>
+                            <div class="Nom">@selectedBrand.Product!.Nom.Tradueix(culture.Lang())</div>
+                            <div>&nbsp;</div>
+                            <div class="Num">@string.Format("{0:N2} €",selectedBrand.Eur)</div>
+                            @if (isDepreciating)
+                            {
+                                <div class="Num">@string.Format("{0:N2} €",selectedBrand.DeprecValue)</div>
+                                <div class="Num">@string.Format("{0:N2} €",selectedBrand.Net())</div>
+                            }
+                        </a>
+
+                        @if (selectedCategory == null)
+                        {
+                            @foreach (var category in mgzInventoryService.Categories(selectedBrand) ?? new())
+                            {
+                                <a href="#" class="Category" @onclick="@(()=>CategoryClick(category))" @onclick:preventDefault>
+                                    <div>&nbsp;</div>
+                                    <div class="Nom">@category.Product!.Nom.Tradueix(culture.Lang())</div>
+                                    <div class="Num">@string.Format("{0:N0}",category.Qty)</div>
+                                    <div class="Num">@string.Format("{0:N2} €",category.Eur)</div>
+                                    @if (isDepreciating)
+                                    {
+                                        <div class="Num">@string.Format("{0:N2} €",category.DeprecValue)</div>
+                                        <div class="Num">@string.Format("{0:N2} €",category.Net())</div>
+                                    }
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <a href="#" class="Category Selected" @onclick="@(()=>CategoryClick(selectedCategory))" @onclick:preventDefault>
+                                <Icon Id="Icon.Ids.Xmark"></Icon>
+                                <div class="Nom">@selectedCategory.Product!.Nom.Tradueix(culture.Lang())</div>
+                                <div class="Num">@string.Format("{0:N0}",selectedCategory.Qty)</div>
+                                <div class="Num">@string.Format("{0:N2} €",selectedCategory.Eur)</div>
+                                @if (isDepreciating)
+                                {
+                                    <div class="Num">@string.Format("{0:N2} €",selectedCategory.DeprecValue)</div>
+                                    <div class="Num">@string.Format("{0:N2} €",selectedCategory.Net())</div>
+                                }
+                            </a>
+
+                            @foreach (var sku in mgzInventoryService.Skus(selectedCategory) ?? new())
+                            {
+                                <div href="#" class="Sku">
+                                    <div>&nbsp;</div>
+                                    <div class="Nom">@sku.Product?.Nom?.Tradueix(culture.Lang())</div>
+                                    <div class="Num">@string.Format("{0:N0}",sku.Qty)</div>
+                                    <div class="Num">@string.Format("{0:N2} €",sku.Eur)</div>
+                                    @if (isDepreciating)
+                                    {
+                                        <div class="Num">@string.Format("{0:N2} €",sku.DeprecValue)</div>
+                                        <div class="Num">@string.Format("{0:N2} €",sku.Net())</div>
+                                    }
+                                </div>
+                            }
+
+                        }
+                    }
+                </div>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="Item" href="/Login">
+                <Login></Login>
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+
+
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    List<MgzInventoryModel>? model;
+    int? selectedYear;
+    int? selectedMonth;
+    MgzInventoryService.XItem? selectedBrand;
+    MgzInventoryService.XItem? selectedCategory;
+    MgzInventoryService.XItem? selectedSku;
+    MgzInventoryExtracteModel? extracte;
+    bool isDepreciating;
+    bool isAddingDepreciation;
+    bool isWritingExcel;
+    int fromDays;
+    int percent;
+    ProductBrandModel tommeetippee = ProductBrandModel.Wellknown(ProductBrandModel.Wellknowns.TommeeTippee)!;
+
+    Exception? exception;
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        mgzInventoryService.OnChange += Refresca;
+    }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        model = mgzInventoryService.Values?.Where(x => x.Brand == tommeetippee.Guid).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task FchChanged(ChangeEventArgs args)
+    {
+        var fch = DateTime.Parse(args.Value?.ToString() ?? "");
+        model = null;
+        await mgzInventoryService.FetchAsync(fch);
+        //StateHasChanged();
+    }
+
+    void BrandClick(MgzInventoryService.XItem brand)
+    {
+        if (brand == selectedBrand)
+        {
+            selectedBrand = null;
+            selectedCategory = null;
+            selectedSku = null;
+            extracte = null;
+        }
+        else
+            selectedBrand = brand;
+    }
+
+    void CategoryClick(MgzInventoryService.XItem category)
+    {
+        if (category == selectedCategory)
+        {
+            selectedCategory = null;
+            selectedSku = null;
+            extracte = null;
+        }
+        else
+            selectedCategory = category;
+    }
+
+    async Task SkuClick(MgzInventoryService.XItem sku)
+    {
+        if (sku == selectedSku)
+        {
+            selectedSku = null;
+            extracte = null;
+        }
+        else
+        {
+            selectedSku = sku;
+            if (extracte?.Sku != sku.Product!.Guid)
+            {
+                extracte = null;
+                try
+                {
+                    extracte = await mgzInventoryService.GetExtracte((ProductSkuModel)sku.Product);
+                    InvokeAsync(StateHasChanged);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            }
+        }
+    }
+
+    void AddDepreciation()
+    {
+        var value = new MgzInventoryService.Depreciation()
+            {
+                FromDays = fromDays,
+                Percent = percent
+            };
+        mgzInventoryService.Depreciations.Add(value);
+        mgzInventoryService.SetTotal();
+        isAddingDepreciation = false;
+        selectedBrand = null;
+        selectedCategory = null;
+        selectedSku = null;
+        extracte = null;
+    }
+
+    void RemoveDepreciation(MgzInventoryService.Depreciation value)
+    {
+        mgzInventoryService.Depreciations.Remove(value);
+        mgzInventoryService.SetTotal();
+        isAddingDepreciation = false;
+        selectedBrand = null;
+        selectedCategory = null;
+        selectedSku = null;
+        extracte = null;
+    }
+
+    async Task Excel()
+    {
+        isWritingExcel = true;
+        var sheet = new DTO.Excel.Sheet("Inventario", "inventario.xlsx");
+        var row = sheet.AddRow();
+        row.AddCell("Guid");
+        row.AddCell("Marca");
+        row.AddCell("Categoria");
+        row.AddCell("Producto");
+        row.AddCell("EAN");
+        row.AddCell("Ref.Proveedor");
+        row.AddCell("Ref.M+O");
+        row.AddCell("Stock");
+        row.AddCell("Coste");
+        foreach (var item in mgzInventoryService.Values?.Where(x => x.Brand == tommeetippee.Guid).ToList() ?? new())
+        {
+            if (item.Stk > 0)
+            {
+                row = sheet.AddRow();
+                row.AddCell(mgzInventoryService.Sku(item.Sku)?.Guid.ToString());
+                row.AddCell(mgzInventoryService.Brand(item.Brand)?.Nom?.Esp);
+                row.AddCell(mgzInventoryService.Category(item.Category)?.Nom?.Esp);
+                row.AddCell(mgzInventoryService.Sku(item.Sku)?.Nom?.Esp);
+                row.AddCell(mgzInventoryService.Sku(item.Sku)?.Ean);
+                row.AddCell(mgzInventoryService.Sku(item.Sku)?.Ref);
+                row.AddCell(mgzInventoryService.Sku(item.Sku)?.Id.ToString());
+                row.AddCell(item.Stk);
+                row.AddCell(Math.Round(item.Eur, 2));
+            }
+        }
+        sheet.Rows = sheet.Rows
+        .OrderBy(x => x.Cells[1].Content)
+        .ThenBy(x => x.Cells[2].Content)
+        .ThenBy(x => x.Cells[3].Content)
+        .ToList();
+        var bytes = DTO.Excel.ClosedXml.Bytes(sheet);
+        var fileStream = new MemoryStream(bytes);
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", sheet.Filename, streamRef);
+        isWritingExcel = false;
+    }
+
+    public void Dispose()
+    {
+        mgzInventoryService.OnChange -= Refresca;
+    }
+
+
+}

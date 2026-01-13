@@ -1,0 +1,220 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <h1>
+        @Localizer("VehicleProperties")
+    </h1>
+
+
+    <TabControl TabChanged="TabChanged">
+        <TabPage Text="@Localizer("Details")">
+
+            <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          RequestToLoadOptions="LoadOptionsRequest"></PropertyGrid>
+
+        </TabPage>
+
+        <TabPage Text="@Localizer("Img")">
+            @*            <UxImgFile Src="@value.ImgUrl()" Width="350" Height="400" ValueChanged="ImgChanged"></UxImgFile>*@
+        </TabPage>
+
+        <TabPage Text="@Localizer("Downloads")">
+            <TargetDownloads Values="@documents" AddNewRequest="AddNewDocfile"></TargetDownloads>
+        </TabPage>
+
+        <TabPage Text="@Localizer("Penalties")">
+            <Multas Values="@value?.Multas"></Multas>
+        </TabPage>
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <ButtonsBar IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(value != null && !value.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></ButtonsBar>
+    </div>
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private VehicleModel? value;
+    private List<DownloadTargetModel> documents = new();
+    private PropertyGridModel? gridModel;
+    private Media? media;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    private ProblemDetails? problemDetails;
+
+    private enum Fields : int
+    {
+        CarModel,
+        Matricula,
+        Bastidor,
+        Conductor,
+        Venedor,
+        FchFrom,
+        FchTo,
+        Contract,
+        Insurance,
+        Privat
+    }
+
+    private enum Tabs
+    {
+        General,
+        Img,
+        Downloads,
+        Penalties
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        CacheDTO cache; // = Cache(CacheDTO.Table.TableIds.CliGral);
+        if (Guid == null)
+            value = new VehicleModel { Emp = Globals.DefaultEmp };
+        else
+        {
+            var apiResponse = await GetAsync<VehicleModel>("Vehicle", Guid.ToString()!);
+            value = apiResponse.Value;
+            problemDetails = apiResponse.ProblemDetails;
+
+        }
+
+        if (value != null)
+        {
+            var model = new PropertyGridModel(value.Model);
+            model.AddLookup<GuidNom>((int)Fields.CarModel, value.Model, Localizer("Vehicle.CarModel"));
+            model.AddString((int)Fields.Matricula, value.Matricula, Localizer("Vehicle.Matrícula"));
+            model.AddString((int)Fields.Bastidor, value.Bastidor, Localizer("Vehicle.Bastidor"));
+            //model.AddDropdown<GuidNom>((int)Fields.Conductor, cache.Contacts, value.Conductor, Localizer("Vehicle.CarDriver"));
+            model.AddFch((int)Fields.FchFrom, value.Alta, Localizer("EntryDate"));
+            model.AddFch((int)Fields.FchTo, value.Baixa, Localizer("TerminationDate"));
+            model.AddLookup<GuidNom>((int)Fields.Contract, value.Contract, Localizer("Contract"));
+            model.AddLookup<GuidNom>((int)Fields.Insurance, value.Insurance, Localizer("Insurance"));
+            gridModel = model;
+            StateHasChanged();
+        }
+
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        isUpdating = true;
+        value.Model = gridModel.GetValue<GuidNom>((int)Fields.CarModel);
+        value.Matricula = gridModel.GetString((int)Fields.Matricula);
+        value.Bastidor = gridModel.GetString((int)Fields.Bastidor);
+        value.Conductor = gridModel.GetValue<GuidNom>((int)Fields.Conductor);
+        value.Venedor = gridModel.GetValue<GuidNom>((int)Fields.Venedor);
+        value.Alta = gridModel.GetValue<DateTime?>((int)Fields.FchFrom);
+        value.Baixa = gridModel.GetValue<DateTime?>((int)Fields.FchTo);
+        value.Contract = gridModel.GetValue<GuidNom>((int)Fields.Contract);
+        value.Insurance = gridModel.GetValue<GuidNom>((int)Fields.Insurance);
+        if (media != null) value.ImageMime = media.Mime;
+        var apiResponse = await PostMultipartAsync<VehicleModel, bool>( value, media, "vehicle");
+        if (apiResponse.Value)
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        isUpdating = false;
+    }
+
+    private void ImgChanged(Media args)
+    {
+        isDirty = true;
+        media = args;
+    }
+
+    private async Task LoadOptionsRequest(PropertyGridModel.Item item)
+    {
+        ApiResponse<GuidNom[]> apiResponse = null;
+        switch ((Fields)item.Field)
+        {
+            case Fields.CarModel:
+                apiResponse = await GetAsync<GuidNom[]>( "Vehicles/CarModels");
+                break;
+            case Fields.Contract:
+                var cc1 = ContractModel.CodiClass.Wellknown(ContractModel.CodiClass.Wellknowns.VehicleLeasings);
+                apiResponse = await GetAsync<GuidNom[]>( "Contracts/FromCodi", cc1.Guid.ToString());
+                break;
+            case Fields.Insurance:
+                var cc2 = ContractModel.CodiClass.Wellknown(ContractModel.CodiClass.Wellknowns.VehicleInsurances);
+                apiResponse = await GetAsync<GuidNom[]>( "Contracts/FromCodi", cc2.Guid.ToString());
+                break;
+            default:
+                break;
+        }
+
+        if (apiResponse != null)
+        {
+            if (apiResponse.Fail())
+                problemDetails = apiResponse.ProblemDetails;
+            else
+            {
+                List<IModel> values = apiResponse.Value.OrderBy(x => x.Nom).ToList<IModel>();
+                gridModel.Items.First(x => x.Field == item.Field).Values = values;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<ApiResponse<bool>>( "Vehicle/delete", value!.Guid.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+
+
+    private void AddNewDocfile()
+    {
+        problemDetails = new ProblemDetails { Title = "Not implemented yet" };
+    }
+
+    private async Task TabChanged(int idx)
+    {
+
+        switch ((Tabs)idx)
+        {
+            case Tabs.Downloads:
+                ApiResponse<List<DownloadTargetModel>> ar1 = await GetAsync<List<DownloadTargetModel>>( "Vehicle/documents", value!.Guid.ToString());
+                if (ar1.Fail())
+                {
+                    problemDetails = ar1.ProblemDetails;
+                }
+                else
+                    documents = ar1.Value;
+                break;
+            case Tabs.Penalties:
+                ApiResponse<List<MultaModel>> ar2 = await GetAsync<List<MultaModel>>( "vehicle/Multas", value.Guid.ToString());
+                if (ar2.Fail())
+                {
+                    problemDetails = ar2.ProblemDetails;
+                }
+                else
+                    value.Multas = ar2.Value;
+                break;
+            default:
+                break;
+
+        }
+    }
+
+}
+

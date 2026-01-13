@@ -1,0 +1,172 @@
+﻿@inject ApiService ApiService
+
+
+<div class="PageWrapper900">
+
+
+    <Title Value="@Title()" CloseRequest="CloseRequestHandler"></Title>
+
+    @if(Value == null)
+    {
+
+    }
+    else if (selectedTab == Tabs.Detalls)
+    {
+        <Tabs Value="(int?)selectedTab" ValueChanged="HandleTabChanged" Captions="Detalls, Documents"></Tabs>
+
+        <PropertyGrid Model="propertyGrid"
+        UpdateRequest="UpdateRequestHandler"
+        CancelRequest="CloseRequestHandler"
+        DeleteRequest="DeleteRequestHandler"
+        UpdateState="updateState"
+        DeleteState="deleteState">
+        </PropertyGrid>
+
+    }
+    else if (selectedTab == Tabs.Docs)
+    {
+        <Tabs Value="(int?)selectedTab" ValueChanged="HandleTabChanged" Captions="Detalls, Documents"></Tabs>
+
+        <ContactDocs Model="Value"></ContactDocs>
+    }
+
+
+
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+
+@code {
+    [Parameter] public EmpModel? Value { get; set; }
+    [Parameter] public EventCallback<EmpModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<EmpModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    EmpModel? value;
+    List<ContactModel>? allContacts;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Tabs selectedTab = Tabs.Detalls;
+    Exception? exception;
+
+    enum Tabs
+    {
+        Detalls,
+        Docs
+    }
+
+    enum Fields
+    {
+        Nom,
+        Abr,
+        Nif,
+        FchFrom,
+        FchTo,
+        Ord
+    }
+
+
+    protected override void OnInitialized()
+    {
+        _ = Task.Run(async () => await FetchAsync());
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            allContacts =  await ApiService.GetAsync<List<ContactModel>>("Contacts");
+            propertyGrid = PropertyGrid();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+                value = await ApiService.GetAsync<EmpModel>("Emp/fromId", ((int)Value!.Id).ToString());
+
+            propertyGrid = PropertyGrid();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private string Title() => "Empresa " + Value.Abr;
+
+    PropertyGridModel PropertyGrid()
+    {
+        var contacts = allContacts?.Where(x => x.Emp == value?.Id).Select(x => x.ToGuidNom()).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddString("Nom", value?.Nom);
+        retval.AddString("Alies", value?.Abr);
+        retval.AddString("Nif", value?.Nif);
+        retval.AddDateOnly("Alta", value?.FchFrom);
+        retval.AddDateOnly("Baixa", value?.FchTo);
+        retval.AddInt("Ordre", value?.Ord);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Nom = propertyGrid!.GetString((int)Fields.Nom);
+            value.Abr = propertyGrid!.GetString((int)Fields.Abr);
+            value.Nif = propertyGrid!.GetString((int)Fields.Nif);
+            value.FchFrom = propertyGrid!.GetDateOnly((int)Fields.FchFrom);
+            value.FchTo = propertyGrid!.GetDateOnly((int)Fields.FchTo);
+            value.Ord = propertyGrid!.GetInt((int)Fields.Ord);
+            await ApiService.PostAsync<EmpModel, bool>(value, "Emp");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Emp/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void HandleTabChanged(int args)
+    {
+        selectedTab = (Tabs)args;
+    }
+
+}

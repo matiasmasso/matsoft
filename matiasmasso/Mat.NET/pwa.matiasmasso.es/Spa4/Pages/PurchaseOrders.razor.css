@@ -1,0 +1,107 @@
+﻿.TitleBar {
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+.TitleBar span {
+    font-size:1.2em;
+    font-weight:600;
+}
+
+.THSpacer {
+    grid-column: 1/-1;
+}
+
+.HasDoc {
+    display: block;
+    background-repeat: no-repeat;
+    background-image: url(/img/pdf-36.png);
+}
+
+.Amt {
+    text-align: right;
+    white-space: nowrap;
+}
+.Cli, .Pdd, .Usr {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.Id, .Fch, .Doc, .Cli, .Pdd {
+    display:block;
+}
+
+/* Desktop */
+@media (min-width:600px) {
+    .Grid {
+        display: grid;
+        column-gap: 10px;
+        /*Id Fch Doc Cli Amt Pdd Usr*/
+        grid-template-columns: min-content min-content 20px 1fr min-content 1fr 1fr;
+    }
+    .DesktopContents {
+        display: contents;
+    }
+    .ItemContents {
+        display: contents;
+    }
+    .HasDoc {
+        background-size: 20px 20px;
+    }
+}
+
+/* Mobile */
+@media (max-width:599px){
+    .Grid {
+        display:flex;
+        flex-direction:column;
+    }
+    .DesktopContents {
+        display:none;
+    }
+    .ItemContents {
+        display:grid;
+        grid-template-areas: "doc id fch amt"
+            "doc cli cli cli"
+            "doc pdd pdd pdd";
+        grid-template-columns: 36px 50px 1fr 1fr;
+        grid-column-gap:10px;
+        padding:5px 0;
+        border-bottom: 1px solid gray;
+    }
+
+    .Doc {
+        grid-area: doc;
+    }
+
+    .Id {
+        grid-area: id;
+    }
+
+    .Fch {
+        grid-area: fch;
+    }
+
+    .Amt {
+        grid-area: amt;
+    }
+
+    .Cli {
+        grid-area: cli;
+    }
+
+    .Pdd {
+        grid-area: pdd;
+    }
+    .Usr {
+        display:none;
+    }
+
+    .HasDoc {
+        background-size: 36px 36px;
+    }
+
+
+}

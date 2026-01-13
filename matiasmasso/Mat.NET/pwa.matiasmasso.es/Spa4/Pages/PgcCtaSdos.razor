@@ -1,0 +1,95 @@
+﻿@page "/PgcCtaSdos/{Contact:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <div>Loading...</div>
+    }
+    else
+    {
+        <div class="Truncate">@(model!.Contact?.Nom ?? "")</div>
+        @if (years.Count == 0)
+        {
+            <div>
+                @base.Tradueix(
+                    "No se han encontrado movimientos contables en esta ficha",
+                    "No s'han trobat moviments comptables en aquesta fitxa",
+                    "No account movements have been found for this contact"
+                )
+                </div>
+        }
+        else
+        {
+            foreach (var year in years)
+            {
+                <a href="#" @onclick="@(()=>YearClicked(year))" @onclick:preventDefault="true" class="Year">
+                    @year
+                </a>
+            }
+            <div class="Grid">
+                @foreach (var item in items)
+                {
+                    <a href="#" @onclick="@(()=>ItemClicked(item))" @onclick:preventDefault="true" class="Truncate">
+                        @item.Caption()
+                    </a>
+
+                    <div class="Deb">@string.Format("{0:n2} €",item.Deb)</div>
+                    <div class="Hab">@string.Format("{0:n2} €",item.Hab)</div>
+                    <div class="Sdo">@string.Format("{0:n2} €",item.Sdo())</div>
+                    <div class="Line"></div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Contact { get; set; }
+    private PgcCtaSdosDTO? model;
+    private List<int> years { get; set; } = new();
+    private List<PgcCtaSdosDTO.Item> items { get; set; } = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        model = await base.GetAsync<PgcCtaSdosDTO>("PgcCtaSdos", Contact.ToString());
+        var year = model.Items.GroupBy(x => x.Year).Select(x => x.First().Year).FirstOrDefault();
+        Expand(year);
+
+    }
+
+    private void YearClicked(int year)
+    {
+        var isExpanded = items.Count > 0;
+        if (isExpanded)
+            Collapse();
+        else
+            Expand(year);
+    }
+
+    private void Collapse()
+    {
+        years = model!.Items.GroupBy(x => x.Year).Select(x => x.First().Year).ToList();
+        items.Clear();
+    }
+
+    private void Expand(int year)
+    {
+        years.Clear();
+        years.Add(year);
+        items = model!.Items
+        .Where(x => x.Year == year)
+        .ToList();
+    }
+
+
+
+    private void ItemClicked(PgcCtaSdosDTO.Item item)
+    {
+        var url = string.Format("/PgcCtaExtracte/{0}/{1}/{2}/{3}", "1", item.Year.ToString(), item.CtaGuid.ToString(), Contact.ToString());
+        NavigationManager.NavigateTo(url);
+    }
+
+
+}

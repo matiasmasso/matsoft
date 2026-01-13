@@ -1,0 +1,58 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <div class="Label">Usuari</div>
+    <div class="Value">
+        <input type="email" placeholder="adreça email" @bind-value="emailAddress" autofocus />
+    </div>
+    <div class="Label">Clau de pas</div>
+    <div class="Value">
+        <input type="password" placeholder="clau de pas" @bind-value="password" autofocus />
+    </div>
+    <div class="Submit">
+        <button class="Button ButtonOk" @onclick="Submit">
+            @if (isAuthorizing)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <span>Acceptar</span>
+            }
+        </button>
+    </div>
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> Authenticated { get; set; }
+    string? emailAddress;
+    string? password;
+    bool isAuthorizing;
+    ProblemDetails? problemDetails;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    async Task Submit()
+    {
+        isAuthorizing = true;
+        if (!string.IsNullOrEmpty(emailAddress) & !string.IsNullOrEmpty(password))
+        {
+            var hash = UserModel.GetHash(emailAddress!, password!);
+            var apiResponse = await PostAsync<string, string>( hash, "Token/1");
+            if (apiResponse.Success())
+            {
+                var token = apiResponse.Value!;
+                await Authenticated.InvokeAsync(token);
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+            isAuthorizing = false;
+        }
+    }
+}

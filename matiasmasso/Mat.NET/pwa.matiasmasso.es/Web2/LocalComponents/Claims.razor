@@ -1,0 +1,86 @@
+﻿@implements IDisposable
+@inject ClaimsService claimsService
+@inject CultureService culture
+
+
+
+    <div class="PageWrapper900">
+        <h1>Claims</h1>
+
+        @if (claimsService.Values == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <div class="PageOptions">
+                <PageOptions IsShowingOptions>
+                    <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nou claim</a>
+                </PageOptions>
+            </div>
+
+            <SearchBox @bind-Value="@searchterm"></SearchBox>
+
+            <div class="Grid">
+                @foreach (var value in FilteredValues() ?? new())
+                {
+                    <a class="Item" @onclick="@(()=>ItemClick(value))" @onclick:preventDefault>
+                        <div class="Nom">
+                            @value.Nom.Tradueix(culture.Lang())
+                        </div>
+                        <div class="Dsc">
+                            @value.Nom.Tradueix(culture.Lang())
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+
+        <Error @bind-Exception="exception"></Error>
+    </div>
+
+
+@code {
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    string? searchterm;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        claimsService.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<ClaimModel>? FilteredValues()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return claimsService.Values;
+        else
+            return claimsService.Values?.Where(x => x.Nom.Matches(searchterm)).ToList();
+    }
+
+    async Task AddNew()
+    {
+        var item = new ClaimModel();
+        var breadcrumb = new ModelEditor.Breadcrumb(item, culture.Lang().Tradueix("Nuevo claim","Nou claim","New claim"));
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    async Task ItemClick(ClaimModel item)
+    {
+        var breadcrumb = new ModelEditor.Breadcrumb(item, item.ToString() ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    public void Dispose()
+    {
+        claimsService.OnChange -= Refresca;
+    }
+
+}

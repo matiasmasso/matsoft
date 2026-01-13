@@ -1,0 +1,48 @@
+﻿@using DTO
+@using Spa.Shared
+@using Spa.ViewModels
+
+@inject AppState AppState
+@inject HttpClient Http
+@inject Microsoft.Extensions.Localization.IStringLocalizer<TargetDownloads> Loc
+
+@if (viewModel!.LoadStatus == Globals.LoadStatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <SearchBox @bind-Value="@viewModel.SearchTerm"></SearchBox>
+
+        <Virtualize Items="@viewModel.Items()" Context="item">
+            <a class="Item" href="@item.DownloadUrl()" target="_blank">
+                <div class="Ico">
+                    <img src="img/pdf-36-red.png"/>
+                </div>
+                <div class="Nom Truncate">
+                    @item.Nom
+                </div>
+                <div class="Details Truncate">
+                    @item.Features()
+                </div>
+            </a>
+        </Virtualize>
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public BaseGuid Target { get; set; }
+
+    private TargetDownloadsViewModel? viewModel;
+
+    protected override void OnParametersSet()
+    {
+        viewModel = new TargetDownloadsViewModel(AppState, Target);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch(Http);
+        base.OnParametersSet();
+    }
+
+
+}

@@ -1,0 +1,13 @@
+﻿.LookuÈmps {
+    position: relative;
+}
+
+.Thumbnail {
+    width:350px;
+    height:400px;
+}
+
+.Thumbnail img {
+    max-width:100%;
+    max-height:100%;
+}

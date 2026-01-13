@@ -1,0 +1,101 @@
+﻿@inject AppState AppState
+@using DTO
+
+    <TabControl SelectedTab = "@SelectedTab">
+
+        <ChildContent>
+
+            <TabPage Text="Público">
+
+
+                <div class="MenuWrapper">
+                         <div class="CustomMenu">
+
+                            @if (!string.IsNullOrEmpty(viewModel?.Model?.PublicMenuCustomTitle))
+                            {
+                                <div class="CustomMenuTitle Truncate">
+                                    @viewModel.Model.PublicMenuCustomTitle
+                                </div>
+                            }
+
+                            <NavItems MenuItems="@viewModel?.Model?.PublicMenuCustomItems" 
+                                      RequestToNavigate="NavigateRequest"/>
+                        </div>
+
+                    <NavItems MenuItems="@viewModel?.Model?.PublicMenuItems" RequestToNavigate="NavigateRequest"/>
+
+                    <div>
+                        <LanguageSelection></LanguageSelection>
+                    </div>
+
+                    <div>
+                    <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                        @(AppState.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+                    </a>
+                    </div>
+
+                </div>
+            </TabPage>
+
+            <TabPage Text="Privado">
+                @if(viewModel?.Model?.User == null)
+                {
+                    <Login></Login>
+                } else
+                {
+                <div class="MenuWrapper">
+                         <div class="CustomMenu">
+
+                            @if (!string.IsNullOrEmpty(viewModel.Model.PrivateMenuCustomTitle))
+                            {
+                                <div class="CustomMenuTitle Truncate">
+                                    @viewModel.Model.PrivateMenuCustomTitle
+                                </div>
+                            }
+
+                            <NavItems MenuItems="@viewModel.Model.PrivateMenuCustomItems" RequestToNavigate="NavigateRequest"/>
+                        </div>
+
+                    <NavItems MenuItems="@viewModel.Model.PrivateMenuItems" RequestToNavigate="NavigateRequest"/>
+                </div>
+                }
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>  
+
+@code {
+
+    [Parameter]
+    public LayoutViewModel viewModel { get; set; }
+
+    [Parameter]
+    public EventCallback<ExpandableItem> OnNavigate { get; set; }
+
+    [Parameter]
+    public int SelectedTab { get; set; } = 1;
+
+    protected override void OnInitialized()
+    {
+        AppState.OnStateChange += StateHasChanged;
+        base.OnInitialized();
+    }
+
+    protected void UseLocalApi()
+    {
+        AppState.UseLocalApi = !AppState.UseLocalApi;
+        //StateHasChanged();
+    }
+
+    async Task NavigateRequest()
+    {
+        await OnNavigate.InvokeAsync();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+    }
+
+}

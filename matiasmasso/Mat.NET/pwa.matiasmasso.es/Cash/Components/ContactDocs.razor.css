@@ -1,0 +1,17 @@
+﻿
+
+.Grid {
+    display:grid;
+    grid-template-columns:24px min-content 1fr;
+    grid-column-gap:10px;
+    align-items:center;
+    margin-top:15px;
+}
+
+.Item {
+    display:contents;
+}
+
+.Doc {
+    width:16px;
+}

@@ -1,0 +1,58 @@
+﻿@page "/test"
+@page "/{LangSegment}/test"
+@inject CultureService culture
+@inject AppStateService appState
+
+@inherits _PageBase
+
+<div class="Wrapper900">
+    <p>
+        <h2>The standard Lorem Ipsum passage, used since the 1500s</h2>
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+    </p>
+    <p>
+        <h2>Section 1.10.32 of "de Finibus Bonorum et Malorum", written by Cicero in 45 BC</h2>
+        "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
+    </p>
+    <div class="WhatsApp">
+        <a href="https://wa.me/34932541522">
+        </a>
+    </div>
+</div>
+
+<PageTitle>4moms Developer | Test page</PageTitle>
+
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+
+@code {
+    private UserModel? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            user = await appState.GetAsync<UserModel>("User", "621FF6C2-1065-4273-A8EB-AC74E18E6DCF");
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+
+    async Task OnClick()
+    {
+        var dataurl = "data:image/svg+xml;base64,DQo8c3ZnIGhlaWdodD0iMjUwMCIgdmlld0JveD0iMTE4LjkgMzYwLjggNjU2LjcgMTc5LjMiIHdpZHRoPSIyNTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Im0xOTIgMzYyYy0zOC43IDMuNC00OS42IDYuNy01OS40IDE4LjEtNi42IDcuOC05LjUgMTUuOC0xMi4xIDMyLjktMS40IDkuNS0xLjYgMTYuNy0xLjIgNDEuNS41IDM2LjggMi4xIDQ3LjEgOS4zIDU5LjUgOCAxMy43IDE4LjcgMTguNiA0OC45IDIyLjUgMjguNCAzLjYgNzIuNC41IDg5LTYuMiA0LjMtMS44IDExLjUtNy4yIDE1LjItMTEuMyAyLjktMy4zIDcuNy0xMy4yIDkuMy0xOS41IDMuMi0xMi4zIDQuOC01MC4xIDMtNzQuNC0xLjktMjYuNS01LjQtMzcuNC0xNS4yLTQ3LjItNC41LTQuNi0xNi0xMC45LTE5LjYtMTAuOS0uOSAwLTQuNi0uNi04LjItMS41LTEyLjctMi44LTQ0LjUtNC43LTU5LTMuNXptLTE1LjYgMzMuNmMuMy45LjYgMTUuNi42IDMyLjcgMCAyOSAuMSAzMS40IDEuOSAzNC40IDIuNyA0LjQgOC4xIDUuMyAzMiA1LjMgMTUuMyAwIDIwLjEtLjMgMjEtMS4zLjctLjkgMS4yLTEwLjEgMS4zLTI2LjhsLjMtMjUuNCA4LjQtLjNjNC42LS4yIDguOS4yIDkuNC43LjYuNi45IDEwLjcuOCAyNS4zLS4yIDIzLjItLjEgMjQuNSAxLjggMjYuMiAxLjEgMSAyLjQgMS41IDIuOSAxLjIgMi4yLTEuMyAzLjMgMi40IDMgMTAuNnMtLjMgOC4zLTMuMSA4LjZjLTMuOC41LTQuOCAzLjEtNC41IDExLjIuMSAzLjktLjMgNy41LS44IDgtLjcuNy00LjYgMS05LjUuOGwtOC40LS4zLS41LTkuNS0uNS05LjUtMjgtLjVjLTMxLS42LTMwLjYtLjUtMzguNi03LjctNC42LTQuMS02LjgtNy44LTguNi0xNC4zcy0xLjgtNjkuNiAwLTcwLjNjLjYtLjMgNS4xLS42IDkuOC0uNiA3LjEtLjEgOC44LjIgOS4zIDEuNXptMTYyLjEgMTguOGMtMTIuOCAzLjctMjEuNiAxMi42LTI1LjIgMjUuNi0uOCAyLjktMS4yIDEyLTEuMyAyNS44djIxLjNsNS44LS4zIDUuNy0uMy42LTIxYy4zLTEyLjYgMS0yMi41IDEuOC0yNC45IDEuOS01LjcgOC44LTEyLjEgMTUuMi0xNCA2LjMtMS45IDcuOS0yIDEzLjMtLjQgNS41IDEuNSAxMS44IDYuOCAxNC43IDEyIDIuMiA0LjEgMi4zIDUuNSAyLjYgMjUuOC4yIDExLjguMyAyMS45LjMgMjIuM3MyLjYuNyA1LjguNWw1LjctLjMuNi0yMS41Yy4zLTExLjggMS0yMi44IDEuNC0yNC40LjQtMS41IDMuMS01LjIgNi04IDYuNS02LjUgMTMuNC04LjcgMjEuMi02LjYgNi42IDEuNyAxMS44IDUuMyAxNSAxMC4zbDIuOCA0LjIuNSAyMyAuNSAyM2gxMmwtLjEtMjMuNWMtLjEtMjYuNi0uNS0yOC4zLTguNS0zNy4zLTEzLjgtMTUuNy0zNy4xLTE2LjktNTItMi42LTIuMiAyLjEtNC42IDMuOS01LjMgMy45LS42IDAtMy0xLjgtNS4xLTQuMS00LjctNC43LTgtNi41LTE1LjMtOC41LTYuMS0xLjYtMTMtMS42LTE4LjcgMHptMTU1IC4xYy03LjMgMi4xLTEwLjkgNC4zLTE1LjYgOS4yLTcuNyA4LTEwLjkgMTUuOS0xMC45IDI2LjcgMCAxNS43IDguMSAyNy44IDIzLjQgMzQuOCAyLjcgMS4zIDYuMyAxLjggMTIuOCAxLjggNy45IDAgOS42LS4zIDE1LjEtMy4xIDYuNC0zLjEgMTMuMi04LjggMTQuOC0xMi40LjUtMS4xIDEuMy0yLjcgMS44LTMuNSAzLjQtNS42IDQuMy0xMCAzLjktMTkuMS0uMy03LjctLjktMTAuNC0zLjEtMTUtMy02LjEtMTAuMS0xMy45LTE1LTE2LjQtOC4yLTQuMi0xOS4yLTUuNC0yNy4yLTN6bTE1LjkgMTEuN2M5LjkgMi44IDE3LjYgMTMuMyAxNy42IDIzLjkgMCAyMi43LTI1LjggMzMuNC00MS42IDE3LjEtMS45LTEuOS0zLjQtNC4xLTMuNC00LjcgMC0uNy0uNy0yLjYtMS41LTQuMS01LjQtMTAuNCAzLjctMjkuMSAxNS42LTMyIDYuMi0xLjUgOC42LTEuNiAxMy4zLS4yem03Ny4xLTExLjhjLTExLjkgMy40LTIwLjIgMTEuNS0yNC45IDI0LjQtMS4zIDMuNC0xLjYgOC43LTEuNiAyNi4ydjIyaDEydi0yMC41YzAtMjIgLjYtMjUuMyA1LjgtMzIuMiA1LjEtNi45IDE1LjYtMTAuNSAyMy44LTguMyA2LjQgMS43IDEyLjkgNyAxNS45IDEzLjEgMi40IDQuNyAyLjUgNS40IDIuNSAyNi40djIxLjVoMTJ2LTIxLjJjMC0yMC44IDAtMjEuMiAyLjYtMjYuNSA3LjItMTQuNyAyNS44LTE4LjYgMzYuOS03LjcgNy43IDcuNSA4LjUgMTAuNiA4LjUgMzQuNXYyMC45aDEydi0yMS44YzAtMTguNC0uMy0yMi41LTEuOC0yNi43LTIuOC03LjctNC43LTEwLjktOS42LTE1LjYtMTMuNy0xMy0zNi4yLTEzLTQ5LjEgMC0yLjIgMi4yLTQuNiA0LTUuNCA0LjEtLjcgMC0zLjEtMS44LTUuMy00LTQuNy00LjYtOC4zLTYuNi0xNS42LTguNi02LjEtMS42LTEzLTEuNi0xOC43IDB6bTEzNy41LS4xYy05LjIgMy0xNCA5LjgtMTQgMTkuNSAwIDQuOS41IDYuNiAyLjkgOS44IDYuMSA4LjQgMTEgMTAuNCAyNS45IDEwLjQgOS43LjEgMTEgLjMgMTMuNiAyLjQgMi4zIDEuOSAzIDMuNCAzLjQgNy40LjQgNC40LjEgNS4zLTIuNiA4LjNsLTMgMy40LTE2LjQuMmMtOSAuMi0xNi42LjMtMTcgLjMtMS40IDAtLjkgMTEgLjUgMTEgLjYuMSA5IDAgMTguNSAwIDE2LjUtLjEgMTcuNi0uMiAyMS4xLTIuNSA2LTMuNyA5LjktOS40IDEwLjctMTUuMyAxLjEtOC40LS4yLTEzLjQtNC42LTE4LjUtNi41LTcuMy0xMC4yLTguNy0yMy4yLTguNy05LjUgMC0xMS41LS4zLTE0LjQtMi4xLTMtMS44LTMuNC0yLjUtMy40LTYuNSAwLTMuOS40LTQuNyAzLjMtNi40IDIuOC0xLjcgNS0yIDE2LjctMiA3LjQgMCAxNC4xLS40IDE0LjgtLjkuOS0uNSAxLjItMi41IDEtNS43bC0uMy00LjktMTUtLjJjLTkuMS0uMS0xNi40LjMtMTguNSAxem00My44LjdjLTEgLjYtMS40IDEuOC0xLjEgMy4xLjQgMS4yIDAgMi41LS44IDIuOS0uNy41LTEgMS4zLS41IDEuN3MxLjEuMiAxLjMtLjVjLjctMS44IDMtMS41IDMuOC41LjYgMS42LjggMS41IDIuNS0uNyAyLjEtMi43IDIuNi01IDEtNS0uNSAwLTEgLjktMSAyLjFzLS41IDEuOS0xLjIgMS42Yy0uNy0uMi0xLjMtMS44LTEuMy0zLjUgMC0zLjUtLjItMy42LTIuNy0yLjJ6Ii8+PC9zdmc+";
+        var text = "<img src='" + dataurl + "'/>";
+
+        var subject = base.Tradueix("Tu consulta a 4moms", "La teva consulta a 4moms", "Your 4moms inquiry", "Tu consulta a 4moms");
+        var body = culture.Localize("ContactRequest.ConfirmationMailBody", "lore ipsum..." + text);
+        var templatedBody = Shop4moms.Services.MailService.TemplatedBody(body);
+        await base.MailUserAsync(subject, templatedBody, false);
+
+    }
+}
+

@@ -1,0 +1,28 @@
+﻿.TogglePanel {
+    margin-top:15px;
+}
+
+.OrderLines {
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: min-content min-content min-content 1fr min-content min-content min-content;
+    grid-column-gap: 10px;
+}
+
+.ButtonsBar {
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+.Transporters {
+    display:grid;
+    grid-template-columns: min-content min-content min-content;
+    grid-column-gap:10px;
+    margin:15px 0;
+}

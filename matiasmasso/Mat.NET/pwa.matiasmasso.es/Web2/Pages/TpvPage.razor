@@ -1,0 +1,96 @@
+﻿@page "/{LangSegment}/tpv"
+@page "/tpv"
+@layout ProLayout
+@inject CultureService culture
+@inject SessionStateService session
+@inject TpvService tpvService
+
+<AuthorizeView>
+    <Authorized>
+        <div class="PageWrapper600">
+            <h3>@culture.Localize("Payments")</h3>
+
+            <div class="Info">
+                @culture.Tradueix("Al pulsar 'Siguiente' será reenviado a la página segura de pagos de nuestra entidad bancaria")
+            </div>
+
+            <div class="Grid">
+                <label>
+                    @culture.Localize("Payment.Concept")
+                </label>
+                <div >
+                    <input type="text" class="Concept" @bind-value="@concept" placeholder="@culture.Localize("Payment.Concept.Placeholder")" />
+                </div>
+                <label>
+                    @culture.Localize("Amount.Eur")
+                </label>
+                <div>
+                    <input type="num" class="Eur" @bind-value="@eur" />
+                </div>
+                <div class="ButtonsBar">
+                    <button class="Button ButtonOk" @onclick="Submit">@culture.Localize("Next")</button>
+                </div>
+            </div>
+
+            <PostForm Url="@tpv?.Gateway()" Data="formData"></PostForm>
+
+        </div>
+    </Authorized>
+
+    <NotAuthorized>
+        <Login></Login>
+    </NotAuthorized>
+
+</AuthorizeView>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private Dictionary<string, string>? formData;
+    private DTO.Integracions.Redsys.Tpv? tpv;
+
+    private string? concept;
+    private decimal eur;
+    private bool isSubmitting;
+
+    async Task Submit()
+    {
+        //isSubmitting = true;
+        //tpv = tpvService.Tpv(culture.Lang());
+        //if (eur == null || eur == 0) throw new Exception("empty amount not allowed");
+        //if (string.IsNullOrEmpty(concept)) throw new Exception("empty concept not allowed");
+
+        //var tpvBookRequest = tpv!.BookRequest(session.User,concept,eur);
+        //try
+        //{
+        //Values = await appstate.GetAsync<List<NominaModel>>("Nominas") ?? new();
+
+        //} catch (Exception ex)
+        //{
+            
+        //}
+
+        //var tpvResponse = await PostAsync<DTO.Integracions.Redsys.TpvLog, string>(tpvBookRequest, "Redsys/BookRequest");
+        //if (tpvResponse.Success())
+        //{
+        //    basket.TpvOrderNum = tpvResponse.Value!;
+
+        //    var apiResponse = await PostAsync<ShoppingBasketModel, bool>(basket, "ShoppingBasket");
+        //    if (apiResponse.Success())
+        //    {
+        //        var request = tpv!.Request(basket.TpvOrderNum, basket.OrderNum!, basket.Cash(), basket.Lang.ToString());
+        //        formData = request.FormData();
+        //    }
+        //    else
+        //    {
+        //        problemDetails = apiResponse.ProblemDetails;
+        //        isSubmitting = false;
+        //    }
+        //}
+        //else
+        //{
+        //    problemDetails = tpvResponse.ProblemDetails;
+        //    isSubmitting = false;
+        //}
+
+    }
+}

@@ -1,0 +1,78 @@
+﻿@page "/Templates"
+@page "/{LangSegment}/Templates"
+
+@implements IDisposable
+@inject CultureService culture
+@inject TemplatesService templatesService
+@inject NavigationManager navigationManager
+
+<div class="PageWrapper600">
+    <h3>Templates page</h3>
+
+    <PageOptions>
+        <a href="#" @onclick="AddNew" @onclick:preventDefault>
+            @culture.Tradueix("AddNew")
+        </a>
+    </PageOptions>
+
+    <SearchBox @bind-Value="searchterm"></SearchBox>
+
+    <div class="Grid">
+        <div class="ColHeaders">
+            <div>@culture.Localize("Nom")</div>
+        </div>
+
+    @foreach (var item in FilteredItems() ?? new())
+    {
+        <a href="#"
+           class="Item"
+       @onclick="@(()=>ItemClick(item))"
+        @onclick:preventDefault>
+            @item.Nom
+        </a>
+    }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    List<TemplateModel>? Items;
+    string? searchterm;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        templatesService.OnChange += Refresca;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    void ItemClick(TemplateModel item)
+    {
+        navigationManager.NavigateTo("/Template/" + item.Guid.ToString());
+    }
+
+    List<TemplateModel>? FilteredItems()
+    {
+        return templatesService.Values?.Where(x => x.Matches(searchterm)).ToList();
+    }
+
+    void AddNew()
+    {
+        var item = new TemplateModel() { Nom = "another fake template" };
+        Items!.Add(item);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        templatesService.OnChange -= Refresca;
+    }
+}

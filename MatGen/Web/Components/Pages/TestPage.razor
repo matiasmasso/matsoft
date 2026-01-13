@@ -1,0 +1,28 @@
+﻿@page "/test"
+@inject ApiService ApiService
+
+
+
+<div class="Container">
+    <input type="text" placeholder="YYYYMMDD" />
+    <select>
+        @foreach (var q in Enum.GetValues<FchModel.Qualifiers>())
+        {
+            <option value="@q">@q.ToString()</option>
+        }
+    </select>
+    <input type="text" placeholder="YYYYMMDD" />
+</div>
+
+@code {
+    void OnClick()
+    {
+        var parents = ApiService.DocSrcs()?.Where(x => x.Parent == null && x.Repo != null).ToList();
+        foreach(var item in parents ?? new())
+        {
+            
+        }
+    }
+
+
+}

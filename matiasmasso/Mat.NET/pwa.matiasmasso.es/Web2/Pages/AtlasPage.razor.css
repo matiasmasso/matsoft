@@ -1,0 +1,22 @@
+﻿.LookuÈmps {
+    position: relative;
+}
+
+.Grid {
+    display:flex;
+    flex-direction:column;
+}
+
+.SeeMore {
+    padding: 10px 0;
+    color: gray;
+}
+
+.SeeMore:hover {
+    color:black;
+}
+
+.Country, .Zona, .Location, .Item {
+    display:block;
+    cursor:pointer;
+}

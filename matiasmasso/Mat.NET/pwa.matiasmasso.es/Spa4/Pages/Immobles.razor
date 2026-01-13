@@ -1,0 +1,59 @@
+﻿@page "/Immobles"
+@inherits _ComponentBase
+@layout ProLayout
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Inmuebles","Immobles","Real State")</h1>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Grid">
+        @if (base.IsLoaded)
+        {
+            foreach (var item in model.Where(x => x.Matches(searchTerm)))
+            {
+                <a href="@item.Url()" class='Row @(item.FchTo != null ? "Obsoleto" : "")'>
+
+                    <div>
+                        @item.Nom
+                    </div>
+
+                    <div>
+                        @item.FchFrom?.ToString("dd/MM/yyyy")
+                    </div>
+
+                </a>
+            }
+        }
+        else
+        {
+            <div>loading...</div>
+        }
+    </div>
+</div>
+
+
+
+
+@code {
+    private List<ImmobleDTO>? model;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            await Fetch();
+            StateHasChanged();
+        };
+    }
+
+
+    private async Task Fetch()
+    {
+        model = await base.GetAsync<List<ImmobleDTO>>("Immobles");
+    }
+
+}

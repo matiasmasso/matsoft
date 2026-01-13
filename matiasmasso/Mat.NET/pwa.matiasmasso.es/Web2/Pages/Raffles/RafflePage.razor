@@ -1,0 +1,83 @@
+﻿@page "/sorteo/{Guid:guid}"
+@page "/ca/sorteig/{Guid:guid}"
+@page "/en/raffle/{Guid:guid}"
+@page "/sorteio/{Guid:guid}"
+
+@implements IDisposable
+
+@inject CultureService culture
+@inject RafflesService rafflesService
+
+<div class="PageWrapper600">
+
+    <div class="Banner">
+        <img src="@model?.ImgBanner600Url()" alt="@model?.Title" width="600" height="200" />
+    </div>
+
+    <h3 class="Title">@model?.Title</h3>
+
+    <div class="Grid">
+        <div class="Label">@culture.Localize("Raffle.FchFrom")</div>
+        <div class="Value">@model?.FchFrom?.ToString("dd /MM/yy")</div>
+        <div class="Label">@culture.Localize("Raffle.FchTo")</div>
+        <div class="Value">@model?.FchTo?.ToString("dd/MM/yy")</div>
+        <div class="Label">@culture.Localize("Raffle.Product")</div>
+        <div class="Value">@rafflesService.ProductName(model, culture.Lang())</div>
+        <div class="Label">@culture.Localize("Raffle.ParticipantsCount")</div>
+        <div class="Value">@model?.LeadsCount.ToString("N0")</div>
+        <div class="Label">@culture.Localize("Raffle.RightAnswer")</div>
+        <div class="Value">@model?.Answer(model?.RightAnswer)</div>
+        <div class="Label">@culture.Localize("Raffle.Winner")</div>
+        <div class="Value">
+            <div>@model?.WinnerFullNom()</div>
+            @if (model?.Winner?.Ticket != null)
+            {
+                <div>ticket @model?.Winner?.Ticket?.ToString("N0")</div>
+            }
+        </div>
+        <div class="Label">@culture.Localize("Raffle.Distributor")</div>
+        <div class="Value">
+            @foreach (var line in rafflesService.DistributorNameAndAddressLines(model))
+            {
+                <div>@line</div>
+            }
+        </div>
+    </div>
+
+    @if (model?.HasImgWinner ?? false)
+    {
+        <div class="PrizePicture">
+            <img src="@model.WinnerImgUrl()" alt="@culture.Localize("Raffle.PrizePicture")" />
+        </div>
+    }
+
+    <NavLink class="SeeAll" href="@culture.RelativeUrl(culture.Tradueix("sorteos","sortejos","raffles","sorteios"))">
+        (@culture.Localize("Raffles.SeeAll"))
+    </NavLink>
+
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    RaffleModel? model;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        rafflesService.OnChange += Refresca;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        model = rafflesService.GetValue(guid);
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        rafflesService.OnChange -= Refresca;
+        culture.OnChange -= Refresca;
+    }
+
+}

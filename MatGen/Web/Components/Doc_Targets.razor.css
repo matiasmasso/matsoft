@@ -1,0 +1,89 @@
+﻿/*issues found?*/
+
+.ActionBar {
+    display:flex;
+    gap:10px;
+}
+.Grid {
+    display: grid;
+    grid-template-columns: 20px minmax(100px,min-content) minmax(150px,1fr) ;
+    grid-column-gap: 10px;
+    margin-top: 15px;
+}
+
+.Item {
+    display:contents;
+}
+
+.DocRel, .Target {
+    display:block;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+    .Ellipsis {
+        opacity:0.0;
+        width:10px;
+        margin:0 auto;
+        padding:0 2px;
+        cursor:pointer;
+    }
+
+
+
+.Item:hover .Ellipsis {
+    opacity: 1.0;
+}
+
+.Ico ::deep .Svg {
+    width: 12px;
+    min-width: 12px;
+}
+
+.Ancestor {
+    color: red !important;
+}
+
+.HasGrau {
+    color: navy !important;
+}
+
+.DropdownContainer {
+    position:relative;
+}
+
+.Dropdown {
+    position: relative;
+    top: 1em;
+    left:-20px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-left: 1px solid #DDDDDD;
+    border-right: 1px solid #DDDDDD;
+    border-bottom: 1px solid #DDDDDD;
+    background-color: white;
+    min-width: 100px;
+    width: max-content;
+    box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+    padding-top: 5px;
+}
+
+    .Dropdown .Item {
+        display: block;
+        padding: 4px 10px 2px;
+    }
+
+@media (max-width:599px) {
+    .Grid {
+        grid-template-columns: 20px minmax(100px,min-content) minmax(150px,1fr) /* 24px*/;
+    }
+}
+
+@media (min-width:600px) {
+    .Item:hover > .Nom {
+        background-color: #E0E0E0;
+    }
+}
+

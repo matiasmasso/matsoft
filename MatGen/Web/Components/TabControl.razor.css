@@ -1,0 +1,54 @@
+﻿/*issues found?*/
+
+.TabControlWrapper {
+    display:flex;
+    flex-direction:column;
+    min-height:400px;
+}
+
+
+.TabButtons {
+    display: flex;
+    overflow: auto;
+    /*overflow-x: hidden;*/
+}
+
+.TabButton {
+    display: block;
+    padding: 5px 15px;
+    border-top: 1px solid gray;
+    border-left: 1px solid gray;
+    border-right: 1px solid gray;
+    border-radius: 0 6px 0 0;
+    white-space: nowrap;
+}
+
+    .TabButton.Active {
+        color: red;
+        border-bottom: none;
+    }
+
+    .TabButton.Passive {
+        color: navy;
+        border-bottom: 1px solid gray;
+        background-color: #F5F5F5;
+    }
+
+    .TabButton.Spacer {
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        border-bottom: 1px solid gray;
+        width:100%;
+    }
+
+.TabPageContent {
+    border-left: 1px solid gray;
+    border-right: 1px solid gray;
+    border-bottom: 1px solid gray;
+
+    padding: 15px 10px;
+    /*height:calc(100% - 38px);*/
+    min-height:50vh;
+}
+ 

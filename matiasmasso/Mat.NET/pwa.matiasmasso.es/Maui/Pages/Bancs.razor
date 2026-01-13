@@ -1,0 +1,65 @@
+﻿@page "/Bancs"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Entidades bancarias","Entitats bancaries","Banks")</h1>
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        @if (model.Count > 5)
+        {
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+        }
+
+        <div class="ShowObsolets">
+            <Toggle Label="@base.Tradueix("Incluir obsoletos","Inclou obsolets","Include outdated")"
+                @bind-Value="@IsShowingObsolets"></Toggle>
+        </div>
+
+@*        <div class="Summary">
+            @string.Format("S'han trobat {0} entitats, {1} en actiu",model.Count(), model.Where(x => x. == null).Count())
+        </div>
+*@
+        <div class="Grid">
+                @foreach (var item in model!.Where(x => x.Matches(searchTerm)))
+                {
+                    <BancSaldoItem Item="@item" ShowEmp="@showEmp" ItemClicked="@(()=>ItemClicked(item))"></BancSaldoItem>
+                }
+        </div>
+
+    }
+</div>
+
+
+
+
+@code {
+    private List<BancDTO.Saldo>? model;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+    private bool showEmp = false;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            model = await base.GetAsync<List<BancDTO.Saldo>>("Bancs/Saldos");
+            if (model.Count > 0)
+                showEmp = model.Any(x => x.Emp != model.First().Emp);
+            StateHasChanged();
+        };
+    }
+
+    private void ItemClicked(BancDTO.Saldo item)
+    {
+        NavigationManager.NavigateTo("/PgcCtaSdos/" + item.Guid.ToString());
+    }
+
+
+
+}

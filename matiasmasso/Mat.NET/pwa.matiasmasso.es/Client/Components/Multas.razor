@@ -1,0 +1,44 @@
+﻿@using DTO
+@using Client.Shared
+@using Client.ViewModels
+
+@inject AppState AppState
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Multas> Loc
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <SearchBox @bind-Value="@viewModel.SearchTerm"></SearchBox>
+
+        <Virtualize Items="@viewModel.Items()" Context="item">
+            <NavLink href="@item.Url()">
+                 <div class="Nom Truncate">
+                    Expedient: @item.Expedient
+                </div>
+                <div class="Details Truncate">
+                    @item.Fch.ToString("dd/MM/yyyy")
+                </div>
+            </NavLink>
+        </Virtualize>
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public BaseGuid Target { get; set; }
+
+    private MultasViewModel? viewModel;
+
+    protected override void OnParametersSet()
+    {
+        viewModel = new MultasViewModel(AppState, Target);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+        base.OnParametersSet();
+    }
+
+
+}

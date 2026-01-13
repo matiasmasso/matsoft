@@ -1,0 +1,172 @@
+﻿@inject ApiService ApiService
+
+<PropertyGrid Model="propertyGrid"
+              ItemChanged="ItemChanged"
+              UpdateRequest="UpdateAsync"
+              CancelRequest="CancelRequest"
+              UpdateState="UpdateState()">
+</PropertyGrid>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public DocfileModel? Docfile { get; set; }
+    [Parameter] public EventCallback RequestToClose { get; set; }
+    [Parameter] public EventCallback<CcaModel> AfterUpdate { get; set; }
+
+    private Model? value;
+    private PropertyGridModel? propertyGrid;
+    private CrudButton.States updateState;
+    private List<PgcCtaModel>? ctas;
+
+    private EmpModel.EmpIds emp;
+    private Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Fch,
+        Employee,
+        Concept,
+        Devengat,
+        SegSocial,
+        Liquid,
+        Docfile
+    }
+
+    protected override void OnInitialized()
+    {
+        ApiService.OnChange += Refresca;
+        value = new Model { Fch = DateOnly.FromDateTime(DateTime.Today) };
+        emp = (EmpModel.EmpIds)ApiService.DefaultEmp()!;
+    }
+
+    protected override void OnParametersSet()
+    {
+        propertyGrid = PropertyGrid();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var contacts = ApiService.GetContacts(emp);
+        var retval = new PropertyGridModel();
+        retval.AddEmp(emp);
+        retval.AddDateOnly("Data", value?.Fch);
+        retval.AddGuidnom("Empleat", value?.Employee, contacts);
+        retval.AddString("Concepte", value?.Concept, 60);
+        retval.AddEur("Devengat", value?.Devengat);
+        retval.AddEur("Seg.Social", value?.SegSocial);
+        retval.AddEur("Liquid", value?.Liquid());
+        retval.AddDocfile(value?.Docfile);
+        return retval;
+    }
+
+    void ItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+        else if (args.Field == (int)Fields.Employee)
+        {
+            var val = CurrentValue();
+            var item = (PropertyGridModel.Item<string>)propertyGrid!.Items.First(x => x.Field == (int)Fields.Concept);
+            if (!item.IsDirty)
+            {
+                if (val?.Employee == null)
+                    item.Value = "Nómina";
+                else
+                {
+                    var contact = ApiService.GetContact(val?.Employee);
+                    item.Value = $"Nómina de {contact?.FullNom}";
+                }
+            }
+
+        }
+        else if (args.Field == (int)Fields.Devengat || args.Field == (int)Fields.SegSocial)
+        {
+            var val = CurrentValue();
+            var item = (PropertyGridModel.Item<string>)propertyGrid!.GetItem((int)Fields.Liquid);
+            item.Value = val!.Liquid().ToString("0.00", new System.Globalization.CultureInfo("es-ES"));
+        }
+    }
+
+    Model? CurrentValue()
+    {
+        var retval = value;
+        if (retval != null)
+        {
+            retval.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            retval.Fch = propertyGrid!.GetDateOnly((int)Fields.Fch);
+            retval.Employee = propertyGrid.GetGuid((int)Fields.Employee);
+            retval.Concept = propertyGrid.Value<string>((int)Fields.Concept);
+            retval.Devengat = propertyGrid.GetEur((int)Fields.Devengat);
+            retval.SegSocial = propertyGrid.GetEur((int)Fields.SegSocial);
+            retval.Docfile = Docfile;
+        }
+        return retval;
+    }
+
+
+    async Task UpdateAsync()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            var ctaDevengat = ApiService.GetPgcCta(PgcCtaModel.Cods.Nomina);
+            var ctaSegSocial = ApiService.GetPgcCta(PgcCtaModel.Cods.SegSocialDevengo);
+            var ctaPagas = ApiService.GetPgcCta(PgcCtaModel.Cods.PagasTreballadors);
+
+            var nomina = (Model)CurrentValue()!;
+            var cca = CcaModel.Factory(nomina.Emp, ApiService.CurrentUser()!, CcaModel.CcdEnum.Nomina, nomina.Fch);
+            cca.Concept = nomina.Concept;
+            cca.Docfile = nomina.Docfile;
+            cca.AddDebit(nomina.Devengat ?? 0, ctaDevengat!, nomina.Employee);
+            if(nomina.SegSocial != 0)
+                cca.AddCredit(nomina.SegSocial ?? 0, ctaSegSocial!);
+            cca.AddSaldo(ctaPagas!, nomina.Employee);
+
+            await ApiService.PostMultipartAsync<CcaModel, bool>(cca.Docfile, cca, "Cca");
+            await AfterUpdate.InvokeAsync(cca);
+        }
+        catch (Exception ex)
+        {
+            updateState = CrudButton.States.StandBy;
+            exception = ex;
+        }
+    }
+
+
+    CrudButton.States UpdateState()
+    {
+        CrudButton.States retval = updateState;
+        var val = CurrentValue();
+        if (val?.Employee == null | val?.Fch == null | val?.Concept == null | val?.Devengat == null)
+            retval = CrudButton.States.Disabled;
+        return retval;
+    }
+
+    void CancelRequest()
+    {
+        RequestToClose.InvokeAsync();
+    }
+
+    private class Model
+    {
+        public EmpModel.EmpIds Emp { get; set; }
+        public DateOnly? Fch { get; set; }
+        public Guid? Employee { get; set; }
+        public string? Concept { get; set; }
+        public decimal? Devengat { get; set; }
+        public decimal? SegSocial { get; set; }
+        public DocfileModel? Docfile { get; set; }
+
+        public decimal Liquid() => (Devengat ?? 0) - (SegSocial ?? 0);
+    }
+}

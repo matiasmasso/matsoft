@@ -1,0 +1,44 @@
+﻿.Searchbox {
+    margin-top: 15px;
+}
+
+
+
+
+
+@media(max-width:599px) {
+    .Grid {
+        display:flex;
+        flex-direction:column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 1fr min-content;
+        padding:10px 0;
+    }
+}
+
+@media(min-width:600px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: 1fr min-content;
+    }
+
+    .Item {
+        display: contents;
+    }
+
+        .Item > * {
+            padding-top: 4px;
+            padding-bottom: 2px;
+        }
+
+            .Item > *:first-child {
+                padding-right: 10px;
+            }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid #DDDDDD;
+        }
+}

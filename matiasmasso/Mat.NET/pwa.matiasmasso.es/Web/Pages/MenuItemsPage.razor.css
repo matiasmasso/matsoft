@@ -1,0 +1,22 @@
+﻿.Item {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid gray;
+}
+
+    .Item .EditButtons {
+        display: flex;
+        gap: 10px;
+    }
+
+.Buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+
+@media(max-width:600px) {
+    .Item {
+        padding: 10px;
+    }
+}

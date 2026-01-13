@@ -1,0 +1,215 @@
+﻿.body-content {
+    font-family: Open Sans, Arial;
+    font-size: 16px;
+    max-width:950px;
+    margin:auto;
+}
+
+header {
+    position: relative;
+}
+
+header .banner img {
+    width:100%;
+    height: auto;
+}
+
+
+.banner {
+    position: relative;
+}
+
+.BlogTitle {
+    position: absolute;
+    bottom: 0;
+    left: 22%;
+    font-size: 36pt;
+    font-weight: 600;
+    color: gray;
+}
+
+
+
+/*--------------------------------------Top Nav Bar-------------------------------------------------*/
+
+.topnavbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+    .topnavbar .dropdown {
+        position: relative;
+        display: inline-block;
+        padding: 4px 12px;
+        cursor: pointer;
+    }
+
+    .topnavbar .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        padding: 12px 16px;
+        z-index: 1;
+    }
+
+        .topnavbar .dropdown-content div {
+            padding: 4px 12px;
+        }
+
+    .topnavbar .dropdown a:hover, .dropdown:hover {
+        color: red;
+    }
+
+#Hamburger img {
+    display: none;
+}
+
+
+@media screen and (max-width:950px) {
+    .BlogTitle {
+        font-size: 5vw;
+    }
+}
+
+
+@media screen and (min-width: 577px) {
+
+    .topnavbar .dropdown:hover .dropdown-content {
+        display: block;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    nav {
+        display:none;
+    }
+
+    .topnavbar {
+        /*flex-direction: column;
+        display:none;
+            */
+    }
+
+    .popSidenav .topnavbar {
+        display: flex;
+    }
+
+    #Hamburger {
+        position: absolute;
+        right: 0;
+        bottom: 0px;
+        display: block;
+    }
+
+        #Hamburger img {
+            display: block;
+        }
+
+    .PageWrapper {
+       padding-top: 30px;
+    }
+
+}
+---------------------------------------------------------------------------------------*/
+
+.PageWrapper {
+    column-gap: 20px;
+}
+
+#SearchBox {
+    background-color: #F5F5F5;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+#SearchBox .Title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+#SearchBox input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    font-size: 1em;
+    background-image: url('../../Media/Img/Ico/magnifying-glass.jpg');
+    background-repeat: no-repeat;
+    background-position: right;
+    border: 1px solid grey;
+    padding: 4px 7px 2px 4px;
+}
+
+#SubscribeMe {
+    display: flex;
+    flex-direction: column;
+    background-color: #F5F5F5;
+    padding: 10px;
+    margin-bottom: 20px;
+    min-height: 64px;
+}
+
+#SubscribeMe .CallToAction {
+    display: block;
+    font-weight: 600;
+}
+
+#SubscribeMe .Submit {
+    margin-top: 10px;
+    align-self: flex-end;
+}
+
+    #SubscribeMe .Spinner64 {
+        align-self: flex-end;
+    }
+
+
+.LastPostsTitle {
+    display: block;
+    font-weight: 600;
+    margin: 20px 0;
+}
+
+.BlogPosts {
+    background-color: #F5F5F5;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+main {
+}
+
+.bottomFooter {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border-top: 1px solid grey;
+    margin-top: 20px;
+    padding-top: 5px;
+}
+
+@media(max-width:900px) {
+    .AllRightsReserved {
+        display: none;
+    }
+
+    .bottomFooter {
+        font-size: 0.8em;
+    }
+}
+
+@media(max-width:500px) {
+
+    .bottomFooter {
+        flex-direction: column-reverse;
+             border-top: none;
+   }
+
+        .bottomFooter > div {
+            display: flex;
+            justify-content: center;
+            padding-bottom: 5px;
+        }
+}

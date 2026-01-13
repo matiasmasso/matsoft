@@ -1,0 +1,17 @@
+﻿@using System.Globalization
+@using Spa4.Shared
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Footer> Loc
+
+<div class="Bottom">
+    <div class="Copyright">
+        © @(DateTime.Today.Year) - MATIAS MASSO, S.A. @Loc["Copyright"]
+    </div>
+    <div class="Links">
+        <div>@Loc["LegalNotice"]</div>
+        <div>@Loc["Privacity"]</div>
+        <div>@Loc["Cookies"]</div>
+    </div>
+</div>
+
+@code {
+}

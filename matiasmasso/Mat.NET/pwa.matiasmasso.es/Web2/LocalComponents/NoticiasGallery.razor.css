@@ -1,0 +1,34 @@
+﻿.Wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-direction: column;
+}
+.Grid {
+    display: grid;
+    max-width: 100%;
+    grid-template-columns: repeat(auto-fit, 265px);/* minmax(265px, 1fr));*/
+    grid-gap: 10px;
+    text-align: center;
+    margin:0 auto;
+}
+
+.Item {
+      display:flex;
+      flex-direction:column;
+}
+
+.SeeMore {
+    margin-top: 10px;
+    text-align:right;
+}
+
+.Thumbnail {
+    width:100%;
+    height:auto;
+}
+
+.Label {
+    font-size:0.8em;
+    max-width:265px;
+}

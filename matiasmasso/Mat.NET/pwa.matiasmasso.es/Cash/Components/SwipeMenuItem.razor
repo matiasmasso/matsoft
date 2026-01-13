@@ -1,0 +1,38 @@
+﻿
+@if (Model != null)
+{
+    @if (Model.Mode == SwipeMenuModel.Modes.CopyToClipboard)
+    {
+        <div class="MenuItem @Model.Style.ToString()">
+            <CopyButton Value="@Model.Tag?.ToString()" OnCopy="Clicked">
+                @Model.Caption
+            </CopyButton>
+        </div>
+    }
+    else if (Model.Mode == SwipeMenuModel.Modes.Navigation)
+    {
+        <a href="@Model.NavigateTo()" class="MenuItem @Model.Style.ToString()" target="_blank" @onclick="Clicked">
+            <p>@Model.Caption</p>
+        </a>
+    }
+    else
+    {
+        <a href="#" class="MenuItem @Model.Style.ToString()" @onclick="Clicked" @onclick:preventDefault>
+            <p>@Model.Caption</p>
+        </a>
+    }
+}
+
+
+
+@code {
+    [Parameter] public SwipeMenuModel.Item? Model { get; set; }
+    [Parameter] public EventCallback<SwipeMenuModel.Item> OnClick { get; set; }
+
+    void Clicked()
+    {
+        OnClick.InvokeAsync(Model);
+    }
+
+
+}

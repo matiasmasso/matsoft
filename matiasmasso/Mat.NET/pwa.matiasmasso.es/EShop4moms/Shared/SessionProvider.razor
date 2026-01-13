@@ -1,0 +1,191 @@
+﻿@using DTO.Helpers;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using System.Net.Http.Headers;
+@using System.IdentityModel.Tokens.Jwt;
+@using Microsoft.IdentityModel.Tokens;
+@using Newtonsoft.Json;
+@using System.Security.Claims;
+@using System.Text;
+
+
+@implements IDisposable
+@implements Components.ISessionProvider
+@inject ProtectedSessionStorage _sessionStorage
+@inject IAppState appState
+@inject HttpClient http
+@*@inject AuthenticationStateProvider authStateProvider
+*@
+@inject AuthenticationStateProvider authStateProvider
+@inject ICatalogService Catalog
+@inject CultureService Culture
+
+
+
+@if (isLoaded)
+{
+    <CascadingValue Value="@this">
+        @ChildContent
+    </CascadingValue>
+}
+else
+{
+    <p>Loading...</p>
+}
+
+
+@*Shop4moms*@
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    public Shop4moms.SessionState? Session { get; set; }
+    public event EventHandler<EventArgs>? MenuJustLoaded;
+    public bool isLoaded;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        var custAuthProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        //custAuthProvider.TokenChangedAsync += TokenChangedAsync;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Maintains session collection returning current or creating a new one
+            var result = await _sessionStorage.GetAsync<Guid>("sessionId");
+            if (result.Success)
+                Session = (Shop4moms.SessionState)appState.Session(result.Value);
+            else
+            {
+                Session = (Shop4moms.SessionState)appState.AddSession();
+                await _sessionStorage.SetAsync("sessionId", Session.Guid);
+            }
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    public DTO.Integracions.Shop4moms.Cache Cache()
+    {
+        return (DTO.Integracions.Shop4moms.Cache)Catalog.Cache;
+    }
+
+    #region "Basket"
+    public void AddItemToBasket(ShoppingBasketModel.Item item)
+    {
+        Session?.Basket.Items.Add(item);
+        StateHasChanged();
+    }
+
+    public void RemoveItemFromBasket(ShoppingBasketModel.Item item)
+    {
+        Session?.Basket.Items.Remove(item);
+        StateHasChanged();
+    }
+
+    public ShoppingBasketModel.Item? BasketItem(ProductSkuModel? sku)
+    {
+        var retval = Session?.Basket.Items.FirstOrDefault(x => x.Sku == sku?.Guid);
+        if (retval == null && sku != null)
+            retval = new ShoppingBasketModel.Item
+                {
+                    Sku = sku.Guid,
+                    Qty = 0,
+                    Price = Price(sku)
+                };
+        return retval;
+    }
+
+    public decimal? Price(ProductSkuModel sku)
+    {
+        var cache = Cache();
+        var rrpp = cache.RetailPrices.FirstOrDefault(x => x.Guid == sku.Guid);
+        var offer = cache.Offers.FirstOrDefault(x => x.Guid == sku.Guid);
+        var retval = offer == null ? rrpp?.Value : offer.Value;
+        return retval;
+    }
+
+    #endregion
+
+    #region "http"
+    public async Task<ApiResponse<T>> GetAsync<T>(params string[] segments) => await HttpService.GetAsync<T>(http, segments);
+
+    #endregion
+
+
+    #region "auth token"
+
+    public async Task TokenChangedAsync(object? sender, EventArgs args)
+    {
+        var token = ((MatEventArgs<string>)args)?.Value;
+        if (token == null)
+        {
+            http.DefaultRequestHeaders.Authorization = null;
+            Session!.Basket.User = null;
+        }
+
+        else
+        {
+            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            Session!.Basket.User = await GetUserFromIdentity();
+        }
+        //await LoadNav();
+    }
+
+    public async Task<UserModel?> GetUserFromIdentity()
+    {
+        UserModel? retval = null;
+        var authstate = await authStateProvider.GetAuthenticationStateAsync();
+        var claims = authstate.User.Claims;
+        var claim = claims.FirstOrDefault(x => x.Type == "UserId");
+        if (claim != null)
+        {
+            retval = new UserModel(new Guid(claim.Value));
+            retval.Rol = claims.FirstOrDefault(x => x.Type == "Rol")?.Value.ToEnum<UserModel.Rols>() ?? 0;
+            retval.Nickname = claims.FirstOrDefault(x => x.Type == "DisplayName")?.Value;
+            retval.EmailAddress = claims.FirstOrDefault(x => x.Type == "Email")?.Value;
+            retval.Hash = claims.FirstOrDefault(x => x.Type == "Hash")?.Value;
+            var emps = claims.FirstOrDefault(x => x.Type == "Emps")?.Value;
+
+        }
+        return retval;
+    }
+
+
+    public async Task LogoutAsync()
+    {
+        await ((CustomAuthenticationStateProvider)authStateProvider).LogoutAsync();
+    }
+
+    public void Dispose()
+    {
+        //((CustomAuthenticationStateProvider)authStateProvider).TokenChangedAsync -= TokenChangedAsync;
+    }
+
+    #endregion
+
+    #region "Browser History"
+
+    public void AddToBrowserHistory(string url)
+    {
+        if (Session!.BrowserHistory.Count == 0 || url != Session!.BrowserHistory.Last())
+            Session!.BrowserHistory.Add(url);
+    }
+
+    public void RemoveLastBrowserHistory()
+    {
+        Session!.BrowserHistory.RemoveAt(Session!.BrowserHistory.Count - 1);
+    }
+
+    public string GetLastBrowserHistory() => Session!.BrowserHistory[Session!.BrowserHistory.Count - 1];
+
+
+
+    #endregion
+
+    //To Deprecate
+    public void AuthenticationStateChanged(UserModel userAccount)
+    {
+        Session!.Basket.User = userAccount;
+    }
+}

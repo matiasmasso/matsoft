@@ -1,0 +1,57 @@
+﻿<div class="SelectedValues">
+    @foreach (var value in values)
+    {
+        <a href="#" @onclick="@(()=>ItemClick(value))" @onclick:preventDefault title="ClicToRemove">
+            <Icon Id="Icon.Ids.Xmark"></Icon>
+            <span>@value.Caption</span>
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public Collection? Values { get; set; }
+    [Parameter] public EventCallback<Collection> ValuesChanged { get; set; }
+    [Parameter] public bool Nested { get; set; } // if removing one item implies removing all folloeing items
+
+    Collection values = new();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        values = Values ?? new();
+    }
+
+    async Task ItemClick(Item item)
+    {
+        var idx = values.IndexOf(item);
+        if (Nested)
+            values.RemoveRange(idx, values.Count - idx);
+        else
+            values.Remove(item);
+        await ValuesChanged.InvokeAsync(values);
+    }
+
+    public class Collection : List<Item>
+    {
+        public Item Add(object tag, string? caption)
+        {
+            var item = new Item(tag, caption);
+            base.Add(item);
+            return item;
+        }
+    }
+
+    public class Item
+    {
+        public object Value { get; set; }
+        public string? Caption { get; set; }
+
+        public Item(object value, string? caption)
+        {
+            Value = value;
+            Caption = caption;
+        }
+
+        public override string ToString() => Caption ?? "{SelectedValues.Item}";
+    }
+}

@@ -1,0 +1,81 @@
+﻿@typeparam TItem where TItem : BaseGuid
+
+<div class="Wrapper @CssClass">
+    <Input type="text" 
+           value=@InternalValue 
+           @oninput="Search" />
+
+    <a href="#" @onclick="ClearText" 
+                @onclick:preventDefault 
+                class="ClearTextButton" >
+        <div hidden=@HideClearTextButton>x</div>
+    </a>
+
+    @if(candidates.Count<20)
+    {
+        @foreach(var item in candidates)
+        {
+            <a href="#" @onclick=@(() => SelectItem(item)) @onclick:preventDefault >
+                <div class="Item">
+                    @item.ToString()
+                </div>
+            </a>
+        }    
+    }
+</div>
+
+
+
+@code {
+    private bool HideClearTextButton;
+    private string? InternalValue
+    {
+        get { 
+            return Value?.ToString() ?? ""; 
+        }
+    }
+
+    private List<TItem> candidates = new List<TItem?>();
+
+    [Parameter]
+    public TItem? Value { get; set; }
+
+    //[Parameter]
+    //public TItem TItem { get; set; }
+
+    [Parameter]
+    public List<TItem> Items { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem> ValueChanged { get; set; }
+
+    [Parameter]
+    public string CssClass {get; set;}
+
+
+    protected override void OnParametersSet()
+    {
+        HideClearTextButton = this.Value == null;
+        base.OnParametersSet();
+    }
+
+    public void Search(ChangeEventArgs args)
+    {
+        var searchterm = args.Value?.ToString() ?? "";
+        candidates = Items.Where(x => ((TItem)x).Matches(searchterm)).ToList();
+    }
+
+    public void SelectItem(TItem item)
+    {
+        candidates = new List<TItem>();
+        HideClearTextButton = false;
+        ValueChanged.InvokeAsync(item);
+    }
+
+    private async void ClearText()
+    {
+        candidates = new List<TItem>();
+        await ValueChanged.InvokeAsync(default(TItem));
+        HideClearTextButton = true;
+    }
+}

@@ -1,0 +1,74 @@
+﻿
+<div class="Grid">
+    @if (isAdding || SelectedValues == null || SelectedValues?.Count == 0)
+    {
+        <div class="IdNom">
+            <LookupIdNom Values="availableValues" ValueChanged="AddedValueChanged"></LookupIdNom>
+        </div>
+    }
+    @foreach (var value in SelectedValues ?? new())
+    {
+        <div class="IdNom">
+        <LookupIdNomsItem Value="value"
+                           SelectedValue="selectedValue"
+                           SelectedValueChanged="SelectedValueChangedHandler"
+                           ZoomRequest="ZoomRequestHandler"
+                           AddNewRequest="AddNewRequestHandler"
+                           RemoveRequest="RemoveRequestHandler"></LookupIdNomsItem>
+        </div>
+    }
+
+
+</div>
+
+
+
+@code {
+    [Parameter] public List<IdNom>? SelectedValues { get; set; }
+    [Parameter] public List<IdNom>? AvailableValues { get; set; }
+    [Parameter] public EventCallback<List<IdNom>> SelectedValuesChanged { get; set; }
+    [Parameter] public EventCallback<IdNom> ZoomRequest { get; set; }
+
+    bool isAdding = false;
+    List<IdNom>? selectedValues;
+    List<IdNom>? availableValues;
+    IdNom? selectedValue;
+    IdNom? valueToAdd;
+    ContextMenuModel? contextMenu;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        availableValues = AvailableValues ?? new();
+        selectedValues = SelectedValues ?? new();
+    }
+
+    void SelectedValueChangedHandler(IdNom args)
+    {
+        selectedValue = args;
+    }
+
+    void ZoomRequestHandler(IdNom args)
+    {
+        ZoomRequest.InvokeAsync(args);
+    }
+
+    void AddNewRequestHandler(IdNom args)
+    {
+        isAdding = true;
+    }
+
+    void RemoveRequestHandler(IdNom args)
+    {
+        SelectedValues!.Remove(args);
+    }
+
+    void AddedValueChanged(IdNom args)
+    {
+        isAdding = false;
+        selectedValues!.Add(args);
+        SelectedValuesChanged.InvokeAsync(selectedValues);
+    }
+}
+
+

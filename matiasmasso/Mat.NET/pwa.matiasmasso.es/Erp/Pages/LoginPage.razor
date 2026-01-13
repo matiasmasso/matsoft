@@ -1,0 +1,49 @@
+﻿@page "/Login"
+
+@inherits _PageBase
+@inject ICookie cookie
+
+<div class="Wrapper600">
+    <AuthorizeView>
+        <Authorized>
+            <div>
+                Welcome, @user?.Nickname
+            </div>
+        </Authorized>
+
+        <NotAuthorized>
+
+            <div class="SignIn">
+                <SignIn Success="@SignInSuccess" Fail="SignInFail"></SignIn>
+            </div>
+
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+
+    UserModel? user;
+
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            user = await SessionProvider?.GetUserFromIdentity();
+        base.OnAfterRender(firstRender);
+    }
+
+    private void SignInFail(ProblemDetails args)
+    {
+        problemDetails = args;
+    }
+
+    private async Task SignInSuccess(string token)
+    {
+        await SessionProvider!.TokenChangedAsync(this, new DTO.Helpers.MatEventArgs<string>(token));
+        NavigationManager?.NavigateTo("/", true);
+    }
+}

@@ -1,0 +1,17 @@
+﻿.Wrapper {
+    position:relative;
+}
+
+.Grid {
+    margin: 10px 0;
+}
+
+.Item {
+    display: block;
+}
+
+.ReadMore {
+    display: block;
+    margin-top: 10px;
+    text-align: right;
+}

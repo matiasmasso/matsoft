@@ -1,0 +1,72 @@
+﻿/*issues found?*/
+
+.Grid {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+}
+
+.Row {
+    display: flex;
+}
+
+.Cell {
+    position: relative;
+    width: 100%;
+}
+
+
+.Node {
+    position:relative;
+    display: block;
+    margin: auto;
+    width: 100px;
+    height: 100px;
+    padding: 10px 5px;
+    border: 1px solid black;
+    text-align: center;
+    border-radius: 2px;
+}
+
+.Node .Background {
+    position:absolute;
+    font-size:5em;
+    font-weight: 900;
+    color:lightgray;
+    top:-12px;
+    left:24px;
+}
+
+.BottomLines {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.Cell:nth-child(even) .BottomLines div:first-child {
+    border-bottom-right-radius: 5px;
+    border-right: 1px solid black;
+    border-bottom: 1px solid black;
+}
+
+.Cell:nth-child(odd) .BottomLines div:nth-child(2) {
+    border-bottom-left-radius: 5px;
+    border-left: 1px solid black;
+    border-bottom: 1px solid black;
+}
+
+.Cell:nth-child(even) .BottomLines div:nth-child(3) {
+    border-left: 1px solid black;
+}
+
+.Cell:nth-child(odd) .Fch {
+    position: absolute;
+    top: 110px;
+    right: -20px;
+    background: white;
+    z-index: 3;
+    padding: 2px 2px 0;
+}
+
+.Cell:nth-child(even) .Fch {
+    display: none;
+}

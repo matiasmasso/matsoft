@@ -1,0 +1,53 @@
+﻿@page "/profile"
+@page "/{LangSegment}/profile"
+@implements IDisposable
+
+@inject CultureService culture
+@inject SessionStateService session
+@inject AtlasService atlasService
+
+<div class="PageWrapper600">
+    <h3>@culture.Localize("Profile")</h3>
+
+    <div>
+        @session.User?.EmailAddress
+    </div>
+
+    <div>
+        @atlasService.Contact(session.User?.DefaultContact)?.RaoSocial
+    </div>
+
+    <div>
+        rol:
+        @session.User?.Rol.ToString()
+    </div>
+    @*
+    @foreach(var claim in session.User?.Claims())
+    {
+        
+    }
+*@</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+        atlasService.OnChange += Refresca;
+    }
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        atlasService.OnChange -= Refresca;
+    }
+
+}

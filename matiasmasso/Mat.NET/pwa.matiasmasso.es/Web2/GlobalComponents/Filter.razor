@@ -1,0 +1,22 @@
+﻿<a href="#" @onclick="OnClickHandler" @onclick:preventDefault>
+    <div>@caption</div>
+    <Icon Id="Icon.Ids.Xmark"></Icon>
+</a>
+
+@code {
+    [Parameter] public IModel? Value { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public EventCallback<IModel> OnClick { get; set; }
+
+    string? caption;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        caption = Label ?? Value?.ToString();
+    }
+    async Task OnClickHandler()
+    {
+        await OnClick.InvokeAsync(Value);
+    }
+}

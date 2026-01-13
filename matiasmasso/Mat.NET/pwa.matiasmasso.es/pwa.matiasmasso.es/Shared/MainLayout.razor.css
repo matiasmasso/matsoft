@@ -1,0 +1,63 @@
+.PageWrapper {
+    max-width: 900px;
+    margin: auto;
+    border: 1px solid black;
+    display: grid;
+    grid-template-areas: "header header header"
+        "left main right"
+        "footer footer footer";
+    grid-template-columns: 265px 1fr 265px;
+    grid-template-rows: min-content 1fr min-content;
+    height: 100%;
+}
+
+header {
+    border: 1px solid blue;
+    grid-area: header;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+aside.Left {
+    border: 1px solid red;
+    grid-area: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+main {
+    grid-area: main;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+aside.Menu {
+    border: 1px solid red;
+    grid-area: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+aside.Right {
+    border: 1px solid green;
+    grid-area: right;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+footer {
+    border: 1px solid blue;
+    grid-area: footer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.NavMenu {
+    margin-top:20px;
+}

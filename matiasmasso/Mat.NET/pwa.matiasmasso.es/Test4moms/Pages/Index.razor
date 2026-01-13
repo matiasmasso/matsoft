@@ -1,0 +1,54 @@
+﻿@page "/"
+@inherits _ComponentBase
+@inject IStringLocalizer<AppResource> Localizer
+@inject AppState AppState
+
+<PageTitle>Index</PageTitle>
+
+@if (SessionProvider?.Cache == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="Gallery">
+        @foreach (var item in Categories())
+        {
+            <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                <div class="Caption">@item.CamelCase4moms(base.Lang())</div>
+                <img src="@SessionProvider.Cache.ImageUrl(item)" width="410" height="410" />
+            </a>
+        }
+    </div>
+}
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    ProblemDetails? problemDetails;
+    ProductCategoryModel? selectedCategory;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if(AppState.Cache == null)
+        {
+            AppState.CatalogLoaded += CatalogLoaded;
+        }
+    }
+
+    void CatalogLoaded(object sender, System.EventArgs args)
+    {
+        StateHasChanged();
+    }
+
+    void ItemClick(ProductCategoryModel category)
+    {
+        NavigateTo("/Category/" + category.Guid.ToString());
+    }
+
+    List<ProductCategoryModel> Categories() => SessionProvider?.Cache?.Categories.Where(x => x.Codi < 2).ToList() ?? new();
+    List<ProductSkuModel> Skus() => SessionProvider?.Cache?.Skus.Where(x => x.Category == selectedCategory!.Guid).ToList() ?? new();
+
+
+}

@@ -1,0 +1,59 @@
+﻿@inherits LayoutComponentBase
+@implements IDisposable
+
+@inject AuthenticationStateProvider authStateProvider
+
+@using System.Globalization
+
+
+<div class="Wrapper">
+    <div class="Header">
+        <Header ToggleMenu="@(()=>{isShowingMenu = !isShowingMenu;})"></Header>
+    </div>
+
+    <main class="Body @(isShowingMenu ? "HideOnMobile":"")">
+        @Body
+    </main>
+
+    <aside class="Menu @(isShowingMenu ? "":"HideOnMobile")">
+        <MainNav Nav="@sessionProvider?.Session?.Nav" MenuItemClicked="@(()=>{isShowingMenu = false;})"></MainNav>
+    </aside>
+</div>
+
+@code {
+    [CascadingParameter] public SessionProvider? sessionProvider { get; set; }
+
+    private NavDTO? nav;
+    private bool isShowingMenu = false;
+    private ProblemDetails? problemDetails;
+
+    protected override void OnInitialized()
+    {
+        authStateProvider.AuthenticationStateChanged += Refresca;
+    }
+
+    void Refresca(Task<AuthenticationState> task)
+    {
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (sessionProvider != null)
+            sessionProvider.MenuJustLoaded += MenuLoaded;
+    }
+
+    private void MenuLoaded(object? sender, EventArgs args) {
+        StateHasChanged();
+    }
+
+    void IDisposable.Dispose()
+    {
+        if (sessionProvider != null)
+            sessionProvider.MenuJustLoaded -= MenuLoaded;
+        authStateProvider.AuthenticationStateChanged -= Refresca;
+    }
+
+
+}

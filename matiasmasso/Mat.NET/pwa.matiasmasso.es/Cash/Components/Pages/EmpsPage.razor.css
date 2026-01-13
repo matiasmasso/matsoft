@@ -1,0 +1,49 @@
+﻿
+
+.Nom {
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.Grayed {
+    color:gray;
+}
+
+@media(max-width:599px) {
+    .HideOnMobile {
+        display: none;
+    }
+
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        padding: 10px 0;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid gray;
+        }
+
+}
+
+
+@media(min-width:600px) {
+    .HideOnDesktop {
+        display: none;
+    }
+
+    .Grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-column-gap: 10px;
+        grid-row-gap: 5px;
+    }
+
+    .Item {
+        display: contents;
+    }
+}

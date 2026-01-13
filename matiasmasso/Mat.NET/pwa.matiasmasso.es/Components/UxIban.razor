@@ -1,0 +1,34 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (CanEdit && isEditing){
+        //TODO: Iban editor
+    } else {
+        @if (Value != null)
+        {
+            <div class="Logo">
+                <img src="@(Value?.BankLogoUrl() ?? "")" alt="logo" width="48" height="48" />
+            </div>
+            <div class="Ccc Truncate">
+                @(Value?.FormatedDigits() ?? "")
+            </div>
+            <div class="Bank Truncate">
+                @(Value?.NomComercialOrRaoSocial() ?? "")
+            </div>
+            <div class="Adr Truncate">
+                @(Value?.FullAddress() ?? "")
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    [Parameter] public IbanModel? Value { get; set; }
+    [Parameter] public EventCallback<IbanModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback<IbanModel> ObjChanged { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+
+    private bool isEditing;
+
+}

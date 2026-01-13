@@ -1,0 +1,154 @@
+﻿@inherits _ComponentBase
+@using System.Runtime.Versioning
+@using System.Text.RegularExpressions
+
+<div class="Wrapper">
+
+    <a class="Thumbnail" href="#"
+       width="@Width"
+       height="@Height"
+       style="width:@(Width)px;height:@(Height)px;"
+       @onclick="Importar" 
+       @onclick:preventDefault>
+
+        <img src="@_src" 
+             @onerror="ImgOnError"
+             @onload="ImgOnLoad" />
+    </a>
+
+    <UxError ProblemDetails="@problemDetails"></UxError>
+</div>
+
+@code {
+    [Parameter] public string Src { get; set; }
+    [Parameter] public int Width { get; set; }
+    [Parameter] public int Height { get; set; }
+    [Parameter] public EventCallback<Media> ValueChanged { get; set; }
+    private string? features;
+    private string noImg = "/img/noImg.svg";
+    private string imgLoader = "/img/spinner-200px.svg";
+    private string _src;
+    private bool hasLoadedPlaceHolder = false;
+    private bool hasParameters = false;
+    private bool isUploading = false;
+    private bool isDirty = false;
+    new ProblemDetails problemDetails;
+    private FileResult fileResult;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        //Quickly loads spinner
+        //as soon as loaded loads document image
+        _src = imgLoader;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        hasParameters = true;
+        LoadImg();
+    }
+
+    private void LoadImg()
+    {
+        if (hasParameters && hasLoadedPlaceHolder && !isDirty)
+            _src = Src ?? noImg;
+    }
+
+    void Navegar()
+    {
+        base.NavigateToPage(Src);
+    }
+
+    async Task Importar()
+    {
+        try
+        {
+            var customFileType = new FilePickerFileType(
+                new Dictionary<DevicePlatform, IEnumerable<string>>
+                                    {
+                    { DevicePlatform.iOS, new[] { ".jpg" } },
+                    { DevicePlatform.Android, new[] { ".jpg" } },
+                    { DevicePlatform.WinUI, new[] { ".jpg" } },
+                    { DevicePlatform.Tizen, new[] { ".jpg" } },
+                    { DevicePlatform.macOS, new[] { ".jpg" } },
+                                    });
+
+            PickOptions options = new()
+                {
+                    PickerTitle = "Importar document pdf",
+                    FileTypes = customFileType,
+                };
+
+            fileResult = await FilePicker.Default.PickAsync(options);
+            if (fileResult != null && fileResult.FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
+            {
+                isUploading = true;
+                _src = imgLoader;
+                using var stream = await fileResult.OpenReadAsync();
+                var fileBytes = new byte[(int)stream.Length];
+                stream.Read(fileBytes, 0, (int)stream.Length);
+                Media media = new Media(Media.MimeCods.Jpg, fileBytes);
+                media = await Resized(media, 350, 400);
+                _src = media.DataUrl();
+                isDirty = true;
+                await ValueChanged.InvokeAsync(media);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            // The user canceled or something went wrong
+            problemDetails = ProblemDetails.Factory(ex);
+        }
+
+    }
+
+    private async Task<Media> Resized(Media media, int width, int height)
+    {
+        Media retval = null;
+        ApiResponse<Byte[]> apiResponse = await HttpService.PostMultipartAsync<Media, Byte[]>(http, media, media, "media/resize", width.ToString(), height.ToString());
+        if (apiResponse.Success())
+            retval = new Media
+                {
+                    Data = apiResponse.Value,
+                    Mime = media.Mime
+                };
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        return retval;
+    }
+
+
+    void Exportar()
+    {
+
+    }
+
+    void Reset()
+    {
+        _src = null;
+        ValueChanged.InvokeAsync(null);
+    }
+
+    void ImgOnError()
+    {
+        _src = noImg;
+    }
+
+     void ImgOnLoad()
+    {
+        if (!hasLoadedPlaceHolder)
+        {
+            hasLoadedPlaceHolder = true;
+            LoadImg();
+        }
+        //else if (isUploading)
+        //{
+        //    await FileUpload();
+        //    isUploading = false;
+        //}
+    }
+
+}

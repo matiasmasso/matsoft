@@ -1,0 +1,58 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (Value is not null)
+    {
+        @if (Value.IsActive())
+        {
+            <a class="Banner" href="#" @onclick="PlayRaffle" @onclick:preventDefault title="viewModel.Model.Raffle.Caption">
+                <img src="@Value.ImgBanner600Url()" alt="@Value.Title" width="@RaffleModel.BANNER600WIDTH" height="@RaffleModel.BANNER600HEIGHT" />
+            </a>
+        }
+        else
+        {
+            <div class="NextRaffle">
+                <div class="Ico">
+                    <i class="fa-light fa-alarm-clock"></i>
+                </div>
+                <div>
+                    <h1>@Localizer("NextRaffle")</h1>
+                    <div class="Title">@Localizer("Raffle.NextFchFrom",string.Format("{0:dd/MM/yy} {0:HH:mm}", Value.FchFrom))</div>
+                    <div class="Properties">
+                        <UxTimer FchTo="Value.FchFrom" FchReached="@(()=>{StateHasChanged();})"></UxTimer>
+                        
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public RaffleModel Value { get; set; }
+    bool isCurrent = false;
+    bool isNext = false;
+
+    private System.Threading.Timer? Timer;
+    private int seconds = 0;
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isNext = true;
+            Timer = new System.Threading.Timer(_ =>
+            {
+                InvokeAsync(StateHasChanged);
+            }, null, 1000, 1000);
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+
+    private TimeSpan TimeLeft() => (TimeSpan)(Value.FchFrom - DateTime.Now);
+
+    void PlayRaffle() {
+        var url = Value.PlayUrl();
+        navigationManager.NavigateTo(url);
+    }
+}

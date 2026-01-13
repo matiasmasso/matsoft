@@ -1,0 +1,123 @@
+﻿@using BlazorContextMenu;
+@inject IBlazorContextMenuService blazorContextMenuService
+@inject IJSRuntime JS
+
+<div class="Wrapper" @onfocusout="@OnWrapperBlur">
+
+    <input type="text" @bind="caption" @bind:event="oninput" @onfocus="OnTextboxFocus" @onblur="OnTextboxBlur" />
+
+    @if (isShowingDropdown)
+    {
+        <div class="Dropdown" @ref="dropdown" @onfocus="OnDropdownFocus" @onblur="OnDropdownBlur">
+            <Virtualize Items="Items()" Context="item">
+                <a class="Item" href="#" @onclick="@(()=>OptionClick(item))" @onclick:preventDefault>
+                    @item.ToString()
+                </a>
+            </Virtualize>
+        </div>
+    }
+</div>
+
+
+
+@code {
+    [Parameter] public IEnumerable<IModel>? Values { get; set; }
+    [Parameter] public IModel? Value { get; set; }
+    [Parameter] public EventCallback<IModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback<IModel> ItemClick { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsEditing { get; set; }
+
+    private bool textboxHasFocus;
+    private bool dropdownHasFocus;
+    private ElementReference dropdown;
+
+    private string? _caption;
+    private string? caption
+    {
+        get
+        {
+            return _caption;
+        }
+        set
+        {
+            _caption = value;
+            isShowingDropdown = true;
+        }
+    }
+    private bool isShowingDropdown = false;
+    private bool isShowingMenu = false;
+    private bool textboxLostFocus;
+    bool pendingWrapperBlur;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        _caption = Value?.ToString() ?? "";
+    }
+
+    void OnTextboxFocus()
+    {
+        //textboxLostFocus = false;
+        //textboxHasFocus = true;
+        isShowingDropdown = true;
+    }
+
+    async Task OnTextboxBlur()
+    {
+        //textboxLostFocus = true;
+        //textboxHasFocus = false;
+        //if (!dropdownHasFocus) isShowingDropdown = false;
+    }
+
+    void OnDropdownFocus()
+    {
+        //dropdownHasFocus = true;
+        //isShowingDropdown = true;
+    }
+
+    void OnDropdownBlur()
+    {
+        //dropdownHasFocus = false;
+        //if (textboxLostFocus) isShowingDropdown = false;
+    }
+
+    void OnWrapperBlur()
+    {
+        //pendingWrapperBlur = true;
+    }
+
+    List<IModel>? Items()
+    {
+        if (Values == null)
+            return null;
+        else
+        {
+            if (_caption == Value?.ToString() & Values.Count() < 10)
+                return Values.ToList();
+            else
+                return Values
+                .Where(x => x.Matches(caption))
+                .OrderBy(x => x.ToString())
+                .ToList();
+
+        }
+    }
+
+
+    private void OptionClick(IModel item)
+    {
+        caption = item.ToString();
+        Value = item;
+        ValueChanged.InvokeAsync(item);
+        isShowingDropdown = false;
+    }
+
+    //public void SetEditingMode()
+    //{
+    //    isShowingDropdown = true;
+    //}
+
+
+}
+

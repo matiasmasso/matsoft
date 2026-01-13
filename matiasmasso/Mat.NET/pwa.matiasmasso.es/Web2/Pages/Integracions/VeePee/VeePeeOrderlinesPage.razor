@@ -1,0 +1,468 @@
+﻿@page "/VeePee"
+@implements IDisposable
+@layout ProLayout
+@inject IJSRuntime JSRuntime
+@inject CultureService culture;
+@inject SessionStateService session;
+@inject AtlasService atlas;
+@inject TaxesService taxesService;
+@inject ProductsService productsService;
+@inject PurchaseOrdersService purchaseOrdersService;
+@inject DeliveriesService deliveriesService;
+@inject TransmissionsService transmissionsService;
+
+@using Web.Helpers
+
+<div class="PageWrapper900">
+    <h3>VeePee</h3>
+
+    <TogglePanel class="TogglePanel"
+                 Collapsed="isCollapsedFilesUpload"
+                 Caption="@culture.Tradueix("Subida de ficheros","Pujada de fitxers","File upload")">
+        <Dropzone OnChange="FilesUploaded"></Dropzone>
+    </TogglePanel>
+
+    @if (isReading)
+    {
+        <Loading></Loading>
+    }
+    else if (items != null)
+    {
+        <TogglePanel class="TogglePanel"
+                     Collapsed="isCollapsedOrderLines"
+                     Caption="@culture.Tradueix("Lineas de pedido","Linies de comanda","Order lines")">
+            <div class="OrderLines">
+                <div class="Info">
+                    @($"{items.Count:N0} linies de {Comandes():N0} comandes per {Amount():N2} €")
+                    <span>&nbsp;</span>
+                    @if(items?.All(x=>x.Accepted) ?? false)
+                    {
+                        <span>(totes acceptades)</span>
+                    } else
+                    {
+                        <span>@($"acceptades {items?.Where(x=>x.Accepted).Count():N0} linies")</span>
+                    }
+                </div>
+
+                <PageOptions>
+                    <a href="#" @onclick="AcceptAll" @onclick:preventDefault disabled="@(items?.All(x=>x.Accepted) ?? false)" title="activar totes les linies independentment de si hi ha stock">
+                        @culture.Localize("AcceptAll")
+                    </a>
+                </PageOptions>
+
+                <div class="Grid">
+                    <div>&nbsp;</div>
+                    <div>@culture.Localize("Order")</div>
+                    <div>@culture.Localize("Ean")</div>
+                    <div class="Nom">@culture.Localize("Product")</div>
+                    <div class="Num">@culture.Localize("Qty")</div>
+                    <div class="Num">@culture.Localize("Price")</div>
+                    <div class="Num">@culture.Localize("Stock")</div>
+                    @foreach (var item in items ?? new())
+                    {
+                        <div><Toggle @bind-Value="item.Accepted" CanEdit="true"></Toggle></div>
+                        <div>@item.OrderNumber</div>
+                        <div>@item.Ean</div>
+                        <div class="Nom">@item.Sku?.NomLlarg?.Tradueix(culture.Lang())</div>
+                        <div class="Num">@item.Qty</div>
+                        <div class="Num">@($"{item.Price:N2} €")</div>
+                        <div class="Num">@Stock(item)</div>
+                    }
+                </div>
+
+                <div class="ButtonsBar">
+
+                    @if (state == DbState.IsUpdating)
+                    {
+                        <Loading></Loading>
+                    }
+                    else
+                    {
+                        <button class="Button ButtonOk"
+                                disabled="@(!items?.Any(x=>x.Accepted) ?? true)"
+                        @onclick="UpdateAsync">
+                            @culture.Localize("Submit")
+                        </button>
+                    }
+                </div>
+            </div>
+        </TogglePanel>
+
+        @if (isDone)
+        {
+            <TogglePanel class="TogglePanel"
+                         Collapsed="isCollapsedResults"
+                         Caption="@culture.Tradueix("Resultado","Resultat","Result")">
+                <div class="Info">
+                    Les següents transmisions han estat registrades i han quedat pendents d'enviar a magatzem:
+                </div>
+
+                <div class="Transporters">
+                    <div class="Num">Transmisió</div>
+                    <div class="Nom">Transport</div>
+                    <div class="Num">Albarans</div>
+                    @foreach (var transporter in transporters)
+                    {
+                        <div class="Num">@transporter.Transmission?.Id</div>
+                        <div class="Nom">@transporter.Nom</div>
+                        <div class="Num">@transporter.Deliveries.Count</div>
+                    }
+                </div>
+
+                <div class="ButtonsBar">
+                    <button @onclick="DownloadExcel">
+                        Descarregar Excel
+                    </button>
+                    <button @onclick="MoreFiles">
+                        Pujar un altre fitxer
+                    </button>
+                </div>
+
+
+            </TogglePanel>
+        }
+    }
+
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    List<DTO.Integracions.Veepee.OrderLine>? items;
+    EmpModel? emp;
+    ContactModel? mgz;
+    ContactModel? customer;
+
+    DTO.Excel.Sheet? sheet;
+    string? filename;
+    bool isReading;
+    bool isDone;
+    bool requestToDeliver = true;
+    bool requestToTransmit = true;
+    bool isCollapsedFilesUpload = false;
+    bool isCollapsedOrderLines = false;
+    bool isCollapsedResults = false;
+
+    DbState state = DbState.StandBy;
+    PurchaseOrderModel.Resources? resources;
+    List<Transporter> transporters = new();
+
+
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+        customer = await atlas.GetContactAsync(DTO.Integracions.Veepee.Misc.Contact()!.Guid);
+        mgz = await atlas.GetContactAsync(MgzModel.Default()?.Guid);
+        productsService.OnChange += Refresca;
+        Refresca();
+    }
+
+    
+
+    void Refresca(Exception? ex = null)
+    {
+        if (emp == null) emp = session.Emps?.FirstOrDefault(x => x.Id == EmpModel.EmpIds.MatiasMasso);
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task FilesUploaded(List<IBrowserFile> files)
+    {
+        if (files.Count > 0)
+        {
+            isReading = true;
+            try
+            {
+                resources = await purchaseOrdersService.GetResourcesAsync(customer);
+                var file = files.First();
+                filename = file.Name;
+                var mime = Media.MimeCodFromContentType(file.ContentType);
+                var fileBytes = await IBrowserFileHelper.FileBytes(file);
+                if (mime == Media.MimeCods.Xlsx)
+                {
+                    items = Web.Integracions.Veepee.OrderFulfillment.FromExcel(fileBytes);
+                    foreach (var item in items)
+                    {
+                        item.Sku = productsService.SkuFromEan(item.Ean);
+                        item.Price = purchaseOrdersService.Price(item.Sku, resources);
+                    }
+                    foreach (var item in items)
+                    {
+                        var stock = Stock(item);
+                        var unitsOrdered = items.Where(x => x.Sku == item.Sku && x.Accepted).Sum(x => x.Qty);
+                        item.Accepted = item.Sku != null && stock > 0 && stock >= unitsOrdered;
+                    }
+                }
+                else
+                    throw new Exception("S'esperava un fitxer Excel (*.xlsx)");
+                isReading = false;
+                isCollapsedFilesUpload = true;
+                isCollapsedOrderLines = false;
+                StateHasChanged();
+
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+        }
+    }
+
+    int Stock(DTO.Integracions.Veepee.OrderLine item)
+    {
+        return productsService.AvailableStock(item.Sku?.Guid);
+    }
+
+    async Task UpdateAsync()
+    {
+        state = DbState.IsUpdating;
+        try
+        {
+            transporters = items!.GroupBy(x => x.Transporter)
+            .Select(x => new Transporter(x.Key!))
+            .ToList();
+
+            foreach (var transporter in transporters)
+            {
+                transporter.Lines = items!
+                .Where(x => x.Transporter == transporter.Nom)
+                .OrderBy(x => x.OrderNumber)
+                .ToList();
+
+                await UpdateOrdersAsync(transporter);
+                await DeliverAsync(transporter);
+                await TransmitAsync(transporter);
+            }
+
+            isCollapsedOrderLines = true;
+            isCollapsedResults = false;
+            isDone = true;
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task UpdateOrdersAsync(Transporter transporter)
+    {
+        transporter.PurchaseOrders = new();
+        string lastOrderNumber = "lastOrderNumber";
+        PurchaseOrderModel? po = null;
+        @foreach (var line in transporter.Lines)
+        {
+            if (line.OrderNumber != lastOrderNumber)
+            {
+                lastOrderNumber = line.OrderNumber ?? "?";
+                po = PurchaseOrderModel.Factory(session.User!, customer.Guid);
+                po.Emp =  emp!.Id;
+                po.Cod = PurchaseOrderModel.Cods.Customer;
+                po.Src = PurchaseOrderModel.Sources.Marketplace;
+                po.Fch = DateOnly.FromDateTime( DateTime.Today);
+                po.Concept = lastOrderNumber;
+                transporter.PurchaseOrders.Add(po);
+            }
+
+            var poItem = new PurchaseOrderModel.Item()
+                {
+                    Sku = line.Sku!.Guid,
+                    Qty = line.Qty,
+                    Pending = 0, //line.Qty,
+                    Price = line.Price
+                };
+            po!.Items.Add(poItem);
+            line.PurchaseOrder = po;
+            line.PurchaseOrderItem = poItem;
+        }
+
+        var retval = await purchaseOrdersService.UpdateAsync(transporter.PurchaseOrders);
+        foreach (var purchaseOrder in transporter.PurchaseOrders)
+        {
+            purchaseOrder.Id = retval.FirstOrDefault(x => x.Guid == purchaseOrder.Guid)?.Id;
+        }
+    }
+
+    async Task DeliverAsync(Transporter transporter)
+    {
+        transporter.Deliveries = new List<DeliveryModel>();
+        foreach (var po in transporter.PurchaseOrders)
+        {
+            var delivery = DeliveryModel.Factory(emp!.Id, session.User!, PurchaseOrderModel.Cods.Customer, DateTime.Today);
+            delivery.ContactGuid = customer.Guid;
+            delivery.Contact = new GuidNom(customer.Guid, customer.NomComercialOrRaoSocial());
+            delivery.PortsCod = CustomerModel.PortsCodes.reculliran;
+            delivery.CashCod = CustomerModel.CashCodes.credit;
+            delivery.Nom = customer.NomComercialOrRaoSocial();
+            delivery.Address = mgz!.Address;
+            delivery.Mgz = new GuidNom(mgz.Guid);
+            delivery.Incoterm = "EXW";
+            delivery.ExportCod = ZonaModel.ExportCods.National;
+            delivery.Req = customer.Req;
+            delivery.ObsTransp = transporter.Nom;
+            delivery.Items = new();
+            foreach (var poItem in po.Items)
+            {
+                var dItem = new DeliveryModel.Item();
+                dItem.PncGuid = poItem.Guid;
+                dItem.PdcGuid = po.Guid;
+                dItem.Sku = poItem.Sku;
+                dItem.Qty = poItem.Qty;
+                dItem.Price = poItem.Price;
+                dItem.MgzGuid = mgz.Guid;
+                dItem.IvaCod = TaxModel.Codis.iva_Standard; // productsService.Sku(dItem.Sku).IvaCod;
+                delivery.Items.Add(dItem);
+
+                var line = items?.FirstOrDefault(x => x.PurchaseOrderItem != null && x.PurchaseOrderItem.Guid == dItem.PncGuid);
+                if (line != null)
+                    line.Delivery = delivery;
+                line.DeliveryItem = dItem;
+                line.Cost = productsService.SkuCost(dItem.Sku);
+            }
+
+            var baseImponible = delivery.Items.Sum(x => x.Amt());
+            var vat = delivery.VatAmt(taxesService.Values);
+            delivery.Amt = new Amt(baseImponible + vat);
+            transporter.Deliveries.Add(delivery);
+
+        }
+        var retval = await deliveriesService.UpdateAsync(transporter.Deliveries);
+        foreach (var delivery in transporter.Deliveries)
+        {
+            delivery.Id = retval.FirstOrDefault(x => x.Guid == delivery.Guid)!.Id;
+        }
+    }
+
+    async Task TransmitAsync(Transporter transporter)
+    {
+        transporter.Transmission = TransmissionModel.Factory(transporter.Deliveries);
+        try
+        {
+            transporter.Transmission.Id = await transmissionsService.UpdateAsync(transporter.Transmission);
+            foreach (var line in items!.Where(x => x.Transporter == transporter.Nom))
+            {
+                line.Transmission = transporter.Transmission;
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    void AcceptAll()
+    {
+        foreach (var item in items ?? new())
+        {
+            item.Accepted = true;
+        }
+    }
+
+    int Comandes() => items?.GroupBy(x => x.OrderNumber).Count() ?? 0;
+
+    decimal Amount() => items?.Sum(x => x.Qty * x.Price) ?? 0;
+
+    void MoreFiles()
+    {
+        isDone = false;
+        transporters = new();
+        isCollapsedFilesUpload = false;
+        isCollapsedOrderLines = true;
+        isCollapsedResults = true;
+        items = new();
+    }
+
+    async Task DownloadExcel()
+    {
+        var sheet = new DTO.Excel.Sheet();
+        var row = sheet.AddRow();
+        row.AddCell("Batch");
+        row.AddCell("OrderNumber");
+        row.AddCell("DeliveryOrder");
+        row.AddCell("ParcelNumber");
+        row.AddCell("Transporter");
+        row.AddCell("DestinationAddress");
+        row.AddCell("ProductNumber");
+        row.AddCell("Ean");
+        row.AddCell("SupplierRef");
+        row.AddCell("ProductLabel");
+        row.AddCell("Qty");
+        row.AddCell("QtyAssigned");
+        row.AddCell("LabeledQty");
+        row.AddCell("SentQty");
+        row.AddCell("Weight");
+        row.AddCell("Preu");
+        row.AddCell("Cost");
+        row.AddCell("Comanda");
+        row.AddCell("Linia de comanda");
+        row.AddCell("Albarà");
+        row.AddCell("Linia d'albarà");
+        row.AddCell("Transmissio");
+
+        foreach (var item in items!)
+        {
+            row = sheet.AddRow();
+            row.AddCell(item.Batch);
+            row.AddCell(item.OrderNumber);
+            row.AddCell(item.DeliveryOrder);
+            row.AddCell(item.ParcelNumber);
+            row.AddCell(item.Transporter);
+            row.AddCell(item.DestinationAddress);
+            row.AddCell(item.ProductNumber);
+            row.AddCell(item.Ean);
+            row.AddCell(item.SupplierRef);
+            row.AddCell(item.ProductLabel);
+            row.AddCell(item.Qty);
+            row.AddCell(item.QtyAssigned);
+            row.AddCell(item.LabeledQty);
+            row.AddCell(item.SentQty);
+            row.AddCell(item.Weight);
+            row.AddCell($"{item.Price:N2}");
+            row.AddCell($"{item.Cost:N2}");
+            row.AddCell(item.PurchaseOrder?.Id.ToString(), $"https://beta.matiasmasso.es/purchaseOrder/{item.PurchaseOrder.Guid.ToString()}");
+            row.AddCell(item.PurchaseOrder.Items.IndexOf(item.PurchaseOrderItem) + 1);
+            row.AddCell(item.Delivery.Id, $"https://beta.matiasmasso.es/delivery/{item.Delivery.Guid.ToString()}");
+            row.AddCell(item.Delivery.Items.IndexOf(item.DeliveryItem) + 1);
+            row.AddCell(item.Transmission.Id, $"https://beta.matiasmasso.es/transmission/{item.Transmission.Guid.ToString()}");
+        }
+
+        var bytes = DTO.Excel.ClosedXml.Bytes(sheet);
+        var excelfilename = filename + " results.xlsx";
+
+        var fileStream = new MemoryStream(bytes);
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", excelfilename, streamRef);
+
+    }
+
+    void NotifyChange()
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        productsService.OnChange -= Refresca;
+        session.OnChange -= Refresca;
+    }
+
+    private class Transporter
+    {
+        public string? Nom { get; set; }
+        public List<DTO.Integracions.Veepee.OrderLine> Lines { get; set; } = new();
+        public List<PurchaseOrderModel> PurchaseOrders { get; set; } = new();
+        public List<DeliveryModel> Deliveries { get; set; } = new();
+        public TransmissionModel? Transmission { get; set; }
+
+        public Transporter(string nom)
+        {
+            Nom = nom;
+        }
+    }
+}

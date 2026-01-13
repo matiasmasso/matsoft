@@ -1,0 +1,41 @@
+﻿<div class="Wrapper">
+
+    @if (!isActive)
+    {
+        <a href="#" @onclick:preventDefault @onclick="@(()=>isActive = true)">
+            @Caption
+        </a>
+    }
+    else
+    {
+        <a href="#">
+            @Caption
+        </a>
+
+        <div class="Popup">
+            <a href="#" class="Header" @onclick:preventDefault @onclick="@(()=>isActive=false)">
+                <div> @Caption</div>
+                <Icon Id="Icon.Ids.Xmark"></Icon>
+            </a>
+            <div class="Body">
+                @ChildContent
+            </div>
+            <button class="Button ButtonOk" @onclick="HandleButtonOkClick">Acceptar</button>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public EventCallback OnSuccess { get; set; }
+
+    bool isActive;
+
+    void HandleButtonOkClick()
+    {
+        isActive = false;
+        OnSuccess.InvokeAsync();
+    }
+}

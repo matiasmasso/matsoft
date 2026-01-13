@@ -1,0 +1,173 @@
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage ProtectedLocalStore
+
+<div class="Wrapper">
+    <div class="Offline">
+
+        @if (Model?.Offline.Countries.Count > 0)
+        {
+                <h3>@offlineTitle</h3>
+ 
+            <select @bind="CountryGuid">
+                @foreach (var country in Model.Offline.Countries)
+                {
+                    <option value="@country.Guid">@country.Nom</option>
+                }
+            </select>
+
+            <select @bind="@ZonaNom">
+                @foreach (string zona in Zonas!)
+                {
+                    <option>@zona</option>
+                }
+            </select>
+
+            <select @bind="LocationNom">
+                @foreach (string location in Locations!)
+                {
+                    <option>@location</option>
+                }
+            </select>
+
+            <div class="Distributors">
+                @foreach (StoreLocatorDTO.Distributor distributor in Distributors)
+                {
+                    <div class="Distributor">
+                        <div>@distributor.Nom</div>
+                        <div>@distributor.Address</div>
+                        <div>@LocationNom</div>
+                        @if (!string.IsNullOrEmpty(distributor.Tel))
+                        {
+                            <div>@distributor.Tel</div>
+                        }
+                    </div>
+                }
+            </div>
+
+        }
+    </div>
+
+    @if (Model.Online.Ecommerces.Any())
+    {
+        <div class="Online">
+            @foreach (StoreLocatorDTO.Ecommerce ecommerce in Model.Online.Ecommerces)
+            {
+                <a href="#" onclick="EcommerceClicked">
+                    <div class="EcommNom">@ecommerce.Nom</div>
+                    <div class="EcommNom">@ecommerce.Url</div>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .Wrapper {
+        display: flex;
+    }
+
+    .Offline {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .Offline select {
+            width: 280px;
+            font-size: 1em;
+            padding: 4px 7px 2px 4px;
+        }
+        div.Distributor div:first-child {
+            padding-top:15px;
+            font-weight:600;
+        }
+</style>
+
+@code {
+    [Parameter]
+    public StoreLocatorDTO? Model { get; set; }
+
+    private LangDTO lang;
+    private string offlineTitle;
+    private string? zonaNom;
+    private string? locationNom;
+    private List<string> Zonas = new();
+    private List<string> Locations = new();
+    private List<StoreLocatorDTO.Distributor> Distributors = new();
+
+    protected override Task OnInitializedAsync()
+    {
+
+        return base.OnInitializedAsync();
+    }
+
+    protected async override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        CountryGuid = Model!.Offline.SelectedCountry;
+        var result = await ProtectedLocalStore.GetAsync<SessionDTO>("session");
+        var session = result.Value;
+        lang = session.Lang;
+        offlineTitle = lang.Tradueix("¿Dónde comprar?", "On comprar?", "Where to buy?", "Onde comprar");
+        StateHasChanged();
+    }
+
+
+    private Guid? CountryGuid
+    {
+        get => Model?.Offline.SelectedCountry;
+        set
+        {
+            Model!.Offline.SelectedCountry = value;
+            var countries = Model?.Offline.Countries;
+            var country = countries?.FirstOrDefault(x => x.Guid.Equals(value));
+            ZonaNom = country?.SelectedZona;
+            Zonas = country?.Zonas.Select(x => x.Nom).ToList();
+            ZonaNom = zonaNom;
+        }
+    }
+
+    private string? ZonaNom
+    {
+        get => zonaNom;
+        set
+        {
+            zonaNom = value;
+            var countries = Model?.Offline.Countries;
+            var country = countries?.FirstOrDefault(x => x.Guid.Equals(CountryGuid));
+            var zonas = country?.Zonas;
+            var zona = zonas?.FirstOrDefault(x => x.Nom == value);
+            Locations = zona?.Locations.Select(x => x.Nom).ToList();
+            LocationNom = zona?.SelectedLocation;
+        }
+    }
+
+    private string? LocationNom
+    {
+        get => locationNom;
+        set
+        {
+            locationNom = value;
+            var countries = Model?.Offline.Countries;
+            var country = countries?.FirstOrDefault(x => x.Guid.Equals(CountryGuid));
+            var zonas = country?.Zonas;
+            var zona = zonas?.FirstOrDefault(x => x.Nom == zonaNom);
+            var locations = zona?.Locations;
+            var location = locations?.FirstOrDefault(x => x.Nom == value);
+            Distributors = location?.Distributors;
+        }
+    }
+
+
+
+    public async Task ReadLang()
+    {
+        var result = await ProtectedLocalStore.GetAsync<string>("lang");
+        string? langTag = result.Success ? result.Value : "";
+        lang = new LangDTO(langTag);
+    }
+
+    protected void EcommerceClicked()
+    {
+
+    }
+}

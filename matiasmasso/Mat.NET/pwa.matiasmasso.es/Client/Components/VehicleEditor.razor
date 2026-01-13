@@ -1,0 +1,95 @@
+﻿@using Newtonsoft.Json
+@using System.Net.Http.Json
+@using DTO
+
+@inject NavigationManager NavigationManager
+@inject AppState AppState
+
+<div class="row">
+
+
+    @if (DeleteDialogOpen)
+{
+    <ModalDialog Title="Are you sure?"
+                 Text="Do you want to delete this entry?"
+                 OnClose="@OnDeleteDialogClose">
+    </ModalDialog>
+}
+
+
+    <EditForm Model="@viewModel" OnValidSubmit="@Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            Matricula: <InputText id="nom" @bind-Value="viewModel!.Model.Matricula" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Alta: <InputDate @bind-Value="viewModel!.Model.Alta" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Baixa: <InputDate @bind-Value="viewModel!.Model.Baixa" class="form-control" />
+        </div>
+
+        <br />
+
+      <div class="Buttons">
+          <!--<button type="submit" form="my-form-ref" class="btn btn-success" value="Update"/>-->
+          <button type="submit" class="btn btn-success">Update</button>
+          <input type="button" form="my-form-ref" class="btn btn-secondary" @onclick=Delete value="Delete"/>
+          <input type="button" form="my-form-ref" class="btn btn-secondary" @onclick=Cancel value="Cancel"/>
+      </div>
+
+        <!--<button type="submit" class="btn btn-success">Update</button>-->
+    </EditForm>
+
+</div>
+
+<br />
+<br />
+<a href="/vehicles">Back to List</a>
+
+
+@code {
+    [Parameter]
+    public VehicleViewModel viewModel { get; set; }
+
+    public bool DeleteDialogOpen { get; set; } = false;
+
+        protected override void OnParametersSet()
+    {
+        viewModel.OnStateChange += StateHasChanged;
+        //viewModel.Fetch();
+    }
+
+    private async Task Submit()
+    {
+        if (await viewModel!.Submit())
+            NavigationManager.NavigateTo("Vehicles");
+    }
+
+    private void Delete()
+    {
+        DeleteDialogOpen = true;
+        StateHasChanged();
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("Vehicles");
+    }
+
+    private async Task OnDeleteDialogClose(bool accepted)
+    {
+        DeleteDialogOpen = false;
+        if(accepted)
+            if (await viewModel!.Delete())
+            {
+                NavigationManager.NavigateTo("Vehicles");
+            }
+        StateHasChanged();
+    }
+
+}

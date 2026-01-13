@@ -1,0 +1,43 @@
+﻿.Grid {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin:auto;
+    max-width:300px;
+    width:100%;
+}
+
+.Item {
+    display:flex;
+    flex-direction:row;
+    cursor:pointer;
+}
+
+.ColumnHeader {
+    color:gray;
+}
+
+.Fch, .Id {
+    width: 100px;
+    min-width: 100px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.Eur {
+    width:100%;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.GridRowDivider {
+    height: 1px;
+    border-bottom: 1px solid #DDDDDD;
+    margin:10px 0;
+}
+
+@media(max-width:599px){
+    h2{
+        margin:auto;
+    }
+}

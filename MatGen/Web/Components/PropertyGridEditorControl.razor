@@ -1,0 +1,190 @@
+﻿@inject ApiService ApiService
+
+<div class="Wrapper">
+    @if (Item != null)
+    {
+        if (Item.Cod == PropertyGridModel.Cods.Boolean)
+        {
+            <Toggle Value="(bool?)Item.Value ?? false" ObjChanged="ValueChanged"></Toggle>
+        }
+        else if (Item.Cod == PropertyGridModel.Cods.Fch)
+        {
+            <Textbox MaxLength="Item.MaxLength"
+                     @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></Textbox>
+        }
+        else if (Item.Cod == PropertyGridModel.Cods.Url)
+        {
+            <UrlBox @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged"></UrlBox>
+        }
+        else if (Item.Cod == PropertyGridModel.Cods.Email)
+        {
+            <a class="Email" href="#" @onclick="ItemClickAsync" @onclick:preventDefault>
+                @(((UserModel?)Item.Value)?.EmailAddress)
+            </a>
+        }
+        else if (Item.Cod == PropertyGridModel.Cods.Password)
+        {
+            <Textbox MaxLength="Item.MaxLength"
+                IsPassword @bind-Value="Item.Value" @bind-Value:event="ObjChanged" CanEdit="CanEdit"></Textbox>
+        }
+        else if (Item.Cod == PropertyGridModel.Cods.Dropdown)
+        {
+            <Dropdown Values="Item.Values"
+            Value="(IModel?)Item.Value"
+            GenericType="IModel"
+            OnClick="ItemClickAsync"
+            RequestToAddNew="@(RequestToAddNew.HasDelegate ?  AddNewRequest : null)"
+            FontColor="@fontColor"
+            ValueChanged="DropdownChanged">
+            </Dropdown>
+        }
+        else if (Item.Cod == PropertyGridModel.Cods.Multiline)
+        {
+            <Textbox MaxLength="Item.MaxLength"
+                Multiline @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></Textbox>
+        }
+        else if (Item.Cod == PropertyGridModel.Cods.FchLocation)
+        {
+            <FchLocation Value="@((FchLocationModel?)Item.Value)" 
+            Values="Item.Values" ObjectChanged="ValueChanged" 
+            RequestToAddNewLocation="AddNewRequest"
+            ItemSelected="ItemClickAsync"
+            CanEdit="CanEdit"></FchLocation>
+        } else if(Item.Cod == PropertyGridModel.Cods.Sex)
+        {
+            <Sex Value="@((PersonModel.Sexs?)Item.Value)" ObjChanged="ValueChanged"></Sex>
+        }
+        else if (Item.Cod == PropertyGridModel.Cods.Docfile)
+        {
+            <Filedrop Value="(DocfileModel?)(object?)Item.Value" ValueChanged="ValueChanged"></Filedrop>
+        }
+        else
+        {
+            <Textbox MaxLength="Item.MaxLength"
+                @bind-Value="Item.Value" @bind-Value:event="ObjChanged" ValueChanged="ValueChanged" CanEdit="CanEdit"></Textbox>
+        }
+    }
+
+</div>
+@* 
+<ContextMenu Id="MenuEmail">
+    <Item Key="LoginAs" OnClick="@ContextMenuClickAsync">Loggeja'l</Item>
+    <Item Key="Message" OnClick="@ContextMenuClickAsync">Missatge</Item>
+</ContextMenu>
+ *@
+
+@code {
+
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsDirty { get; set; }
+    [Parameter] public int? MaxLength { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> SetDirty { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> RequestToAddNew { get; set; }
+    // [Parameter] public EventCallback<ItemClickEventArgs> ContextMenuClick { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> ItemClick { get; set; }
+    [Parameter] public PropertyGridModel.Item? Item { get; set; }
+
+    //private bool isEditing = false;
+    private string fontColor = Colors.Black;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Item?.Value is PersonModel)
+        {
+            var person = (PersonModel)Item!.Value!;
+            if (person.Guid == ApiService.RootPerson()?.Guid)
+                fontColor = Colors.Green;
+            else if (ApiService.IsAncestor(person))
+                fontColor = Colors.Red;
+            else if (ApiService.HasGrau(person))
+                fontColor = Colors.Navy;
+        }
+    }
+
+    private Type GenericType()
+    {
+        return typeof(string);
+        // var retval = typeof(PropertyGridEditorControl.Item.Value); // Item!.Value!.GetType();
+        // return retval;
+    }
+
+    private void ValueClicked()
+    {
+        if (Item!.Cod == PropertyGridModel.Cods.Dropdown)
+        {
+            //isShowingSelector = true;
+            //isEditing = true;
+        }
+        else if (Item!.Cod == PropertyGridModel.Cods.Boolean)
+        {
+            if ((bool)(Item.Value ?? false))
+            {
+                Item!.Value = false;
+                Item.Id = "False";
+                Item.DisplayText = Item.Id;
+            }
+            else
+            {
+                Item!.Value = true;
+                Item.Id = "True";
+                Item.DisplayText = Item.Id;
+            }
+        }
+        else
+        {
+            //isEditing = true;
+        }
+    }
+
+
+    private void DropdownChanged(object args)
+    {
+        var isPerson = args is PersonModel;
+        Item?.Value = args;
+        SetDirty.InvokeAsync(Item);
+        Item?.IsEditing = false;
+        //isShowingSelector = false;
+    }
+
+    private void ValueChanged(object args)
+    {
+        Item!.Value = args;
+        SetDirty.InvokeAsync(Item);
+    }
+
+    private void AddNewRequest()
+    {
+        RequestToAddNew.InvokeAsync(Item);
+    }
+
+    // async Task ContextMenuClickAsync(ItemClickEventArgs e)
+    // {
+    //     await ContextMenuClick.InvokeAsync(e);
+    // }
+
+    async Task ItemClickAsync()
+    {
+        await ItemClick.InvokeAsync(Item);
+    }
+
+    //async Task MenuItemClick(ItemClickEventArgs e)
+    //{
+    //    var item = (ShoppingBasketModel)e.Data;
+    //    var key = e.MenuItem.Attributes["Key"].ToString();
+    //    switch (key)
+    //    {
+    //        case "Message":
+    //            break;
+    //        case "LoginAs":
+    //            var apiResponse = await base.GetAsync<bool>("ShoppingBasket/delete", item.Guid.ToString());
+    //            if (apiResponse.Success())
+    //                items!.Remove(item);
+    //            else
+    //                problemDetails = apiResponse.ProblemDetails;
+    //            break;
+    //    }
+    //    Console.WriteLine($"Item Clicked => Menu: {e.ContextMenuId}, MenuTarget: {e.ContextMenuTargetId}, IsCanceled: {e.IsCanceled}, MenuItem: {e.MenuItemElement}, MouseEvent: {e.MouseEvent}");
+    //}
+
+}

@@ -1,0 +1,33 @@
+﻿<div>
+        @if (Model != null)
+    {
+        foreach(var item in Model.Owners)
+        {
+            <div>
+            <span> @item.Nom</span>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    private CredencialModel? _model;
+
+    [Parameter]
+    public CredencialModel? Model
+    {
+        get => _model;
+        set
+        {
+            var hasChanged = _model == null || !value.Owners.SequenceEqual(_model.Owners);
+            if (!hasChanged) return;
+            _model = value;
+            ModelChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<CredencialModel> ModelChanged { get; set; }   
+
+}

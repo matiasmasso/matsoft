@@ -1,0 +1,46 @@
+﻿@inherits LayoutComponentBase
+@using System.Globalization
+@using Spa.Shared
+@using Spa.Components
+@using Spa.ViewModels
+@using DTO
+@inject AppState AppState
+@inject HttpClient Http
+@inject NavigationManager _navigation
+@inject IJSRuntime Js
+
+   <div class="MainLayout @(IsMenuVisible ? "MenuVisible" : "")">
+        <header>
+            <Header ShowHamburger = "@true" @bind-IsMenuVisibleValue = "@IsMenuVisible"></Header>
+        </header>
+
+    <aside>
+        <NavMenu SelectedTab = "@defaultTab"></NavMenu>
+    </aside>
+
+    <main>
+        <ErrorBoundary>
+            @Body
+        </ErrorBoundary>
+    </main>
+
+    <footer>
+        <Footer></Footer>
+    </footer>
+</div>
+
+@code {
+    LayoutViewModel? viewModel;
+    private bool IsMenuVisible = false;
+    private int defaultTab = 2;
+
+    protected override Task OnParametersSetAsync()
+    {
+        AppState.Lang = LangDTO.FromCultureInfo(CultureInfo.CurrentCulture.Name);
+        viewModel = new LayoutViewModel(AppState);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch(Http);
+        return base.OnParametersSetAsync();
+    }
+
+}

@@ -1,0 +1,119 @@
+﻿    .pagewrapper {
+        min-width:320px;
+        max-width:510px;
+        margin:0 auto 20px;
+        text-align:left;
+        min-height:400px;
+        border:1px black;
+    }
+
+    h1 {
+        font-size: 1.1em;
+    }
+
+    #Details {
+        text-align:left;
+    }
+
+
+
+    .label {
+        vertical-align:top;
+        display:inline-block;
+        width:150px;
+    }
+
+
+    .control {
+        margin-left: 20px;
+        display:inline-block;
+    }
+
+
+    .row {
+        margin-bottom:15px;
+    }
+
+
+        .control input[type=text],.control input[type=email], .control select, textarea {
+            width:300px;
+            font-size:1.0em;
+            color:navy;
+        }
+
+
+        #submit {
+            margin-bottom:20px;
+            text-align:right;
+        }
+
+        .SkuBox {
+            position:relative;
+            display:inline-block;
+            width:114px;
+            height:106px;
+            border:1px solid gray;
+            margin:5px 5px 5px 0;
+        }
+
+        .Qty {
+            position:absolute;
+            bottom:0;
+            right:0;
+        }
+
+        .Precio {
+            position:absolute;
+            bottom:0;
+            left:0;
+        }
+
+        .BasketRow {
+
+        }
+
+        .CellRemove {
+            display:inline-block;
+            text-align:left;
+            width:25px;
+        }
+
+        .CellNom {
+            display:inline-block;
+            width:300px;
+            text-align:left;
+        }
+
+        .CellSummary {
+            margin-left:25px;
+            display:inline-block;
+            width:155px; /*??wrapper max-width - -margin-left - NumericColumns*/
+            text-align:left;
+        }
+
+        .NumericColumns {
+            display:inline-block;
+            margin-left:130px; /*margin+width=320*/
+            width:190px;
+        }
+
+        .CellQty {
+            display:inline-block;
+            width:20px;
+            text-align:right;
+        }
+        .CellPrice, .CellAmt, .CellTot {
+            display:inline-block;
+            width:80px;
+            text-align:right;
+        }
+        
+
+
+        #CloseOrder {
+            text-align:right;
+        }
+
+        #KeepPurchasing {
+            text-align:right;
+        }

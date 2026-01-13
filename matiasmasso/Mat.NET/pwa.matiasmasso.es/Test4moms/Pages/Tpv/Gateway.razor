@@ -1,0 +1,66 @@
+﻿@page "/gateway"
+@    using System.Net.Mail;
+    using DTO.Integracions.Redsys.Redsys;
+@inherits _ComponentBase
+@inject AuthenticationStateProvider authStateProvider
+@inject IStringLocalizer<AppResource> Localizer
+@inject NavigationManager NavigationManager
+@inject AppState AppState
+
+@if (request != null)
+{
+    <form action="@request.GatewayUrl" method="post">
+
+        <div style="display:flex;flex-direction:column;gap:5px;">
+            <input type="text" name="Ds_MerchantParameters" value="@request.Ds_MerchantParameters" />
+            <input type="text" name="Ds_Signature" value="@request.Ds_Signature" />
+            <input type="text" name="Ds_SignatureVersion" value="@request.Ds_SignatureVersion" />
+            <input type="submit" value="submit" />
+        </div>
+    </form>
+
+    <button @onclick="Mailme" value="mail"></button>
+}
+
+@code {
+    private ShoppingBasketModel? basket;
+    private Redsys.Request? request = null;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        //var sku = ProductSkuModel.Wellknown(ProductSkuModel.Wellknowns.mamaRoo5grey)!;
+        //var price = SessionProvider?.Cache?.Price(sku);
+
+        //var basket = new ShoppingBasketModel();
+        //basket.TicketNumber = DTO.Helpers.CryptoHelper.RandomString(10);
+        //basket.Lang = base.Lang();
+        //basket.AddItem(sku, price);
+
+        //request = Redsys.Request.Factory(basket);
+    }
+
+    private void Mailme()
+    {
+        SendMail("matias@matiasmasso.es", "Gateway test", "this is a gateway test from tpv/feed");
+    }
+
+    public void SendMail(string To, string Subject, string Body)
+    {
+        MailMessage mail = new MailMessage();
+        mail.To.Add(To);
+        mail.From = new MailAddress("info@matiasmasso.es", "M+O info");
+        mail.Subject = Subject;
+        mail.Body = Body;
+        mail.IsBodyHtml = true;
+        SmtpClient smtp = new SmtpClient
+            {
+                EnableSsl = true,
+                Host = "smtp.office365.com",
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                Credentials = new System.Net.NetworkCredential("info@matiasmasso.es", "Tan76831") // Enter seders User name and password
+            };
+        smtp.Send(mail);
+    }
+
+}

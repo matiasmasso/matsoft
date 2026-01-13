@@ -1,0 +1,53 @@
+﻿
+.video-thumb-wrapper {
+    aspect-ratio: 1;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.video-thumb-content {
+    flex: 1;
+    display: flex;
+}
+
+    .video-thumb-content img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.filmstriptop, .filmstripbottom {
+    height: 8%;
+    background-size: contain;
+    background-repeat: repeat-x;
+}
+
+.filmstriptop {
+    background-image: url('/img/filmstripchunktop.png');
+    /*    height: 14px;
+    background-size: contain;
+    background-repeat: repeat-x;*/
+}
+
+.filmstripbottom {
+    background-image: url('/img/filmstripchunkbottom.png');
+    /*    height: 14px;
+    background-size: contain;
+    background-repeat: repeat-x;*/
+}
+
+
+/*.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.thumbnail {
+    width: 100%;
+    height: auto;
+}*/
+

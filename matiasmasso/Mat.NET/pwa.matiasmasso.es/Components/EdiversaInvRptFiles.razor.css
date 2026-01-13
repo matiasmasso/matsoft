@@ -1,0 +1,16 @@
+﻿.Grid {
+    display:grid;
+    grid-template-columns: min-content min-content 1fr;
+}
+.Item {
+    display:contents;
+}
+    .Item div {
+        padding: 0 5px;
+    }
+        .Item div:first-child {
+            padding: 0 5px 0 0;
+        }
+        .Item div:last-child {
+            padding: 0 0 0 5px;
+        }

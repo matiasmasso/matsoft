@@ -1,0 +1,134 @@
+﻿@inherits _Base
+@inject NavService navService
+@inject BasketService basketService
+@inject CultureService culture
+
+<div itemscope itemtype="https://schema.org/SiteNavigationElement" class="Wrapper">
+
+    <div class="Lang">
+        <Lang Value="base.Lang()" ValueChanged="CultureChanged"></Lang>
+    </div>
+
+    @foreach (var item in publicItems ?? new())
+    {
+        @if (item.Mode == MenuItemModel.Modes.Toggle)
+        {
+            <a href="#" class="Item" @onclick:preventDefault>
+                <MenuItemToggle Model="(MenuItemToggleModel)item"></MenuItemToggle>
+            </a>
+        }
+        else
+        {
+            <div class="Item">
+                <NavLink href="@base.RelativeUrl(item.Url ?? new())"
+                    @onclick="(()=>OnClick(item))">
+                    @(item.Caption?.Tradueix(base.Lang()) ?? "?")
+                </NavLink>
+            </div>
+        }
+    }
+
+    <AuthorizeView>
+        <Authorized>
+            @if (backoffice != null && backoffice.Count > 0)
+            {
+                <div class="BackOffice">BackOffice</div>
+
+                @foreach (var item in backoffice ?? new())
+                {
+                    @if (item.Mode == MenuItemModel.Modes.Toggle)
+                    {
+                        <div class="Item">
+                            <MenuItemToggle Model="(MenuItemToggleModel)item"></MenuItemToggle>
+                        </div>
+                    }
+                    else if (item.Mode == MenuItemModel.Modes.Navigation && item.BlankTarget && (item.Url?.Esp?.StartsWith("http") ?? false))
+                    {
+                        <a href="@item.Url?.Esp" target="_blank" class="Item" title="@(item.Caption?.Tradueix(base.Lang()) ?? "?")">
+                            @(item.Caption?.Tradueix(base.Lang()) ?? "?")
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="Item">
+                            <NavLink href="@base.RelativeUrl(item.Url ?? new())"
+                         @onclick="(()=>OnClick(item))">
+                                @(item.Caption?.Tradueix(base.Lang()) ?? "?")
+                            </NavLink>
+                        </div>
+                    }
+                }
+
+            }
+            <div class="Item">
+                <NavLink href="@base.RelativeUrl(profile?.Url ?? new())"
+                         @onclick="(()=>OnClick(profile!))">
+                    @culture.Localize("Profile")
+                </NavLink>
+            </div>
+            <div class="Item">
+                <NavLink href="#" @onclick="LogoutAsync">
+                    @culture.Localize("Logout")
+                </NavLink>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="Item">
+                <NavLink href="@base.RelativeUrl(login?.Url ?? new())"
+                         @onclick="(()=>OnClick(login ?? new()))">
+                    @culture.Localize("Login")
+                </NavLink>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? authenticationState { get; set; }
+    [Parameter] public EventCallback<MenuItemModel> ItemClick { get; set; }
+
+    List<MenuItemModel>? publicItems;
+    List<MenuItemModel>? backoffice;
+    MenuItemModel? login;
+    MenuItemModel? logout;
+    MenuItemModel? profile;
+    UserModel? user;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await base.GetUser();
+        var rol = (UserModel.Rols?)user?.Rol ?? UserModel.Rols.unregistered;
+        publicItems = navService.PublicItems(rol);
+        backoffice = navService.BackOffice(rol);
+        login = new MenuItemModel(MenuItemModel.Modes.Navigation, "login", "login", "login", "faça login");
+        login.Url = new LangTextModel("/es/login", "/ca/login", "/en/login", "/pt/login");
+        profile = new MenuItemModel(MenuItemModel.Modes.Navigation, "profile");
+        profile.Url = new LangTextModel("/es/profile", "/ca/profile", "/en/profile", "/pt/profile");
+    }
+
+    protected async Task CultureChanged(LangDTO lang)
+    {
+        await basketService.SaveBasketToSessionStorageAsync(lang, user);
+        var uri = new Uri(navigationManager!.Uri);
+        var url = Culture!.ResetUrl(lang, uri);
+        navigationManager!.NavigateTo(url, forceLoad: true);
+    }
+
+    void OnClick(MenuItemModel item)
+    {
+        if ((item.Mode == MenuItemModel.Modes.Toggle || item.Mode == MenuItemModel.Modes.Action) && item.Action != null)
+            item.Action();
+
+        ItemClick.InvokeAsync(item);
+    }
+
+    async Task LogoutAsync()
+    {
+        var auth = (CustomAuthenticationStateProvider?)base.authStateProvider!;
+        await auth.LogoutAsync();
+       // navigationManager?.NavigateTo("/", true);
+    }
+
+}

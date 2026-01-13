@@ -1,0 +1,38 @@
+﻿.Wrapper {
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: 16px min-content min-content min-content min-content minmax(350px,1fr);
+    grid-column-gap: 10px;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+.Grid::-webkit-scrollbar {
+    display: none;
+}
+
+
+.Item, .ColHeaders {
+    display: contents;
+}
+
+    .ColHeaders div {
+        font-weight: 600;
+        color: darkgrey;
+        padding: 0 0 10px;
+    }
+
+.Response {
+    text-align:center;
+}
+
+.Fch, .Eur {
+    white-space: nowrap;
+}
+
+.Ico {
+    fill: green;
+    max-width: 11px;
+}

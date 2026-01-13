@@ -1,0 +1,52 @@
+﻿<div class="Bar">
+
+    @foreach(var item in items ?? new())
+    {
+        if (item.Value == Value)
+        {
+            <div class="Active">@item.Caption</div>
+        }
+        else
+        {
+            <a href="#" @onclick:preventDefault @onclick="@(()=>ItemClick(item))">@item.Caption</a>
+        }
+    }
+
+</div>
+
+@code {
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public string? Captions { get; set; }
+    [Parameter] public EventCallback<int> ValueChanged { get; set; }
+
+    List<Item>? items;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        string[] stringSeparators = new string[] { "," };
+
+        var captions = Captions!.Split(stringSeparators, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList();
+        items = new();
+        for (var i = 0; i < captions?.Count; i++)
+        {
+            items.Add(new Item(i, captions[i]));
+        }
+    }
+    void ItemClick(Item args)
+    {
+        ValueChanged.InvokeAsync(args.Value);
+    }
+
+    private class Item
+    {
+        public int Value { get; set; }
+        public string Caption { get; set; }
+
+        public Item(int value, string caption)
+        {
+            Value = value;
+            Caption = caption;
+        }
+    }
+}

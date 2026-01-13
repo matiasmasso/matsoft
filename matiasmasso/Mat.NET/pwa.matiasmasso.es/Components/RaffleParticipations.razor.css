@@ -1,0 +1,13 @@
+﻿.Grid {
+    display:grid;
+    grid-template-columns:24px 9em 1fr;
+    grid-gap:10px;
+}
+
+.Item {
+    display:contents;
+}
+
+.Fch {
+    white-space:nowrap;
+}

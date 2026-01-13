@@ -1,0 +1,106 @@
+﻿@page "/menuitem/{Guid:guid}"
+@page "/menuitem"
+
+@layout ProLayout
+@using Client.Shared
+@using Client.ViewModels
+@inject AppState AppState
+@inject NavigationManager NavigationManager
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <EditForm Model="@viewModel" OnValidSubmit="@Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            Español: <InputText id="esp" @bind-Value="viewModel.Model.Caption.Esp" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Català: <InputText id="cat" @bind-Value="viewModel.Model.Caption.Cat" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Anglès: <InputText id="eng" @bind-Value="viewModel.Model.Caption.Eng" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Portuguès: <InputText id="por" @bind-Value="viewModel.Model.Caption.Por" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Modo:        <InputSelectEnum @bind-Value="viewModel.Model.Mode" class="form-control" />
+        </div>
+        <div class="form-group">
+            Privat: <InputCheckbox @bind-Value=viewModel.Model.Private />
+            
+        </div>
+
+        <div class="form-group">
+            Acció: <InputText id="acc" @bind-Value="viewModel.Model.Action" class="form-control" />
+        </div>
+
+        <div class="form-group">
+             Parent: 
+             <LookupGuidNom Items = "@viewModel.ParentCandidates"
+                             @bind-Value="@viewModel.Parent" 
+                             CssClass="form-control" />
+        </div>  
+
+        
+        <div class="form-group">
+            Pàgina:  <InputSelectEnum @bind-Value="viewModel.Model.Page" class="form-control" />
+        </div>
+
+
+        <div class="form-group Ico">
+            Icona: <InputText id="ico" @bind-Value="viewModel.Model.Ico" class="form-control" />
+            <i class="@viewModel!.Model?.Ico"></i>
+        </div>
+
+        <br />
+
+      <div class="Buttons">
+          <button type="submit" class="btn btn-success">Update</button>
+          <input type="button" form="my-form-ref" class="btn btn-secondary" @onclick=Delete value="Delete"/>
+          <input type="button" form="my-form-ref" class="btn btn-secondary" @onclick=Cancel value="Cancel"/>
+      </div>
+      </EditForm>
+}
+
+@code {
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    private MenuItemViewModel? viewModel;
+
+
+    protected override Task OnParametersSetAsync()
+    {
+        viewModel = new MenuItemViewModel(AppState, Guid);
+        viewModel.OnStateChange += StateHasChanged;
+        if(Guid != null)
+            viewModel.Fetch();
+        return base.OnParametersSetAsync();
+    }
+
+    private async Task Submit()
+    {
+        if (await viewModel!.Update())
+            NavigationManager.NavigateTo("MenuItems");
+
+    }
+
+    private void Delete()
+    {
+        
+    }
+
+    private void Cancel()
+    {
+        
+    }
+
+}

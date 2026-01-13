@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32421.90
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DTO", "DTO\DTO.csproj", "{BA2D07FA-489E-4AE2-95FD-DF75C8AA23C6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiCore", "ApiCore\ApiCore.csproj", "{EF455BF2-57B8-4B0D-B57F-AA487D5A6E26}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cash", "Cash\Cash.csproj", "{34674044-2A6F-4FA4-B2D6-E9684D46F658}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA2D07FA-489E-4AE2-95FD-DF75C8AA23C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA2D07FA-489E-4AE2-95FD-DF75C8AA23C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA2D07FA-489E-4AE2-95FD-DF75C8AA23C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA2D07FA-489E-4AE2-95FD-DF75C8AA23C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF455BF2-57B8-4B0D-B57F-AA487D5A6E26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF455BF2-57B8-4B0D-B57F-AA487D5A6E26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF455BF2-57B8-4B0D-B57F-AA487D5A6E26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF455BF2-57B8-4B0D-B57F-AA487D5A6E26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34674044-2A6F-4FA4-B2D6-E9684D46F658}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34674044-2A6F-4FA4-B2D6-E9684D46F658}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34674044-2A6F-4FA4-B2D6-E9684D46F658}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34674044-2A6F-4FA4-B2D6-E9684D46F658}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2D18314E-F743-4E57-88E0-56E49421B20F}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 4
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://matiasmasso.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = DTO\\DTO.csproj
+		SccProjectName1 = DTO
+		SccLocalPath1 = DTO
+		SccProjectUniqueName2 = ApiCore\\ApiCore.csproj
+		SccProjectName2 = ApiCore
+		SccLocalPath2 = ApiCore
+		SccProjectUniqueName3 = Cash\\Cash.csproj
+		SccProjectName3 = Cash
+		SccLocalPath3 = Cash
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,29 @@
+﻿.Wrapper {
+    max-width: 450px;
+}
+
+.HeaderRow {
+    display: flex;
+    justify-content: space-between;
+    background-color: #EFEFEF;
+    padding: 10px;
+    margin-bottom:15px;
+}
+
+
+input[type=text], input[type=password], textarea {
+    width: 100%;
+    padding: 4px 7px 2px 4px;
+}
+
+.Value {
+    display:flex;
+    justify-content:space-around;
+    gap:10px;
+    padding: 5px 0 15px 15px;
+}
+
+.Label {
+    color: darkgray;
+}
+

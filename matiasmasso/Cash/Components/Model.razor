@@ -1,0 +1,68 @@
+﻿@if (Value is ContactModel)
+{
+    <Contact Value="@Contact()"
+             AfterUpdate="HandleAfterUpdate"
+             CloseRequest="HandleCloseRequest"></Contact>
+} else if(Value is CcaModel)
+{
+    <Cca Value="@((CcaModel)Value)"
+         AfterUpdate="HandleAfterUpdate"
+         AfterDelete="HandleAfterDelete"
+         CloseRequest="HandleCloseRequest"></Cca>
+}
+else if (Value is CountryModel)
+{
+    <Country Value="@((CountryModel)Value)"
+             AfterUpdate="HandleAfterUpdate"
+             CloseRequest="HandleCloseRequest"></Country>
+}
+else if (Value is CustomerInvoiceModel)
+{
+    <CustomerInvoice Value="(CustomerInvoiceModel)Value"
+                     AfterUpdate="HandleAfterUpdate"
+                     CancelRequest="HandleCloseRequest"></CustomerInvoice>
+}
+else if (Value is CustomerInvoiceModel.Template)
+{
+    <CustomerInvoiceTemplate Value="(CustomerInvoiceModel.Template)Value"
+                             AfterUpdate="HandleAfterUpdate"
+                             CancelRequest="HandleCloseRequest"></CustomerInvoiceTemplate>
+}
+else if (Value is CustomerInvoiceModel.Item)
+{
+    <CustomerInvoiceItem Value="(CustomerInvoiceModel.Item)Value"
+                         AfterUpdate="HandleAfterUpdate"
+                         CancelRequest="HandleCloseRequest"></CustomerInvoiceItem>
+}
+else if (Value is BookfraModel)
+{
+    <Bookfra Value="(BookfraModel)Value"
+             AfterUpdate="HandleAfterUpdate"
+             AfterDelete="HandleAfterDelete"
+             CloseRequest="HandleCloseRequest"></Bookfra>
+}
+
+
+@code {
+    [Parameter] public IModel? Value { get; set; }
+    [Parameter] public EventCallback<IModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<IModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    private ContactModel Contact() => (ContactModel)Value!;
+
+    private void HandleAfterUpdate(IModel args)
+    {
+        AfterUpdate.InvokeAsync(args);
+    }
+
+    private void HandleAfterDelete(IModel args)
+    {
+        AfterDelete.InvokeAsync(args);
+    }
+
+    private void HandleCloseRequest()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}

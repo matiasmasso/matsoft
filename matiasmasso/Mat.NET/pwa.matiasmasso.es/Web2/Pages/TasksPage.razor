@@ -1,0 +1,141 @@
+﻿@page "/tasks"
+@page "/{LangSegment}/tasks"
+@layout ProLayout
+@inject CultureService culture
+@inject TasksService tasksService
+
+<div class="PageWrapper900">
+    @if (isLoading)
+    {
+        <h3>@culture.Localize("Tasks")</h3>
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" 
+            BreadcrumbsChanged="BreadcrumbsChanged"
+        ></ModelEditor>
+    }
+    else
+    {
+        <h3>@culture.Localize("Tasks")</h3>
+
+        <SearchBox @bind-Value="searchterm"></SearchBox>
+
+        <div class="Grid">
+            <div class="ColHeaders">
+                <div class="Nom">&nbsp;</div>
+                <div class="Nom">@culture.Localize("Nom")</div>
+                <div class="Nom HideOnMobile">@culture.Localize("LastRun")</div>
+                <div class="Nom">@culture.Localize("Result")</div>
+                <div class="Nom HideOnMobile">@culture.Localize("NextRun")</div>
+                <div class="Nom">@culture.Localize("Task.TimeLeft")</div>
+            </div>
+
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Toggle">
+                        <Toggle Value="item.Enabled"></Toggle>
+                    </div>
+                    <div class="Nom">
+                        @item.Nom
+                    </div>
+                    <div class="Fch HideOnMobile">
+                        @if (item.LastLog?.Fch != null)
+                        {
+                            <span>@($"{LastRun(item):dd/MM/yy HH:mm}")</span>
+                        }
+                        else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </div>
+                    <div class="Ico">
+                        <Icon Id="tasksService.Icon(item)"></Icon>
+                    </div>
+                    <div class="Fch HideOnMobile">
+                        @if(item.NextRun() != null)
+                        {
+                            <span>@($"{NextRun(item):dd/MM/yy HH:mm}")</span>
+                        } else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </div>
+                    <div class="TimeSpan">
+                        @if (item.NextRun() != null && item.NextRun()>DateTime.Now)
+                        {
+                            <span>@(TimeSpan(item).ToString(@"hh\:mm\:ss"))</span>
+                        }
+                        else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    List<TaskModel>? values;
+    string? searchterm;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    bool isLoading;
+
+    private System.Threading.Timer? Timer;
+    private int secondsToFirstLaunch = 1;
+    private int secondsInterval = 1;
+
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            values = await tasksService.FetchAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Timer = new System.Threading.Timer(_ =>
+            {
+                InvokeAsync(StateHasChanged);
+            }, null, secondsToFirstLaunch * 1000, secondsInterval * 1000);
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    List<TaskModel>? FilteredItems() => values?.Where(x => x.Matches(searchterm)).ToList();
+
+    async Task ItemClick(TaskModel item)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(item, item.Nom ?? "?"));
+    }
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+
+
+    private DateTime LastRun(TaskModel item) => ((DateTimeOffset)item.LastLog!.Fch!).LocalDateTime;
+    private DateTime NextRun(TaskModel item) => ((DateTimeOffset)item.NextRun()!).LocalDateTime;
+    private TimeSpan TimeSpan(TaskModel item) => NextRun(item) - DateTime.Now;
+
+}

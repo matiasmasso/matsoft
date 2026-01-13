@@ -1,0 +1,67 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject PgcCtaSdosService pgcCtaSdosService
+
+<div class="Grid">
+    @foreach (var item in Model?.Items ?? new())
+    {
+        @if (item.Visible)
+        {
+            <a class="Item" href="#" @onclick="@(()=>ToggleChildren(item))" @onclick:preventDefault>
+                <div class="Nom" style="padding-left:@(item.Level*20)px;">
+                    @item.Nom?.Tradueix(culture.Lang())
+                </div>
+                <div class="Num">
+                    @if (item.IsEmpty())
+                    {
+                        <span>&nbsp;</span>
+                    }
+                    else
+                    {
+                        @($"{Model?.Saldo(item):N2} €")
+                    }
+                </div>
+            </a>
+
+        }
+
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public BalanceModel? Model { get; set; }
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        pgcCtaSdosService.OnChange += Refresca;
+    }
+    protected override void OnParametersSet()
+    {
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void ToggleChildren(BalanceModel.Item parent)
+    {
+        var children = Model?.Items.Where(x => x.Parent == parent).ToList();
+        foreach(var child in children ?? new())
+        {
+            child.Visible = !child.Visible;
+        }
+    }
+
+
+    public void Dispose()
+    {
+        pgcCtaSdosService.OnChange -= Refresca;
+    }
+}

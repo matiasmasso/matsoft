@@ -1,0 +1,80 @@
+﻿@page "/{url1}/{url2?}/{url3?}/{url4?}/{url5?}"
+@inherits _PageBase
+
+@if (exception != null)
+{
+    <UxError Exception="exception"></UxError>
+} else if(model == null)
+{
+    <Loading></Loading>
+}
+else if(model is ProductBrandModel)
+{
+    <ProductBrand Model="(ProductBrandModel)model"></ProductBrand>
+}
+else if(model is ProductDeptModel)
+{
+    <ProductDept Model="(ProductDeptModel)model"></ProductDept>
+}
+else if(model is ProductCategoryModel)
+{
+    <ProductCategory Model="(ProductCategoryModel)model"></ProductCategory>
+}
+else if(model is ProductSkuModel)
+{
+    <ProductSku Model="(ProductSkuModel)model"></ProductSku>
+}
+@code {
+    [Parameter] public string? Url1 { get; set; }
+    [Parameter] public string? Url2 { get; set; }
+    [Parameter] public string? Url3 { get; set; }
+    [Parameter] public string? Url4 { get; set; }
+    [Parameter] public string? Url5 { get; set; }
+
+
+    List<CanonicalUrlDTO>? canonicalUrls;
+    List<ProductBrandModel>? brands;
+    List<ProductDeptModel>? depts;
+    List<ProductCategoryModel>? categories;
+    List<ProductSkuModel>? skus;
+
+    private ProductModel? model;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            canonicalUrls = await Get2Async<List<CanonicalUrlDTO>>("products/CanonicalUrls");
+            brands = await Get2Async<List<ProductBrandModel>>("productBrands/1");
+            depts = await Get2Async<List<ProductDeptModel>>("productDepts/1");
+            categories = await Get2Async<List<ProductCategoryModel>>("productCategories/1");
+            skus = await Get2Async<List<ProductSkuModel>>("productSkus/1");
+
+            var url = UrlFromSegments().ToLower();
+            var productGuid = canonicalUrls?.FirstOrDefault(x => x.Url.Text(base.Lang())?.ToLower() == url)?.Target;
+
+            model = brands?.FirstOrDefault(x => x.Guid == productGuid);
+            if (model == null) model = depts?.FirstOrDefault(x => x.Guid == productGuid);
+            if (model == null) model = categories?.FirstOrDefault(x => x.Guid == productGuid);
+            if (model == null) model = skus?.FirstOrDefault(x => x.Guid == productGuid);
+            if (model == null) throw new Exception("Page not found");
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    private string UrlFromSegments()
+    {
+        var segments = new List<String?>{ Url1, Url2, Url3, Url4, Url5 };
+        if(LangDTO.LangUrlSegments().Contains(Url1, StringComparer.OrdinalIgnoreCase))
+            segments.RemoveAt(0);
+        var retval = string.Join("/", segments.Where(x => !string.IsNullOrEmpty(x)));
+        return retval;
+    }
+
+
+}

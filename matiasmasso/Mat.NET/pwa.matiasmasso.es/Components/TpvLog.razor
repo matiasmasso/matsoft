@@ -1,0 +1,103 @@
+﻿@inherits _Base
+
+<div class="Wrapper600">
+    <h2>Tpv log @Value?.Ds_Order</h2>
+
+    @if (Value != null)
+    {
+
+        <PropertyGrid model="@gridModel"
+                  SetDirty="@(()=>isDirty=true)"
+                  CanEdit="true"></PropertyGrid>
+
+        <div class="ButtonsBar">
+            <ButtonsBar CanEdit="true"
+                    IsDirty="isDirty"
+                    IsUpdating="isUpdating"
+                    CanDelete="@(!(Value?.IsNew ?? false))"
+                    RequestToCancel="CancelRequest"
+                    RequestToDelete="DeleteAsync"
+                    RequestToUpdate="UpdateAsync"></ButtonsBar>
+        </div>
+
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+<PageTitle>4moms Backoffice | Tpv log</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    [Parameter] public DTO.Integracions.Redsys.TpvLog? Value { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    LangDTO? lang = null;
+    private PropertyGridModel? gridModel;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    ProblemDetails? problemDetails;
+
+    enum Fields
+    {
+        Fch,
+        TpvOrder,
+        Order,
+        Amt,
+        Concept,
+        Response,
+        Auth,
+        Error
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        var apiResponse = await GetAsync<DTO.Integracions.Redsys.TpvLog>("tpvlog", Value!.Guid.ToString());
+        if (apiResponse.Success())
+        {
+            Value = apiResponse.Value;
+            var model = new PropertyGridModel(Value!);
+            model.AddFch((int)Fields.Fch, Value?.FchCreated, "Data");
+            model.AddString((int)Fields.TpvOrder, Value?.Ds_Order, "Id");
+            model.AddString((int)Fields.Order, Value?.Ds_ProductDescription, "Comanda");
+            model.AddDecimal((int)Fields.Amt, Convert.ToDecimal(Value?.Ds_Amount ?? "0") / 100, "Import");
+            model.AddString((int)Fields.Concept, Value?.Ds_ProductDescription, "Concepte");
+            model.AddString((int)Fields.Response, Value?.Ds_Response, "Resposta");
+            model.AddString((int)Fields.Auth, Value?.Ds_AuthorisationCode, "Codi autorització");
+            model.AddString((int)Fields.Error, Value?.Ds_ErrorCode, "Codi error");
+            gridModel = model;
+            StateHasChanged();
+        }
+
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    async Task DeleteAsync()
+    {
+        var apiResponse = await GetAsync<bool>( "tpvlog/delete", Value!.Guid.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+    }
+
+    async Task UpdateAsync()
+    {
+        var apiResponse = await PostAsync<DTO.Integracions.Redsys.TpvLog, bool>( Value!, "Redsys/log");
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+    }
+}

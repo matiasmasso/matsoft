@@ -1,0 +1,174 @@
+﻿@page "/po"
+@layout ProLayout
+@inject CultureService culture
+@inject PurchaseOrdersService purchaseOrdersService
+@inject SessionStateService session
+@implements IDisposable
+
+<AuthorizeView>
+    <Authorized>
+        <div class="PageWrapper600">
+
+
+            <h3>Nova comanda</h3>
+            @if (resources == null && exception == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <div class="Customer">
+                    <CustomerSelection Value="customerGuid"
+                                       ValueChanged="CustomerChanged" 
+                                       Values="resources?.AvailableDestinations"></CustomerSelection>
+                </div>
+
+                @if (customerGuid != null)
+                {
+                    @if (isSelectingProduct)
+                    {
+                        <PurchaseOrderProductSelection Resources="resources"
+                                                       ValueChanged="AddToBasket"></PurchaseOrderProductSelection>
+                    }
+                    else
+                    {
+                        <PageOptions>
+                            <a href="#" @onclick="@(()=>isSelectingProduct = true)" @onclick:preventDefault>
+                                @((po?.IsEmpty() ?? true) ? culture.Localize("Select.Product") : culture.Localize("Select.MoreProduct"))
+                            </a>
+                            <a href="#" @onclick="@(()=>isShowingAdvancedOptions = !isShowingAdvancedOptions)" @onclick:preventDefault>
+                                @culture.Localize("AdvancedOptions")
+                            </a>
+                            @if (po?.IsEmpty() ?? true)
+                            {
+                                <div class="DisabledAnchor">@culture.Localize("Close.Order")</div>
+                            }
+                            else
+                            {
+                                <a href="#" @onclick="CloseOrder" @onclick:preventDefault disabled>
+                                    @culture.Localize("Close.Order")
+                                </a>
+                            }
+                        </PageOptions>
+
+                        <div class="Grid">
+                            @foreach (var item in po?.Items ?? new())
+                            {
+                                <PurchaseOrderFactoryItem 
+                                    Value="item" 
+                                    ValueChanged="@(()=>ItemChanged(item))"
+                                    HasDiscount="@po!.HasDiscount()"></PurchaseOrderFactoryItem>
+                            }
+                        </div>
+                    }
+                }
+            }
+
+            <Error @bind-Exception="exception"></Error>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <NavLink class="Item" href="/Login">
+            <Login></Login>
+        </NavLink>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+@code {
+    Guid? customerGuid;
+    PurchaseOrderModel? po;
+    PurchaseOrderModel.Resources? resources = null;
+    ProductSkuModel? selectedSku;
+    int selectedQty;
+    bool isLoading;
+    bool isSelectingProduct;
+    bool isShowingAdvancedOptions;
+    bool isClosingOrder;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+        purchaseOrdersService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        if (resources == null && !isLoading)
+        {
+            isLoading = true;
+            Task.Run(async () => await LoadResourcesAsync());
+
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task LoadResourcesAsync()
+    {
+        try
+        {
+            resources = await purchaseOrdersService.GetResourcesAsync(session.User);
+            if (resources?.AvailableDestinations?.Count == 1)
+                CustomerChanged(resources.AvailableDestinations.First());
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            isLoading = false;
+            exception = ex;
+        }
+    }
+
+    void CustomerChanged(Guid? customer)
+    {
+        resources!.SelectedDestination = customer;
+        customerGuid = customer;
+        po = customerGuid == null ? null : PurchaseOrderModel.Factory(session.User!, (Guid)customerGuid);
+        isSelectingProduct = true;
+    }
+
+    void AddToBasket(ProductSkuModel sku)
+    {
+        var item = new PurchaseOrderModel.Item
+            {
+                Sku = sku.Guid,
+                Qty = purchaseOrdersService.Moq(sku),
+                Price = purchaseOrdersService.Price(sku, resources),
+                Dto = purchaseOrdersService.Dto(sku, resources)
+            };
+        po!.Items.Insert(0, item);
+        selectedSku = null;
+        isSelectingProduct = false;
+    }
+
+    void ItemChanged(PurchaseOrderModel.Item item)
+    {
+        if (item.Qty == 0)
+        {
+            po!.Items.Remove(item);
+            isSelectingProduct = po.IsEmpty();
+        }
+    }
+
+    void CloseOrder()
+    {
+
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        purchaseOrdersService.OnChange -= Refresca;
+
+    }
+}

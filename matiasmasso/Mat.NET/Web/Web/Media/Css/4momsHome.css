@@ -1,0 +1,97 @@
+﻿        .Bodegon {
+            max-width:1008px;
+            height:638px;
+            margin:auto;
+            border:1px solid red;
+            position: relative;
+            background-image:url(https://cdn2.bigcommerce.com/server500/6e78d/templates/__custom/images/white/2015_mamaroo/homepage_2015_mamaroo.jpg?t=1426682802);
+            background-size:100%;
+            background-repeat:no-repeat;
+        }
+
+        @media screen and (max-width: 400px) {
+            .body {
+        background-color: lightblue;
+    }
+    }
+
+         a.hover img.hover_img {
+      display: none;
+
+    }
+    a.hover:hover img.hover_img {
+      display: block;
+
+    }
+    a.hover:hover img.product_link {
+      display: none;
+    }
+
+
+
+    a#origami_link{
+      position: relative;
+      top: 50%;
+      left: 50%;
+    }
+    div#origami {
+      height: 413px;
+      width: 264px;
+            border:1px solid green;
+    }
+    div#origami img {
+    }
+
+    a#mamaroo_link {
+      position: absolute;
+      top: 134px;
+      left: 78px;
+    }
+    div#mamaroo {
+      width: 191px;
+      height: 239px;
+    }
+    div#mamaroo img {
+      position: absolute;
+      top: 1px;
+    }
+
+    a.hover {
+      height: 45px;
+      width: 172px;
+    }
+
+    a#breeze_link {
+      position: absolute;
+      top: 121px;
+      left: 300px;
+    }
+    div#breeze {
+      margin-left: -20px;
+      margin-top: 30px;
+      width: 363px;
+      height: 136px;
+    }
+
+    div#breeze img {
+      position: absolute;
+      top: -6px;
+      left: 81px;
+    }
+
+
+    a#rockaroo_link {
+      position: absolute;
+      top: 284px;
+      left: 404px;
+    }
+    div#rockaroo {
+      width: 217px;
+      height: 259px;
+    }
+
+    div#rockaroo img {
+      position: absolute;
+      top: 250px;
+      left: 75px;
+    }

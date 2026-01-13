@@ -1,0 +1,130 @@
+﻿@page "/"
+@page "/ca"
+@page "/en"
+@page "/pt"
+@implements IDisposable
+
+@inject BannersService bannersService
+@inject NoticiasService noticiasService
+@inject PortadaImgsService portadaImgsService
+@inject RafflesService rafflesService
+
+@inject Web.Services.CultureService culture
+
+<div class="Wrapper">
+
+    <div class="Error">
+        <Error @bind-Exception="exception"></Error>
+    </div>
+
+
+    <div class="Banner">
+        @if (banners == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <BannerRotator Banners="@banners"></BannerRotator>
+        }
+    </div>
+
+    @if (noticias != null && noticias.Count > 1)
+    {
+        <a href="@noticias[0].Url" class="News0 ShowOnMobile">
+            <img src="@noticias[0].ImageUrl" title="@(noticias[0].Caption ?? "")" />
+            <span>@noticias[0].Caption</span>
+        </a>
+        <a href="@noticias[1].Url" class="News1 ShowOnMobile">
+            <img src="@noticias[1].ImageUrl" title="@(noticias[1].Caption ?? "")" />
+            <span>@noticias[1].Caption</span>
+        </a>
+    }
+
+    <a href="@portadaImgsService.PortadaImgNavigateTo(PortadaImgModel.Ids.V1)" class="Brand1">
+        <img src="@portadaImgsService.PortadaImgSrc(PortadaImgModel.Ids.V1)"
+             class="BrandsV"
+             title="@portadaImgsService.PortadaImgTitle(PortadaImgModel.Ids.V1)"
+             width="200"
+             height="242" />
+        <img src="@portadaImgsService.PortadaImgSrc(PortadaImgModel.Ids.H1)"
+             class="BrandsH"
+             title="@portadaImgsService.PortadaImgTitle(PortadaImgModel.Ids.H1)"
+             width="600"
+             height="338" />
+    </a>
+    <a href="@portadaImgsService.PortadaImgNavigateTo(PortadaImgModel.Ids.V2)" class="Brand2">
+        <img src="@portadaImgsService.PortadaImgSrc(PortadaImgModel.Ids.V2)"
+             class="BrandsV"
+             title="@portadaImgsService.PortadaImgTitle(PortadaImgModel.Ids.V2)"
+             width="200"
+             height="242" />
+        <img src="@portadaImgsService.PortadaImgSrc(PortadaImgModel.Ids.H2)"
+             class="BrandsH"
+             title="@portadaImgsService.PortadaImgTitle(PortadaImgModel.Ids.H2)"
+             width="600"
+             height="338" />
+    </a>
+    <a href="@portadaImgsService.PortadaImgNavigateTo(PortadaImgModel.Ids.V3)" class="Brand3">
+        <img src="@portadaImgsService.PortadaImgSrc(PortadaImgModel.Ids.V3)"
+             class="BrandsV"
+             title="@portadaImgsService.PortadaImgTitle(PortadaImgModel.Ids.V3)"
+             width="200"
+             height="242" />
+        <img src="@portadaImgsService.PortadaImgSrc(PortadaImgModel.Ids.H3)"
+             class="BrandsH"
+             title="@portadaImgsService.PortadaImgTitle(PortadaImgModel.Ids.H3)"
+             width="600"
+             height="338" />
+    </a>
+
+            <div class="Raffle">
+        <RaffleCurrentOrNext Value="@currentOrNextRaffle"></RaffleCurrentOrNext>
+        </div>
+
+</div>
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private List<Box>? banners;
+    private List<Box>? noticias;
+    private List<Box>? portadaImgs;
+    private RaffleModel? currentOrNextRaffle;
+    private Exception? exception;
+
+    protected override void OnInitialized(){
+        noticiasService.OnChange += Refresca;
+        portadaImgsService.OnChange += Refresca;
+        rafflesService.OnChange += Refresca;
+        bannersService.OnChange += Refresca;
+
+        banners = bannersService.Boxes(culture.Lang());
+        noticias = noticiasService.Boxes(culture.Lang());
+        portadaImgs = portadaImgsService.Boxes(culture.Lang());
+        currentOrNextRaffle = rafflesService.CurrentOrNextRaffle(culture.TopLevelDomain());
+    }
+
+
+    private async void Refresca(Exception? ex = null)
+    {
+        exception = ex ?? exception;
+        banners = bannersService.Boxes(culture.Lang());
+        noticias = noticiasService.Boxes(culture.Lang());
+        portadaImgs = portadaImgsService.Boxes(culture.Lang());
+        currentOrNextRaffle = rafflesService.CurrentOrNextRaffle(culture.TopLevelDomain());
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        bannersService.OnChange -= Refresca;
+        noticiasService.OnChange -= Refresca;
+        portadaImgsService.OnChange -= Refresca;
+        rafflesService.OnChange -= Refresca;
+    }
+}
+

@@ -1,0 +1,940 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="About.AppName" xml:space="preserve">
+    <value>Nom de la app</value>
+  </data>
+  <data name="About.BuildString" xml:space="preserve">
+    <value>Compilació</value>
+  </data>
+  <data name="About.PackageName" xml:space="preserve">
+    <value>Paquet</value>
+  </data>
+  <data name="About.Rol" xml:space="preserve">
+    <value>Rol</value>
+  </data>
+  <data name="About.Title" xml:space="preserve">
+    <value>Sobre aquesta app</value>
+  </data>
+  <data name="About.User" xml:space="preserve">
+    <value>Usuari</value>
+  </data>
+  <data name="About.VersionString" xml:space="preserve">
+    <value>Versió</value>
+  </data>
+  <data name="AddNew" xml:space="preserve">
+    <value>Afegir</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Adreça</value>
+  </data>
+  <data name="Age" xml:space="preserve">
+    <value>Edat</value>
+  </data>
+  <data name="Amount" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Amt" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="and" xml:space="preserve">
+    <value>i</value>
+  </data>
+  <data name="Andorra" xml:space="preserve">
+    <value>Andorra</value>
+  </data>
+  <data name="Basket.AddToBasket" xml:space="preserve">
+    <value>Afexeix a la cistella</value>
+  </data>
+  <data name="Basket.Destination" xml:space="preserve">
+    <value>Adreça d'entrega</value>
+  </data>
+  <data name="Basket.Destination:" xml:space="preserve">
+    <value>Lloc d'entrega:</value>
+  </data>
+  <data name="Basket.DestinationSelection" xml:space="preserve">
+    <value>Tria el lloc d'entrega:</value>
+  </data>
+  <data name="Basket.ProductSelection" xml:space="preserve">
+    <value>Tria producte</value>
+  </data>
+  <data name="BirthYear" xml:space="preserve">
+    <value>Any de naixement</value>
+  </data>
+  <data name="ButtonClose" xml:space="preserve">
+    <value>Tancar</value>
+  </data>
+  <data name="BuyNowAt" xml:space="preserve">
+    <value>Comprar ara a...</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel·lar</value>
+  </data>
+  <data name="CarDealer" xml:space="preserve">
+    <value>Concessionari</value>
+  </data>
+  <data name="CarDriver" xml:space="preserve">
+    <value>Conductor</value>
+  </data>
+  <data name="CarFleet" xml:space="preserve">
+    <value>Flota de vehícles</value>
+  </data>
+  <data name="CarModel" xml:space="preserve">
+    <value>Marca y model</value>
+  </data>
+  <data name="CarPlate" xml:space="preserve">
+    <value>Matrícula</value>
+  </data>
+  <data name="Catalan" xml:space="preserve">
+    <value>Català</value>
+  </data>
+  <data name="Ccas" xml:space="preserve">
+    <value>Assentaments comptables</value>
+  </data>
+  <data name="Ccas.Found" xml:space="preserve">
+    <value>S'han trobat {0} assentaments a {1}</value>
+  </data>
+  <data name="Center" xml:space="preserve">
+    <value>Centre</value>
+  </data>
+  <data name="Centers" xml:space="preserve">
+    <value>Centres</value>
+  </data>
+  <data name="CertsIrpf" xml:space="preserve">
+    <value>Certificats Irpf</value>
+  </data>
+  <data name="ClearBasket" xml:space="preserve">
+    <value>Buidat la cistella</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Tancar</value>
+  </data>
+  <data name="CloseBasket" xml:space="preserve">
+    <value>Finalitzar la comanda</value>
+  </data>
+  <data name="Commission" xml:space="preserve">
+    <value>Comisió</value>
+  </data>
+  <data name="Concept" xml:space="preserve">
+    <value>Concepte</value>
+  </data>
+  <data name="ContactRequest" xml:space="preserve">
+    <value>La teva consulta</value>
+  </data>
+  <data name="ContactRequest.ConfirmationMailBody" xml:space="preserve">
+    <value>&lt;p&gt;Gracies per contactar, la teva consulta s'ha rebut correctament.&lt;br/&gt;
+La copiem a continuació per la teva referencia.&lt;br/&gt;
+Esperem contestar el mes aviat possible.&lt;/p&gt;</value>
+  </data>
+  <data name="ContactRequest.ConfirmationMailSubject" xml:space="preserve">
+    <value>La teva consulta</value>
+  </data>
+  <data name="ContactRequest.Thanks" xml:space="preserve">
+    <value>Gracies per la teva consulta &lt;br/&gt;Acabem de enviar un email de confirmació a {0}</value>
+  </data>
+  <data name="Contract" xml:space="preserve">
+    <value>Contracte</value>
+  </data>
+  <data name="CopyingToClipboard" xml:space="preserve">
+    <value>Copiant al portapapers</value>
+  </data>
+  <data name="CopyPwd" xml:space="preserve">
+    <value>Copiar clau de pas</value>
+  </data>
+  <data name="CopyToClipboard" xml:space="preserve">
+    <value>Copiar al portapapers</value>
+  </data>
+  <data name="CopyUsername" xml:space="preserve">
+    <value>Copiar usuari</value>
+  </data>
+  <data name="Countries.Found" xml:space="preserve">
+    <value>S'han trobat {0} països</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>País</value>
+  </data>
+  <data name="Credential.Ref" xml:space="preserve">
+    <value>Referència</value>
+  </data>
+  <data name="Credentials.AddNew" xml:space="preserve">
+    <value>Nova credencial</value>
+  </data>
+  <data name="Customer" xml:space="preserve">
+    <value>Client</value>
+  </data>
+  <data name="Dates" xml:space="preserve">
+    <value>Dates</value>
+  </data>
+  <data name="Day" xml:space="preserve">
+    <value>Dia</value>
+  </data>
+  <data name="days" xml:space="preserve">
+    <value>dies</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="Deliveries" xml:space="preserve">
+    <value>Albarans</value>
+  </data>
+  <data name="Deliveries.Count" xml:space="preserve">
+    <value>S'han trobat {0:N0} albarans</value>
+  </data>
+  <data name="Delivery" xml:space="preserve">
+    <value>Albarà</value>
+  </data>
+  <data name="DeliveryIdFromFch" xml:space="preserve">
+    <value>Albarà {0:N0} del {1:dd/MM/yy}</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Detalls</value>
+  </data>
+  <data name="Downloads" xml:space="preserve">
+    <value>Descàrregues</value>
+  </data>
+  <data name="Dto" xml:space="preserve">
+    <value>Dte.</value>
+  </data>
+  <data name="EmailAddress" xml:space="preserve">
+    <value>Adreça email</value>
+  </data>
+  <data name="EmailAddresses" xml:space="preserve">
+    <value>Adreçes email</value>
+  </data>
+  <data name="EmailAddresses.Count" xml:space="preserve">
+    <value>Hem trobat {0:N0} adreçes email</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>Data final</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>Anglès</value>
+  </data>
+  <data name="Entry" xml:space="preserve">
+    <value>Entrada</value>
+  </data>
+  <data name="Error.Notify" xml:space="preserve">
+    <value>Avisar a Suport</value>
+  </data>
+  <data name="Errors.PleaseFixFollowingErrors" xml:space="preserve">
+    <value>Si us plau solventa els següents errors:</value>
+  </data>
+  <data name="Escriptura.Inscription" xml:space="preserve">
+    <value>Inscripció</value>
+  </data>
+  <data name="Escriptura.MercantileRegistry" xml:space="preserve">
+    <value>Registre Mercantil</value>
+  </data>
+  <data name="Escriptura.Notary" xml:space="preserve">
+    <value>Notari</value>
+  </data>
+  <data name="Escriptura.Page" xml:space="preserve">
+    <value>Foli</value>
+  </data>
+  <data name="Escriptura.ProtocolNumber" xml:space="preserve">
+    <value>Número de Protocol</value>
+  </data>
+  <data name="Escriptura.Sheet" xml:space="preserve">
+    <value>Full</value>
+  </data>
+  <data name="Escriptura.Volume" xml:space="preserve">
+    <value>Tomo</value>
+  </data>
+  <data name="Exit" xml:space="preserve">
+    <value>Sortida</value>
+  </data>
+  <data name="Expand" xml:space="preserve">
+    <value>Expandir</value>
+  </data>
+  <data name="Fch" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Files" xml:space="preserve">
+    <value>Fitxers</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>Nom</value>
+  </data>
+  <data name="Gross" xml:space="preserve">
+    <value>Brut</value>
+  </data>
+  <data name="HelloWorld" xml:space="preserve">
+    <value>Hola, Món!</value>
+  </data>
+  <data name="hours" xml:space="preserve">
+    <value>hores</value>
+  </data>
+  <data name="Incidence" xml:space="preserve">
+    <value>Incidencia</value>
+  </data>
+  <data name="Incidences" xml:space="preserve">
+    <value>Incidencies</value>
+  </data>
+  <data name="IncludeObsolets" xml:space="preserve">
+    <value>Inclou obsolets</value>
+  </data>
+  <data name="Insurance" xml:space="preserve">
+    <value>Assegurança</value>
+  </data>
+  <data name="Invoice" xml:space="preserve">
+    <value>Factura</value>
+  </data>
+  <data name="InvoiceIdFromFch" xml:space="preserve">
+    <value>Factura {0:N0} del {1:dd/MM/yy}</value>
+  </data>
+  <data name="InvoicePending" xml:space="preserve">
+    <value>Pendent de facturar</value>
+  </data>
+  <data name="KeepPurchasing" xml:space="preserve">
+    <value>Continuar comprant</value>
+  </data>
+  <data name="Line" xml:space="preserve">
+    <value>Linia</value>
+  </data>
+  <data name="LoadingOrder" xml:space="preserve">
+    <value>Carregant comanda</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Població</value>
+  </data>
+  <data name="Locations.Found" xml:space="preserve">
+    <value>S'han trobat {0} poblacions, {1} in {2}</value>
+  </data>
+  <data name="Login.Email.VerificationCodeBody" xml:space="preserve">
+    <value>Entra el següent codi a la casella que t'ho demana: &lt;b&gt;{0}&lt;/b&gt;
+Aquest missatge s'envia en resposta a una sol·licitud de renovar la teva clau de pas.
+Si no ho has demanat tú pots ignorar aquest missatge.</value>
+  </data>
+  <data name="Login.Email.VerificationCodeSubject" xml:space="preserve">
+    <value>Codi de verificació</value>
+  </data>
+  <data name="Login.Err.MissingPassword" xml:space="preserve">
+    <value>Si us plau entra la teva clau de pas.
+Si no la tens o no la recordes hi ha un enllaç per registrar-te o per recuperar-la.</value>
+  </data>
+  <data name="Login.Err.WrongCredentials" xml:space="preserve">
+    <value>Clau de pas incorrecta. Si no la recordes, prem el següent botó.
+T'enviarem un codi de verificació que et demanarem per crear-ne una de nova.</value>
+  </data>
+  <data name="Login.Err.WrongEmailAddress" xml:space="preserve">
+    <value>Si us plau entra una adreça email vàlida.</value>
+  </data>
+  <data name="Login.IForgot.Anchor" xml:space="preserve">
+    <value>No tinc o no recordo la meva clau de pas.</value>
+  </data>
+  <data name="Login.IForgot.VerificationCodeFail" xml:space="preserve">
+    <value>El codi entrat no es correspon amb el que t'hem enviat.
+Si no has rebut el nostre missatge, si us plau verifica que has entrat la adreça correcta.
+Pots modificar-la i tornar a enviar-la.
+També pots buscar el missatge a la teva safata de correu no desitjat.</value>
+  </data>
+  <data name="Login.IForgot.VerificationCodeRequest" xml:space="preserve">
+    <value>En un minut rebràs un correu amb l'assumpte "{0}".
+Entra el codi en la següent casella per crear una nova clau de pas.</value>
+  </data>
+  <data name="Login.Info.EmailAddress" xml:space="preserve">
+    <value>Si us plau entra la adreça de correu amb la que vols que t'identifiquem.</value>
+  </data>
+  <data name="Login.NewPwd.Unmatch" xml:space="preserve">
+    <value>Les noves claus no coincideixen o bé tenen menys de 6 caracters. Si us plau entra-les de nou.</value>
+  </data>
+  <data name="Login.NewPwdConfirm" xml:space="preserve">
+    <value>Entra-la aqui de nou per confirmar-la.</value>
+  </data>
+  <data name="Login.NewPwdRequest" xml:space="preserve">
+    <value>Si us plau entra una nova clau de pas</value>
+  </data>
+  <data name="Login.Title" xml:space="preserve">
+    <value>Identifica't</value>
+  </data>
+  <data name="Login.Title.CreateNewPassword" xml:space="preserve">
+    <value>Crea nova clau de pas</value>
+  </data>
+  <data name="Login.Title.SignUp" xml:space="preserve">
+    <value>Registre de usuari</value>
+  </data>
+  <data name="Login.UserIsAlreadyRegistered" xml:space="preserve">
+    <value>Ja tenim un usuari registrat amb aquesta adreça.
+Si us plau entra la clau de pas o fes clic a l'enllaç per crear-ne una de nova.</value>
+  </data>
+  <data name="Login.UserIsNotRegistered" xml:space="preserve">
+    <value>No tenim cap usuari registrat amb aquest email.
+Si fas clic al següent botó t'enviarem un codi per verificar que tens accés a aquest compte de correu.</value>
+  </data>
+  <data name="Login.VerificationCode.EmailBody" xml:space="preserve">
+    <value>Acabem de rebre una sol·licitud per resetejar la teva clau de pas.
+Si ha estat cosa teva, si us plau copia el següent codi i entra'l a la casella on s'et demana.
+&lt;p style="text-align:center;font-weight:700;"&gt;{0}&lt;/p&gt;
+Si no has estat tú, pots ignorar aquest missatge.</value>
+  </data>
+  <data name="Login.VerificationCode.EmailSubject" xml:space="preserve">
+    <value>Codi de verificació d'adreça email</value>
+  </data>
+  <data name="LoginFailure" xml:space="preserve">
+    <value>Credencials no vàlides</value>
+  </data>
+  <data name="MailCTO" xml:space="preserve">
+    <value>Enviar a suport</value>
+  </data>
+  <data name="MarketPlaces.Found" xml:space="preserve">
+    <value>S'han trobat {0} market places</value>
+  </data>
+  <data name="minutes" xml:space="preserve">
+    <value>minuts</value>
+  </data>
+  <data name="Mkg.PortaitImgs.Title" xml:space="preserve">
+    <value>Imatges de portada</value>
+  </data>
+  <data name="MustAcceptConditions" xml:space="preserve">
+    <value>Si us plau, accepta les condicions del sorteig</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Nom</value>
+  </data>
+  <data name="Net" xml:space="preserve">
+    <value>Net</value>
+  </data>
+  <data name="NewCredential" xml:space="preserve">
+    <value>Nova credencial</value>
+  </data>
+  <data name="News" xml:space="preserve">
+    <value>Noticies</value>
+  </data>
+  <data name="News.OtherNews" xml:space="preserve">
+    <value>Altres notícies:</value>
+  </data>
+  <data name="NextRaffle" xml:space="preserve">
+    <value>Proxim sorteig</value>
+  </data>
+  <data name="NextRaffleOn" xml:space="preserve">
+    <value>Proxim sorteig en</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="NoItemsInBasketYet" xml:space="preserve">
+    <value>Encara no hi ha cap producte a la cistella</value>
+  </data>
+  <data name="NoLocationsAvailable" xml:space="preserve">
+    <value>No hi ha cap població a {0}</value>
+  </data>
+  <data name="NomAndCognoms" xml:space="preserve">
+    <value>Nom i cognoms</value>
+  </data>
+  <data name="NoRegionsAvailable" xml:space="preserve">
+    <value>No hi ha cap regio a {0}</value>
+  </data>
+  <data name="Notarial deeds" xml:space="preserve">
+    <value>Escriptures</value>
+  </data>
+  <data name="NotarialDeedsCount" xml:space="preserve">
+    <value>S'han trobat {0} ecriptures, {1} de elles vigents</value>
+  </data>
+  <data name="NoZonasAvailable" xml:space="preserve">
+    <value>No hi ha cap zona registrada a  {0}</value>
+  </data>
+  <data name="Obs" xml:space="preserve">
+    <value>Observacions</value>
+  </data>
+  <data name="Offer" xml:space="preserve">
+    <value>Oferta</value>
+  </data>
+  <data name="Offers" xml:space="preserve">
+    <value>Ofertes</value>
+  </data>
+  <data name="OfficialShop" xml:space="preserve">
+    <value>Botiga oficial de {0} per Espanya, Portugal y Andorra</value>
+  </data>
+  <data name="Options" xml:space="preserve">
+    <value>Opcions</value>
+  </data>
+  <data name="OrderCfmEmailSent" xml:space="preserve">
+    <value>Hem enviat un correu a {0} amb la confirmació de la comanda.</value>
+  </data>
+  <data name="OrderIdFromFch" xml:space="preserve">
+    <value>Comanda {0:N0} del {1:dd/MM/yy}</value>
+  </data>
+  <data name="OutdatedIncluded" xml:space="preserve">
+    <value>Obsolets inclosos</value>
+  </data>
+  <data name="OutdatedNotIncluded" xml:space="preserve">
+    <value>Obsolets no inclosos</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Clau de pas</value>
+  </data>
+  <data name="Payrolls" xml:space="preserve">
+    <value>Nómines</value>
+  </data>
+  <data name="Penalties" xml:space="preserve">
+    <value>Multes</value>
+  </data>
+  <data name="Permissions" xml:space="preserve">
+    <value>Permisos</value>
+  </data>
+  <data name="PlayYoureStillOnTime" xml:space="preserve">
+    <value>¡Participa, encara hi ets a temps!</value>
+  </data>
+  <data name="Portugal" xml:space="preserve">
+    <value>Portugal</value>
+  </data>
+  <data name="Portuguese" xml:space="preserve">
+    <value>Portuguès</value>
+  </data>
+  <data name="Price" xml:space="preserve">
+    <value>Preu</value>
+  </data>
+  <data name="Prize" xml:space="preserve">
+    <value>Premi</value>
+  </data>
+  <data name="Product" xml:space="preserve">
+    <value>Producte</value>
+  </data>
+  <data name="ProductBrands.Found" xml:space="preserve">
+    <value>S'han trobat {0} marques comerciales, {1} actives</value>
+  </data>
+  <data name="ProductCategories.Found" xml:space="preserve">
+    <value>S'han trobat {0} categories, {1} actives a {2}</value>
+  </data>
+  <data name="ProductDepts.Found" xml:space="preserve">
+    <value>S'han trobat {0} departaments, {1} a {2}</value>
+  </data>
+  <data name="Products" xml:space="preserve">
+    <value>Productes</value>
+  </data>
+  <data name="ProductSkus.Found" xml:space="preserve">
+    <value>S'han trobat {0} articles, {1} actius a {2}</value>
+  </data>
+  <data name="Profile" xml:space="preserve">
+    <value>Perfil</value>
+  </data>
+  <data name="Profile.EnterYourPwd" xml:space="preserve">
+    <value>Per la seva seguretat, si us plau entri la seva clau de pas actual:</value>
+  </data>
+  <data name="Profile.ResetPwd" xml:space="preserve">
+    <value>Canviar clau de pas</value>
+  </data>
+  <data name="Profile.ResetPwdSuccess" xml:space="preserve">
+    <value>La tevas clau de pas ha estat actualitzada correctament.</value>
+  </data>
+  <data name="Profile.UserDeletedSuccess" xml:space="preserve">
+    <value>Les teves dades han estat eliminades correctament.</value>
+  </data>
+  <data name="Profile.WrongPwd" xml:space="preserve">
+    <value>Clau de pas incorrecta.
+Tant sols el titular del perfil està autoritzat a canviar-la.</value>
+  </data>
+  <data name="Provinces.Found" xml:space="preserve">
+    <value>S'han trobat {0} provincies, {1} in {2}</value>
+  </data>
+  <data name="PublishDay" xml:space="preserve">
+    <value>Dia de publicació</value>
+  </data>
+  <data name="PurchaseDate" xml:space="preserve">
+    <value>Data de compra</value>
+  </data>
+  <data name="PurchaseOrders" xml:space="preserve">
+    <value>Comandes</value>
+  </data>
+  <data name="PurchaseOrders.Count" xml:space="preserve">
+    <value>S'han trobat {0:N0} comandes</value>
+  </data>
+  <data name="Qty" xml:space="preserve">
+    <value>Quant</value>
+  </data>
+  <data name="Quantity" xml:space="preserve">
+    <value>Quantitat</value>
+  </data>
+  <data name="Question" xml:space="preserve">
+    <value>Questió</value>
+  </data>
+  <data name="Raffle.NextFchFrom" xml:space="preserve">
+    <value>El proper sorteig començarà el {0:dd/MM/yy} </value>
+  </data>
+  <data name="Raffle.Participation" xml:space="preserve">
+    <value>Participació en sorteig</value>
+  </data>
+  <data name="RaffleDate" xml:space="preserve">
+    <value>Data de sorteig</value>
+  </data>
+  <data name="RafflePlay.ConfirmationEmailBody" xml:space="preserve">
+    <value>&lt;table&gt;
+&lt;tr&gt;&lt;td colspan="2"&gt;&lt;p&gt;Confirmem la teva participació en el següent sorteig:&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Sorteig&lt;/td&gt;&lt;td&gt;{0}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Participant&lt;/td&gt;&lt;td&gt;{1}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Data&lt;/td&gt;&lt;td&gt;{2}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Ticket&lt;/td&gt;&lt;td&gt;{3}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Resposta&lt;/td&gt;&lt;td&gt;{4}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Distribuïdor&lt;/td&gt;&lt;td&gt;{5}&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2"&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td colspan="2"&gt;
+&lt;p&gt;
+Recorda que aquest es un sorteig exclusiu per seguidors dels nostres perfils a Facebook i/o Instagram. Si encara no ho ets pots seguir-nos fent clic als botons de m'agrada (Facebook) o Seguir (Instagram) a les següents pàgines:
+&lt;/p&gt;
+&lt;div&gt;&lt;a href="https://www.facebook.com/matiasmasso.sa"&gt;www.facebook.com/matiasmasso.sa&lt;/a&gt;&lt;/div&gt;
+&lt;div&gt;&lt;a href="https://www.instagram.com/matiasmasso.sa"&gt;www.instagram.com/matiasmasso.sa&lt;/a&gt;&lt;/div&gt;
+&lt;p&gt;Pots verificar el resultat a partir de les 23:59 hores del {6} {7} en &lt;a href="https://www.matiasmasso.es/sorteos"&gt;www.matiasmasso.es/sorteos&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Si et toca el premi, tens 30 dies per posar-te en contacte amb nosaltres a &lt;a href="mailto:marketing@matiasmasso.es"&gt;marketing@matiasmasso.es&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Gracies per participar!&lt;/p&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;</value>
+  </data>
+  <data name="RafflePlay.ConfirmationEmailJustSent" xml:space="preserve">
+    <value>Acabem d'enviar-te un correo a {0} confirmant la teva resposta, el número que tens al sorteig si la resposta es correcta, y el distribuidor on podrás recollir el premi si t'ha tocat.</value>
+  </data>
+  <data name="RafflePlay.ConfirmationEmailSubject" xml:space="preserve">
+    <value>Confirmación de participación en sorteo</value>
+  </data>
+  <data name="RafflePlay.DuplicatedPlayerBody" xml:space="preserve">
+    <value>Aquest usuari ja participa al sorteig amb el ticket numero {0} from {1:dd/MM/yy HH:mm}</value>
+  </data>
+  <data name="RafflePlay.DuplicatedPlayerTitle" xml:space="preserve">
+    <value>Jugador duplicat</value>
+  </data>
+  <data name="RafflePlay.Error.18YearsOldMin" xml:space="preserve">
+    <value>Els sortejos son nomes per adults a partir dels 18 anys</value>
+  </data>
+  <data name="RafflePlay.Error.MissingAnswer" xml:space="preserve">
+    <value>Has de sel·leccionar alguna resposta</value>
+  </data>
+  <data name="RafflePlay.Error.MissingBasesAcceptance" xml:space="preserve">
+    <value>No has acceptat les bases del sorteig</value>
+  </data>
+  <data name="RafflePlay.Error.MissingDistributor" xml:space="preserve">
+    <value>Has de triar algun distribuïdor</value>
+  </data>
+  <data name="RafflePlay.Error.MissingNom" xml:space="preserve">
+    <value>El nom del jugador està incomplert</value>
+  </data>
+  <data name="RafflePlay.Error.MissingResidence" xml:space="preserve">
+    <value>Falta el lloc de residencia del jugador</value>
+  </data>
+  <data name="RafflePlay.Error.WrongBirthYear" xml:space="preserve">
+    <value>L'any de naixement no es vàlid</value>
+  </data>
+  <data name="RafflePlay.GoodLuck" xml:space="preserve">
+    <value>Sort!</value>
+  </data>
+  <data name="RafflePlay.HaveReadBasis" xml:space="preserve">
+    <value>He llegit i accepto les bases del sorteig</value>
+  </data>
+  <data name="RafflePlay.StepAcceptAndSubmit.Caption" xml:space="preserve">
+    <value>Accepta les bases i confirma les dades</value>
+  </data>
+  <data name="RafflePlay.StepAcceptAndSubmit.Title" xml:space="preserve">
+    <value>Envía la teva participació</value>
+  </data>
+  <data name="RafflePlay.StepDistributor.Caption" xml:space="preserve">
+    <value>En cas de guanyar, es on podràs recullir el premi.</value>
+  </data>
+  <data name="RafflePlay.StepDistributor.Title" xml:space="preserve">
+    <value>Tria el distribuidor mes proper</value>
+  </data>
+  <data name="RafflePlay.StepPlayerDetails.Title" xml:space="preserve">
+    <value>Identificació del jugador</value>
+  </data>
+  <data name="RafflePlay.StepQuestion.Caption" xml:space="preserve">
+    <value>El premi es sortejarà entre aquells jugadors que hagin triat la resposta correcta.</value>
+  </data>
+  <data name="RafflePlay.StepQuestion.Title" xml:space="preserve">
+    <value>Tria la resposta</value>
+  </data>
+  <data name="RafflePlay.Thanks" xml:space="preserve">
+    <value>Gracies {0} per participar!</value>
+  </data>
+  <data name="Raffles" xml:space="preserve">
+    <value>Sortejos</value>
+  </data>
+  <data name="RealState" xml:space="preserve">
+    <value>Immoble</value>
+  </data>
+  <data name="RealStates" xml:space="preserve">
+    <value>Immobles</value>
+  </data>
+  <data name="RefCatastral" xml:space="preserve">
+    <value>Ref.Cadastral</value>
+  </data>
+  <data name="Regions.Found" xml:space="preserve">
+    <value>S'han trobat {0} regions, {1} in {2}</value>
+  </data>
+  <data name="RemindMe" xml:space="preserve">
+    <value>Recorda'm</value>
+  </data>
+  <data name="Residence" xml:space="preserve">
+    <value>Residencia</value>
+  </data>
+  <data name="RetailPrice" xml:space="preserve">
+    <value>Preu de venda recomenat</value>
+  </data>
+  <data name="RightAnswer" xml:space="preserve">
+    <value>Resposta correcta</value>
+  </data>
+  <data name="Rrpp" xml:space="preserve">
+    <value>Pvr</value>
+    <comment>Preu de venda recomenat</comment>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Desar</value>
+  </data>
+  <data name="seconds" xml:space="preserve">
+    <value>segons</value>
+  </data>
+  <data name="SeeLess" xml:space="preserve">
+    <value>Veure'n menys</value>
+  </data>
+  <data name="SeeMore" xml:space="preserve">
+    <value>Veure'n mes</value>
+  </data>
+  <data name="SelectACountry" xml:space="preserve">
+    <value>Tria un pais</value>
+  </data>
+  <data name="SelectedDistributor" xml:space="preserve">
+    <value>Distribuïdor triat</value>
+  </data>
+  <data name="Shop.AddToBasket" xml:space="preserve">
+    <value>Afegir a la cistella</value>
+  </data>
+  <data name="Shop.CloseOrder" xml:space="preserve">
+    <value>Finalitzar la comanda</value>
+  </data>
+  <data name="Shop.SeeBasket" xml:space="preserve">
+    <value>Veure la cistella</value>
+  </data>
+  <data name="ShowAll" xml:space="preserve">
+    <value>Veure tot</value>
+  </data>
+  <data name="ShowOutdateds" xml:space="preserve">
+    <value>Veure desfassats</value>
+  </data>
+  <data name="SignUp.EmailNotFound" xml:space="preserve">
+    <value>Adreça email no registrada. Pots registrar-te a continuació</value>
+  </data>
+  <data name="SignUp.EmailVerificationCodeFailed" xml:space="preserve">
+    <value>Codi de verificació incorrecte. La teva adreça email no ha pogut ser confirmada.</value>
+  </data>
+  <data name="SignUp.SendVerificationCode" xml:space="preserve">
+    <value>Envia'm un codi de verificació</value>
+  </data>
+  <data name="SignUp.Title" xml:space="preserve">
+    <value>Registre de usuari</value>
+  </data>
+  <data name="SignUp.VerificationCodeSent" xml:space="preserve">
+    <value>Acabem d'enviar-te un codi per verificar la teva adreça de correu.
+Si us plau comprova la teva bustia i entra el codi a la següent casella:</value>
+  </data>
+  <data name="Sku" xml:space="preserve">
+    <value>Producte</value>
+  </data>
+  <data name="Sku.Availability.None" xml:space="preserve">
+    <value>Temporalment esgotat</value>
+  </data>
+  <data name="Sku.Availability.Some" xml:space="preserve">
+    <value>Entrega immediata</value>
+  </data>
+  <data name="Spain" xml:space="preserve">
+    <value>Espanya</value>
+  </data>
+  <data name="Spanish" xml:space="preserve">
+    <value>Espanyol</value>
+  </data>
+  <data name="StaffPosition" xml:space="preserve">
+    <value>Càrrec</value>
+  </data>
+  <data name="StaffProperties" xml:space="preserve">
+    <value>Fitxa de empleat</value>
+  </data>
+  <data name="StaffSeniority" xml:space="preserve">
+    <value>Antiguitat</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>Data de inici</value>
+  </data>
+  <data name="String" xml:space="preserve">
+    <value>Accepted size {2}x{3}px</value>
+  </data>
+  <data name="String1" xml:space="preserve">
+    <value>We can only offer password reset to the current owner of the profile.</value>
+  </data>
+  <data name="Submit" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="Surnames" xml:space="preserve">
+    <value>Cognoms</value>
+  </data>
+  <data name="TerminationDate" xml:space="preserve">
+    <value>Caducitat</value>
+  </data>
+  <data name="TextResourcesFound" xml:space="preserve">
+    <value>S'han trobat {0:N0} recursos de text</value>
+  </data>
+  <data name="ThanksForPurchasing" xml:space="preserve">
+    <value>Gracies per comprar a {0}.</value>
+  </data>
+  <data name="Transmission" xml:space="preserve">
+    <value>Transmisió</value>
+  </data>
+  <data name="TransmissionPending" xml:space="preserve">
+    <value>Pendent de transmetre</value>
+  </data>
+  <data name="TrpObs" xml:space="preserve">
+    <value>Observacions per el transportista</value>
+  </data>
+  <data name="UnitPrice" xml:space="preserve">
+    <value>Preu unitari</value>
+  </data>
+  <data name="Units" xml:space="preserve">
+    <value>Unitats</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Desar</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>Usuari</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Adreça email</value>
+  </data>
+  <data name="VehicleProperties" xml:space="preserve">
+    <value>Fitxa de vehicle</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>Verificar</value>
+  </data>
+  <data name="WhereToBuy" xml:space="preserve">
+    <value>On comprar?</value>
+  </data>
+  <data name="Winner" xml:space="preserve">
+    <value>Guanyador</value>
+  </data>
+  <data name="WorkDays" xml:space="preserve">
+    <value>Jornades laborals</value>
+  </data>
+  <data name="WrongImgSize" xml:space="preserve">
+    <value>Mides {0}x{1}px no vàlides.
+Ha de ser {2}x{3}px</value>
+  </data>
+  <data name="ZipCod" xml:space="preserve">
+    <value>Codi postal</value>
+  </data>
+  <data name="Zips.Found" xml:space="preserve">
+    <value>S'han trobat {0} codis postals, {1} a {2}</value>
+  </data>
+</root>

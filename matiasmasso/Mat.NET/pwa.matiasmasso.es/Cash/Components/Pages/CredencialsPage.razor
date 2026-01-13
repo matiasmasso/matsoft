@@ -1,0 +1,141 @@
+﻿@page "/Credencials"
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Cash</PageTitle>
+
+@if (selectedItem == null)
+{
+    <div class="PageWrapper600">
+        <h3>Credencials</h3>
+
+        <PageOptions>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir</a>
+        </PageOptions>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <SwipeMenu Model="SwipeMenu(item)" MenuItemClick="SwipeMenuItemClickAsync">
+                    <a href="#" class="Item" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        <div class="Ref">@item.Referencia</div>
+                        <div class="Usr">@item.Usuari</div>
+                    </a>
+                </SwipeMenu>
+            }
+        </div>
+
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+else
+{
+    <Credencial Model="selectedItem"
+                CloseRequest="@(()=> selectedItem = null)"
+                AfterUpdate="AfterUpdateHandler"
+                AfterDelete="AfterDeleteHandler"></Credencial>
+}
+
+
+@code {
+    List<CredencialModel>? values;
+    CredencialModel? selectedItem;
+    CredencialModel? swippingItem;
+    string? searchterm;
+    Exception? exception;
+
+    enum Ids
+    {
+        Delete,
+        Browse,
+        CopyUsr,
+        CopyPwd
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        try
+        {
+            values = await ApiService.GetAsync<List<CredencialModel>>("Credencials");
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private List<CredencialModel>? FilteredItems()
+    {
+        List<CredencialModel>? retval = values;
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = retval?.Where(x => x.Matches(searchterm)).ToList();
+        return retval;
+    }
+
+    private SwipeMenuModel SwipeMenu(CredencialModel value)
+    {
+        var retval = new SwipeMenuModel();
+        retval.AddDeleteButton(value);
+        if(!string.IsNullOrEmpty(value.Url))
+            retval.AddBrowseButton(value.Url);
+        if (!string.IsNullOrEmpty(value.Usuari))
+            retval.AddCopyToClipboardButton(value.Usuari, "usuari");
+        if (!string.IsNullOrEmpty(value.Password))
+            retval.AddCopyToClipboardButton(value.Password, "password");
+        return retval;
+    }
+
+
+    private void ItemClick(CredencialModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = CredencialModel.Factory(ApiService.CurrentUser()!);
+    }
+
+    private void AfterUpdateHandler(CredencialModel item)
+    {
+        var idx = values!.IndexOf(item);
+        if (idx >= 0)
+            values[idx] = item;
+        else
+        {
+            values!.Add(item);
+            values = values.OrderBy(x => x.Referencia).ToList();
+        }
+        selectedItem = null;
+    }
+
+    private void AfterDeleteHandler(CredencialModel item)
+    {
+        values!.Remove(item);
+        selectedItem = null;
+    }
+
+    private async Task SwipeMenuItemClickAsync(SwipeMenuModel.Item item)
+    {
+        var value = (CredencialModel)item.Tag!;
+        switch((Ids)item.Id){
+            case Ids.Delete:
+                try
+                {
+                    await ApiService.GetAsync<bool>("Credencial/delete", value.Guid.ToString());
+                    values!.Remove(value);
+                } catch(Exception ex)
+                {
+                    exception = ex;
+                }
+                break;
+        }
+    }
+
+}

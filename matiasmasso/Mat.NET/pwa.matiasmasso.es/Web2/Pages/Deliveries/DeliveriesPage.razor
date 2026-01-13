@@ -1,0 +1,162 @@
+﻿@page "/albaranes"
+@page "/{LangSegment}/albaranes"
+@page "/ca/albarans"
+@page "/en/deliveries"
+
+@layout ProLayout
+@implements IDisposable
+
+@inject CultureService culture;
+@inject SessionStateService session;
+@inject DeliveriesService deliveriesService;
+
+<div class="PageWrapper900">
+    <AuthorizeView>
+        <Authorized>
+
+
+            @if (deliveriesService.State == DbState.IsLoading)
+            {
+                <h3>@culture.Localize("Deliveries")</h3>
+                <Loading></Loading>
+            }
+            else if (breadcrumbs.Count > 0)
+            {
+                <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+            }
+            else if (selectedYear == null)
+            {
+                <h3>@culture.Localize("Deliveries")</h3>
+
+                @if (deliveriesService.Years == null)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <div class="Info">
+                        @culture.Tradueix("Selecciona un ejercicio","Selecciona un exercici","Select a year"):
+                    </div>
+
+                    <div class="Years">
+                        @foreach (var year in deliveriesService.Years ?? new())
+                        {
+                            <a href="#" @onclick="@(()=>YearChanged(year))" @onclick:preventDefault>@year</a>
+                        }
+                    </div>
+                }
+
+
+            }
+            else
+            {
+                <div class="SelectedYear">
+                    <a href="#" @onclick="@(()=>selectedYear = null)" @onclick:preventDefault>
+                        <div>@selectedYear</div>
+                        <Icon Id="Icon.Ids.Xmark"></Icon>
+                    </a>
+                </div>
+
+                <SearchBox @bind-Value="@searchterm"></SearchBox>
+
+                <div class="Grid">
+                    <Virtualize Items="FilteredValues()" Context="item">
+                        <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                            <div class="Num">
+                                @item.Id
+                            </div>
+                            <div>
+                                @string.Format("{0:dd/MM/yy}",item.Fch)
+                            </div>
+                            <div class="Nom">
+                                @item.Nom
+                            </div>
+                            <div class="Num">
+                                @item.Amt?.CurFormatted()
+                            </div>
+                        </a>
+                    </Virtualize>
+                </div>
+            }
+
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="Item" href="/Login">
+                <Login></Login>
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    EmpModel? emp;
+    int? selectedYear;
+    DeliveryModel? selectedItem;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    string? searchterm;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        emp = session.Emps?.FirstOrDefault();
+        session.OnChange += Refresca;
+        deliveriesService.OnChange += Refresca;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (emp != null)
+            await deliveriesService.FetchAsync(emp.Id);
+    }
+
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        if (emp != session.Emps?.FirstOrDefault())
+        {
+            emp = session.Emps?.FirstOrDefault();
+            Task.Run(async () => await deliveriesService.FetchAsync(emp!.Id));
+        }
+        if (selectedYear == null) selectedYear = deliveriesService.Years?.FirstOrDefault();
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<DeliveryModel>? FilteredValues()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return deliveriesService.Values;
+        else
+            return deliveriesService.Values?.Where(x => x.Matches(searchterm)).ToList();
+    }
+
+    async Task YearChanged(int year)
+    {
+        selectedYear = year;
+        await deliveriesService.FetchAsync(emp!.Id, year);
+    }
+
+    private void ItemClick(DeliveryModel value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value.ToString()));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        deliveriesService.OnChange -= Refresca;
+        session.OnChange -= Refresca;
+    }
+}

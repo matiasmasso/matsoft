@@ -1,0 +1,64 @@
+﻿<div class="Wrapper">
+    @if (CanEdit && IsEditing)
+    {
+        <input type="text"
+               class="@(isOverLength ? "OverLength" : "" )"
+               placeholder="YYYYMMDD"
+               @oninput="HandleOnInputText"
+               @bind-value="@_innerControlValue" @onblur="@(()=>{IsEditing = false;})" />
+    }
+    else
+    {
+        <a class="Display" href="#" @onclick="OnClick" @onclick:preventDefault="true">
+            @if (string.IsNullOrEmpty(_innerControlValue))
+            {
+                @(" ")
+            } else
+            {
+                @_innerControlValue
+            }
+        </a>
+    }
+
+</div>
+
+@code {
+    [Parameter] public Object? Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsEditing { get; set; }
+
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+    [Parameter] public EventCallback IsDirty { get; set; }
+
+    private int maxLength = 8;
+    private bool isOverLength = false;
+
+    private string _innerControlValue
+    {
+        get => Value?.ToString() ?? "";
+        set
+        {
+            if (Value?.ToString() != value)
+            {
+                Value = value;
+
+                if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                    ObjChanged.InvokeAsync(value);
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    private void OnClick()
+    {
+        IsEditing = true;
+    }
+
+    private void HandleOnInputText(ChangeEventArgs args)
+    {
+        isOverLength = args.Value is string &&  ((string)args.Value).Length > maxLength;
+        IsDirty.InvokeAsync();
+    }
+}

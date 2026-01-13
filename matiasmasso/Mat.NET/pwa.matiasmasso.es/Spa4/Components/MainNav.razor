@@ -1,0 +1,231 @@
+﻿@using System.Globalization
+@inherits _ComponentBase
+
+<div class="ButtonsBar" hidden="@(!ShowButtonsBar)">
+    <a href="#" class="Lupa" hidden="@IsShowingSearchbox" @onclick="ShowSearchbox"  @onclick:preventDefault="true">
+        <img src="img/Lupa-20.png" alt="search menu..." width="20" height="20" />
+    </a>
+    <div class="Lang" hidden="@IsShowingSearchbox">
+        <Lang></Lang>
+    </div>
+    <div class="Searchbox" hidden="@(!IsShowingSearchbox)">
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+    </div>
+</div>
+
+@if (string.IsNullOrEmpty(searchTerm))
+{
+    @foreach (var selectedItem in selectedItems)
+    {
+        <a class="Item Selected" href="#" @onclick="() => SelectedItemClick(selectedItem)" @onclick:preventDefault="true">
+            @selectedItem.Nom.Tradueix(base.Lang())
+                    <i class="fa-solid fa-xmark"></i>
+        </a>
+    }
+
+    @foreach (var item in menuItems)
+    {
+        if (item.Mode == (int)NavDTO.Model.Modes.Navigation)
+        {
+            <a class="Item" href="@item.Action" target="_top">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Toggle)
+        {
+            <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off") />
+                @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+       else if (item.Mode == (int)NavDTO.Model.Modes.Lang)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+         else
+        {
+            <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+    }
+
+
+
+}
+else
+{
+    @foreach (var item in nav.Items.Where(x => x.Nom.Contains(searchTerm)))
+    {
+
+        if (item.Mode == (int)NavDTO.Model.Modes.Navigation)
+        {
+            <a class="Item" href="@item.Action" target="_top">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Toggle)
+        {
+            <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off") />
+                @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+        {
+            <div class="Item">
+                <Lang></Lang>
+            </div>
+        }
+        else
+        {
+            <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+
+    }
+
+}
+
+
+
+
+<!--hidden form submit LogoutButton gets clicked by _Host.cshtml jscript window.LogoutRequest() triggered by Mode.Logout NavDTO item -->
+<form hidden="hidden" method="post" id="LogoutForm" action="Identity/Account/LogOut" target="_top">
+    <button type="submit" class="Item" Id="LogoutButton">logout hidden</button>
+</form>
+
+
+@code {
+    [Parameter] public NavDTO? nav { get; set; }
+    [Parameter] public bool ShowButtonsBar { get; set; } = false;
+    private List<NavDTO.Model> selectedItems = new();
+    private List<NavDTO.Model> menuItems = new();
+    ElementReference LogoutButton;
+    private string? searchTerm;
+    private bool isLoaded = false;
+    private bool IsShowingSearchbox = false;
+    [Parameter] public EventCallback<List<NavDTO.Model>> SelectedItemsChanged { get; set; }
+    [Parameter] public EventCallback<List<NavDTO.Model>> ItemsChanged { get; set; }
+
+
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (nav != null && menuItems.Count == 0)
+        {
+            var itemsJson = await base.ReadCookie("navItems");
+            if (!string.IsNullOrEmpty(itemsJson))
+            {
+                menuItems = Newtonsoft.Json.JsonConvert.DeserializeObject<List<NavDTO.Model>>(itemsJson!);
+                var selectedItemsJson = await base.ReadCookie("navSelectedItems");
+                if (!string.IsNullOrEmpty(selectedItemsJson))
+                    selectedItems = Newtonsoft.Json.JsonConvert.DeserializeObject<List<NavDTO.Model>>(selectedItemsJson!);
+            }
+            else
+            {
+                menuItems = nav.Items.Where(x => x.Parent == null).OrderBy(y => y.Ord).ToList();
+            }
+
+            RemoveAccountItems();
+            StateHasChanged();
+        }
+
+    }
+
+
+    //private Task<AuthenticationState> authenticationState;
+
+    //[CascadingParameter]
+    //private Task<AuthenticationState> authenticationStateTask
+    //{
+    //    get => authenticationState;
+    //    set
+    //    {
+    //        if (authenticationState == value) return;
+    //        authenticationState = value;
+    //    }
+    //}
+
+    private void RemoveAccountItems()
+    {
+        var authState = authenticationState.Result;
+        var user = authState.User;
+        var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+
+        if (isAuthenticated)
+        {
+            menuItems.RemoveAll(x => x.Guid == NavDTO.Login().Guid);
+            menuItems.RemoveAll(x => x.Guid == NavDTO.SignUp().Guid);
+        }
+        else
+        {
+            //menuItems.Add(NavDTO.Login());
+            //menuItems.Add(NavDTO.SignUp());
+        }
+    }
+
+    private async Task SelectedItemClick(NavDTO.Model item)
+    {
+        var idx = selectedItems.IndexOf(item);
+        selectedItems.RemoveRange(idx, selectedItems.Count - idx);
+        menuItems = nav.Items.Where(x => x.Parent == item.Parent).OrderBy(y => y.Ord).ToList();
+        RemoveAccountItems();
+        await ItemsChanged.InvokeAsync(menuItems);
+        await SelectedItemsChanged.InvokeAsync(selectedItems);
+        StateHasChanged();
+    }
+
+    private async Task ItemClick(NavDTO.Model item)
+    {
+        switch ((NavDTO.Model.Modes)item.Mode)
+        {
+
+            case NavDTO.Model.Modes.Logout:
+                await JSRuntime.InvokeVoidAsync("LogoutRequest");
+                break;
+            case NavDTO.Model.Modes.Toggle:
+                break;
+            case NavDTO.Model.Modes.Action:
+                break;
+            default:
+                var items = nav.Items.Where(x => x.Parent == item.Guid).OrderBy(y => y.Ord).ToList();
+                if (items.Count > 0)
+                {
+                    menuItems = items;
+                    selectedItems.Add(item);
+                    RemoveAccountItems();
+                }
+                break;
+        }
+        await ItemsChanged.InvokeAsync(menuItems);
+        await SelectedItemsChanged.InvokeAsync(selectedItems);
+    }
+
+    private void UseLocalApi()
+    {
+        Globals.UseLocalApi = !Globals.UseLocalApi;
+    }
+
+    private void ShowSearchbox()
+    {
+        IsShowingSearchbox = true;
+    }
+
+}
+

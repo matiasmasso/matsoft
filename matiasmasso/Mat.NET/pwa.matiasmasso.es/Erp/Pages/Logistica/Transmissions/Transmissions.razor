@@ -1,0 +1,55 @@
+﻿@page "/Transmissions"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper900">
+    <h1>@Localizer("Incidences")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedItem is null)
+    {
+        <TransmissionsList Model="model"
+                     SelectedItemChanged="SelectedItemChanged"
+                     IsSingleCustomer="isSingleCustomer"></TransmissionsList>
+    }
+    else
+    {
+        <Transmission Guid="selectedItem.Guid"
+                RequestToCancel="@(()=>selectedItem = null)"></Transmission>
+    }
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+@code {
+    private List<TransmissionModel> model;
+    private CacheDTO cache;
+    private TransmissionModel selectedItem = null;
+    private bool isSingleCustomer;
+    private new ProblemDetails problemDetails;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (model == null)
+        {
+            ApiResponse<List<TransmissionModel>> apiResponse = await base.GetAsync2<List<TransmissionModel>>("Transmissions", Globals.DefaultEmp.ToString());
+            if (apiResponse.Success())
+            {
+                model = apiResponse.Value;
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+    }
+
+    void SelectedItemChanged(TransmissionModel item)
+    {
+        selectedItem = item;
+    }
+
+}

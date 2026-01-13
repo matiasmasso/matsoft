@@ -1,0 +1,69 @@
+﻿@using System.Globalization
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigation
+
+<div>
+  <select class="form-control" @bind="SelectedLang">
+   @foreach (var langCode in langCodes)
+   {
+	<option value="@langCode.Code">@langCode.DisplayName</option>
+   }
+  </select>
+</div>
+
+@code{
+	private string selectedLang = "";
+
+	private string SelectedLang {
+		get { return selectedLang; }
+		set {
+			selectedLang = value;
+			ChangeLanguage();
+		}
+	}
+
+	[Parameter]
+	public EventCallback<string> ValueChanged { get; set; }
+
+
+
+	protected override void OnInitialized()
+	{
+		selectedLang = CultureInfo.CurrentCulture.Name;
+	}
+
+	private async void ChangeLanguage()
+	{
+		await _jsRuntime.InvokeAsync<string>("appCulture.set", selectedLang);
+		_navigation.NavigateTo("", forceLoad:true);
+		//await ValueChanged.InvokeAsync(selectedLang);
+	}
+
+  	private List<LanguageCodes> langCodes = new List<LanguageCodes>()
+  {
+	new LanguageCodes
+	{
+	Code = "es-ES",
+	DisplayName = "Español"
+	},
+	new LanguageCodes
+	{
+	Code = "ca-ES",
+	DisplayName = "Català"
+	},
+	new LanguageCodes
+	{
+	Code = "en-US",
+	DisplayName= "English"
+	},
+		new LanguageCodes
+	{
+	Code = "pt-PT",
+	DisplayName= "Portugès"
+	}
+  };
+
+
+
+
+}

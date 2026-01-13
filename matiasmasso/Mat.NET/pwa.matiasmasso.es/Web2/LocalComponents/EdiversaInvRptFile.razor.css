@@ -1,0 +1,36 @@
+﻿.Details {
+    display: grid;
+    grid-template-columns: min-content  1fr;
+    grid-gap: 10px;
+}
+.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr min-content min-content min-content;
+}
+
+.Lin, .Qty, .Rrpp, .Amt {
+    white-space:nowrap;
+    text-align:right;
+}
+
+.ColumnHeaders > * {
+    font-weight:600;
+    color:darkgray;
+    height:2em;
+}
+
+.Item {
+    display: contents;
+}
+
+    .Item > * {
+        padding: 0 5px;
+    }
+
+        .Item >*:first-child {
+            padding: 0 5px 0 0;
+        }
+
+        .Item >*:last-child {
+            padding: 0 0 0 5px;
+        }

@@ -1,0 +1,120 @@
+﻿@page "/bancs"
+@page "/{LangSegment}/bancs"
+@implements IDisposable
+@layout ProLayout
+@inject CultureService culture
+@inject SessionStateService session
+@inject BancSaldosService bancSaldosService
+
+
+<div class="PageWrapper600">
+    <h1>@culture.Localize("Bancs")</h1>
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <SelectedEmps @bind-SelectedValues="selectedEmps"></SelectedEmps>
+
+        @if (model.Count > 5)
+        {
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+        }
+
+        <div class="ShowObsolets">
+            <ToggleObsolets @bind-Value="IsShowingObsolets"></ToggleObsolets>
+        </div>
+
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <a href="#" class='Item' @onclick="@(()=>ItemClicked(item))" @onclick:preventDefault="true">
+                    <div class="Ico">
+                        <img src="@item.LogoUrl()" alt="@item.Abr" height="48" width="48" />
+                    </div>
+
+                    <div class="Details">
+                        <div class="Abr Truncate">
+                            @item.Abr
+                            <span hidden="@(!showEmp)">@string.Format(" ({0})", ((EmpModel.EmpIds)item.Emp).GetDisplayName())</span>
+                        </div>
+
+                        <div class="Ccc Truncate">
+                            @item.FormattedCcc()
+                        </div>
+
+                        <div class="Saldo">
+                            <div class="Truncate">
+                                @string.Format("Saldo a {0:dd/MM/yy HH:mm}",item.Fch)
+                            </div>
+                            <div class="Eur">
+                                @string.Format("{0:n2} €",item.Eur)
+                            </div>
+                        </div>
+
+                    </div>
+                </a>
+            }
+        </div>
+
+    }
+</div>
+
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private List<BancModel.Saldo>? model;
+    private List<EmpModel>? selectedEmps;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+    private bool showEmp = false;
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        bancSaldosService.OnChange += Refresca;
+        session.OnChange += Refresca;
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = bancSaldosService.Values;
+            StateHasChanged();
+        };
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        model = bancSaldosService.Values;
+        if (selectedEmps == null)
+            selectedEmps = session.Emps?.Where(x => model?.Any(y => x.Id == y.Emp) ?? false).ToList();
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<BancModel.Saldo>? FilteredItems()
+    {
+        return model!.Where(x => x.Matches(searchTerm) && (selectedEmps?.Any(y => x.Emp == y.Id) ?? false)).ToList();
+    }
+
+    private void ItemClicked(BancModel.Saldo item)
+    {
+        //navigationManager.NavigateTo("/PgcCtaSdos/" + item.Guid.ToString());
+    }
+
+    public void Dispose()
+    {
+        bancSaldosService.OnChange -= Refresca;
+        session.OnChange -= Refresca;
+    }
+
+
+
+}

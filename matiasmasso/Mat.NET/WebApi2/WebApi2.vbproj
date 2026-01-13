@@ -1,0 +1,747 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{E414D032-3315-474B-85F0-122B62EFCF9C}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>WebApi</RootNamespace>
+    <AssemblyName>WebApi2</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionCompare>Binary</OptionCompare>
+    <OptionStrict>Off</OptionStrict>
+    <OptionInfer>On</OptionInfer>
+    <MvcBuildViews>false</MvcBuildViews>
+    <UseIISExpress>true</UseIISExpress>
+    <Use64BitIISExpress />
+    <IISExpressSSLPort>44314</IISExpressSSLPort>
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>WebApi2.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>WebApi2.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=4.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\lib\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json.Bson, Version=1.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.Bson.1.0.3\lib\net45\Newtonsoft.Json.Bson.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.0\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.1\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.Formatting, Version=6.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.6.0.0\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.0\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.1\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.1\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Cors, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Cors.5.3.0\lib\net45\System.Web.Cors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.3.0\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.3.0\lib\net45\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.Cors, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Cors.5.3.0\lib\net45\System.Web.Http.Cors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.3.0\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.3.0\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.3.0\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.3.0\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.3.0\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.3.0\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.2.0.1\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http">
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest">
+    </Reference>
+    <Reference Include="System.Web.Optimization">
+      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="WebGrease">
+      <Private>True</Private>
+      <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
+    </Reference>
+    <Reference Include="Antlr3.Runtime">
+      <Private>True</Private>
+      <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="DTO" />
+    <Import Include="MatHelperStd" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Collections.Specialized" />
+    <Import Include="System.Configuration" />
+    <Import Include="System.Text" />
+    <Import Include="System.Text.RegularExpressions" />
+    <Import Include="System.Web" />
+    <Import Include="System.Web.Caching" />
+    <Import Include="System.Web.Mvc" />
+    <Import Include="System.Web.Mvc.Ajax" />
+    <Import Include="System.Web.Mvc.Html" />
+    <Import Include="System.Web.Routing" />
+    <Import Include="System.Web.SessionState" />
+    <Import Include="System.Web.Security" />
+    <Import Include="System.Web.Profile" />
+    <Import Include="System.Web.UI" />
+    <Import Include="System.Web.UI.WebControls" />
+    <Import Include="System.Web.UI.WebControls.WebParts" />
+    <Import Include="System.Web.UI.HtmlControls" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\BundleConfig.vb" />
+    <Compile Include="App_Start\FilterConfig.vb" />
+    <Compile Include="App_Start\RouteConfig.vb" />
+    <Compile Include="App_Start\WebApiConfig.vb" />
+    <Compile Include="Areas\HelpPage\ApiDescriptionExtensions.vb" />
+    <Compile Include="Areas\HelpPage\App_Start\HelpPageConfig.vb" />
+    <Compile Include="Areas\HelpPage\Controllers\HelpController.vb" />
+    <Compile Include="Areas\HelpPage\HelpPageAreaRegistration.vb" />
+    <Compile Include="Areas\HelpPage\HelpPageConfigurationExtensions.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\CollectionModelDescription.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ComplexTypeModelDescription.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\DictionaryModelDescription.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumTypeModelDescription.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumValueDescription.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\IModelDocumentationProvider.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\KeyValuePairModelDescription.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescription.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescriptionGenerator.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameAttribute.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameHelper.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterAnnotation.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterDescription.vb" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\SimpleTypeModelDescription.vb" />
+    <Compile Include="Areas\HelpPage\Models\HelpPageApiModel.vb" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleGenerator.vb" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleKey.vb" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\ImageSample.vb" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\InvalidSample.vb" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\ObjectGenerator.vb" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.vb" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.vb" />
+    <Compile Include="Areas\HelpPage\XmlDocumentationProvider.vb" />
+    <Compile Include="Controllers\AddressController.vb" />
+    <Compile Include="Controllers\AeatDocsController.vb" />
+    <Compile Include="Controllers\AeatMod347Controller.vb" />
+    <Compile Include="Controllers\AeatModelController.vb" />
+    <Compile Include="Controllers\AecocController.vb" />
+    <Compile Include="Controllers\AlbBloqueigController.vb" />
+    <Compile Include="Controllers\AmortizationController.vb" />
+    <Compile Include="Controllers\AmortizationItemController.vb" />
+    <Compile Include="Controllers\ApiLogController.vb" />
+    <Compile Include="Controllers\AppController.vb" />
+    <Compile Include="Controllers\AppUsrLogController.vb" />
+    <Compile Include="Controllers\AreaController.vb" />
+    <Compile Include="Controllers\AreaProvinciaController.vb" />
+    <Compile Include="Controllers\AreaRegioController.vb" />
+    <Compile Include="Controllers\ArtCustRefController.vb" />
+    <Compile Include="Controllers\AtlasController.vb" />
+    <Compile Include="Controllers\AuditStockController.vb" />
+    <Compile Include="Controllers\BalanceController.vb" />
+    <Compile Include="Controllers\BancController.vb" />
+    <Compile Include="Controllers\BancSdoController.vb" />
+    <Compile Include="Controllers\BancTermController.vb" />
+    <Compile Include="Controllers\BancTransferBeneficiariController.vb" />
+    <Compile Include="Controllers\BancTransferPoolController.vb" />
+    <Compile Include="Controllers\BankBranchController.vb" />
+    <Compile Include="Controllers\BankController.vb" />
+    <Compile Include="Controllers\BannerController.vb" />
+    <Compile Include="Controllers\BloggerController.vb" />
+    <Compile Include="Controllers\BloggerPostController.vb" />
+    <Compile Include="Controllers\BlogPostController.vb" />
+    <Compile Include="Controllers\BookFraController.vb" />
+    <Compile Include="Controllers\BoxItemsController.vb" />
+    <Compile Include="Controllers\BrandAreaController.vb" />
+    <Compile Include="Controllers\BritaxController.vb" />
+    <Compile Include="Controllers\BuzonController.vb" />
+    <Compile Include="Controllers\CacheController.vb" />
+    <Compile Include="Controllers\CatalegController.vb" />
+    <Compile Include="Controllers\CatalogController.vb" />
+    <Compile Include="Controllers\CategoriaDeNoticiaController.vb" />
+    <Compile Include="Controllers\CcasController.vb" />
+    <Compile Include="Controllers\CcbsController.vb" />
+    <Compile Include="Controllers\CertController.vb" />
+    <Compile Include="Controllers\CertificatIrpfController.vb" />
+    <Compile Include="Controllers\CliAperturaController.vb" />
+    <Compile Include="Controllers\CliCreditLogsController.vb" />
+    <Compile Include="Controllers\CliProductBlockedController.vb" />
+    <Compile Include="Controllers\CliProductDtoController.vb" />
+    <Compile Include="Controllers\CliReturnController.vb" />
+    <Compile Include="Controllers\CnapController.vb" />
+    <Compile Include="Controllers\CobramentController.vb" />
+    <Compile Include="Controllers\CodController.vb" />
+    <Compile Include="Controllers\CodiMercanciaController.vb" />
+    <Compile Include="Controllers\ComarcaController.vb" />
+    <Compile Include="Controllers\CompactCustomerPOController.vb" />
+    <Compile Include="Controllers\ComputerController.vb" />
+    <Compile Include="Controllers\CondicioCapitolController.vb" />
+    <Compile Include="Controllers\CondicionsController.vb" />
+    <Compile Include="Controllers\ConsumerTicketController.vb" />
+    <Compile Include="Controllers\ContactClassController.vb" />
+    <Compile Include="Controllers\ContactController.vb" />
+    <Compile Include="Controllers\ContactDocController.vb" />
+    <Compile Include="Controllers\ContactMenuController.vb" />
+    <Compile Include="Controllers\ContactMessageController.vb" />
+    <Compile Include="Controllers\ContactTelsController.vb" />
+    <Compile Include="Controllers\ContentController.vb" />
+    <Compile Include="Controllers\ContractCodisController.vb" />
+    <Compile Include="Controllers\ContractController.vb" />
+    <Compile Include="Controllers\CorrespondenciaController.vb" />
+    <Compile Include="Controllers\CountriesController.vb" />
+    <Compile Include="Controllers\CredencialController.vb" />
+    <Compile Include="Controllers\CsasController.vb" />
+    <Compile Include="Controllers\CsbsController.vb" />
+    <Compile Include="Controllers\CurExchangeRatesController.vb" />
+    <Compile Include="Controllers\CursController.vb" />
+    <Compile Include="Controllers\CustomerBasketController.vb" />
+    <Compile Include="Controllers\CustomerClusterController.vb" />
+    <Compile Include="Controllers\CustomerPlatformController.vb" />
+    <Compile Include="Controllers\CustomerProductsController.vb" />
+    <Compile Include="Controllers\CustomerRankingController.vb" />
+    <Compile Include="Controllers\CustomersController.vb" />
+    <Compile Include="Controllers\CustomerTarifaController.vb" />
+    <Compile Include="Controllers\CustomerTarifaDtoController.vb" />
+    <Compile Include="Controllers\DefaultController.vb" />
+    <Compile Include="Controllers\DefaultImageController.vb" />
+    <Compile Include="Controllers\DeliveriesController.vb" />
+    <Compile Include="Controllers\DeliveryItemsController.vb" />
+    <Compile Include="Controllers\DeliveryTraspasController.vb" />
+    <Compile Include="Controllers\DeptsController.vb" />
+    <Compile Include="Controllers\DiariController.vb" />
+    <Compile Include="Controllers\DirtyTablesController.vb" />
+    <Compile Include="Controllers\DistributionChannelController.vb" />
+    <Compile Include="Controllers\DocController.vb" />
+    <Compile Include="Controllers\DocfilesController.vb" />
+    <Compile Include="Controllers\DocFileSrcController.vb" />
+    <Compile Include="Controllers\DownloadController.vb" />
+    <Compile Include="Controllers\ECITransmGroupController.vb" />
+    <Compile Include="Controllers\EdiOrderController.vb" />
+    <Compile Include="Controllers\EdiversaDesadvController.vb" />
+    <Compile Include="Controllers\EdiversaExceptionsController.vb" />
+    <Compile Include="Controllers\EdiversaFileController.vb" />
+    <Compile Include="Controllers\EdiversaGenralController.vb" />
+    <Compile Include="Controllers\EdiversaInvRpt.vb" />
+    <Compile Include="Controllers\EdiversaInvRptController.vb" />
+    <Compile Include="Controllers\EdiversaOrderItemController.vb" />
+    <Compile Include="Controllers\EdiversaOrdersController.vb" />
+    <Compile Include="Controllers\EdiversaOrdrSpController.vb" />
+    <Compile Include="Controllers\EdiversaRecadvController.vb" />
+    <Compile Include="Controllers\EdiversaRemadvController.vb" />
+    <Compile Include="Controllers\EdiversaSalesReportController.vb" />
+    <Compile Include="Controllers\EdiversaSalesReportItemsController.vb" />
+    <Compile Include="Controllers\ElCorteInglesController.vb" />
+    <Compile Include="Controllers\ElCorteInglesDeptController.vb" />
+    <Compile Include="Controllers\EmailsController.vb" />
+    <Compile Include="Controllers\EmpController.vb" />
+    <Compile Include="Controllers\EscripturesController.vb" />
+    <Compile Include="Controllers\EventosController.vb" />
+    <Compile Include="Controllers\ExcelsController.vb" />
+    <Compile Include="Controllers\ExerciciController.vb" />
+    <Compile Include="Controllers\ExtracteController.vb" />
+    <Compile Include="Controllers\FeedbackController.vb" />
+    <Compile Include="Controllers\FilterController.vb" />
+    <Compile Include="Controllers\FilterTargetsController.vb" />
+    <Compile Include="Controllers\ForecastController.vb" />
+    <Compile Include="Controllers\FourMomsController.vb" />
+    <Compile Include="Controllers\FtpserverController.vb" />
+    <Compile Include="Controllers\GalleryItemController.vb" />
+    <Compile Include="Controllers\GarantiasController.vb" />
+    <Compile Include="Controllers\GrfMesValuesController.vb" />
+    <Compile Include="Controllers\HelpController.vb" />
+    <Compile Include="Controllers\HoldingController.vb" />
+    <Compile Include="Controllers\TamariuController.vb" />
+    <Compile Include="Controllers\IbanController.vb" />
+    <Compile Include="Controllers\IbanStructureController.vb" />
+    <Compile Include="Controllers\ImgController.vb" />
+    <Compile Include="Controllers\ImmobleController.vb" />
+    <Compile Include="Controllers\ImpagatsController.vb" />
+    <Compile Include="Controllers\ImportacioController.vb" />
+    <Compile Include="Controllers\ImportPrevisioController.vb" />
+    <Compile Include="Controllers\ImportUrlController.vb" />
+    <Compile Include="Controllers\IncentiuController.vb" />
+    <Compile Include="Controllers\IncidenciaCodController.vb" />
+    <Compile Include="Controllers\IncidenciaController.vb" />
+    <Compile Include="Controllers\IncotermController.vb" />
+    <Compile Include="Controllers\InemCompresProductRankingController.vb" />
+    <Compile Include="Controllers\InsolvenciaController.vb" />
+    <Compile Include="Controllers\IntrastatController.vb" />
+    <Compile Include="Controllers\InventariItemController.vb" />
+    <Compile Include="Controllers\InvoiceController.vb" />
+    <Compile Include="Controllers\InvoiceReceivedController.vb" />
+    <Compile Include="Controllers\InvRptsController.vb" />
+    <Compile Include="Controllers\IrpfController.vb" />
+    <Compile Include="Controllers\IvaLiquidacioController.vb" />
+    <Compile Include="Controllers\JornadaLaboralController.vb" />
+    <Compile Include="Controllers\JsonLogController.vb" />
+    <Compile Include="Controllers\JSONSchemaController.vb" />
+    <Compile Include="Controllers\KeywordsController.vb" />
+    <Compile Include="Controllers\LangTextsController.vb" />
+    <Compile Include="Controllers\LeadAreasController.vb" />
+    <Compile Include="Controllers\LiniaTelefonController.vb" />
+    <Compile Include="Controllers\LocalizedStringController.vb" />
+    <Compile Include="Controllers\LocationsController.vb" />
+    <Compile Include="Controllers\MailingLogsController.vb" />
+    <Compile Include="Controllers\MailingsController.vb" />
+    <Compile Include="Controllers\MailMessageController.vb" />
+    <Compile Include="Controllers\MarginsController.vb" />
+    <Compile Include="Controllers\MarketPlaceController.vb" />
+    <Compile Include="Controllers\MaybornController.vb" />
+    <Compile Include="Controllers\MediaResourceController.vb" />
+    <Compile Include="Controllers\MemController.vb" />
+    <Compile Include="Controllers\MenuController.vb" />
+    <Compile Include="Controllers\MgzsController.vb" />
+    <Compile Include="Controllers\Mod145Controller.vb" />
+    <Compile Include="Controllers\MultasController.vb" />
+    <Compile Include="Controllers\MvcHomeController.vb" />
+    <Compile Include="Controllers\NeighboursController.vb" />
+    <Compile Include="Controllers\NewsletterController.vb" />
+    <Compile Include="Controllers\NominaController.vb" />
+    <Compile Include="Controllers\NoticiaController.vb" />
+    <Compile Include="Controllers\OutletController.vb" />
+    <Compile Include="Controllers\PaymentGatewayController.vb" />
+    <Compile Include="Controllers\PdfController.vb" />
+    <Compile Include="Controllers\PgcClassController.vb" />
+    <Compile Include="Controllers\PgcCtasController.vb" />
+    <Compile Include="Controllers\PgcGeosController.vb" />
+    <Compile Include="Controllers\PgcPlanController.vb" />
+    <Compile Include="Controllers\PgcSaldoController.vb" />
+    <Compile Include="Controllers\PlantillaController.vb" />
+    <Compile Include="Controllers\PndController.vb" />
+    <Compile Include="Controllers\PortadaImgController.vb" />
+    <Compile Include="Controllers\PortsCondicioController.vb" />
+    <Compile Include="Controllers\PostCommentController.vb" />
+    <Compile Include="Controllers\PremiumCustomerController.vb" />
+    <Compile Include="Controllers\PremiumLineController.vb" />
+    <Compile Include="Controllers\PriceListCustomerController.vb" />
+    <Compile Include="Controllers\PriceListItemCustomerController.vb" />
+    <Compile Include="Controllers\PriceListItemSupplierController.vb" />
+    <Compile Include="Controllers\PriceListSupplierController.vb" />
+    <Compile Include="Controllers\ProductBrandController.vb" />
+    <Compile Include="Controllers\ProductCatalogController.vb" />
+    <Compile Include="Controllers\ProductCategoryController.vb" />
+    <Compile Include="Controllers\ProductChannelController.vb" />
+    <Compile Include="Controllers\ProductController.vb" />
+    <Compile Include="Controllers\ProductDistributorsController.vb" />
+    <Compile Include="Controllers\ProductDownloadController.vb" />
+    <Compile Include="Controllers\ProductPluginController.vb" />
+    <Compile Include="Controllers\ProductPluginItemController.vb" />
+    <Compile Include="Controllers\ProductRankController.vb" />
+    <Compile Include="Controllers\ProductSkuController.vb" />
+    <Compile Include="Controllers\ProductStatsController.vb" />
+    <Compile Include="Controllers\ProductStocksController.vb" />
+    <Compile Include="Controllers\ProductUrlController.vb" />
+    <Compile Include="Controllers\ProjecteController.vb" />
+    <Compile Include="Controllers\PromofarmaController.vb" />
+    <Compile Include="Controllers\ProveidorController.vb" />
+    <Compile Include="Controllers\ProvinciasController.vb" />
+    <Compile Include="Controllers\PrvCliNumsController.vb" />
+    <Compile Include="Controllers\PurchaseOrderConceptShortcutController.vb" />
+    <Compile Include="Controllers\PurchaseOrderController.vb" />
+    <Compile Include="Controllers\PurchaseOrderItemController.vb" />
+    <Compile Include="Controllers\QualityDistributionController.vb" />
+    <Compile Include="Controllers\RaffleController.vb" />
+    <Compile Include="Controllers\RaffleParticipantController.vb" />
+    <Compile Include="Controllers\RankingController.vb" />
+    <Compile Include="Controllers\RecallCliController.vb" />
+    <Compile Include="Controllers\RecallController.vb" />
+    <Compile Include="Controllers\RemittanceAdviceController.vb" />
+    <Compile Include="Controllers\RepBasketController.vb" />
+    <Compile Include="Controllers\RepCertsRetencioController.vb" />
+    <Compile Include="Controllers\RepCliComController.vb" />
+    <Compile Include="Controllers\RepComLiquidablesController.vb" />
+    <Compile Include="Controllers\RepController.vb" />
+    <Compile Include="Controllers\RepCustomerController.vb" />
+    <Compile Include="Controllers\RepeticionsController.vb" />
+    <Compile Include="Controllers\RepliqsController.vb" />
+    <Compile Include="Controllers\RepProductController.vb" />
+    <Compile Include="Controllers\RiscController.vb" />
+    <Compile Include="Controllers\RolsController.vb" />
+    <Compile Include="Controllers\SabiasQueController.vb" />
+    <Compile Include="Controllers\SalesQueryController.vb" />
+    <Compile Include="Controllers\SatRecallController.vb" />
+    <Compile Include="Controllers\SearchRequestController.vb" />
+    <Compile Include="Controllers\SegSocialGrupController.vb" />
+    <Compile Include="Controllers\SellOutController.vb" />
+    <Compile Include="Controllers\SepaMeController.vb" />
+    <Compile Include="Controllers\SepaTextController.vb" />
+    <Compile Include="Controllers\SessionController.vb" />
+    <Compile Include="Controllers\SiiController.vb" />
+    <Compile Include="Controllers\SiteMapController.vb" />
+    <Compile Include="Controllers\SkuController.vb" />
+    <Compile Include="Controllers\SkuStocksController.vb" />
+    <Compile Include="Controllers\SkuWithController.vb" />
+    <Compile Include="Controllers\SocialMediaWidgetController.vb" />
+    <Compile Include="Controllers\SpvController.vb" />
+    <Compile Include="Controllers\SpvInController.vb" />
+    <Compile Include="Controllers\SpvOutController.vb" />
+    <Compile Include="Controllers\StaffCategoryController.vb" />
+    <Compile Include="Controllers\StaffController.vb" />
+    <Compile Include="Controllers\StaffHolidayController.vb" />
+    <Compile Include="Controllers\StaffPosController.vb" />
+    <Compile Include="Controllers\StaffSchedController.vb" />
+    <Compile Include="Controllers\StatementController.vb" />
+    <Compile Include="Controllers\StatQuotasOnlineController.vb" />
+    <Compile Include="Controllers\StocksController.vb" />
+    <Compile Include="Controllers\StoreLocatorController.vb" />
+    <Compile Include="Controllers\SubscriptionsController.vb" />
+    <Compile Include="Controllers\SubscriptorsController.vb" />
+    <Compile Include="Controllers\SumasYSaldosController.vb" />
+    <Compile Include="Controllers\TaskLogsController.vb" />
+    <Compile Include="Controllers\TaskSchedulesController.vb" />
+    <Compile Include="Controllers\TasksController.vb" />
+    <Compile Include="Controllers\TaxesController.vb" />
+    <Compile Include="Controllers\Templates\TemplateController.vb" />
+    <Compile Include="Controllers\TestController.vb" />
+    <Compile Include="Controllers\TpvLogController.vb" />
+    <Compile Include="Controllers\TrackingController.vb" />
+    <Compile Include="Controllers\TransmisionsController.vb" />
+    <Compile Include="Controllers\TransportistaController.vb" />
+    <Compile Include="Controllers\TxtsController.vb" />
+    <Compile Include="Controllers\UserController.vb" />
+    <Compile Include="Controllers\UserDefaultsController.vb" />
+    <Compile Include="Controllers\VehicleController.vb" />
+    <Compile Include="Controllers\VisaCardController.vb" />
+    <Compile Include="Controllers\VisaEmisorController.vb" />
+    <Compile Include="Controllers\VivaceController.vb" />
+    <Compile Include="Controllers\VivaceStocksController.vb" />
+    <Compile Include="Controllers\WebAtlasController.vb" />
+    <Compile Include="Controllers\WebErrController.vb" />
+    <Compile Include="Controllers\WebLogBrowseController.vb" />
+    <Compile Include="Controllers\WebMenuGroupController.vb" />
+    <Compile Include="Controllers\WebMenuItemController.vb" />
+    <Compile Include="Controllers\WebPageAliasController.vb" />
+    <Compile Include="Controllers\WinBugController.vb" />
+    <Compile Include="Controllers\WinMenuItemsController.vb" />
+    <Compile Include="Controllers\WortenController.vb" />
+    <Compile Include="Controllers\WtbolBasketController.vb" />
+    <Compile Include="Controllers\WtbolController.vb" />
+    <Compile Include="Controllers\WtbolCtrController.vb" />
+    <Compile Include="Controllers\WtbolLandingPageController.vb" />
+    <Compile Include="Controllers\WtbolSerpController.vb" />
+    <Compile Include="Controllers\WtbolSiteController.vb" />
+    <Compile Include="Controllers\WtbolStocksController.vb" />
+    <Compile Include="Controllers\XecController.vb" />
+    <Compile Include="Controllers\XecsPresentacioController.vb" />
+    <Compile Include="Controllers\YearMonthsController.vb" />
+    <Compile Include="Controllers\YouTubeMovieController.vb" />
+    <Compile Include="Controllers\ZipsController.vb" />
+    <Compile Include="Controllers\ZonasController.vb" />
+    <Compile Include="Controllers\_BaseController.vb" />
+    <Compile Include="Extensions\ImageExtensions.vb" />
+    <Compile Include="Filters\CustomCompression.vb" />
+    <Compile Include="Global.asax.vb">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="GlobalVariables.vb" />
+    <Compile Include="Helpers\CompressionHelper.vb" />
+    <Compile Include="Helpers\HttpRequestHelper.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="Controllers\HomeController.vb" />
+    <Compile Include="Controllers\ValuesController.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Areas\HelpPage\HelpPage.css" />
+    <Content Include="Areas\HelpPage\Views\Help\ResourceModel.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\Index.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\TextSample.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\SimpleTypeModelDescription.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Parameters.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ModelDescriptionLink.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\KeyValuePairModelDescription.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\InvalidSample.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ImageSample.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\HelpPageApiModel.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\EnumTypeModelDescription.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\DictionaryModelDescription.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ComplexTypeModelDescription.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\Api.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Web.config" />
+    <Content Include="Areas\HelpPage\Views\Shared\_Layout.vbhtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Samples.vbhtml" />
+    <Content Include="Content\bootstrap-grid.css" />
+    <Content Include="Content\bootstrap-grid.min.css" />
+    <Content Include="Content\bootstrap-grid.rtl.css" />
+    <Content Include="Content\bootstrap-grid.rtl.min.css" />
+    <Content Include="Content\bootstrap-reboot.css" />
+    <Content Include="Content\bootstrap-reboot.min.css" />
+    <Content Include="Content\bootstrap-reboot.rtl.css" />
+    <Content Include="Content\bootstrap-reboot.rtl.min.css" />
+    <Content Include="Content\bootstrap-utilities.css" />
+    <Content Include="Content\bootstrap-utilities.min.css" />
+    <Content Include="Content\bootstrap-utilities.rtl.css" />
+    <Content Include="Content\bootstrap-utilities.rtl.min.css" />
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\bootstrap.rtl.css" />
+    <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\bootstrap.rtl.min.css.map" />
+    <Content Include="Content\bootstrap.rtl.css.map" />
+    <Content Include="Content\bootstrap.min.css.map" />
+    <Content Include="Content\bootstrap.css.map" />
+    <Content Include="Content\bootstrap-utilities.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-utilities.rtl.css.map" />
+    <Content Include="Content\bootstrap-utilities.min.css.map" />
+    <Content Include="Content\bootstrap-utilities.css.map" />
+    <Content Include="Content\bootstrap-reboot.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-reboot.rtl.css.map" />
+    <Content Include="Content\bootstrap-reboot.min.css.map" />
+    <Content Include="Content\bootstrap-reboot.css.map" />
+    <Content Include="Content\bootstrap-grid.rtl.min.css.map" />
+    <Content Include="Content\bootstrap-grid.rtl.css.map" />
+    <Content Include="Content\bootstrap-grid.min.css.map" />
+    <Content Include="Content\bootstrap-grid.css.map" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+    <Content Include="Scripts\bootstrap.bundle.js" />
+    <Content Include="Scripts\bootstrap.bundle.min.js" />
+    <Content Include="Scripts\bootstrap.esm.js" />
+    <Content Include="Scripts\bootstrap.esm.min.js" />
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Scripts\bootstrap.min.js.map" />
+    <Content Include="Scripts\bootstrap.js.map" />
+    <Content Include="Scripts\bootstrap.esm.min.js.map" />
+    <Content Include="Scripts\bootstrap.esm.js.map" />
+    <Content Include="Scripts\bootstrap.bundle.min.js.map" />
+    <Content Include="Scripts\bootstrap.bundle.js.map" />
+    <None Include="Scripts\jquery-3.7.1.intellisense.js" />
+    <Content Include="Scripts\jquery-3.7.1.js" />
+    <Content Include="Scripts\jquery-3.7.1.min.js" />
+    <Content Include="Scripts\jquery-3.7.1.slim.js" />
+    <Content Include="Scripts\jquery-3.7.1.slim.min.js" />
+    <Content Include="Scripts\jquery-3.7.1.slim.min.map" />
+    <Content Include="Scripts\jquery-3.7.1.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="favicon.ico" />
+    <Content Include="Global.asax" />
+    <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Web.config" />
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Areas\HelpPage\Views\_ViewStart.vbhtml" />
+    <Content Include="Content\Site.css" />
+    <Content Include="Views\Web.config" />
+    <Content Include="Views\_ViewStart.vbhtml" />
+    <Content Include="Views\Home\Index.vbhtml" />
+    <Content Include="Views\Shared\Error.vbhtml" />
+    <Content Include="Views\Shared\_Layout.vbhtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Models\" />
+    <Folder Include="My Project\PublishProfiles\" />
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ApiHelper\ApiHelper.vbproj">
+      <Project>{e36022a4-5371-4ea8-bd78-171ced2eb5fb}</Project>
+      <Name>ApiHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BEBL\BEBL.vbproj">
+      <Project>{fec8ed2d-e855-4d72-9f4f-3010405808c7}</Project>
+      <Name>BEBL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DAL\DAL.vbproj">
+      <Project>{57ec6c6f-a320-4d9f-afdb-7643e97dc0f7}</Project>
+      <Name>DAL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DTO\DTO.csproj">
+      <Project>{c2f49505-452b-4856-b8a0-c504df10cdf2}</Project>
+      <Name>DTO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LegacyHelper\LegacyHelper.vbproj">
+      <Project>{d0841f63-fe98-4bc0-bf84-7a9a9608b920}</Project>
+      <Name>LegacyHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelperStd\MatHelperStd.vbproj">
+      <Project>{38401bfe-45c6-4e67-ba29-12f8dd0c483e}</Project>
+      <Name>MatHelperStd</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MatHelper\MatHelper.csproj">
+      <Project>{d6ab48f7-36e9-4ce3-8850-1ca00a508141}</Project>
+      <Name>MatHelper</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
+    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>53973</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>https://localhost:44314/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target> -->
+</Project>

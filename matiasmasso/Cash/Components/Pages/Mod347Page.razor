@@ -1,0 +1,123 @@
+﻿@page "/347"
+@inject ApiService ApiService
+
+<div class="PageWrapper900">
+
+    <h3>Model 347</h3>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+
+        <PageOptions>
+            <LookupEmp Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+            <LookupYears Value="year" ValueChanged="YearChanged" Years="years"></LookupYears>
+        </PageOptions>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            <div>Clau</div>
+            <div>NIF</div>
+            <div>Rao Social</div>
+            <div class="Num">Total</div>
+            <div class="Num">T1</div>
+            <div class="Num">T2</div>
+            <div class="Num">T3</div>
+            <div class="Num">T4</div>
+            @foreach (var item in FilteredItems())
+            {
+                <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>ItemClick(item))">
+                    <div>@item.Clau()</div>
+                    <div>@item.Nif</div>
+                    <div>@item.Nom</div>
+                    <Eur Value="item.Total()"></Eur>
+                    <Eur Value="item.Q(1)"></Eur>
+                    <Eur Value="item.Q(2)"></Eur>
+                    <Eur Value="item.Q(3)"></Eur>
+                    <Eur Value="item.Q(4)"></Eur>
+                </a>
+            }
+        </div>
+    }
+
+    <Error @bind-Value="exception"></Error>
+
+</div>
+
+@code {
+    Mod347Model? model;
+    List<CcaModel>? ccas;
+    int year;
+    string? searchterm;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        years = [.. Enumerable.Range(year - 5, year + 1)];
+        year = DateTime.Today.Year - 1;
+    }
+
+    List<Mod347Model.Item> FilteredItems()
+    {
+        foreach (var cca in ccas)
+        {
+
+        }
+    }
+
+    void ItemClick(Mod347Model.Item item)
+    {
+
+    }
+
+    async Task<Mod347Model> GetModelAsync()
+    {
+        Mod347Model retval = new();
+        ccas = await GetCcasAsync()
+        foreach (var cca in ccas)
+        {
+            foreach (var ccb in cca.Items.Where(x => x.Contact != null))
+            {
+                retval.Apunts.Add(new Apunt
+                    {
+                        Cca = cca.Guid,
+                        Fch = cca.Fch,
+                        Concept = cca.Concept,
+                        Cta = ccb.Cta,
+                        Contact = ccb.Contact,
+                        Eur = ccb.Eur,
+                        Dh = ccb.Dh
+                    });
+            };
+        };
+
+
+        foreach (var e in retval.Apunts.GroupBy(x=>new (x.Cta, x.Contact))){
+            var cta = ApiService.GetCta(e.Key.Cta);
+            if(Mod347Model.IsEnabled(cta)){
+
+            }
+        }
+    }
+
+    async Task<List<CcaModel>> GetCcasAsync()
+    {
+        List<CcaModel>? retval = null;
+        try
+        {
+            retval = await ApiService.GetAsync<List<CcaModel>>("Ccas", ((int)emp.Id).ToString(), year.ToString())
+        } catc(Exception ex){
+            exception = ex;
+        }
+        return retval;
+    }
+
+
+
+}

@@ -1,0 +1,69 @@
+﻿.Wrapper {
+    padding: 10px;
+    max-width:600px;
+    margin:0 auto;
+    display:flex;
+    flex-direction: column;
+    gap:15px;
+}
+
+.Title {
+    font-family: bc-novatica-cyr,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+    font-size: 30px;
+    font-weight: 700;
+    color: #AAAAAA;
+    text-align: center;
+}
+
+.Details {
+    display:flex;
+    gap:10px;
+}
+
+.Thumbnail {
+    width:50%;
+}
+
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}
+
+.Features {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap: 10px;
+    grid-row-gap:10px;
+    align-content: flex-start;
+    width:50%;
+}
+
+.Features input[type=number]{
+    width:50px;
+    text-align:right;
+    padding-right:5px;
+}
+
+.Features button {
+    grid-column:1/-1;
+}
+
+    .Features .Excerpt, .Features .StoreLocator {
+        grid-column: 1/-1;
+    }
+
+.AddToBasket div {
+    display:flex;
+    gap:10px;
+    justify-content: center;
+    white-space:nowrap;
+}
+
+.AddToBasket .ShoppingCart {
+    width: 24px;
+}
+
+.AddToBasket:hover .ShoppingCart ::deep path {
+    fill: white;
+}
+

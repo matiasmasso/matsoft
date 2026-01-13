@@ -1,0 +1,51 @@
+﻿.Emp {
+    grid-column: 1/-1;
+    font-weight: 600;
+    padding: 10px 0 5px;
+}
+
+.Txt {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+
+@media(max-width:599px){
+    .Item {
+        display: grid;
+        grid-template-columns:36px 1fr;
+        grid-template-areas: "ico nom" "ico ccc";
+        grid-column-gap:10px;
+    }
+
+    .Nom {
+        grid-area: nom;
+    }
+
+    .Ccc {
+        grid-area: ccc;
+    }
+
+    .Ico {
+        grid-area: ico;
+    }
+
+    .Ico ::deep .Svg {
+        width: 36px;
+        min-width: 36px;
+    }
+}
+
+@media(min-width:600px){
+    .Grid {
+        grid-template-columns:min-content min-content 12px;
+        grid-column-gap:10px;
+    }
+
+    .Ico ::deep .Svg {
+        width: 12px;
+        min-width: 12px;
+    }
+}

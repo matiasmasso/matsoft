@@ -1,0 +1,171 @@
+﻿*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ensure common form controls are covered */
+input,
+textarea,
+select,
+button {
+  box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+
+
+.PageWrapper600 {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+    width: 100%;
+}
+
+.PageWrapper900 {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 900px;
+    width: 100%;
+}
+
+.RightAlign {
+    display:flex;
+    justify-content: flex-end;
+    gap:10px;
+}
+
+.Truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Number {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}
+
+.Button {
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    border-color: #198754;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    border: 1px solid gray;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    -webkit-appearance: button;
+}
+
+.ButtonOk {
+    color: #fff;
+    background-color: #198754;
+}
+
+.ButtonLemon {
+    background-color: lemonchiffon;
+}
+
+.Button:disabled {
+    color: gray !important;
+    background-color: #DDDDDD !important;
+}
+
+.Button:not(:disabled):hover {
+    color: #fff;
+    background-color: #5a95f5 !important;
+}
+
+
+.Num {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}
+
+.ContextMenuContainer {
+    position: relative;
+}
+
+.ContextMenu {
+    display: none;
+}
+
+    .ContextMenu.Active {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 1.8em;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+        border-left: 1px solid #DDDDDD;
+        border-right: 1px solid #DDDDDD;
+        border-bottom: 1px solid #DDDDDD;
+        background-color: white;
+        min-width: 100px;
+        width: min-content;
+        padding: 0 10px;
+        box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034), 0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06), 0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086), 0 100px 80px rgba(0, 0, 0, 0.12);
+        z-index: 2;
+        padding-top: 5px;
+    }
+
+    .ContextMenu a {
+        display: block;
+        padding: 5px 7px 5px 10px;
+    }
+        .ContextMenu a:hover {
+            background-color: #E0E0E0;
+        }
+
+
+
+@media(max-width:599px) {
+    .HideOnMobile {
+        display: none;
+    }
+
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        padding: 10px 0;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid gray;
+        }
+}
+
+@media(min-width:600px) {
+    .HideOnDesktop {
+        display: none;
+    }
+
+    .Grid {
+        display: grid;
+        grid-row-gap: 5px;
+    }
+
+    .Item {
+        display:contents;
+    }
+}

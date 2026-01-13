@@ -1,0 +1,22 @@
+﻿.Grid {
+    display: grid;
+    grid-template-columns: 1fr minmax(min-content,100px);
+    grid-column-gap: 10px;
+}
+
+.Grid .ColHeaders, .Grid .Item {
+    display:contents;
+}
+
+    .Grid .ColHeaders div {
+        padding-bottom: 10px;
+    }
+    .Grid .Item:hover div {
+        background-color: #F0F0F0;
+    }
+
+.Price {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}

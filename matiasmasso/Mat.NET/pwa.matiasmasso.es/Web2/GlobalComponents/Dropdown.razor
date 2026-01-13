@@ -1,0 +1,128 @@
+﻿<div class="Wrapper">
+
+    @if (IsEditing)
+    {
+
+        <!-- editor -->
+
+        <div @onblur="InputBlur">
+            <input type="text" @bind="caption" @bind:event="oninput" />
+            <div class="Dropdown">
+
+                <Virtualize Items="Items()" Context="item">
+
+                    <a class="Item" href="#" @onclick="@(()=>OptionClick(item))" @onclick:preventDefault>
+                        @item.ToString()
+                    </a>
+
+                </Virtualize>
+
+            </div>
+
+        </div>
+    }
+    else
+    {
+
+        <!-- display -->
+
+        <div class="Display">
+            <a class="Caption" href="#" @onclick="CaptionClick" @onclick:preventDefault>
+                <span class="@(string.IsNullOrEmpty(caption) ? "" : "Hidden")">&nbsp;</span>
+                <span class="@(string.IsNullOrEmpty(caption) ? "Hidden" : "")">@caption</span>
+            </a>
+        </div>
+    }
+
+
+
+
+</div>
+
+
+
+@code {
+    [Parameter] public IEnumerable<IModel>? Values { get; set; }
+    [Parameter] public bool DropOnClick { get; set; }
+    [Parameter] public string? DefaultValue { get; set; }
+    [Parameter] public IModel? Value { get; set; }
+    [Parameter] public EventCallback<IModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback<IModel> ItemClick { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsEditing { get; set; }
+
+    private string? caption;
+    private bool isShowingDropdown = false;
+    private bool isShowingMenu = false;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (!string.IsNullOrEmpty(DefaultValue))
+        {
+            var defaultValue = new GuidNom(Guid.Empty, DefaultValue);
+            var tmp = new List<IModel> { defaultValue };
+            if(Values != null ) tmp.AddRange(Values);
+            Values = tmp;
+            if (Value == null) Value = defaultValue;
+        }
+        caption = Value?.ToString() ?? "";
+    }
+
+    List<IModel>? Items()
+    {
+        if (Values == null)
+            return null;
+        else
+        {
+            if (caption == Value?.ToString() & Values.Count() < 10)
+                return Values.ToList();
+            else
+                return Values
+                .Where(x => x.Matches(caption))
+                .OrderBy(x => x.ToString())
+                .ToList();
+
+        }
+    }
+
+    private async Task CaptionClick()
+    {
+        IsEditing = true;
+        isShowingDropdown = true;
+        //await ItemClick.InvokeAsync(Value);
+
+    //    if (Value == null || DropOnClick)
+    //    {
+    //        IsEditing = true;
+    //        isShowingDropdown = true;
+    //    }
+    //    else
+    //        await ItemClick.InvokeAsync(Value);
+    }
+
+    private void EllipsisClick()
+    {
+        isShowingMenu = true;
+    }
+
+    private void OptionClick(IModel item)
+    {
+        Value = item;
+        ValueChanged.InvokeAsync(item);
+        IsEditing = false;
+    }
+
+    private void InputBlur()
+    {
+        IsEditing = false; // it is ignored
+    }
+
+    public void SetEditingMode()
+    {
+        IsEditing = true;
+    }
+
+
+}
+

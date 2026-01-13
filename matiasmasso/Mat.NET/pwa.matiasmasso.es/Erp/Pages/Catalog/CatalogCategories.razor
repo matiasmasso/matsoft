@@ -1,0 +1,67 @@
+﻿@inherits _ComponentBase
+
+<div class="Categories">
+    <div class="Item ColumnHeader HideOnMobile">
+        @Localizer("Category")
+    </div>
+
+    @foreach (var item in Model)
+    {
+        var isSelected = IsSelected(item);
+
+        <a href="#"
+       class="Item Nom
+                        @(IsSelected(item)?"Selected":"")
+                        @(item.Obsoleto ? "BgColor BgGray" : "")
+                        @(HideOnMobile(item) ? "HideOnMobile":"")"
+       @onclick="(()=>ItemClick(item))"
+       @onclick:preventDefault="true"
+       @oncontextmenu="(()=>ContextMenu(item))"
+       @oncontextmenu:preventDefault="true">
+            @item.Nom.Tradueix(base.Lang())
+        </a>
+
+        @if (isSelected & IsShowingContextMenu)
+        {
+            <div class="ContextMenu">
+                <Nav nav="@item.ContextMenu()" />
+            </div>
+        }
+
+    }
+</div>
+
+
+@code {
+    [Parameter] public List<ProductCategoryModel>Model { get; set; }
+    [Parameter] public EventCallback<ProductCategoryModel> OnSelect { get; set; }
+    ProductCategoryModel selectedItem;
+    bool IsShowingContextMenu = false;
+
+
+    private bool IsSelected(ProductCategoryModel item)
+    {
+        var retval = false;
+        if (selectedItem != null && selectedItem.Guid == item.Guid)
+            retval = true;
+        return retval;
+    }
+
+    void ItemClick(ProductCategoryModel item)
+    {
+        selectedItem = selectedItem == item ? null : item;
+        IsShowingContextMenu = false;
+        OnSelect.InvokeAsync(item);
+    }
+
+    private void ContextMenu(ProductCategoryModel item)
+    {
+        selectedItem = item;
+        IsShowingContextMenu = true;
+    }
+
+    private bool HideOnMobile(ProductCategoryModel item)
+    {
+        return selectedItem != null && item != selectedItem;
+    }
+}

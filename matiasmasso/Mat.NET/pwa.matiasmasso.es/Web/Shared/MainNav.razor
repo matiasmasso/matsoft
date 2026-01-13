@@ -1,0 +1,254 @@
+﻿@inherits _Base
+@using Microsoft.AspNetCore.Components.Authorization
+@implements IDisposable
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager NavigationManager
+@inject NavService navService
+
+<div class="ButtonsBar">
+    <a href="#" title="search menu..." hidden="@IsShowingSearchbox" @onclick="ShowSearchbox" @onclick:preventDefault="true">
+        <img src="img/Lupa-20.png" alt="search menu..." width="20" height="20" />
+    </a>
+    <div class="Lang" hidden="@IsShowingSearchbox">
+        <Lang Value="base.Lang()" ValueChanged="CultureChanged"></Lang>
+    </div>
+    <div class="Searchbox" hidden="@(!IsShowingSearchbox)">
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+    </div>
+    @if (navService?.Nav?.Items == null)
+    {
+        <Loading></Loading>
+    }
+</div>
+
+@if (string.IsNullOrEmpty(searchTerm))
+{
+    @foreach (var selectedItem in navService?.SelectedMenuItems ?? new())
+    {
+        <a class="Item Selected" href="#" @onclick="() => SelectedItemClick(selectedItem)" @onclick:preventDefault="true">
+            @selectedItem.Nom.Tradueix(base.Lang())
+            <i class="fa-solid fa-xmark"></i>
+        </a>
+    }
+
+    @foreach (var item in navService?.DisplayItems() ?? new())
+    {
+        if (item.Mode == (int)NavDTO.Model.Modes.Navigation)
+        {
+            <a class="Item" href="@item.Action" target="_top">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Toggle)
+        {
+            <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off") />
+                @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Lang)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else
+        {
+            <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+    }
+
+}
+else
+{
+    @foreach (var item in navService?.Nav?.Items?.Where(x => x.Nom.Contains(searchTerm)) ?? new List<NavDTO.Model>())
+    {
+        if (item.Mode == (int)NavDTO.Model.Modes.Toggle)
+        {
+            <a href="#" @onclick=UseLocalApi @onclick:preventDefault>
+                <i class=@(Globals.UseLocalApi == true ? "fa-solid fa-toggle-on":"fa-solid fa-toggle-off") />
+                @(Globals.UseLocalApi == true ? "Using local Api" : "Using remote Api")
+            </a>
+        }
+        else if (item.Mode == (int)NavDTO.Model.Modes.Spacer)
+        {
+            <div class="Spacer" href="#">
+                &nbsp;
+            </div>
+        }
+        else
+        {
+            <a class="Item" href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                @item.Nom.Tradueix(base.Lang())
+            </a>
+        }
+
+    }
+
+}
+
+<div class="Spacer" href="#">
+    &nbsp;
+</div>
+
+<AuthorizeView>
+    <Authorized>
+        <a class="Item" href="#" @onclick="@(async() => await LogoutAsync())" @onclick:preventDefault="true">
+            [Logout]
+        </a>
+    </Authorized>
+    <NotAuthorized>
+        <a class="Item" href="#" @onclick="SignUp" @onclick:preventDefault="true">
+            [Registrarse]
+        </a>
+        <a class="Item" href="#" @onclick="Login" @onclick:preventDefault="true">
+            [Login]
+        </a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+    ElementReference LogoutButton;
+    private string? searchTerm;
+    private bool IsShowingSearchbox = false;
+    ProblemDetails? problemDetails;
+    SessionStateDeprecated? Session;
+
+    [CascadingParameter] public SessionProvider? sessionProvider { get; set; }
+
+    [Parameter] public NavDTO? Nav { get; set; }
+    [Parameter] public EventCallback<List<NavDTO.Model>> SelectedItemsChanged { get; set; }
+    [Parameter] public EventCallback<List<NavDTO.Model>> ItemsChanged { get; set; }
+    [Parameter] public EventCallback<NavDTO.Model> MenuItemClicked { get; set; }
+
+    protected override void OnInitialized()
+    {
+        authStateProvider.AuthenticationStateChanged += AuthenticationStateChanged;
+        navService.Loaded += HandleNavLoadedAsync;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var a = await base.GetUser();
+            await navService.LoadNavAsync(a);
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleNavLoadedAsync(object? sender, DTO.Helpers.MatEventArgs<ProblemDetails> e)
+    {
+        problemDetails = e?.Value;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void AuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        Task task2 = Task.Run(async () => await navService.LoadNavAsync());
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Session = sessionProvider?.Session;
+    }
+
+
+    private async Task SelectedItemClick(NavDTO.Model item)
+    {
+        var idx = navService!.SelectedMenuItems.IndexOf(item);
+        navService!.SelectedMenuItems = navService!.SelectedMenuItems.Take(idx).ToList();
+        //navService!.SelectedMenuItems.RemoveRange(idx, navService!.SelectedMenuItems!.Count - idx);
+        //navService!.Nav!.Items = navService.Nav.Items.Where(x => x.Parent == item.Parent).OrderBy(y => y.Ord).ToList();
+        //if (ItemsChanged.HasDelegate) await ItemsChanged.InvokeAsync(navService!.Nav!.Items);
+        //if (SelectedItemsChanged.HasDelegate) await SelectedItemsChanged.InvokeAsync(navService.SelectedMenuItems);
+        StateHasChanged();
+    }
+
+    private async Task ItemClick(NavDTO.Model item)
+    {
+        switch ((NavDTO.Model.Modes)item.Mode)
+        {
+
+            case NavDTO.Model.Modes.Navigation:
+                NavigationManager.NavigateTo(item.Action ?? "#");
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            case NavDTO.Model.Modes.Logout:
+                //NavigationManager.NavigateTo("Logout");
+                await ((CustomAuthenticationStateProvider)authStateProvider).LogoutAsync();
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            case NavDTO.Model.Modes.Login:
+                NavigationManager.NavigateTo("Login");
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            case NavDTO.Model.Modes.Toggle:
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            case NavDTO.Model.Modes.Action:
+                if (MenuItemClicked.HasDelegate) await MenuItemClicked.InvokeAsync(item);
+                break;
+            default:
+                var items = navService!.Nav!.Items.Where(x => x.Parent == item.Guid).OrderBy(y => y.Ord).ToList();
+                if (items.Count > 0)
+                {
+                    //navService.Nav.Items = items;
+                    navService.SelectedMenuItems.Add(item);
+                }
+                break;
+        }
+
+        if (ItemsChanged.HasDelegate) await ItemsChanged.InvokeAsync(navService.Nav!.Items);
+        if (SelectedItemsChanged.HasDelegate) await SelectedItemsChanged.InvokeAsync(navService!.SelectedMenuItems);
+    }
+
+    void Login()
+    {
+        NavigationManager.NavigateTo("Login");
+    }
+
+    void SignUp()
+    {
+        NavigationManager.NavigateTo("Login");
+    }
+
+    async Task LogoutAsync()
+        {
+            await ((CustomAuthenticationStateProvider)authStateProvider).LogoutAsync();
+        }
+
+    private void UseLocalApi()
+    {
+        Globals.UseLocalApi = !Globals.UseLocalApi;
+    }
+
+    private void ShowSearchbox()
+    {
+        IsShowingSearchbox = true;
+    }
+
+ 
+    protected async Task CultureChanged(LangDTO lang)
+    {
+        var uri = new Uri(navigationManager!.Uri);
+        var url = Culture!.ResetUrl(lang, uri);
+        navigationManager!.NavigateTo(url, forceLoad: true);
+    }
+
+    void IDisposable.Dispose()
+    {
+        authStateProvider.AuthenticationStateChanged -= AuthenticationStateChanged;
+    }
+}
+

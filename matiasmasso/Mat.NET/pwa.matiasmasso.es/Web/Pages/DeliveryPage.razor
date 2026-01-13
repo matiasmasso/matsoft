@@ -1,0 +1,7 @@
+﻿@page "/delivery/{Guid:guid}"
+
+<Delivery Guid="guid"></Delivery>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+}

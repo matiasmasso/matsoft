@@ -1,0 +1,175 @@
+﻿@inherits _ComponentBase
+
+
+
+<div class="Wrapper">
+    @if (isLoading)
+    {
+        <Loading></Loading>
+    }
+    else if (isEditing)
+    {
+        <div class="Zip">
+            <input type="text" placeholder="@Localizer("ZipCod")" value="@zipCod" @onchange="ZipChanged" />
+        </div>
+
+
+        <div class="Country">
+            <UxCountries Countries="@countries" Value="country" ValueChanged="CountryChanged"></UxCountries>
+        </div>
+
+
+        @if (localizedErrMsg != null)
+        {
+            <div class="Err">
+                <i class="fa-regular fa-triangle-exclamation"></i>
+                <div>
+                    @Localizer(localizedErrMsg)
+                </div>
+            </div>
+        }
+
+    }
+    else
+    {
+        <a href="#" @onclick="@FullNomClick" @onclick:preventDefault>
+            @Value?.Nom
+        </a>
+    }
+
+</div>
+
+
+
+
+@code {
+    [Parameter] public GuidNom? Value { get; set; }
+    [Parameter] public EventCallback<GuidNom> ValueChanged { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+
+    private bool isLoading;
+    private bool isEditing;
+    private CacheDTO cache = null;
+    private List<CountryModel> countries = null;
+    private CountryModel country = null;
+    private string? zipCod = null;
+    private string? localizedErrMsg = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Value == null)
+        {
+            if (countries == null) await LoadCountries();
+            isEditing = true;
+        }
+    }
+
+    private async Task FullNomClick()
+    {
+        if (countries == null) await LoadCountries();
+        LoadEditingValues();
+        isEditing = true;
+    }
+
+    private async Task LoadCountries()
+    {
+        isLoading = true;
+        cache = await base.RequestAtlasAsync();
+        countries = cache.Countries;
+        isLoading = false;
+    }
+
+    private void LoadEditingValues()
+    {
+        var zip = cache.Zips.FirstOrDefault(x => x.Guid == Value.Guid);
+        var location = cache.Locations.FirstOrDefault(x => x.Guid == zip.Location);
+        var zona = cache.Zonas.FirstOrDefault(x => x.Guid == location.Zona);
+        country = cache.Country(zona.Country);
+        zipCod = zip.ZipCod;
+    }
+
+    private async Task ZipChanged(ChangeEventArgs args)
+    {
+        localizedErrMsg = null;
+        zipCod = args.Value.ToString();
+        if (country != null)
+        {
+            await SetZipNom();
+        }
+    }
+
+    private async Task CountryChanged(CountryModel arg)
+    {
+        country = arg;
+        if (zipCod != null)
+        {
+            await SetZipNom();
+        }
+    }
+
+    private async Task SetZipNom()
+    {
+        isLoading = true;
+        if (await SetZipFromDatabase() == false)
+        {
+            await SetZipFromGeoCode();
+        }
+        isLoading = false;
+    }
+
+    private async Task<bool> SetZipFromDatabase()
+    {
+        var retval = false;
+        var guidnom = await PostAsync<string, GuidNom>(zipCod, "Zip/Lookup", country.ISO);
+        if (guidnom != null)
+        {
+            retval = true;
+            isEditing = false;
+            if (ValueChanged.HasDelegate) await ValueChanged.InvokeAsync(guidnom);
+            if (AfterUpdate.HasDelegate) await AfterUpdate.InvokeAsync();
+        }
+        return retval;
+    }
+
+    private async Task SetZipFromGeoCode()
+    {
+        var GoogleApiKey = "AIzaSyC3O2n2r1p1w-9JkC-f-yI7HWQfkst053I";
+        var template = @"https://maps.googleapis.com/maps/api/geocode/json?components=postal_code:{1}|country:{0}&key={2}";
+        var url = string.Format(template, country.ISO, zipCod, GoogleApiKey);
+
+        var geoCode = await base.GetAsync<GoogleApi.GeoCodeModel>(url);
+        if (geoCode != null)
+        {
+            switch (geoCode.Status)
+            {
+                case "OK":
+                    ZipModel geoZip = await PostAsync<GoogleApi.GeoCodeModel, ZipModel>(geoCode, "Zip/FromGeoCode");
+                    if (geoZip == null)
+                    {
+                        localizedErrMsg = "NotFound";
+                    }
+                    else
+                    {
+                        cache = await base.RequestAtlasAsync();
+                        var zip = cache.Zips.FirstOrDefault(x => x.Guid == geoZip.Guid);
+                        var location = cache.Locations.FirstOrDefault(x => x.Guid == zip.Location);
+                        var zona = cache.Zonas.FirstOrDefault(x => x.Guid == location.Zona);
+                        var provincia = zona.Provincia == null ? null : cache.Provincias.FirstOrDefault(x => x.Guid == zona.Provincia);
+                        country = cache.Country(zona.Country);
+                        var nom = ZipModel.FullNom(zipCod, location.Nom, zona.Nom, provincia?.Nom, country.ISO, country.Nom.Tradueix(base.Lang()));
+                        var guidnom = new GuidNom(zip.Guid, nom);
+                        if (ValueChanged.HasDelegate) await ValueChanged.InvokeAsync(guidnom);
+                        if (AfterUpdate.HasDelegate) await AfterUpdate.InvokeAsync();
+                        isEditing = false;
+                    }
+                    break;
+                case "ZERO_RESULTS":
+                    localizedErrMsg = "NotFound";
+                    break;
+                default:
+                    localizedErrMsg = "SysErr";
+                    break;
+            }
+        }
+    }
+}

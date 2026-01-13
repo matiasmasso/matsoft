@@ -1,0 +1,78 @@
+﻿.Wrapper {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.Textbox {
+    font-size: 1.0rem;
+    width: 100%;
+    border: none;
+    outline: none;
+    /*padding: 4px 7px 2px 4px;*/
+}
+
+    .Textbox :focus {
+        outline: none;
+    }
+
+    .Textbox.Int {
+        max-width: 6rem;
+        min-width: 4rem;
+    }
+    .Textbox.Fch {
+        width: max-content;
+    }
+
+.Warning {
+    background-color: lightsalmon;
+}
+
+/*.WarnLength {
+    background-color: lightsalmon;
+}*/
+
+.ButtonsBar {
+    display:flex;
+    gap:10px;
+    align-items:baseline;
+    padding-left:10px;
+}
+
+    .ButtonsBar ::deep a path {
+        opacity: .3;
+    }
+
+    .ButtonsBar ::deep a:hover path {
+        opacity: 1.0;
+    }
+
+.Copying1 {
+    transition: ease-in-out .5s;
+    transform: rotateY(180deg) rotateX(180deg);
+}
+
+.Copying2 {
+    transition: ease-in-out .5s;
+    transform: rotateX(180deg) rotateY(180deg);
+}
+
+.LookupEmp {
+    padding-left:2px;
+}
+
+@media(max-width:599px) {
+    .ButtonsBar  {
+        position: absolute;
+        right:0;
+        bottom: 0;
+    }
+    .ButtonsBar ::deep .Svg {
+        width: 40px;
+        min-width: 40px;
+        padding:0 3px;
+    }
+        .ButtonsBar ::deep a path {
+            opacity: .7;
+        }
+}

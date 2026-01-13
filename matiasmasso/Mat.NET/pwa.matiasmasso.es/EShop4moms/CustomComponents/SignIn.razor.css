@@ -1,0 +1,40 @@
+﻿.Wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+    .Grid button, .Grid input {
+        width: 100%;
+    }
+
+    .Warning {
+        color:red;
+    }
+
+    .Value {
+        margin-top: 5px;
+    }
+
+    .Persist {
+        margin-top:10px;
+    }
+.IForgot {
+    margin-top:10px;
+    display: flex;
+    gap: 10px;
+}
+
+    .IForgot > a {
+        display: block;
+        width: 100%;
+    }
+
+    .IForgot > div {
+        width: 30px;
+        text-align: center;
+    }
+
+    .SendMe {
+        width:100%;
+    }

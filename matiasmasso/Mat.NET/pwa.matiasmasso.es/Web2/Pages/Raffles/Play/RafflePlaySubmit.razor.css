@@ -1,0 +1,10 @@
+﻿.Bases {
+    display: flex;
+    gap:10px;
+}
+
+.SubmitRow {
+    display:flex;
+    justify-content: space-between;
+    margin-top:15px;
+}

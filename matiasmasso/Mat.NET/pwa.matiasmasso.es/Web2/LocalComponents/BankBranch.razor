@@ -1,0 +1,108 @@
+﻿@inject CultureService culture
+@inject BankBranchesService bankBranchesService
+@inject IJSRuntime JSRuntime
+
+<div class="Wrapper">
+    @if (Model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+            <h3>Bank branch</h3>
+
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("Details")">
+
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>state = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequest"
+                                RequestToUpdate="UpdateAsync"></ButtonsBar>
+                </div>
+            </TabPage>
+
+        </TabControl>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+@code {
+    [Parameter] public BankModel.Branch? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    enum Fields
+    {
+        Bank,
+        Id,
+        Adr,
+        Location,
+        Swift,
+        Obsoleto
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        gridModel = new PropertyGridModel(Model);
+        gridModel.AddDropdown((int)Fields.Bank, bankBranchesService.Banks() ?? new(), bankBranchesService.Bank((Guid?)Model.Bank), culture.Localize("Bank"));
+        gridModel.AddString((int)Fields.Id, Model?.Id, culture.Localize("Id"));
+        gridModel.AddString((int)Fields.Adr, Model?.Adr, culture.Localize("Address"));
+        gridModel.AddDropdown((int)Fields.Bank, bankBranchesService.Locations() ?? new(), bankBranchesService.Location((Guid?)Model.Location), culture.Localize("Bank"));
+        gridModel.AddString((int)Fields.Swift, Model?.Swift, culture.Localize("Swift"));
+        gridModel.AddBool((int)Fields.Obsoleto, Model?.Obsoleto, culture.Localize("Obsoleto"));
+    }
+
+    void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    async Task UpdateAsync()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            Model!.Bank = gridModel!.GetModelGuid((int)Fields.Bank);
+            Model.Id = gridModel.GetString((int)Fields.Id);
+            Model.Adr = gridModel.GetString((int)Fields.Adr);
+            Model!.Location = gridModel!.GetModelGuid((int)Fields.Location);
+            Model.Swift = gridModel.GetString((int)Fields.Swift);
+            Model.Obsoleto = gridModel.GetBool((int)Fields.Obsoleto);
+            await bankBranchesService.UpdateAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task DeleteAsync()
+    {
+        try
+        {
+            state = DbState.IsDeleting;
+            await bankBranchesService.DeleteAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+}

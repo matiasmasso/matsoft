@@ -1,0 +1,123 @@
+﻿@inject CultureService culture
+@inject BanksService banksService
+@inject IJSRuntime JSRuntime
+
+<div class="Wrapper">
+    @if (Model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+            <h3>Bank</h3>
+
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("Details")">
+
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>state = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequest"
+                                RequestToUpdate="UpdateAsync"></ButtonsBar>
+                </div>
+            </TabPage>
+
+            <TabPage Text="@culture.Localize("Agencies")">
+                <BankBranches Model="Model" RequestToEdit="EditRequest"></BankBranches>
+            </TabPage>
+
+        </TabControl>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+@code {
+    [Parameter] public BankModel? Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    enum Fields
+    {
+        Country,
+        Id,
+        RaoSocial,
+        NomComercial,
+        Swift,
+        Svg,
+        Obsoleto
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        gridModel = new PropertyGridModel(Model);
+        gridModel.AddDropdown((int)Fields.Country, banksService.Countries() ?? new(), banksService.Country((Guid)Model.Country!), culture.Localize("Country"));
+        gridModel.AddString((int)Fields.Id, Model?.Id, culture.Localize("Id"));
+        gridModel.AddString((int)Fields.RaoSocial, Model?.RaoSocial, culture.Localize("RaoSocial"));
+        gridModel.AddString((int)Fields.NomComercial, Model?.NomComercial, culture.Localize("NomComercial"));
+        gridModel.AddString((int)Fields.Swift, Model?.Swift, culture.Localize("Swift"));
+        gridModel.AddString((int)Fields.Svg, Model?.Svg, culture.Localize("Svg"));
+        gridModel.AddBool((int)Fields.Obsoleto, Model?.Obsoleto, culture.Localize("Obsoleto"));
+    }
+
+    void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    async Task UpdateAsync()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            Model!.Country = gridModel!.GetModelGuid((int)Fields.Country);
+            Model.Id = gridModel.GetString((int)Fields.Id);
+            Model.RaoSocial = gridModel.GetString((int)Fields.RaoSocial);
+            Model.NomComercial = gridModel.GetString((int)Fields.NomComercial);
+            Model.Swift = gridModel.GetString((int)Fields.Swift);
+            Model.Svg = gridModel.GetString((int)Fields.Svg);
+            Model.Obsoleto = gridModel.GetBool((int)Fields.Obsoleto);
+            await banksService.UpdateAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task DeleteAsync()
+    {
+        try
+        {
+            state = DbState.IsDeleting;
+            await banksService.DeleteAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+
+    async Task EditRequest(IModel value)
+    {
+        var breadcrumb = new ModelEditor.Breadcrumb(value, value.ToString() ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+}

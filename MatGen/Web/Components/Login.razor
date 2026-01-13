@@ -1,0 +1,99 @@
+﻿@inject AuthenticationService AuthenticationService
+@inject ApiService ApiService
+
+@using System.Security.Claims;
+
+@if (hasCheckedPersistedHash)
+{
+
+    <div class="Wrapper">
+        <div class="Label">
+            Email
+        </div>
+        <div class="Value">
+            <input type="email" @bind-value="emailAddress" />
+        </div>
+        <div class="Label">
+            Password
+        </div>
+        <div class="Value">
+            <input type="password" @bind-value="password" />
+        </div>
+
+        <div class="Value">
+            <label>
+                <input type="checkbox" @bind="persist">
+                recorda'm aquí
+            </label>
+        </div>
+
+        @if (isLogging)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <a class="Submit Button ButtonOk" href="#" @onclick="Submit" @onclick:preventDefault>Enviar</a>
+
+            @if (wrongPwd)
+            {
+                <div class="Err">
+                    <Icon Id="Icon.Ids.Warning"></Icon>
+                    Credencials no vàlides
+                </div>
+            }
+        }
+
+    </div>
+}
+
+else
+{
+    <Loading></Loading>
+}
+
+@code {
+    string emailAddress = "";
+    string? password;
+    bool hasCheckedPersistedHash;
+    bool persist;
+    bool isLogging;
+    bool wrongPwd;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var hash = await AuthenticationService.PersistedHash();
+            if (!string.IsNullOrEmpty(hash))
+            {
+                var user = await ApiService.PostAsync<string, UserModel>(hash, "User/fromHash");
+                if (user == null)
+                {
+                    await AuthenticationService.ClearPersistedHash();
+                }
+                else
+                {
+                    await AuthenticationService.LoginAsync(user);
+                }
+            }
+            hasCheckedPersistedHash = true;
+            StateHasChanged();
+        }
+    }
+
+    async Task Submit()
+    {
+        wrongPwd = false;
+        isLogging = true;
+        var hash = DTO.Helpers.CryptoHelper.Hash(emailAddress.ToLower(), password!);
+        var user = await ApiService.PostAsync<string, UserModel>(hash, "User/fromHash");
+        isLogging = false;
+        if (user == null)
+            wrongPwd = true;
+        else
+            await AuthenticationService.LoginAsync(user, persist);
+    }
+}

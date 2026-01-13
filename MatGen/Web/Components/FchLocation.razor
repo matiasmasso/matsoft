@@ -1,0 +1,147 @@
+﻿@inject ApiService ApiService
+
+
+<div class="Wrapper">
+    @if (isEditing)
+    {
+
+        <div class="Fch">
+            <Fch Value="fch1" ValueChanged="Fch1Changed" IsDirty="@(()=>isDirty=true)" CanEdit="true"></Fch>
+        </div>
+
+        <div class="Qualifier">
+        <Dropdown GenericType="FchModel.Qualifiers"
+                  Values="Enum.GetValues<FchModel.Qualifiers>().ToList()"
+                  Value="qualifier"
+                  ValueChanged="OnQualifierChanged"></Dropdown>
+        </div>
+
+        @if (ShouldShowFch2())
+        {
+            <div class="Fch">
+                <Fch Value="fch2" ValueChanged="Fch2Changed" IsDirty="@(()=>isDirty=true)" CanEdit="true"></Fch>
+            </div>
+        }
+
+        <div class="Location">
+            <LocationLookup Value="ApiService.Location(Value?.Location?.Guid)" Values="Values" ValueChanged="LocationChanged"
+                            RequestToAddNew="AddNewRequest"
+                            CanEdit="CanEdit"></LocationLookup>
+        </div>
+
+        @if (isDirty)
+        {
+            <button class="Button" @onclick="SaveRequest" >Desar</button>
+        }
+    }
+    else
+    {
+        <a class="Caption" href="#" @onclick="@(() => isEditing = !isEditing)" @onclick:preventDefault>
+            @if (string.IsNullOrEmpty(caption))
+            {
+                <span>&nbsp;</span>
+            }
+            else
+            {
+                <span>@caption</span>
+            }
+        </a>
+    }
+</div>
+
+
+@code {
+    [Parameter] public FchLocationModel? Value { get; set; }
+    [Parameter] public List<IModel>? Values { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public EventCallback<FchLocationModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback RequestToAddNewLocation { get; set; }
+    [Parameter] public EventCallback<LocationModel> ItemSelected { get; set; }
+    [Parameter] public EventCallback<Object> ObjectChanged { get; set; }
+
+    private bool isEditing = false;
+    private bool isDirty = false;
+    private FchModel.Qualifiers qualifier = FchModel.Qualifiers.EXC;
+    private string? fch1;
+    private string? fch2;
+    private LocationModel? location;
+    private string? caption;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Value != null)
+        //caption=new string(' ', 10);
+            //isEditing = true;
+        {
+        fch1 = Value?.Fch?.Fch1;
+        fch2 = Value?.Fch?.Fch2;
+        qualifier = Value?.Fch?.Qualifier ?? FchModel.Qualifiers.EXC;
+        location = Value?.Location;
+        caption = ApiService.FchLocationCaption(Value);
+        }
+    }
+
+    private FchLocationModel GetUpdatedValue()
+    {
+        var retval = Value ?? new FchLocationModel();
+        retval.Fch = new FchModel
+        {
+            Fch1 = fch1,
+            Qualifier = qualifier
+        };
+        if (qualifier == FchModel.Qualifiers.BET)
+            retval.Fch.Fch2 = fch2;
+
+        retval.Location = location;
+        return retval;
+    }
+
+    private void Fch1Changed(string args)
+    {
+        fch1 = args;
+        isDirty = true;
+    }
+
+    private void Fch2Changed(string args)
+    {
+        fch2 = args;
+        isDirty = true;
+    }
+
+    private void LocationChanged(LocationModel args)
+    {
+        location = args;
+        isDirty = true;
+    }
+
+    // void LocationSelected(LocationModel location)
+    // {
+    //     ItemSelected.InvokeAsync(location);
+    // }
+
+    void AddNewRequest()
+    {
+        RequestToAddNewLocation.InvokeAsync();
+    }
+
+    void OnQualifierChanged(FchModel.Qualifiers args)
+    {
+        qualifier = args;
+                isDirty = true;
+
+    }
+
+    void SaveRequest()
+    {
+        var retval = GetUpdatedValue();
+        ValueChanged.InvokeAsync(retval);
+        ObjectChanged.InvokeAsync(retval);
+        isEditing = false;
+    }
+
+    bool ShouldShowFch2()
+    {
+        return qualifier == FchModel.Qualifiers.BET;
+    }
+}

@@ -1,0 +1,45 @@
+﻿a.AdvancedOptions {
+    font-size:smaller;
+}
+
+#ProductSelection {
+    margin:15px 0;
+}
+
+div.ProductThumbnail {
+    display: inline-block;
+    vertical-align:top;
+    width:130px;
+    height:149px;
+    border:1px dotted green;
+}
+
+div.ProductThumbnail img{
+    width:100%;
+}
+
+div.ProductSelectors {
+    display:inline-block;
+    vertical-align:top;
+    text-align:right;
+    width:200px;
+    height:150px;
+    border:1px dotted red;
+}
+
+div.ProductSelectors select {
+    width:100%;
+    margin:0 0 2px;
+}
+
+#QtySelection {
+    margin-top:20px;
+}
+
+#Qty {
+    width:80px;
+}
+
+#AddRow {
+    width:113px;
+}

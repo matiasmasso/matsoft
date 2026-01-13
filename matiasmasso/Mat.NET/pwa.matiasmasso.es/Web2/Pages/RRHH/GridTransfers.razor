@@ -1,0 +1,140 @@
+﻿@inject CultureService culture
+@inject BancsService bancsService
+@inject ContactsService contactsService
+@inject IbansService ibansService
+@inject EmpsService empsService
+@inject BancsService bancsService
+
+<div>
+    <p>Llista dels saldos del compte 46500 pagas a transferir despres de registrar les nómines</p>
+    <p>Es senyalen amb un warning els saldos que son diferents del líquid de la nómina</p>
+
+    @foreach (var transfer in Values?.OrderBy(x => x.Emp())?.ToList() ?? new())
+    {
+        <div class="Transfer @(transfer.Enabled ? "":"Disabled")">
+            <div class="Toggle">
+                <Toggle @bind-Value="transfer.Enabled" CanEdit="true"></Toggle>
+            </div>
+
+            <div class="Emp">
+                @empsService.GetValue(transfer.Emp())?.Abr
+            </div>
+
+            <div class="Banc">
+                <select>
+                    @foreach (var banc in Bancs(transfer.Emp()) ?? new())
+                    {
+                        <option @onclick="@(()=>transfer.Banc = banc.Guid)">@BancNom(transfer)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="Eur">
+                @if (transfer.Enabled)
+                {
+                    <span>@transfer.Total().CurFormatted()</span>
+                }
+                else
+                {
+                    <span>&nbsp;</span>
+                }
+
+            </div>
+
+        </div>
+
+        <div>
+
+            @foreach (var item in transfer?.Items?.OrderBy(x => Beneficiari(x))?.ToList() ?? new())
+            {
+                <div class="Item @(transfer.Enabled && item.Enabled ? "":"Disabled")">
+                    <div class="Toggle">
+                        <Toggle @bind-Value="item.Enabled" CanEdit="true"></Toggle>
+                    </div>
+                    <div class="Nom">
+                        @Beneficiari(item)
+                    </div>
+                    <div class="Eur">
+                        @if (transfer.Enabled && item.Enabled)
+                        {
+                            @if (!Cuadra(item))
+                            {
+                                <a href="#" title="@NoCuadraText(item)" @onclick:preventDefault>
+                                    <Icon Id="Icon.Ids.Warning"></Icon>
+                                </a>
+                            }
+                            <AmtEditor @bind-Value="item.Amount"></AmtEditor>
+                        }
+                        else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </div>
+                    <div class="Ccc">
+                        Iban: @Ccc(item)
+                    </div>
+                </div>
+            }
+
+        </div>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+
+
+@code {
+    [Parameter] public List<DTO.BancModel.Transfer>? Values { get; set; }
+    [Parameter] public EventCallback<List<DTO.BancModel.Transfer>>? ValuesChanged { get; set; }
+    [Parameter] public List<NominaModel>? Nominas { get; set; }
+
+    private string? Beneficiari(BancModel.Transfer.Item item) => contactsService.GetValue(item.Beneficiari)?.RaoSocial;
+    private string? Ccc(BancModel.Transfer.Item item) => ibansService.FromStaff(item.Beneficiari)?.FormatedDigits();
+    private Exception? exception;
+
+    string? BancNom(BancModel.Transfer transfer)
+    {
+        string? retval = null;
+        try
+        {
+            var banc = bancsService.Values?.FirstOrDefault(x => x.Emp == transfer.Emp());
+            var ibans = ibansService.FromBanc(banc?.Guid) ?? new();
+            if (ibans.Count() == 0) throw new Exception("Sender bank is missing account number");
+            if (ibans.Count() >1) throw new Exception("Sender bank has multiple active account numbers");
+            var ccc = ibans.First().Ccc;
+            var cccLast4Digits = ccc?.Length >= 4 ? ccc.Substring(ccc.Length - 4, 4) : "";
+            retval = string.Format("{0} ...{1}", banc?.Abr, cccLast4Digits);
+
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+        return retval;
+    }
+
+    List<BancModel> Bancs(EmpModel.EmpIds emp)
+    {
+        return bancsService.Values.Where(x => x.Emp == emp && !x.Obsoleto).ToList();
+    }
+
+    bool Cuadra(BancModel.Transfer.Item item)
+    {
+        var nomina = Nomina(item);
+        var retval = (nomina?.Liquid ?? 0) == (item.Amount?.Eur ?? 0);
+        return retval;
+    }
+
+    string NoCuadraText(BancModel.Transfer.Item item)
+    {
+        var nomina = Nomina(item);
+        var retval = string.Format(culture.Tradueix(
+            "La nómina es de {0:N2} €",
+            "La nómina es de {0:N2} €",
+            "La nómina es de {0:N2} €"
+        ), nomina?.Liquid ?? 0);
+        return retval;
+    }
+
+    NominaModel? Nomina(BancModel.Transfer.Item item) => Nominas?.FirstOrDefault(x => x.Staff == item.Beneficiari);
+}

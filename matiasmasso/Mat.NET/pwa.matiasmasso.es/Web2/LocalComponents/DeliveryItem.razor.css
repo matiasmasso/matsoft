@@ -1,0 +1,26 @@
+﻿.Details {
+    display:grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap: 10px;
+}
+
+.Details > div {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+
+.DeliveryItem {
+    display:flex;
+    gap:10px;
+}
+
+.Thumbnail{
+    width:150px;
+    display:block;
+}
+
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}

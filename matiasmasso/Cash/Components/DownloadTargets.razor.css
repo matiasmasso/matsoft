@@ -1,0 +1,60 @@
+﻿
+@media(max-width:599px) {
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 30px 1fr;
+        grid-template-areas: "icon fch"
+            "icon nom"
+            "icon features";
+        grid-column-gap: 10px;
+        padding: 10px;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid gray;
+        }
+
+    .Icon {
+        grid-area: icon;
+    }
+
+    .Fch {
+        grid-area: fch;
+    }
+
+    .Nom {
+        grid-area: nom;
+    }
+
+    .Features {
+        grid-area: features;
+    }
+}
+
+@media(min-width:600px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: 18px min-content 1fr;
+        grid-column-gap: 10px;
+        align-items:center;
+    }
+
+    .Item {
+        display: contents;
+    }
+
+    .Ico ::deep .Svg {
+        width: 12px;
+        min-width: 12px;
+    }
+
+    .Features{
+        display:none;
+    }
+
+}

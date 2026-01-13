@@ -1,0 +1,83 @@
+﻿@inject CultureService culture
+@inject IJSRuntime jsRuntime
+<div>
+    <input type="date" value="@($"{fch:yyyy-MM-dd}")" @onchange="FchChanged" @oninput="@(()=>state=DbState.IsDirty)" />
+    <input type="text" value="@nom" />
+    <div class="Filedrop">
+        <Filedrop Value="docfile"
+                  ValueChanged="FileChanged"></Filedrop>
+    </div>
+    <div class="ButtonsBar">
+        <ButtonsBar CanEdit="true"
+                    State="state"
+                    CanDelete="true"
+                    RequestToCancel="CancelRequest"
+                    RequestToUpdate="UpdateRequest"
+                    RequestToDelete="DeleteRequest"></ButtonsBar>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DocfileModel? Model { get; set; }
+    [Parameter] public EventCallback<DocfileModel> RequestToUpdate { get; set; }
+    [Parameter] public EventCallback<DocfileModel> RequestToDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private DateTime? fch;
+    private string? nom;
+    private string? features;
+    private DbState state;
+    private DocfileModel? docfile;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        docfile = Model;
+        features = docfile?.Features();
+        nom = docfile?.Nom;
+        fch = docfile?.Fch;
+    }
+
+    private void FileChanged(DocfileModel args)
+    {
+        docfile = args;
+    }
+
+    void FchChanged(ChangeEventArgs args)
+    {
+        if (args.Value != null)
+        {
+            fch = DateTime.Parse(args.Value!.ToString()!);
+        }
+    }
+
+    async Task Browse()
+    {
+        //await jsRuntime.InvokeAsync<object>("open", CancellationToken.None, docfile!.DownloadUrl()!);
+        await jsRuntime.InvokeAsync<string>("open", docfile!.DownloadUrl()!, "_blank");
+    }
+
+    void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    void UpdateRequest()
+    {
+        state = DbState.IsUpdating;
+        docfile!.Fch = fch;
+        docfile.Nom = nom;
+        RequestToUpdate.InvokeAsync(docfile);
+        state = DbState.StandBy;
+        RequestToCancel.InvokeAsync();
+    }
+
+    void DeleteRequest()
+    {
+        state = DbState.IsDeleting;
+        RequestToDelete.InvokeAsync(docfile);
+        state = DbState.StandBy;
+        RequestToCancel.InvokeAsync();
+    }
+
+}

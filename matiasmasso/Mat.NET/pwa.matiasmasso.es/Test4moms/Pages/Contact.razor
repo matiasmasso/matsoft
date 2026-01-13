@@ -1,0 +1,79 @@
+﻿@page "/contacto"
+@page "/contacte"
+@page "/contact"
+@inherits _Base
+@inject IStringLocalizer<AppResource> Localizer
+@inject AuthenticationStateProvider authStateProvider
+
+<div class="Wrapper600">
+    <AuthorizeView>
+        <Authorized>
+            <div>@Localizer["Contact.ReplyTo"]</div>
+            <div class="Recipient @(isChangingRecipient ? "Hidden" : "")">
+                <span>@email</span>
+                <a href="#" @onclick="@(()=>isChangingRecipient = true)" @onclick:preventDefault>
+                    @Localizer["Change"]
+                </a>
+            </div>
+            <div class="SignIn @(isChangingRecipient ? "" : "Hidden")">
+                <SignIn Success="SignInSuccess" Fail="SignInFail"></SignIn>
+            </div>
+
+            <div class="@(isChangingRecipient ? "Hidden" : "")">
+                <div class="CallToAction">
+                    @Localizer["Contact.PostYourQuery"]
+                </div>
+                <textarea rows="10" @bind="message"></textarea>
+                <div class="ButtonsBar">
+                    <button class="Button ButtonOk" @onclick="SubmitAsync">@Localizer["Submit"]</button>
+                </div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <SignIn Success="SignInSuccess" Fail="SignInFail"></SignIn>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    string? email;
+    string? message;
+    bool isChangingRecipient;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            //var authStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+            var authState = await authStateProvider.GetAuthenticationStateAsync();
+            var claims = authState.User.Claims.ToList();
+            email = claims?.FirstOrDefault(x => x.Type.EndsWith("name", StringComparison.OrdinalIgnoreCase))?.Value;
+            StateHasChanged();
+        }
+    }
+
+    async Task SubmitAsync()
+    {
+
+        var msgTo = "matias@matiasmasso.es";
+        var subject = "4moms Shop: Missatge de consumidor " + email;
+        var body = message;
+
+        await Services.MailService.SendEmail(msgTo, subject, body);
+
+    }
+
+    void SignInSuccess(UserModel user)
+    {
+        email = user.EmailAddress;
+        isChangingRecipient = false;
+    }
+
+    void SignInFail(ProblemDetails args)
+    {
+        problemDetails = args;
+    }
+}

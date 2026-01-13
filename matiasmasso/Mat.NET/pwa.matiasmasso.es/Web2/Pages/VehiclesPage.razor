@@ -1,0 +1,194 @@
+﻿@page "/vehicles"
+@page "/{LangSegment}/vehicles"
+@implements IDisposable
+@layout ProLayout
+@inject CultureService culture
+@inject SessionStateService session
+@inject VehiclesService vehiclesService
+
+<div class="PageWrapper600">
+
+
+    @if (model == null && exception == null)
+    {
+        <h1>@culture.Localize("Vehicles")</h1>
+
+        <Loading></Loading>
+    }
+    else if (selectedItem != null)
+    {
+        <Vehicle Model="selectedItem" CloseRequest="@(()=>selectedItem=null)"></Vehicle>
+    }
+    else
+    {
+        <h1>@culture.Localize("Vehicles")</h1>
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                @culture.Localize("AddNew")
+            </a>
+
+            <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+        </PageOptions>
+    </div>
+
+        <SelectedEmps @bind-SelectedValues="selectedEmps"></SelectedEmps>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} vehicles, {1} en actiu",model?.Count(), model?.Where(x => x.Baixa == null).Count())
+        </div>
+
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders HideOnMobile">
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.FchFrom))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("PurchaseDate")
+                </a>
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.Plate))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("CarPlate")
+                </a>
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.CarModel))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("CarModel")
+                </a>
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.Driver))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("CarDriver")
+                </a>
+            </div>
+
+
+            @foreach (var item in FilteredValues() ?? new())
+            {
+                <a href="#" class='Item @(item.Baixa == null ? "" : "Obsoleto" )'
+                @onclick="@(()=>selectedItem = item)"
+                @onclick:preventDefault="true">
+
+                    <div class="Label HideOnDesktop">@culture.Localize("PurchaseDate")</div>
+                    <div class="Truncate">
+                        @(item.Alta == null ? "" : string.Format("{0:dd/MM/yyyy}", item.Alta))
+                    </div>
+
+                    <div class="Label HideOnDesktop">@culture.Localize("CarPlate")</div>
+                    <div class="Truncate">
+                        @(item.Matricula ?? "")
+                    </div>
+
+                    <div class="Label HideOnDesktop"> @culture.Localize("CarModel")</div>
+                    <div class="Truncate">
+                        @(item.Model?.Nom ?? "")
+                    </div>
+
+                    <div class="Label HideOnDesktop">@culture.Localize("CarDriver")</div>
+                    <div class="Truncate">
+                        @(item.Conductor?.Nom ?? "")
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private List<VehicleModel>? model;
+    private VehicleModel? selectedItem;
+    private List<EmpModel>? selectedEmps;
+    private string searchTerm = string.Empty;
+    private Cols? sortedColumn = Cols.FchFrom;
+    private bool isDescendingOrder = false;
+    private bool isShowingObsolets;
+    private Exception? exception;
+
+    private enum Cols
+    {
+        FchFrom,
+        Plate,
+        CarModel,
+        Driver
+    }
+
+    protected override void OnInitialized()
+    {
+        session.OnChange += Refresca;
+        vehiclesService.OnChange += Refresca;
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        model = vehiclesService.Values;
+        if (selectedEmps == null || selectedEmps.Count == 0)
+            selectedEmps = session.Emps?.Where(x => (model?.Any(y => x.Id == y.Emp) ?? false)).ToList();
+
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            //case Cols.Ref:
+            //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Referencia ?? "").ToList() : model!.OrderBy(x => x.Referencia ?? "").ToList();
+            //    break;
+            //case Cols.User:
+            //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Usuari ?? "").ToList() : model!.OrderBy(x => x.Usuari ?? "").ToList();
+            //    break;
+        }
+    }
+
+    public void AddNew()
+    {
+        selectedItem = new VehicleModel();
+    }
+
+    //public List<VehicleModel>? FilteredValues()
+    //{
+    //    //var retval = model?.Where(x => x.Matches(searchTerm)).ToList() ?? new();
+    //    var retval = model?.Where(x => x.Matches(searchTerm)
+    // && (selectedEmps?.Any(y => x.Emp == y.Id) ?? false)).ToList();
+
+    //    if (!isShowingObsolets)
+    //        retval = retval?.Where(x => x.Baixa == null).ToList();
+    //        return retval;
+    //}
+
+    private List<VehicleModel>? FilteredValues()
+    {
+        var retval = model?
+    .Where(x => (string.IsNullOrEmpty(searchTerm) || x.Matches(searchTerm))
+    && (selectedEmps?.Any(y => x.Emp == y.Id) ?? false)
+    && (x.Baixa == null || x.Baixa > DateTime.Today || isShowingObsolets))
+    .OrderByDescending(x => x.Alta)
+    .ToList();
+        return retval;
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        vehiclesService.OnChange -= Refresca;
+    }
+
+}

@@ -1,0 +1,8 @@
+﻿.Wrapper {
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+.Thumbnail img {
+    width:100%;
+}

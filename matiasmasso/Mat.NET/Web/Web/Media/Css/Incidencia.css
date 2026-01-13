@@ -1,0 +1,55 @@
+﻿    .ContentColumn {
+        max-width:600px;
+        margin: auto;
+    }
+
+    .row {
+        margin-bottom:15px;
+    }
+
+        .label {
+        }
+        .control {
+            margin-left:20px;
+        }
+        .control input[type=text],.control input[type=email], .control select, textarea {
+            width:100%;
+            font-size:1.0em;
+            color:navy;
+        }
+
+.UploadImgs a:hover, .UpladTicket a:hover {
+    color: #167ac6;
+}
+
+    #submit {
+            margin-bottom:20px;
+            text-align:right;
+        }
+
+
+        input[type=file] {
+            opacity:0.0;
+        }
+
+        div.Thumbnail {
+            position:relative;
+            display:inline-block;
+            height:100px;
+            margin:10px 10px 10px 0;
+        }
+
+        img.Thumbnail {
+            height:100%;
+        }
+
+        .IconRemoveThumbnail {
+            position:absolute;
+            right:0px;
+            /*
+            width:32px;
+            height:32px;
+                */
+            z-index:10;
+        }
+

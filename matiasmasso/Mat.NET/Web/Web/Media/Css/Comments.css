@@ -1,0 +1,98 @@
+﻿.CommentsWrapper {
+    margin-top: 20px;
+}
+
+    .CommentsWrapper .CommentBox {
+        border: solid 1px #d0d0d0;
+        padding: 5px 10px;
+        margin-bottom: 5px;
+    }
+
+
+.CommentWrapper .CommentWrapper /*make the wrapper margin only for the reply comments */ {
+    margin-left: 25px;
+}
+
+
+.CommentsWrapper textarea {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    font-size: 1em;
+}
+
+.CommentsWrapper .formSubmitDiv {
+    text-align: right;
+}
+
+.CommentsWrapper .AnswerSubmit {
+    padding: 4px 20px;
+}
+
+.CommentsWrapper .AnswerInfo {
+    padding: 20px;
+    box-shadow: inset;
+    background-color: moccasin;
+    margin: 20px;
+}
+
+.CommentThreads .Thread {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0 20px;
+}
+
+    .CommentThreads .Thread .Comment {
+        display: flex;
+        flex-direction: row;
+    }
+
+        .CommentThreads .Thread .Comment .Avatar {
+            flex: 0 0 50px;
+            padding-right: 10px;
+        }
+
+            .CommentThreads .Thread .Comment .Avatar img {
+                width: 100%;
+            }
+
+        .CommentThreads .Thread .Comment .Text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .CommentThreads .Thread .Comment .Caption {
+            font-weight: 600;
+        }
+
+        .CommentThreads .Thread .Comment .CompleteText {
+            display: none;
+        }
+
+    .CommentThreads .Thread a.ReadMore, .Thread a.ReadLess {
+        color: #167ac6;
+    }
+
+.ReadMoreComments {
+    display: block;
+}
+
+.CommentForm {
+    margin-top: 15px;
+}
+
+    .CommentForm .EmailAddress, .CommentForm .Password, .CommentForm .Nickname {
+        box-sizing: border-box;
+        height: 28px;
+        width: 100%;
+        margin: 10px 0;
+        /*padding: 4px 7px 2px 4px;*/
+        /*margin-bottom: 10px;*/
+    }
+
+    .CommentForm .Warning {
+        color: red;
+    }
+
+

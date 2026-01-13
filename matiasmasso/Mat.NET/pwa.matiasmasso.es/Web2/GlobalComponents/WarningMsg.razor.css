@@ -1,0 +1,9 @@
+﻿.Wrapper {
+    display:grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap: 10px;
+}
+
+.Ico {
+    display:inline-flex;
+}

@@ -1,0 +1,64 @@
+﻿<div class="wrapper">
+    @if (ShouldShowSelect())
+    {
+        <div>
+            <button class="btn btn-primary btn-sm"
+                    @onclick="@(() => ValueChanged.InvokeAsync(Modes.Select))">
+                Selecciona
+            </button>
+        </div>
+    }
+    else
+    {
+        <div>
+            <button class="btn btn-outline-secondary btn-sm"
+                    @onclick="@(() => ValueChanged.InvokeAsync(Modes.View))">
+                Cancel·la
+            </button>
+        </div>
+        <div>
+            <button class="btn btn-danger btn-sm"
+                    @onclick="() => OnDeleteRequest.InvokeAsync()">
+                @if (SelectedCount.HasValue && SelectedCount.Value > 0)
+                {
+                    <span>Elimina (@SelectedCount)</span>
+                }
+                else
+                {
+                    <span>Elimina-ho tot</span>
+                }
+            </button>
+        </div>
+        <div>
+            <button class="btn btn-primary btn-sm"
+                    @onclick="() => OnEditRequest.InvokeAsync()">
+                @if (SelectedCount.HasValue && SelectedCount.Value > 0)
+                {
+                    <span>Edita (@SelectedCount)</span>
+                }
+                else
+                {
+                    <span>Edita-ho tot</span>
+                }
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Modes Value { get; set; }
+    [Parameter] public EventCallback<Modes> ValueChanged { get; set; }
+    [Parameter] public EventCallback OnDeleteRequest { get; set; }
+    [Parameter] public EventCallback OnEditRequest { get; set; }
+    [Parameter] public int? SelectedCount { get; set; }
+
+    private Modes mode = Modes.View;
+    public enum Modes { View, Select }
+
+    protected override void OnParametersSet()
+    {
+        mode = Value;
+    }
+
+    bool ShouldShowSelect() => mode == Modes.View ;
+}

@@ -1,0 +1,10 @@
+﻿a {
+    display:block;
+    padding:0 10px;
+    height:24px;
+}
+
+a img {
+    height:100%;
+    width:auto;
+}

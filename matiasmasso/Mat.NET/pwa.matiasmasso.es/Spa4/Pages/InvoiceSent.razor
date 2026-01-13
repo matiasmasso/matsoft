@@ -1,0 +1,46 @@
+﻿@page "/invoiceSent/{Guid:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+@if(model == null)
+{
+    <Loading Message="@LoadingMessage()"></Loading>
+} else
+{
+    <div class="PropertyGrid">
+        <div class="Label">
+            @base.Tradueix("Factura","Factura","Invoice")
+        </div>
+        <div class="Value">
+            @model.Id
+        </div>
+       <div class="Label">
+            @base.Tradueix("Fecha","Data","Date")
+        </div>
+        <div class="Value">
+            @model.Fch.ToString("dd/MM/yy")
+        </div>
+       <div class="Label">
+            @base.Tradueix("Cliente","Client","Customer")
+        </div>
+        <div class="Value">
+            @(model.Contact?.Nom ?? "?")
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    private InvoiceSentModel? model;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        model = await GetAsync<InvoiceSentModel>("InvoiceSent", Guid.ToString());
+
+    }
+
+    private string LoadingMessage()
+    {
+        return base.Tradueix("Cargando factura", "Carregant factura", "Loading invoice");
+    }
+}

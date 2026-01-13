@@ -1,0 +1,46 @@
+﻿<div class="Step @(this == Parent.ActiveStep ? "Step-active":"")">
+    <div>
+        <div class="Circle">@idx</div>
+    </div>
+    <div>
+        <a href="#" @onclick="TitleClick" @onclick:preventDefault class="Title">@Title</a>
+        @if (!string.IsNullOrEmpty(Caption))
+        {
+            <a href="#" class="Caption" @onclick="TitleClick" @onclick:preventDefault >@Caption</a>
+        }
+        <div class="Body">
+            @if (this == Parent.ActiveStep)
+            {
+                @ChildContent
+            }
+        </div>
+    </div>
+
+</div>
+
+
+@code {
+    [CascadingParameter]
+    private UxStepper Parent { get; set; }
+    private int idx;
+
+
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public string Title { get; set; } = "(Title of this step)";
+    [Parameter] public string Caption { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Parent == null)
+            throw new ArgumentNullException(nameof(Parent), "Step must exist within a UxStepper");
+
+        base.OnInitialized();
+        idx = Parent.AddStep(this);
+    }
+
+    void TitleClick()
+    {
+        Parent.ActivateStep(this);
+    }
+
+}

@@ -1,0 +1,23 @@
+﻿.Wrapper {
+    position: relative;
+}
+
+    .Wrapper input[type=text] {
+        border: none;
+        width: 100%;
+    }
+
+        .Wrapper input[type=text]:focus {
+            outline: none;
+        }
+
+.ClearTextButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 6px 15px;
+}
+
+::deep .Item {
+    padding: 5px 0;
+}

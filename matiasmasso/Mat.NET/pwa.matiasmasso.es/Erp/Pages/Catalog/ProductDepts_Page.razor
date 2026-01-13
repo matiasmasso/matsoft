@@ -1,0 +1,108 @@
+﻿@page "/ProductDepts_Page"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("ProductDepts")</h1>
+
+    <PageOptions IsShowingOptions>
+        <ProductBrandLookup HideEllipsis
+                            Value="@brand"
+                            ValueChanged="BrandChanged">
+        </ProductBrandLookup>
+
+        <UxToggle @bind-Value="@IsShowingObsolets"
+                  TrueText="OutdatedIncluded"
+                  FalseText="OutdatedNotIncluded"></UxToggle>
+
+        <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+    </PageOptions>
+
+    @if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("ProductDepts.Found",model.Count(),model.Where(x=>x.Obsoleto == false).Count())
+        </div>
+
+        <ProductDepts_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></ProductDepts_List>
+
+    }
+    else
+    {
+        <ProductDept Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></ProductDept>
+    }
+
+
+
+</div>
+
+@code {
+    List<ProductDeptModel> model;
+    CacheDTO cache;
+    string searchTerm;
+    bool IsShowingObsolets = false;
+    ProductBrandModel brand;
+    ProductDeptModel selectedItem = null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        brand = cache.Brand(ProductBrandModel.Wellknown(ProductBrandModel.Wellknowns.BritaxRoemer).Guid);
+        model = cache.Depts;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Stp);
+        model = cache.Depts;
+    }
+
+    List<ProductDeptModel> FilteredItems()
+    {
+        var retval = model.Where(x => x.Brand == brand.Guid).ToList();
+        if (!string.IsNullOrEmpty(searchTerm))
+            retval = retval.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.Obsoleto == false).ToList();
+        retval = retval.OrderBy(x => x.Obsoleto).ToList();
+        return retval;
+    }
+
+    private void ItemClick(ProductDeptModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new ProductDeptModel
+            {
+                Brand = brand.Guid
+            };
+    }
+
+    private void OnUpdate(ProductDeptModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.Nom.Tradueix(base.Lang())).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(ProductDeptModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void BrandChanged(ProductBrandModel args)
+    {
+        brand = args;
+    }
+
+}

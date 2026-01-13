@@ -1,0 +1,61 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (model != null)
+    {
+        <div class="Grid @Display.ToString()">
+            @foreach (var item in model.Items)
+            {
+                <div class="Label">
+                    @Label(item)
+                </div>
+
+                <div class="Value">
+                    <PropertyGridEditorControl Item="@item"
+                                       CanEdit="CanEdit"
+                                       RequestToAddNew="@(()=>RequestToAddNew.InvokeAsync(item))"
+                                       ContextMenuClick="ContextMenuClickAsync"
+                                       ItemClick="ItemClickAsync"
+                                       SetDirty="@(()=>SetDirty.InvokeAsync(item))">
+                    </PropertyGridEditorControl>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public PropertyGridModel model { get; set; }
+    [Parameter] public DisplayModes Display { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> SetDirty { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> RequestToAddNew { get; set; }
+    [Parameter] public EventCallback<ItemClickEventArgs> ContextMenuClick { get; set; }
+    [Parameter] public EventCallback<PropertyGridModel.Item> ItemClick { get; set; }
+
+    private string Label(PropertyGridModel.Item item) => item.Label;
+
+    public enum DisplayModes
+    {
+        Compact,
+        Wide
+    }
+
+    private async Task ContextMenuClickAsync(ItemClickEventArgs e)
+    {
+        await ContextMenuClick.InvokeAsync(e);
+    }
+
+    private async Task ItemClickAsync(PropertyGridModel.Item e)
+    {
+        await ItemClick.InvokeAsync(e);
+    }
+
+    private async Task SetDirtyHandler(PropertyGridModel.Item item)
+    {
+        await SetDirty.InvokeAsync(item);
+    }
+
+    
+}

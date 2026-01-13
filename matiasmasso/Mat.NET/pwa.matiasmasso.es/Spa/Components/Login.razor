@@ -1,0 +1,57 @@
+﻿@inject IJSRuntime Js
+@inject HttpClient Http
+@inject AppState AppState
+
+@inject IHttpContextAccessor HttpContextAccessor 
+@using DTO
+
+<div class="Wrapper">
+    <EditForm Model="@viewModel" OnValidSubmit="@Submit">
+
+        <div class="form-group">
+            Email: <InputText id="Email" placeholder="Email" @bind-Value="viewModel!.Email" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            Password: <InputText id="Password"type="password" placeholder="Password" @bind-Value="viewModel!.Password" class="form-control" />
+        </div>
+
+        <br />
+
+      <div class="Buttons">
+          <button type="submit" class="btn btn-success">Update</button>
+      </div>
+
+    </EditForm>
+    <!--
+    <pwa-auth id="pwa-auth"
+                microsoftkey="a17ec572-51cc-4c79-83e7-9eb331649249"
+                googlekey="535371030919-i0fns6kc49ovit7cob0k7cbpste49ksk.apps.googleusercontent.com"
+                facebookkey="758204114538607"
+                applekey="com.pwabuilder.myawesomepwaauthsvc"
+                appearance="list">
+    </pwa-auth>
+    -->
+</div>
+
+@code {
+    private LoginViewModel? viewModel;
+
+    protected override void OnInitialized()
+    {
+        viewModel = new LoginViewModel(Http, AppState);
+    }
+
+    private async Task Submit()
+    {
+        if (await viewModel!.Submit())
+        {
+            CookieOptions options = new CookieOptions();
+            options.Expires = DateTime.Now.AddDays(1);
+            var response = HttpContextAccessor.HttpContext.Response;
+            response.Cookies.Append("test_token", "OlaKAse", options);
+        }
+    }
+
+
+}

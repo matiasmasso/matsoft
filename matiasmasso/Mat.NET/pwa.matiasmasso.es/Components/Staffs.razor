@@ -1,0 +1,197 @@
+﻿@inherits _Base
+
+
+<div class="Wrapper">
+    <h1>@Localizer("Staffs")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <PageOptions IsShowingOptions="true">
+            <ChildContent>
+                <div>
+                    <UxToggle @bind-Value="@IsShowingObsolets"
+                          TrueText="OutdatedIncluded"
+                          FalseText="OutdatedIncluded"></UxToggle>
+                </div>
+                <div>
+                    <UxLookupEmp Value="@selectedEmp"
+                             Values="Emps()"
+                             ValueChanged="@OnEmpChanged"></UxLookupEmp>
+                </div>
+            </ChildContent>
+        </PageOptions>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} empleats, {1} en actiu",model.Count(), model.Where(x => x.FchTo == null).Count())
+        </div>
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders HideOnMobile">
+                <a class="Nom" href="#"
+                    @onclick="@(()=>SortColumn(Cols.Nom))"
+                    @onclick:preventDefault="true">
+                    @Localizer("Name")
+                </a>
+                <a class="Position" href="#"
+                    @onclick="@(()=>SortColumn(Cols.Position))"
+                    @onclick:preventDefault="true">
+                    @Localizer("StaffPosition")
+                </a>
+                <a class="Age" href="#"
+                    @onclick="@(()=>SortColumn(Cols.Age))"
+                    @onclick:preventDefault="true">
+                    @Localizer("Age")
+                </a>
+                <a class="Seniority" href="#"
+                    @onclick="@(()=>SortColumn(Cols.Seniority))"
+                    @onclick:preventDefault="true">
+                    @Localizer("StaffSeniority")
+                </a>
+            </div>
+
+            <div class="GridRowDivider"></div>
+
+            @foreach (var item in FilteredItems())
+            {
+                <div class='Item
+                    @(item == selectedItem ? "Selected" : "" )
+                    @(selectedItem != null && item != selectedItem ? "HideOnMobile" : "")
+                    @(item.FchTo == null ? "" : "Obsoleto" )
+                    '
+                    @onclick="@(()=>ItemClick(item))"
+                    @onclick:preventDefault="true">
+
+                    <div class="Abr Truncate">@item.Abr</div>
+
+                    <div class="Position Truncate HideOnMobile">
+                        @(item.Position?.Nom?.Tradueix(base.Lang()) ?? "")
+                    </div>
+
+                    <div class="Age Truncate HideOnMobile">
+                        @item.Age()
+                    </div>
+
+                    <div class="Seniority Truncate HideOnMobile">
+                        @item.Seniority()
+                    </div>
+
+                    @* On mobiles, show position only if declared *@
+                    @if (item.Position != null)
+                    {
+                        <div class="Position Truncate HideOnDesktop">
+                            @(item.Position.Nom?.Tradueix(base.Lang()) ?? "")
+                        </div>
+                    }
+
+                    @*On mobiles, merge age and seniority on a single line *@
+                    <div class="Age HideOnDesktop">
+                        @(string.Format("{0} anys, {1} en actiu", item.Age(), item.Seniority()))
+                    </div>
+
+                    <div class="GridRowDivider">
+
+@*                        @if (item == selectedItem)
+                        {
+                            <div class="ContextMenu">
+                                <Nav nav="@selectedItem.ContextMenu()"></Nav>
+                            </div>
+                        }
+*@                    </div>
+                </div>
+            }
+
+
+        </div>
+    }
+
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+
+@code {
+    private List<StaffModel>? model;
+    private StaffModel? selectedItem;
+    private int? selectedEmp;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+    private Cols? sortedColumn = Cols.Nom;
+    private bool isDescendingOrder = false;
+    private ProblemDetails? problemDetails;
+
+    private enum Cols{
+        Nom,
+        Position,
+        Age,
+        Seniority
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var apiResponse = await GetAsync<List<StaffModel>>("Staffs", ((int)EmpModel.EmpIds.MatiasMasso).ToString());
+            model = apiResponse.Value;
+            problemDetails = apiResponse.ProblemDetails;
+            StateHasChanged();
+        };
+    }
+
+    private List<StaffModel> FilteredItems()
+    {
+        var retval = model!.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.FchTo == null).ToList();
+        if (selectedEmp != null)
+            retval = retval.Where(x => (int?)x.Emp == selectedEmp).ToList();
+        return retval;
+    }
+
+    private void ItemClick(StaffModel item)
+    {
+        var url = item.PropertyPageUrl();
+        navigationManager?.NavigateTo(url);
+        //selectedItem = selectedItem == null ? item : null;
+    }
+
+    private void SortColumn(Cols col){
+        var lang = base.Lang;
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch(col){
+            case Cols.Nom:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Abr).ToList() : model!.OrderBy(x => x.Abr).ToList();
+                break;
+            case Cols.Position:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Position?.Nom.Tradueix(base.Lang()) ?? "").ToList() : model!.OrderBy(x => x.Position?.Nom.Tradueix(base.Lang()) ?? "").ToList();
+                break;
+            case Cols.Age:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Age()).ToList() : model!.OrderBy(x => x.Age()).ToList();
+                break;
+            case Cols.Seniority:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Seniority()).ToList() : model!.OrderBy(x => x.Seniority()).ToList();
+                break;
+        }
+    }
+
+    private List<int> Emps() => model!.Where(x => x.Emp != null).Select(x => (int)x.Emp).ToList();
+
+    private void OnEmpChanged(int? emp)
+    {
+        selectedEmp = emp;
+        StateHasChanged();
+    }
+}
+
+
+

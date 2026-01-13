@@ -1,0 +1,40 @@
+﻿<div>
+    <svg width="36" height="14" viewBox="0 0 32 14" xmlns="http://www.w3.org/2000/svg">
+        <style type="text/css">
+            .spinner_rect {
+                animation: dance .8s linear infinite;
+                animation-delay: -.8s
+            }
+
+            .spinner_rect2 {
+                animation-delay: -.65s
+            }
+
+            .spinner_rect3 {
+                animation-delay: -.5s
+            }
+
+            @@keyframes dance {
+                93.75%, 100% {
+                    opacity: .2
+                }
+            }
+        </style>
+        <rect class="spinner_rect" x="1" y="2" width="9" height="12" />
+        <rect class="spinner_rect spinner_rect2" x="12" y="2" width="9" height="12" />
+        <rect class="spinner_rect spinner_rect3" x="23" y="2" width="9" height="12" />
+    </svg>
+</div>
+
+
+
+
+@*
+<div style="display:inline-block;width:@(Width)px;height:auto;">
+    <img src="/img/spinner-200px.svg" style="width:100%;" />
+</div>
+
+@code {
+    [Parameter] public int Width { get; set; } = 32;
+}
+*@

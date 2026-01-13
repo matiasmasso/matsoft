@@ -1,0 +1,91 @@
+﻿.Years, .Fchs {
+    display: grid;
+    grid-template-rows: repeat(auto-fill, min-content);
+    grid-template-columns: repeat(5,min-content );
+    column-gap: 10px;
+    grid-auto-flow: row;
+}
+
+
+.Years a, .Fchs a {
+    display:block;
+}
+
+
+.Grid {
+    display: grid;
+    grid-column-gap: 10px;
+}
+
+    .Grid.Cols6 {
+        grid-template-columns: 20px 1fr min-content min-content min-content min-content min-content min-content 50px;
+    }
+
+    .Grid.Cols5 {
+        grid-template-columns: 20px 1fr min-content min-content min-content min-content min-content 50px;
+    }
+
+    .Grid.Cols4 {
+        grid-template-columns: 20px 1fr min-content min-content min-content min-content 50px;
+    }
+
+.Item, .ColHeaders {
+    display: contents;
+}
+
+    .Item:nth-child(odd) > ::deep * {
+        background-color: aliceblue;
+    }
+
+.ColHeaders > div {
+    margin: 10px 0  10px;
+}
+
+.Year > *, .Fch > * {
+    border-bottom: 1px solid gray;
+}
+.Year .Nom, .Fch .Nom {
+    grid-column:2/-1;
+    padding:5px;
+}
+
+    .Year.Selected {
+        font-weight: 600;
+        background-color: #E5BA73;
+    }
+
+    .Fch.Selected {
+        font-weight: 600;
+        background-color: #FAEAB1;
+    }
+
+
+.Nom {
+    padding: 0 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Amt {
+    padding:0 5px 0 10px;
+    text-align:right;
+    white-space:nowrap;
+}
+
+.Del {
+    display:flex;
+    justify-content: flex-end;
+}
+
+.DeleteAll {
+    display:flex;
+    justify-content: flex-end;
+    margin-top:15px;
+}
+
+@media(max-width:599px){
+    .Item{
+
+    }
+}

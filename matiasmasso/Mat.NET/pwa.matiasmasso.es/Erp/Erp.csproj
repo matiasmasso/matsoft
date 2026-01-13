@@ -1,0 +1,269 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup Label="Globals">
+      <SccProjectName>SAK</SccProjectName>
+      <SccProvider>SAK</SccProvider>
+      <SccAuxPath>SAK</SccAuxPath>
+      <SccLocalPath>SAK</SccLocalPath>
+
+		<Nullable>enable</Nullable>
+    </PropertyGroup>
+
+
+	
+	<!-- added on 01/09/22 to deploy to Windows -->
+	<!--<PropertyGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Configuration)' == 'Release'">
+		<GenerateAppxPackageOnBuild>true</GenerateAppxPackageOnBuild>
+		<AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
+		--><!--<PackageCertificateThumbprint>51E9599272BE2EEA8139BB5D860F5271B62282EE</PackageCertificateThumbprint>--><!--
+		<PackageCertificateThumbprint>2A7B9A3EE2546515530775CBB06ABE37A432D355</PackageCertificateThumbprint>
+	</PropertyGroup>-->
+
+	<!-- added on 10/10/22 to deploy to Windows -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(Configuration)' == 'Release'">
+		<AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
+		<PackageCertificateThumbprint>2A7B9A3EE2546515530775CBB06ABE37A432D355</PackageCertificateThumbprint>
+	</PropertyGroup>
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(RuntimeIdentifierOverride)' != ''">
+		<RuntimeIdentifier>$(RuntimeIdentifierOverride)</RuntimeIdentifier>
+	</PropertyGroup>
+
+	
+	<!-- added on 10/09/22 to deploy to Android -->
+	<PropertyGroup Condition="$(TargetFramework.Contains('-android')) and '$(Configuration)' == 'Release'">
+		<AndroidKeyStore>True</AndroidKeyStore>
+		<AndroidSigningKeyStore>myapp.keystore</AndroidSigningKeyStore>
+		<AndroidSigningKeyAlias>key</AndroidSigningKeyAlias>
+		<AndroidSigningKeyPass></AndroidSigningKeyPass>
+		<AndroidSigningStorePass></AndroidSigningStorePass>
+	</PropertyGroup>
+
+    <PropertyGroup>
+        <TargetFrameworks>net7.0-maccatalyst;net7.0-android33.0;net7.0-ios14.2</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
+        <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
+        <!-- <TargetFrameworks>$(TargetFrameworks);net7.0-tizen</TargetFrameworks> -->
+        <OutputType>Exe</OutputType>
+        <RootNamespace>Erp</RootNamespace>
+        <UseMaui>true</UseMaui>
+        <SingleProject>true</SingleProject>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <EnableDefaultCssItems>false</EnableDefaultCssItems>
+
+        <!-- Display name -->
+        <ApplicationTitle>Erp</ApplicationTitle>
+
+        <!-- App Identifier -->
+        <ApplicationId>es.matiasmasso.erp</ApplicationId>
+        <ApplicationIdGuid>20A725F7-96FF-4D3C-960F-2E51F79B2E1F</ApplicationIdGuid>
+
+        <!-- Versions -->
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <ApplicationVersion>1</ApplicationVersion>
+
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.18362.0</SupportedOSPlatformVersion>
+        <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.18362.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+        <DefaultLanguage>es-ES</DefaultLanguage>
+        <PackageCertificateThumbprint>2A7B9A3EE2546515530775CBB06ABE37A432D355</PackageCertificateThumbprint>
+        <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+        <AndroidSigningKeyStore>myapp.keystore</AndroidSigningKeyStore>
+        <Title>Mat.Maui Package</Title>
+        <Copyright>MATIAS MASSO, S.A.</Copyright>
+        <PackageProjectUrl>https://www.matiasmasso.es/Maui</PackageProjectUrl>
+        <PackageIcon>Logo M+O 1024.png.png</PackageIcon>
+        <PackageTags>M+O</PackageTags>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-android|AnyCPU'">
+      <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+      <ApplicationVersion>2</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-android|AnyCPU'">
+      <AndroidSigningStorePass></AndroidSigningStorePass>
+      <ApplicationVersion>2</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-ios|AnyCPU'">
+      <AndroidSigningStorePass></AndroidSigningStorePass>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-ios|AnyCPU'">
+      <AndroidSigningStorePass></AndroidSigningStorePass>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-maccatalyst|AnyCPU'">
+      <AndroidSigningStorePass></AndroidSigningStorePass>
+      <ApplicationVersion>4</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-maccatalyst|AnyCPU'">
+      <AndroidSigningStorePass></AndroidSigningStorePass>
+      <ApplicationVersion>4</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-windows10.0.19041.0|AnyCPU'">
+      <AndroidSigningStorePass></AndroidSigningStorePass>
+      <ApplicationVersion>4</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-windows10.0.19041.0|AnyCPU'">
+      <AndroidSigningStorePass></AndroidSigningStorePass>
+      <ApplicationVersion>4</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-ios14.2|AnyCPU'">
+      <ApplicationVersion>4</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-ios14.2|AnyCPU'">
+      <ApplicationVersion>4</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-android33.0|AnyCPU'">
+      <ApplicationVersion>4</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-android33.0|AnyCPU'">
+      <ApplicationVersion>4</ApplicationVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-ios14.2'">
+      <CodesignKey>Apple Development: Created via API (C26F886SPN)</CodesignKey>
+      <CodesignProvision>VS: WildCard Development</CodesignProvision>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- App Icon -->
+        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#FFFFFF" />
+
+        <!-- Splash Screen -->
+        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+
+        <!-- Images -->
+
+        <!-- Custom Fonts -->
+        <MauiFont Include="Resources\Fonts\*" />
+
+        <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Extensions\EnumExtensions.cs" />
+      <Compile Remove="Helpers\ClosedXml.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Remove="CustomComponents\Sisu.razor" />
+      <Content Remove="Pages\Catalog\BrandsList.razor" />
+      <Content Remove="Pages\Logout.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="CustomComponents\Sisu.razor.css" />
+      <None Remove="Resources\AppIcon\BadgeLogo.scale-100.png" />
+      <None Remove="Resources\AppIcon\BadgeLogo.scale-125.png" />
+      <None Remove="Resources\AppIcon\BadgeLogo.scale-150.png" />
+      <None Remove="Resources\AppIcon\BadgeLogo.scale-200.png" />
+      <None Remove="Resources\AppIcon\BadgeLogo.scale-400.png" />
+      <None Remove="Resources\AppIcon\Logo.scale-100.png" />
+      <None Remove="Resources\AppIcon\Logo.scale-125.png" />
+      <None Remove="Resources\AppIcon\Logo.scale-150.png" />
+      <None Remove="Resources\AppIcon\Logo.scale-200.png" />
+      <None Remove="Resources\AppIcon\Logo.scale-400.png" />
+      <None Remove="Resources\AppIcon\Logo.targetsize-16.png" />
+      <None Remove="Resources\AppIcon\logo.targetsize-16_altform-unplated.png" />
+      <None Remove="Resources\AppIcon\Logo.targetsize-24.png" />
+      <None Remove="Resources\AppIcon\logo.targetsize-24_altform-unplated.png" />
+      <None Remove="Resources\AppIcon\Logo.targetsize-256.png" />
+      <None Remove="Resources\AppIcon\logo.targetsize-256_altform-unplated.png" />
+      <None Remove="Resources\AppIcon\Logo.targetsize-32.png" />
+      <None Remove="Resources\AppIcon\logo.targetsize-32_altform-unplated.png" />
+      <None Remove="Resources\AppIcon\Logo.targetsize-48.png" />
+      <None Remove="Resources\AppIcon\logo.targetsize-48_altform-unplated.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Resources\AppIcon\BadgeLogo.scale-100.png" />
+      <Content Include="Resources\AppIcon\BadgeLogo.scale-125.png" />
+      <Content Include="Resources\AppIcon\BadgeLogo.scale-150.png" />
+      <Content Include="Resources\AppIcon\BadgeLogo.scale-200.png" />
+      <Content Include="Resources\AppIcon\BadgeLogo.scale-400.png" />
+      <Content Include="Resources\AppIcon\Logo.scale-100.png" />
+      <Content Include="Resources\AppIcon\Logo.scale-125.png" />
+      <Content Include="Resources\AppIcon\Logo.scale-150.png" />
+      <Content Include="Resources\AppIcon\Logo.scale-200.png" />
+      <Content Include="Resources\AppIcon\Logo.scale-400.png" />
+      <Content Include="Resources\AppIcon\Logo.targetsize-16.png" />
+      <Content Include="Resources\AppIcon\logo.targetsize-16_altform-unplated.png" />
+      <Content Include="Resources\AppIcon\Logo.targetsize-24.png" />
+      <Content Include="Resources\AppIcon\logo.targetsize-24_altform-unplated.png" />
+      <Content Include="Resources\AppIcon\Logo.targetsize-256.png" />
+      <Content Include="Resources\AppIcon\logo.targetsize-256_altform-unplated.png" />
+      <Content Include="Resources\AppIcon\Logo.targetsize-32.png" />
+      <Content Include="Resources\AppIcon\logo.targetsize-32_altform-unplated.png" />
+      <Content Include="Resources\AppIcon\Logo.targetsize-48.png" />
+      <Content Include="Resources\AppIcon\logo.targetsize-48_altform-unplated.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ClosedXML" Version="0.101.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="7.0.5" />
+      <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.2.0" />
+      <PackageReference Include="Microsoft.Extensions.Localization" Version="7.0.5" />
+      <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.5.22" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.29.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Resources\Languages\Default.Designer.cs">
+        <DependentUpon>Default.resx</DependentUpon>
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="Pages\Index.razor">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </Content>
+      <Content Update="Shared\MainLayout.razor">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Resources\Languages\Default.resx">
+        <LastGenOutput>Default.Designer.cs</LastGenOutput>
+        <Generator>ResXFileCodeGenerator</Generator>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Extensions\" />
+      <Folder Include="Pages\Emps\" />
+      <Folder Include="Pages\Incidencias\" />
+      <Folder Include="Pages\MarketPlaces\" />
+      <Folder Include="wwwroot\img\fa\regular\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\..\..\..\..\Pictures\Logos\mmo\bitmap\Logo M+O 1024.png.png">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Components\Components.csproj" />
+      <ProjectReference Include="..\DTO\DTO.csproj" />
+    </ItemGroup>
+
+    <ProjectExtensions><VisualStudio><UserProperties wwwroot_4css_4bootstrap_4bootstrap_1min_1css_1map__JsonSchema="" /></VisualStudio></ProjectExtensions>
+
+</Project>

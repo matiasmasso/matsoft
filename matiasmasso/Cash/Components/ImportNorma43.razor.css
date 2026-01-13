@@ -1,0 +1,19 @@
+﻿.Grid {
+    display:grid;
+    grid-column-gap:10px;
+    grid-template-columns:min-content min-content min-content 1fr;
+}
+
+.Item, .ColHeaders {
+    display: contents;
+}
+
+    .ColHeaders > * {
+        padding-bottom: 10px;
+    }
+
+    .Trunc {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }

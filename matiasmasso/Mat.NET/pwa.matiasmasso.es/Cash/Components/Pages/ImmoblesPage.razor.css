@@ -1,0 +1,56 @@
+﻿.PageOptions {
+}
+
+.Searchbox {
+}
+
+.Grid {
+    display:grid;
+    grid-template-columns: min-content 1fr min-content;
+    grid-column-gap:10px;
+}
+
+.Item {
+    display:contents;
+}
+
+    .Item > * {
+        padding: 4px 0 2px;
+    }
+
+.Item.Baixa div {
+  color:gray;   
+}
+
+@media(max-width:599px) {
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-areas: "nom fch"
+            "cadastre cadastre";
+        grid-template-columns: 1fr min-content;
+        grid-column-gap:10px;
+        padding:10px 0;
+    }
+
+    .Item:not(:last-child){
+        border-bottom:1px solid gray;
+    }
+
+    .Nom {
+        grid-area: nom;
+    }
+
+    .Fch {
+        grid-area: fch;
+    }
+
+    .Cadastre {
+        grid-area: cadastre;
+    }
+
+}

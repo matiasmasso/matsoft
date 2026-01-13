@@ -1,0 +1,115 @@
+﻿@page "/Delivery/{Guid:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+<div class="PageWrapper">
+    @if (Model == null)
+    {
+        <Loading Message="@base.Tradueix("Cargando albarán","Carregant albarà","Loading delivery note")">
+        </Loading>
+    }
+    else
+    {
+        <div class="Truncate">
+            @string.Format("{0} {1} {2} {3:dd/MM/yy}", base.Tradueix("Albarán","Albarà","Delivery"), Model.Id,base.Tradueix("del","del","from"),Model.Fch)
+        </div>
+        <div class="Truncate">
+            @Model.Contact.Nom
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in ControlItems)
+            {
+                <div class="Item">
+                    <div>
+                        <img src="@item.ThumbnailUrl" width="150" height="171" />
+                    </div>
+                    <div>
+                        <div class="Truncate">
+                            @item.BrandNom
+                        </div>
+                          <div class="Truncate">
+                            @item.SkuNom
+                        </div>
+                        <div class="Amount">
+                            @item.Amount
+                        </div>
+                    </div>
+                </div>
+
+            }
+
+        </div>
+
+    }
+
+</div>
+
+@code {
+    public DeliveryModel? Model;
+    [Parameter] public Guid guid { get; set; }
+    private CacheDTO cache;
+    private List<ControlItem> ControlItems = new();
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            cache = await base.Cache((int)EmpDTO.EmpIds.MatiasMasso);
+            var dto = await base.GetAsync<DeliveryDTO>("delivery", guid.ToString());
+            Model = dto.Model;
+            ControlItems = Model.Items.Select(x => new ControlItem(x, cache, base.Lang())).ToList();
+            StateHasChanged();
+        }
+    }
+
+
+    public class ControlItem
+    {
+        public string ThumbnailUrl { get; set; }
+        public string BrandNom { get; set; }
+        public string DeptNom { get; set; }
+        public string CategoryNom { get; set; }
+        public string SkuNom { get; set; }
+        public string Amount { get; set; }
+        public ProductSkuModel? Sku { get; set; }
+        public ProductCategoryModel? Category { get; set; }
+        public ProductDeptModel? Dept { get; set; }
+        public ProductBrandModel? Brand { get; set; }
+
+        public ControlItem(DeliveryModel.Item item, CacheDTO cache, LangDTO lang)
+        {
+            ThumbnailUrl = Globals.ApiUrl("productSku/thumbnail", item.Sku.Guid.ToString() + ".jpg");
+            Sku = cache.Sku(item.Sku.Guid);
+            if (Sku != null)
+            {
+                SkuNom = Sku.Nom.Tradueix(lang) ?? "sku?";
+                Category = cache.Category(Sku.Category);
+                if (Category != null)
+                {
+                    CategoryNom = Category.Nom.Tradueix(lang) ?? "category?";
+                    if (Category.Dept != null)
+                    {
+                        Dept = cache.Dept((Guid)Category.Dept!);
+                        if (Dept != null)
+                            DeptNom = Dept.Nom.Tradueix(lang) ?? "dept?";
+                    }
+
+                    Brand = cache.Brand(Category.Brand);
+                    if (Brand != null)
+                        BrandNom = Brand.Nom.Tradueix(lang) ?? "brand?";
+                }
+            }
+
+            if (item.Dto == 0)
+            {
+                Amount = string.Format("{0} x {1:N2}€ = {2:N2}€", item.Qty, item.Price, item.Amt());
+            }
+            else
+            {
+                Amount = string.Format("{0} x {1:N2}€ - {2}% = {3:N2}€", item.Qty, item.Price, item.Dto, item.Amt());
+            }
+        }
+    }
+}
+

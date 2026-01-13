@@ -1,0 +1,69 @@
+﻿@inherits _ComponentBase
+@using System.Net.Http.Formatting
+
+<div>
+
+    @if (Model != null)
+    {
+
+        <EditForm Model="@Model" OnValidSubmit=@ValidFormSubmitted>
+@*            <DataAnnotationsValidator />
+            <ValidationSummary />
+*@
+            <div class="form-group">
+                @base.Tradueix("Nombre coloquial","Nom coloquial","Nickname"): <InputText @bind-Value="Model.Abr" class="form-control" />
+            </div>
+            <div class="form-group">
+                @base.Tradueix("Descripción","Descripció","Description"): <InputText @bind-Value="Model.Description" class="form-control" />
+            </div>
+
+            <br />
+
+            <div class="Buttons">
+                <!--<button type="submit" form="my-form-ref" class="btn btn-success" value="Update"/>-->
+                <button type="submit" class="btn btn-success">@base.Tradueix("Aceptar","Acceptar","Update")</button>
+                <input type="button" class="btn btn-secondary" value=@base.Tradueix("Eliminar","Eliminar","Delete") />
+                <input type="button" class="btn btn-secondary" @onclick="Cancel" value=@base.Tradueix("Cancelar","Cancel·lar","Cancel") />
+            </div>
+
+        </EditForm>
+    }
+
+</div>
+
+@code {
+
+    [Parameter] public RepModel? Model { get; set; }
+
+    [Parameter]
+    public EventCallback<RepModel> ModelChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<RepModel> SaveRequest { get; set; }
+
+
+
+    async void ValidFormSubmitted(EditContext editContext)
+    {
+        if (editContext.IsModified())
+        {
+            RepModel model = (RepModel)editContext.Model;
+            var url = Globals.ApiUrl("Rep");
+
+            if(await PostAsync<RepModel,bool>(model,"Rep"))
+            {
+                NavigationManager.NavigateTo("Reps");
+            } else
+            {
+                var o = 1;
+            }
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("Reps");
+    }
+
+
+}

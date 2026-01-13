@@ -1,0 +1,49 @@
+﻿@page "/Multa"
+@page "/Multa/{Guid:guid}"
+@inherits _ComponentBase
+@using System.Net.Http.Formatting
+
+<div class="Wrapper">
+    <h1>Multa</h1>
+
+    <TabControl SelectedTab="1">
+
+        <ChildContent>
+
+            <TabPage Text="General">
+                <MultaEditor @bind-Model="@Model"></MultaEditor>
+            </TabPage>
+
+            <TabPage Text="Documentacio">
+                @if (Guid != null)
+                {
+                    <ProductDownloads Target="@((Guid)Guid!)"></ProductDownloads>
+                }
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>
+
+
+
+</div>
+@code {
+    private MultaModel? Model = null;
+
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Guid == null)
+            Model = new MultaModel();
+        else
+        {
+            Model = await base.GetAsync<MultaModel>("multa", ((Guid)Guid!).ToString());
+        }
+        StateHasChanged();
+    }
+
+
+}

@@ -1,0 +1,78 @@
+﻿@page "/incidencia"
+@implements IDisposable
+
+@inject SessionStateService session
+@inject CultureService culture
+@inject IncidenciasService incidenciasService
+
+
+<div class="Wrapper600">
+    <AuthorizeView>
+        <Authorized>
+            @if (Model == null)
+            {
+                <h3>@culture.Localize("Incidencia.Title")</h3>
+                <Loading></Loading>
+            }
+            else
+            {
+                <Incidencia Model="Model"></Incidencia>
+            }
+        </Authorized>
+
+        <NotAuthorized>
+            <h3>@culture.Localize("Incidencia.Title")</h3>
+
+            <div class="SignIn">
+                <SignIn Success="@SignInSuccess" Fail="SignInFail"></SignIn>
+            </div>
+
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <Error Exception="exception"></Error>
+</div>
+
+@code {
+    IncidenciaModel? Model;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.UserChanged += UserChangedHandler;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender && session.User != null)
+        {
+            Model = incidenciasService.Factory(session.User);
+            StateHasChanged();
+        }
+    }
+
+    void SignInSuccess()
+    {
+        Model = incidenciasService.Factory(session.User);
+    }
+
+    void SignInFail()
+    {
+
+    }
+
+    void UserChangedHandler(UserModel? user)
+    {
+        Model = incidenciasService.Factory(session.User);
+        InvokeAsync(StateHasChanged); 
+    }
+
+
+    public void Dispose()
+    {
+        session.UserChanged -= UserChangedHandler;
+
+    }
+}

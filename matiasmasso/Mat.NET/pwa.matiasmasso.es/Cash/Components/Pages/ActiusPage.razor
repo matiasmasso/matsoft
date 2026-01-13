@@ -1,0 +1,235 @@
+﻿@page "/Actius"
+@implements IDisposable
+@inject ApiService ApiService
+
+<PageTitle>Cash</PageTitle>
+
+@if (selectedItem == null)
+{
+    <div class="PageWrapper900">
+        <h3>Actius Financers</h3>
+
+        @if (values == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+
+            <div class="PageOptions">
+                <PageOptions>
+                    <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+                    <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir</a>
+                    <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+                </PageOptions>
+            </div>
+
+            <div class="Searchbox">
+                <SearchBox @bind-Value="searchterm"></SearchBox>
+            </div>
+
+            <div class="Grid">
+                <div class="ColHeaders HideOnMobile">
+                    <div class="Nom Truncate">Nom</div>
+                    <div class="Qty">Participacions</div>
+                    <div class="Avg">Cost mig</div>
+                    <div class="Val">Valor</div>
+                </div>
+
+                @foreach (var cta in FilteredCtas() ?? new())
+                {
+                    <div class="Item Epg">
+                        <div class="Nom Truncate">@cta?.ToString()</div>
+                        <div class="Qty HideOnMobile">&nbsp;</div>
+                        <div class="Avg HideOnMobile">&nbsp;</div>
+                        <div class="Val">@($"{CtaValue(cta):N2} €")</div>
+                    </div>
+
+                    @foreach (var item in FilteredItems(cta) ?? new())
+                    {
+                        <a href="#" class="Item" @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                            <div class="Nom Truncate">@item.Nom</div>
+                            <div class="Qty HideOnMobile">@item.Qty</div>
+                            <div class="Avg HideOnMobile">@($"{item.Avg():N4} €")</div>
+                            <div class="Val">@($"{item.Value:N2} €")</div>
+                        </a>
+                    }
+                }
+
+                <div class="ColTotals">
+                    <div class="Nom Truncate">totals</div>
+                    <div class="Qty HideOnMobile">&nbsp;</div>
+                    <div class="Avg HideOnMobile">&nbsp;</div>
+                    <div class="Val">@($"{FilteredItems()?.Sum(x => x.Value):N2} €")</div>
+                </div>
+
+            </div>
+        }
+
+
+    </div>
+}
+else
+{
+    <Actiu Value="selectedItem"
+           Emp="emp"
+           Actius="values"
+           Movs="movs"
+           AfterUpdate="HandleAfterUpdate"
+           CloseRequest="@(()=>selectedItem=null)"></Actiu>
+}
+<Error @bind-Value="exception"></Error>
+
+
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds? emp;
+
+    List<ActiuModel>? values;
+    List<ActiuModel.Mov>? movs;
+    List<PgcCtaModel>? ctas;
+    ActiuModel? selectedItem;
+    string? searchterm;
+    string? title;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+        ctas = ApiService.GetCurrentPgcCtas();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+        await FetchDataAsync();
+    }
+
+    async Task FetchDataAsync()
+    {
+        try
+        {
+            values = await ApiService.GetAsync<List<ActiuModel>>("Actius");
+            movs = await ApiService.GetAsync<List<ActiuModel.Mov>>("ActiuMovs");
+            emp = ApiService.Emp;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<PgcCtaModel?>? FilteredCtas()
+    {
+        List<PgcCtaModel?>? retval = null;
+        if (ctas != null)
+            retval = FilteredItems()?.Select(x => x.Cta).Distinct()
+            .OrderBy(x => x?.ToString())
+            .ToList();
+        return retval;
+    }
+
+    private decimal? CtaValue(PgcCtaModel? cta) => FilteredItems()?.Where(x => x.Cta == cta).Sum(x => x.Value);
+
+
+    private List<Item>? FilteredItems(PgcCtaModel cta) => FilteredItems()?.Where(x => x.Cta == cta).ToList();
+
+    private List<Item>? FilteredItems()
+    {
+        var retval = values?.Select(x => new Item(x.Guid)
+            {
+                Nom = x.Nom,
+                Cta = ctas?.FirstOrDefault(y => y.Guid == x.Cta)
+            }).ToList();
+
+        if (movs != null && retval != null)
+        {
+            var mvs = movs.Where(x => x.Emp == emp).OrderBy(x => x.Actiu).ThenBy(x => x.Fch).ToList();
+            Item? item = null;
+            foreach (var mv in mvs)
+            {
+                if (mv.Actiu != item?.Guid) item = retval!.First(x => x.Guid == mv.Actiu);
+                if (mv.Qty == 0 || item.Qty == 0)
+                    item.Value += mv.Eur;
+                else
+                    item.Value = (item.Qty + (mv.Qty ?? 0)) * item.Value / item.Qty;
+
+                item.Qty += (mv.Qty ?? 0);
+            }
+        }
+        if (isShowingObsolets)
+            retval = retval?
+            .OrderBy(x => x.Cta?.ToString())
+            //.ThenBy(x => x.Value > 0 ? 0 : 1)
+            .ThenBy(x => x.Nom)
+            .ToList();
+        else
+            retval = retval?.Where(x => x.Value != 0)
+            .OrderBy(x => x.Cta?.ToString())
+            .ThenBy(x => x.Nom).ToList()
+            .ToList();
+
+        return retval;
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    void AddNew()
+    {
+        selectedItem = new ActiuModel { Nom = "(nou actiu financer)" };
+    }
+
+    async Task HandleAfterUpdate(ActiuModel args)
+    {
+        values = null;
+        StateHasChanged();
+        await FetchDataAsync();
+        selectedItem = null;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+    public class Item : ActiuModel
+    {
+        public decimal Qty { get; set; }
+        public decimal Value { get; set; }
+        public decimal Avg() => Qty == 0 ? 0 : Value / Qty;
+        public new PgcCtaModel? Cta { get; set; }
+
+        public Item(Guid guid) : base(guid) { }
+        public Item() : base() { }
+
+        public int CompareTo(object? obj)
+        {
+            int retval = -1;
+            if (obj is Item)
+                retval = ToString().CompareTo(((Item)obj)?.ToString());
+            return retval;
+        }
+
+        public override string ToString()
+        {
+            return base.Nom ?? "?";
+        }
+
+    }
+}

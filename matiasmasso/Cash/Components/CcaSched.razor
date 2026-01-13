@@ -1,0 +1,229 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper900">
+    <Title Value="@((Value?.IsNew ?? true) ? "Nova programació d'assentament" : $"Programació d'assentament")" CloseRequest="HandleCloseRequest"></Title>
+
+    @if (value == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedItem != null)
+    {
+        <CcaSchedItem Value="selectedItem"
+                      Cca="value"
+                      ValueChanged="HandleCcbChanged"
+                      CloseRequest="@(()=>selectedItem = null)"></CcaSchedItem>
+    }
+    else
+    {
+        <PageOptions>
+            <BusyAction Caption="Executar" IsBusy="isExecuting" OnClick="ExecuteAsync"></BusyAction>
+            <BusyAction Caption="Afegir partida" OnClick="AddNewItem"></BusyAction>
+        </PageOptions>
+
+        <div class="Grid">
+            <div class="ColHeaders HideOnMobile">
+                <div class="Cta">Compte</div>
+                <div class="Contact">Subcompte</div>
+                <div class="Deb">Deure</div>
+                <div class="Hab">Haver</div>
+            </div>
+
+            @foreach (var item in value?.Items ?? new())
+            {
+                <a class="Item" href="#" @onclick:preventDefault @onclick="@(()=>selectedItem = item)">
+                    <div class="Cta">
+                        @ApiService.GetPgcCta(item.Cta)?.ToString()
+                    </div>
+                    <div class="Contact">
+                        @ApiService.GetContact(item.Contact)?.ToString()
+                    </div>
+                    <div class="Deb">@(item.Debit() == null ? null : $"{item.Debit():N2} €")</div>
+                    <div class="Hab">@(item.Credit() == null ? null : $"{item.Credit():N2} €")</div>
+                </a>
+            }
+        </div>
+
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="HandleUpdateRequest"
+                      CancelRequest="HandleCloseRequest"
+                      DeleteRequest="HandleDeleteRequest"
+                      ItemChanged="HandleItemChanged"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+
+    }
+
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public CcaSchedModel? Value { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<CcaSchedModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<CcaSchedModel> AfterDelete { get; set; }
+    private CcaSchedModel? value;
+    private CcaSchedModel.Item? selectedItem;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    bool isExecuting;
+    private Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Concept,
+        Ccd,
+        Projecte,
+        FchFrom,
+        FchTo,
+        LastTime,
+        FreqMod,
+        FreqDue
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+                value = Value;
+            else
+                value = await ApiService.GetAsync<CcaSchedModel>("CcaSched", Value!.Guid.ToString());
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value?.Emp);
+        retval.AddString("Concepte", value?.Concept);
+
+        retval.AddEnum<CcaModel.CcdEnum>("Ccd", value?.Ccd);
+        retval.AddGuidnom("Projecte", value?.Projecte, ApiService.GetProjectes(value?.Emp));
+        retval.AddDateOnly("Inici", value?.FchFrom);
+        retval.AddDateOnly("Final", value?.FchTo);
+        retval.AddDateTime("Ultim registre", value?.LastTime);
+        retval.AddEnum<CcaSchedModel.FreqMods>("Frequencia", value?.FreqMod);
+        retval.AddInt("Dia", value?.FreqDue);
+        return retval;
+    }
+
+    void HandleCloseRequest()
+    {
+        CloseRequest.InvokeAsync();
+    }
+
+    void HandleCcbChanged(CcaSchedModel.Item args)
+    {
+        var previousItem = value!.Items.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previousItem == null)
+            value.Items.Add(args);
+        else
+        {
+            var idx = value!.Items.IndexOf(previousItem);
+            value.Items[idx] = args;
+        }
+        selectedItem = null;
+    }
+
+    void AddNewItem()
+    {
+        var deb = value!.Items.Sum(x => x.Debit()) ?? 0;
+        var hab = value!.Items.Sum(x => x.Credit()) ?? 0;
+
+        selectedItem = new CcaSchedModel.Item
+            {
+                Eur = Math.Abs(deb - hab),
+                Dh = deb > hab ? CcaModel.Item.DhEnum.Hab : CcaModel.Item.DhEnum.Deb
+            };
+    }
+
+    async Task ExecuteAsync()
+    {
+        isExecuting = true;
+        await Task.Yield();
+
+        var fch = value!.DueDate();
+        var cca = CcaModel.Factory(Value!.Emp, ApiService.CurrentUser()!, (CcaModel.CcdEnum)Value!.Ccd!, fch);
+        cca.Concept = Value!.Concept;
+        cca.Projecte = Value!.Projecte;
+        foreach (var item in Value.Items)
+        {
+            cca.Items.Add(new CcaModel.Item
+                {
+                    Cta = item.Cta,
+                    Contact = item.Contact,
+                    Eur = item.Eur ?? 0,
+                    Dh = item.Dh
+                });
+        }
+        try
+        {
+            await ApiService.PostMultipartAsync<CcaModel, bool>(cca, "Cca");
+            value!.LastTime = value.DueDate().ToDateTime();
+            await ApiService.PostAsync<CcaSchedModel, bool>(value, "CcaSched");
+            await CloseRequest.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isExecuting = false;
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            value!.Emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+    async Task HandleUpdateRequest()
+    {
+        try
+        {
+            updateState = CrudButton.States.Loading;
+            await Task.Yield();
+            value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            value.Concept = propertyGrid!.GetString((int)Fields.Concept);
+            value.Ccd = (CcaModel.CcdEnum?)propertyGrid!.GetId((int)Fields.Ccd);
+            value.Projecte = propertyGrid!.GetGuid((int)Fields.Projecte);
+            value.FchFrom = propertyGrid!.GetDateOnly((int)Fields.FchFrom);
+            value.FchTo = propertyGrid!.GetDateOnly((int)Fields.FchTo);
+            value.LastTime = propertyGrid!.GetDateTime((int)Fields.LastTime);
+            value.FreqMod = (CcaSchedModel.FreqMods?)propertyGrid!.GetId((int)Fields.FreqMod);
+            value.FreqDue = propertyGrid!.GetInt((int)Fields.FreqDue);
+            await ApiService.PostAsync<CcaSchedModel, bool>(value, "CcaSched");
+            value.IsNew = false;
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task HandleDeleteRequest()
+    {
+
+    }
+}

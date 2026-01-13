@@ -1,0 +1,19 @@
+﻿.EditorWrapper {
+    max-width:600px;
+}
+
+.StringKey {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+
+input [type=text], textarea {
+    width: 100%;
+    padding:10px;
+}
+
+.ButtonsBar {
+    margin-top:15px;
+}

@@ -1,0 +1,73 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.AddNew {
+    display: block;
+}
+
+.Grid {
+    margin-top: 15px;
+}
+
+@media(max-width:599px) {
+    .Item {
+        display: grid;
+        grid-template-columns: 32px 2.8em 1fr;
+        grid-template-areas: "ico year details"
+            "ico title title";
+        padding: 10px 0;
+        grid-column-gap: 10px;
+    }
+
+    .Ico {
+        grid-area: ico;
+    }
+
+    .Detail {
+        grid-area: details;
+    }
+
+    .Year {
+        grid-area: year;
+    }
+
+    .Title {
+        grid-area: title;
+    }
+}
+
+@media(min-width:600px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: 18px fit-content(12ch) fit-content(4ch) 1fr;
+        /*        padding: 10px 0;*/
+        grid-column-gap: 10px;
+    }
+    .Item {
+        display: contents;
+    }
+
+        .Title:hover {
+            background-color: #E0E0E0;
+        }
+
+    .Detail {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .Ico {
+        width: 16px;
+        min-width: 16px;
+        height: 16px;
+    }
+
+
+}

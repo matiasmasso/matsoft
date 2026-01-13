@@ -1,0 +1,139 @@
+﻿@page "/{LangSegment}/stringLocalizer"
+@page "/stringLocalizer"
+@inherits _PageBase
+@inject CultureService culture
+@inject StringsLocalizerService localizer
+@inject AppStateService appState
+
+<div class="Wrapper900">
+    <h1>String Localizer</h1>
+
+    <div class="PageOptions">
+
+        <PageOptions IsShowingOptions>
+            <a href="#" @onclick="@(()=>loadExcelRequest = true)" @onclick:preventDefault>Load Excel</a>
+            <a href="#" @onclick="@AddNew" @onclick:preventDefault>@culture.Localize("AddNew")</a>
+        </PageOptions>
+
+    </div>
+
+    @if (isLoadingExcel || isUpdating || (Items == null && problemDetails == null))
+    {
+        <Loading></Loading>
+    }
+    else if (isLoadedExcel)
+    {
+        <ExcelMapping Src="sheet"
+                  Mappings="colHeaders"
+                  ValueChanged="UpdateAsync"></ExcelMapping>
+    }
+    else if (loadExcelRequest)
+    {
+        <InputFile OnChange="@LoadFiles" />
+    }
+    else if (itemToAdd != null)
+    {
+        <StringLocalizerEditor Model="itemToAdd"
+                           RequestToUpdate="UpdateRequest"
+                           RequestToClose="@(()=>itemToAdd=null)"></StringLocalizerEditor>
+    }
+    else
+    {
+        <StringsLocalizer Items="Items" RequestToUpdate="UpdateRequest"></StringsLocalizer>
+    }
+
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+<PageTitle>4moms Backoffice | String Localizer</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+@code {
+    bool loadExcelRequest;
+    bool isLoadingExcel;
+    bool isUpdating;
+    bool isLoadedExcel;
+    DTO.Excel.Sheet? sheet;
+    string[] colHeaders = new[] { "StringKey", "Esp", "Cat", "Eng", "Por" };
+    List<StringLocalizerModel>? Items;
+    StringLocalizerModel? itemToAdd = null;
+    ProblemDetails? problemDetails;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Fetch();
+    }
+
+    private async Task Fetch()
+    {
+        var apiResponse = await GetAsync<List<StringLocalizerModel>>("StringsLocalizer");
+        if (apiResponse.Success())
+        {
+            Items = apiResponse.Value ?? new();
+            localizer!.Values = Items;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        isLoadingExcel = true;
+        var file = e.File;
+        if (file != null)
+        {
+            try
+            {
+                using var stream = file.OpenReadStream();
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+
+                var book = DTO.Excel.ClosedXml.Read( ms.ToArray());
+                    sheet = book?.Sheets.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+        }
+
+        isLoadingExcel = false;
+        isLoadedExcel = true;
+
+    }
+
+    private async Task UpdateAsync(DTO.Excel.Sheet sheet)
+    {
+        isUpdating = true;
+        var values = StringLocalizerModel.FromExcel(sheet);
+
+        var apiResponse = await PostAsync<List<StringLocalizerModel>>(values, "StringsLocalizer");
+        if (apiResponse.Success())
+        {
+            isUpdating = false;
+            await Fetch();
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        isUpdating = false;
+    }
+
+    private async Task UpdateRequest(StringLocalizerModel value)
+    {
+        await localizer.UpdateAsync(value);
+        itemToAdd = null;
+    }
+
+
+
+    void AddNew()
+    {
+        itemToAdd = new StringLocalizerModel();
+    }
+
+}

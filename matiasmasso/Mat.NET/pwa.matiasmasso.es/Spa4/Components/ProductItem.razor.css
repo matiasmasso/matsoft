@@ -1,0 +1,14 @@
+﻿.Item {
+    border-top: 1px solid lightgray;
+    padding: 5px;
+
+}
+
+.Selected {
+    background-color: lightgray;
+}
+
+.SkuWrapper {
+    display:flex;
+    justify-content:flex-start;
+}

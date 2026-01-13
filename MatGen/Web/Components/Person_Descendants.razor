@@ -1,0 +1,208 @@
+﻿@inject ApiService ApiService
+
+<div class="Wrapper">
+
+    @if (dbState == DbState.IsLoading)
+    {
+        <Loading></Loading>
+    }
+    else 
+    {
+
+        @if (Person != null)
+        {
+
+            <div class="Parent">
+
+                <div class="Ico">
+                    @* <ExpandIcon HasChildren="enlaces?.Count>0" @bind-IsExpanded="IsExpanded"></ExpandIcon> *@
+                    <ExpandIcon HasChildren="enlaces?.Count>0" IsExpanded="IsExpanded" IsExpandedChanged="ExpandChangedHandler"></ExpandIcon>
+                </div>
+
+                <div class="Nom Truncate" @oncontextmenu="@(()=>isShowingPersonContextMenu = true)" @oncontextmenu:preventDefault>
+                    <a href="#"
+                       class="@(RootAncestors.Contains(Person.Guid) ? "Ancestor":"")"
+                        @onclick="@(()=>PersonClick(Person))"
+                        @onclick:preventDefault>
+                        @Person.FullNom()
+                    </a>
+
+                </div>
+
+            </div>
+        }
+
+        @if (enlaces != null)
+        {
+            <div class="Descendants @(IsExpanded ? "" : "Hidden")">
+                @foreach (var enlace in enlaces)
+                {
+                    @if (Person != null)
+                    {
+                        <div class="Enlace">
+
+                            <div class="Ico">
+                                <Icon Id="Icon.Ids.Link"></Icon>
+                            </div>
+
+                                <ListItem Title="@Title(enlace)"
+                                    Tooltip ="@Tooltip(enlace)"
+                                          ContextMenu="@ContextMenu(enlace)"
+                                          Tag="@enlace"
+                                          MenuClick="EnlaceMenuClick"
+                                          OnClick="@(() => EnlaceClick(enlace))"></ListItem>
+                            <span>amb</span>
+                            <a href="#" @onclick="@(() => PersonClick(Conjuge(enlace)))" @onclick:preventDefault>@(Conjuge(enlace)?.FullNom2() ?? "")</a>
+
+                        </div>
+                    }
+
+
+                    @foreach (var child in enlace.Children(ApiService.Persons() ?? new()).OrderBy(x => x.FchFrom ?? ""))
+                    {
+                        <Person_Descendants Person="child"
+                            ItemSelected="SelectItem"
+                            RootAncestors="RootAncestors"></Person_Descendants>
+                    }
+                }
+            </div>
+        }
+    }
+
+    <Error @bind-Exception="exception"></Error>
+
+    <div class="Dropdown" hidden="@(!isShowingPersonContextMenu)">
+        <a href="#" @onclick="@(()=>SelectItem((IModel)Person))" @onclick:preventDefault>
+            Zoom
+        </a>
+        <a href="#" @onclick="AddNewEnlace" @onclick:preventDefault>
+            Afegir enllaç
+        </a>
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter] public PersonModel? Person { get; set; }
+    [Parameter] public EnlaceModel? Enlace { get; set; }
+    [Parameter] public List<Guid> RootAncestors { get; set; } = new();
+    //[Parameter] public EventCallback<EnlaceModel> SelectedEnlace { get; set; } = new();
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; } = new();
+    [Parameter] public bool IsExpanded { get; set; } = false;
+    [Parameter] public EventCallback<bool> IsExpandedChanged { get; set; }
+
+    bool isShowingPersonContextMenu;
+    List<EnlaceModel>? enlaces;
+
+    private DbState dbState = DbState.IsLoading;
+    Exception? exception;
+
+    protected override void OnParametersSet()
+    {
+        dbState = DbState.IsLoading;
+        try
+        {
+            if (Person != null)
+            {
+                enlaces = ApiService.Enlaces()?
+                .Where(x => x.Marit == Person.Guid || x.Muller == Person.Guid)
+                .OrderBy(x=> Person.Sex == PersonModel.Sexs.Female ? x.NupciesMuller : x.NupciesMarit)
+                .ToList() ?? new();
+
+                if (ApiService.Persons() != null)
+                {
+                    var parents = ApiService.Persons()?.Where(x => x.Pare == Person.Guid || x.Mare == Person.Guid)
+                    .Select(x => new Tuple<Guid?, Guid?>(x.Pare, x.Mare)).Distinct()
+                    .Where(x => !enlaces.Any(y => x.Item1 == y.Marit && x.Item2 == y.Muller))
+                    .Select(x => new EnlaceModel { Marit = x.Item1, Muller = x.Item2 })
+                    .ToList();
+
+                    enlaces.AddRange(parents);
+                }
+            }
+            else if (Enlace != null)
+            {
+                enlaces = new List<EnlaceModel>();
+                enlaces.Add(Enlace);
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+
+
+    PersonModel? Conjuge(EnlaceModel? enlace) => enlace?.Conjuge(Person) == null ? null : ApiService.Person(enlace.Conjuge(Person!));
+
+    async Task AddNewEnlace()
+    {
+        var enlace = new EnlaceModel
+            {
+                Marit = Person?.Sex == PersonModel.Sexs.Female ? null : Person?.Guid,
+                Muller = Person?.Sex == PersonModel.Sexs.Male ? null : Person?.Guid
+            };
+        await SelectItem((IModel)enlace);
+    }
+
+    async Task SelectItem(IModel item)
+    {
+        await ItemSelected.InvokeAsync(item);
+    }
+
+    void PersonClick(PersonModel? person)
+    {
+        if(person != null)
+        {
+            ItemSelected.InvokeAsync(person);
+        }
+    }
+
+    string Year(EnlaceModel enlace)
+    {
+        return enlace.Year();
+    }
+
+    string Title(EnlaceModel enlace) /* => $"{(enlace.Fch == null ? "XXXX" : enlace.Year())} enllaç"; */{
+        var retval = $"{(enlace.Fch == null ? "XXXX" : enlace.Year())} enllaç";
+        return retval;
+    }
+    string Tooltip(EnlaceModel enlace) => $"{(enlace.Fch == null ? "XXXX" : enlace.Fch)} enllaç a {ApiService.Location(enlace.Location)?.NomLlarg}";
+
+    private ContextMenuModel ContextMenu(EnlaceModel enlace)
+    {
+        ContextMenuModel retval = new(enlace);
+        retval.AddItem("Zoom", (int)EnlaceModel.MenuKeys.Zoom, enlace);
+        retval.AddItem("Add child", (int)EnlaceModel.MenuKeys.AddChild, enlace);
+        return retval;
+    }
+
+    private void EnlaceMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        switch (args.Key)
+        {
+            case (int)EnlaceModel.MenuKeys.Zoom:
+                ItemSelected.InvokeAsync((EnlaceModel)args.Tag!);
+                break;
+            case (int)EnlaceModel.MenuKeys.AddChild:
+                var child = ApiService.NewChild((EnlaceModel)args.Tag!);
+                ItemSelected.InvokeAsync(child);
+                break;
+        }
+    }
+
+    private void EnlaceClick(EnlaceModel enlace)
+    {
+        ItemSelected.InvokeAsync(enlace);
+    }
+
+    private void ExpandChangedHandler(bool args)
+    {
+        IsExpanded = args;
+        IsExpandedChanged.InvokeAsync(args);
+    }
+
+}

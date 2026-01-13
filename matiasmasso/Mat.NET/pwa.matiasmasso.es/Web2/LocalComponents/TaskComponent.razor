@@ -1,0 +1,162 @@
+﻿@inject CultureService culture
+@inject TasksService tasksService
+
+<div class="PageWrapper600">
+    <h3>Task</h3>
+
+    <TabControl>
+        <TabPage Text="@culture.Localize("Properties")">
+
+            @if (Model == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                @if (Model?.LastLog != null)
+                {
+                    <div class="Info">@culture.Localize("Task.LastRun"):</div>
+                    <div class="Result">
+                        <Icon Id="tasksService.Icon(Model)"></Icon>
+                        <div class="Fch">
+                            @($"{Model.LastLog?.Fch?.ToLocalTime().DateTime: dd/MM/yy HH:mm}")
+                        </div>
+                        <div>
+                            @Model?.LastLog?.ResultMsg
+                        </div>
+                    </div>
+                }
+
+                <div class="Info">@culture.Localize("Task.NextRun"):</div>
+
+
+                <PropertyGrid model="@gridModel"
+                              SetDirty="@(()=>state = DbState.IsDirty)"
+                              CanEdit="@true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="@true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequest"
+                                RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+
+
+        </TabPage>
+
+        <TabPage Text="@culture.Localize("Schedule")">
+            <div class="Schedules">
+                @foreach (var item in Model?.Schedules ?? new())
+                {
+                    <a href="#" @onclick="@(()=>ScheduleEnabledChange(item))" @onclick:preventDefault>
+                        <Icon Id="@(item.Enabled ? Icon.Ids.ToggleOn : Icon.Ids.ToggleOff)" Width="1.5em"></Icon>
+                    </a>
+                    <a href="#" class="Nom" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        @item.FrequencyText(culture.Lang())
+                    </a>
+                }
+            </div>
+        </TabPage>
+
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public TaskModel? Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private PropertyGridModel? gridModel;
+    private DbState state;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Nom,
+        Dsc,
+        Enabled,
+        NotBefore,
+        NotAfter
+    }
+
+    protected override void OnParametersSet()
+    {
+        gridModel = new PropertyGridModel(Model);
+        if (Model != null)
+        {
+            gridModel.AddString((int)Fields.Nom, Model.Nom, culture.Localize("Name"));
+            gridModel.AddString((int)Fields.Dsc, Model.Dsc, culture.Localize("Description"));
+            gridModel.AddBool((int)Fields.Enabled, Model.Enabled, culture.Localize("Enabled"));
+            gridModel.AddFch((int)Fields.NotBefore, LocalDateTime(Model.NotBefore), culture.Localize("NotBefore"));
+            gridModel.AddFch((int)Fields.NotAfter, LocalDateTime(Model.NotAfter), culture.Localize("NotAfter"));
+        }
+    }
+
+    DateTime? LocalDateTime(DateTimeOffset? value)
+    {
+        DateTime? retval = null;
+        if (value != null) retval = ((DateTimeOffset)value).LocalDateTime;
+        return retval;
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        // var cc = new System.Globalization.CultureInfo("es-ES");
+        // Model!.Nom = gridModel!.GetString((int)Fields.Nom);
+        // Model!.Abr = gridModel!.GetString((int)Fields.Abr);
+        // Model!.FchFrom = gridModel!.GetValue<DateTime?>((int)Fields.FchFrom);
+        // Model!.FchTo = gridModel!.GetValue<DateTime?>((int)Fields.FchTo);
+        // Model!.Iban = gridModel!.GetValue<IbanModel?>((int)Fields.Iban);
+
+        var oTimeZoneBcn = TimeZoneInfo.FindSystemTimeZoneById("Romance Standard Time");
+        var notBefore = gridModel!.GetValue<DateTime?>((int)Fields.NotBefore);
+        if (notBefore != null)
+        {
+            Model!.NotBefore = new DateTimeOffset((DateTime)notBefore, oTimeZoneBcn.GetUtcOffset((DateTimeOffset)notBefore));
+        }
+
+
+        // try
+        // {
+        //     await RepsService.UpdateAsync(Model);
+        //     CancelRequest();
+        // }
+        // catch (Exception ex)
+        // {
+        //     exception = ex;
+        // }
+    }
+
+    async Task ScheduleEnabledChange(TaskModel.Schedule item)
+    {
+        try
+        {
+            item.Enabled = !item.Enabled;
+            await tasksService.UpdateScheduleAsync(item);
+            await InvokeAsync(StateHasChanged);
+        }catch(Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task ItemClick(TaskModel.Schedule item)
+    {
+        item.Task = new TaskModel(Model!.Guid) { Nom = Model.Nom }; // to avoid self referencing
+        var breadcrumb = new ModelEditor.Breadcrumb(item, item.FrequencyText(culture.Lang()));
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+}

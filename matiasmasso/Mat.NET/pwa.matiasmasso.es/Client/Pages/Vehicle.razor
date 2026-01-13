@@ -1,0 +1,53 @@
+﻿@page "/vehicle/{Guid:guid}"
+@layout ProLayout
+@using Client.Shared
+@using Client.ViewModels
+@inject AppState AppState
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Vehicle> Loc
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+<h1>Vehicle</h1>
+
+    <TabControl>
+
+        <ChildContent>
+
+            <TabPage Text="@Loc["General"]">
+                <VehicleEditor ViewModel=@viewModel></VehicleEditor>
+            </TabPage>
+
+            <TabPage Text="@Loc["Documents"]">
+                <TargetDownloads Target=@target></TargetDownloads>
+            </TabPage>
+
+            <TabPage Text="@Loc["Penalties"]">
+                <Multas Target=@target></Multas>
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>  
+
+
+}
+
+@code {
+    [Parameter]
+    public Guid Guid { get; set; }
+
+    private BaseGuid? target;
+
+    private VehicleViewModel? viewModel;
+
+
+    protected override void OnParametersSet()
+    {
+        target = new BaseGuid(Guid);
+        viewModel = new VehicleViewModel(AppState, Guid);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+    }
+
+}

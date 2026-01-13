@@ -1,0 +1,25 @@
+﻿.Countries, .Banks {
+    display: flex;
+    flex-direction: column;
+}
+
+.Item {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    grid-template-areas: "logo abr" "logo raosocial" "logo country";
+    grid-column-gap:10px;
+}
+
+.Logo {
+    grid-area:logo;
+    border:1px solid gray;
+}
+.Abr {
+    grid-area:abr;
+}
+.RaoSocial {
+    grid-area:raosocial;
+}
+.Country {
+    grid-area:country;
+}

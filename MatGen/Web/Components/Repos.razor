@@ -1,0 +1,131 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="Wrapper">
+    @if (ApiService.Repos() == null && exception == null)
+    {
+        <Loading></Loading>
+    } 
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nou Repositori</a>
+            </PageOptions>
+        </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+
+            @if (SelectedRepo() == null)
+            {
+                @foreach (var item in FilteredItems())
+                {
+
+                    <div>
+                        <ListItem Title="@item.Nom"
+                                  ContextMenu="@ContextMenu(item)"
+                                  Tag="@item"
+                                  MenuClick="ContextMenuClick"
+                                  OnClick="@(()=>ItemClick(item))"></ListItem>
+
+                    </div>
+                    <div class="GridRowDivider HideOnDesktop"></div>
+                }
+
+            }
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public EventCallback<object> ItemSelected { get; set; }
+
+    SelectedValues.Collection? selectedValues;
+
+    IModel? selectedItem;
+    string? searchTerm;
+    Exception? exception;
+
+    private enum MenuKeys
+    {
+        Zoom,
+        AddNew
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    void ItemClick(IModel? item)
+    {
+        if (ItemSelected.HasDelegate)
+            ItemSelected.InvokeAsync(item);
+        else
+            selectedItem = item;
+    }
+
+    void AddNew()
+    {
+        var value = RepoModel.Factory();
+        ItemSelected.InvokeAsync(value);
+    }
+
+    List<RepoModel> FilteredItems()
+    {
+        List<RepoModel>? retval = null;
+        var values = ApiService.Repos();
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = values;
+        else
+            retval = values?.Where(x => x.Matches(searchTerm)).ToList();
+        return retval ?? new();
+    }
+
+
+    RepoModel? SelectedRepo() => (RepoModel?)selectedValues?.FirstOrDefault()?.Value;
+
+    ContextMenuModel ContextMenu(object? item)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, item);
+
+        if (item is RepoModel)
+            retval.AddItem("Afegir", (int)MenuKeys.AddNew, RepoModel.Factory());
+        return retval;
+    }
+
+    void ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        var tag = args.Tag;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Zoom:
+            case MenuKeys.AddNew:
+                ItemSelected.InvokeAsync(args.Tag);
+                break;
+        }
+    }
+
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

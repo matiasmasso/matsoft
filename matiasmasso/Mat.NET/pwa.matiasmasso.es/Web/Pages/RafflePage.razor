@@ -1,0 +1,7 @@
+﻿@page "/Raffle/{Guid:guid}"
+
+<Raffle Guid="Guid"></Raffle>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+}

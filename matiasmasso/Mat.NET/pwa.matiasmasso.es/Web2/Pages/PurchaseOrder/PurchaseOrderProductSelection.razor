@@ -1,0 +1,107 @@
+﻿@inject CultureService culture
+@inject PurchaseOrdersService purchaseOrdersService
+
+<SelectedValues @bind-Values="selectedValues" Nested></SelectedValues>
+
+@if (SelectedBrand() == null)
+{
+    <div class="Info">@culture.Tradueix("Selecciona una marca comercial o busca un producto en la siguiente casilla:")</div>
+    <SearchBox @bind-Value="searchterm"></SearchBox>
+
+    @if (string.IsNullOrEmpty(searchterm))
+    {
+        <div class="Brands">
+            @foreach (var brand in Brands())
+            {
+                <a href="#" @onclick="@(()=>BrandClick(brand))" @onclick:preventDefault>
+                    @brand.Nom.Tradueix(culture.Lang())
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="FilteredSkus">
+            @foreach (var sku in FilteredValues() ?? new())
+            {
+                <a href="#" @onclick="@(()=>SkuClick(sku))" @onclick:preventDefault>
+                    @sku.NomLlarg?.Tradueix(culture.Lang())
+                </a>
+            }
+        </div>
+    }
+
+}
+else if (SelectedCategory() == null)
+{
+    <div class="Info">@culture.Tradueix("Selecciona una categoria dentro de ") @SelectedBrand()?.Nom?.Tradueix(culture.Lang())</div>
+    <div class="Categories">
+        @foreach (var category in Categories())
+        {
+            <a href="#" @onclick="@(()=>CategoryClick(category))" @onclick:preventDefault>
+                @category.Nom?.Tradueix(culture.Lang())
+            </a>
+        }
+    </div>
+}
+else
+{
+    <div class="Info">@culture.Tradueix("Selecciona un producto dentro de ")  @SelectedCategory()?.Nom?.Tradueix(culture.Lang()) de @SelectedBrand()?.Nom?.Tradueix(culture.Lang()) </div>
+    <div class="Skus">
+        @foreach (var sku in Skus())
+        {
+            <a href="#" @onclick="@(()=>SkuClick(sku))" @onclick:preventDefault>
+                @sku.Nom?.Tradueix(culture.Lang())
+            </a>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public PurchaseOrderModel.Resources? Resources { get; set; }
+    [Parameter] public EventCallback<ProductSkuModel> ValueChanged { get; set; }
+    private string? searchterm;
+    private List<ProductSkuModel>? availableSkus;
+    SelectedValues.Collection selectedValues = new();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        availableSkus = purchaseOrdersService.AvailableSkus(Resources);
+    }
+
+    List<ProductBrandModel> Brands() => purchaseOrdersService.AvailableBrands(Resources)
+        .OrderBy(x => x.Ord).ToList();
+
+    List<ProductCategoryModel> Categories() => purchaseOrdersService.AvailableCategories(Resources, SelectedBrand())
+        .OrderBy(x => x.Codi).ThenBy(x => x.Nom?.Tradueix(culture.Lang())).ToList();
+
+    List<ProductSkuModel> Skus() => purchaseOrdersService.AvailableSkus(Resources, SelectedCategory())
+        .OrderBy(x => x.Nom?.Tradueix(culture.Lang())).ToList();
+
+    ProductBrandModel? SelectedBrand() => selectedValues.Count > 0 ? (ProductBrandModel)(selectedValues[0].Value) : null;
+    ProductCategoryModel? SelectedCategory() => selectedValues.Count > 1 ? (ProductCategoryModel)(selectedValues[1].Value) : null;
+
+    void BrandClick(ProductBrandModel brand)
+    {
+        selectedValues.Add(brand, brand.Nom?.Tradueix(culture.Lang()));
+    }
+
+    void CategoryClick(ProductCategoryModel category)
+    {
+        selectedValues.Add(category, category.Nom?.Tradueix(culture.Lang()));
+    }
+
+    void SkuClick(ProductSkuModel sku)
+    {
+        ValueChanged.InvokeAsync(sku);
+    }
+
+    List<ProductSkuModel>? FilteredValues()
+    {
+        return availableSkus?
+        .Where(x => x.Matches(searchterm))
+        .OrderBy(x => x.NomLlarg?.Tradueix(culture.Lang()))
+        .ToList();
+    }
+}

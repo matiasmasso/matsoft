@@ -1,0 +1,18 @@
+﻿.Schedules{
+    display:grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap:10px;
+}
+
+.Schedules .Nom {
+    display:block;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.Result {
+    display:flex;
+    margin: 15px 0 15px;
+    gap:10px;
+}

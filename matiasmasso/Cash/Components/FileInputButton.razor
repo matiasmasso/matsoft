@@ -1,0 +1,149 @@
+﻿@inject NavigationManager NavigationManager
+@inject ApiService ApiService
+@using DTO.Integracions.Banca
+
+
+
+<label class="Wrapper">
+    @if (exception != null)
+    {
+        <a href="#" @onclick:preventDefault title="@exception?.Message">
+            <Icon Id="Icon.Ids.Warning"></Icon>
+        </a>
+    }
+
+    @if (isLoading)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <span>@Caption</span>
+    }
+
+    <InputFile multiple OnChange="@LoadFiles" />
+</label>
+
+
+@code {
+    [Parameter] public String? Caption { get; set; } = "importar fitxer";
+    [Parameter] public EventCallback<NavigationArgs> NavigationRequest { get; set; }
+    [Parameter] public EventCallback<Media> ValueChanged { get; set; }
+    [Parameter] public EventCallback<List<Media>> ValuesChanged { get; set; }
+    List<IBrowserFile>? files;
+    Exception? exception;
+    bool isLoading;
+    private static readonly IList<string> _supportedMimeTypes = new List<string>
+        {
+            "application/json",
+            "text/csv",
+            "text/plain"
+        };
+
+
+    async Task LoadFiles(InputFileChangeEventArgs args)
+    {
+        try
+        {
+            isLoading = true;
+            files = args.GetMultipleFiles().ToList();
+            List<Media> values = new();
+            foreach(var file in files)
+            {
+                var mime = Media.MimeCodFromContentType(file.ContentType);
+                Stream stream = file.OpenReadStream(maxAllowedSize: 100000000);
+                MemoryStream ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                stream.Close();
+                var fileBytes = ms.ToArray();
+                isLoading = false;
+                var media = new Media(mime, fileBytes);
+                values.Add(media);
+            }
+
+            if(ValuesChanged.HasDelegate)
+                await ValuesChanged.InvokeAsync(values);
+            if (ValueChanged.HasDelegate)
+                await ValueChanged.InvokeAsync(values.First());
+            StateHasChanged();
+
+            // StateHasChanged();
+            // var file = files.First();
+            // var mime = Media.MimeCodFromContentType(file.ContentType);
+            // Stream stream = file.OpenReadStream(maxAllowedSize: 100000000);
+            // MemoryStream ms = new MemoryStream();
+            // await stream.CopyToAsync(ms);
+            // stream.Close();
+            // var fileBytes = ms.ToArray();
+            // isLoading = false;
+            // var media = new Media(mime, fileBytes);
+            // await ValueChanged.InvokeAsync(media);
+
+            // NavigationArgs? navArgs;
+
+            // switch (mime)
+            // {
+            //     case Media.MimeCods.Txt:
+
+            //         //var src = System.Text.Encoding.UTF8.GetString(fileBytes);
+            //         var src = await ReadUTF7TextAsync(file);
+            //         if (string.IsNullOrEmpty(src))
+            //             throw new Exception("Unable to read file");
+            //         else if (src.IsNorma43())
+            //         {
+                        
+            //             await ApiService.PostAsync<string, bool>(src, "Norma43");
+            //             isLoading = false;
+            //             navArgs = new NavigationArgs
+            //                 {
+            //                     Codi = NavigationArgs.Codis.ImportNorma43,
+            //                     Value = DTO.Integracions.Banca.Norma43.Factory(src)
+            //                 };
+            //             await NavigationRequest.InvokeAsync(navArgs);
+            //         }
+            //         break;
+
+            //     case Media.MimeCods.Pdf:
+            //         Stream stream = file.OpenReadStream(maxAllowedSize: 100000000);
+            //         MemoryStream ms = new MemoryStream();
+            //         await stream.CopyToAsync(ms);
+            //         stream.Close();
+            //         var fileBytes = ms.ToArray();
+            //         isLoading = false;
+
+            //         navArgs = new NavigationArgs
+            //             {
+            //                 Codi = NavigationArgs.Codis.ImportMedia,
+            //                 Value = new Media { Mime = Media.MimeCods.Pdf, Data = fileBytes }
+            //             };
+            //         await NavigationRequest.InvokeAsync(navArgs);
+            //         break;
+            // }
+
+        }
+        catch (Exception ex)
+        {
+            isLoading = false;
+            exception = ex;
+        }
+    }
+
+    public async Task<string> ReadUTF7TextAsync(IBrowserFile browserFile)
+    {
+        _ = browserFile ?? throw new ArgumentNullException(nameof(browserFile));
+
+        if (!_supportedMimeTypes.Contains(browserFile.ContentType))
+        {
+            throw new NotSupportedException(
+                $"File type ({browserFile.ContentType}) is not supported.");
+        }
+
+        using var file = browserFile.OpenReadStream();
+        using var reader = new StreamReader(file, System.Text.Encoding.UTF7); // System.Text.Encoding.GetEncoding(850));
+
+        var retval = await reader.ReadToEndAsync().ConfigureAwait(false);
+        return retval;
+    }
+
+
+}

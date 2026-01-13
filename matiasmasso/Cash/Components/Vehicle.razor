@@ -1,0 +1,234 @@
+﻿@inject ApiService ApiService
+
+@if (selectedMulta != null)
+{
+    <Multa Value="selectedMulta" CloseRequest="@(()=>selectedMulta=null)" ></Multa>
+}
+else if (selectedDoc != null)
+{
+    <DownloadTarget Value="selectedDoc" CloseRequest="@(()=>selectedDoc=null)"></DownloadTarget>
+}
+else
+{
+
+    <div class="PageWrapper600">
+
+
+        <Title Value="@($"Vehicle {@value?.Matricula}")" CloseRequest="HandleCloseRequest"></Title>
+
+        @if (value == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <Tabs Value="@((int)selectedTab)" ValueChanged="HandleTabChanged" Captions="Detalls,Documents,Multes de tràfic"></Tabs>
+
+            @if (selectedTab == Tabs.Docs)
+            {
+                <PageOptions>
+                    <a href="#" @onclick:preventDefault @onclick="AddNewDoc">Afegir</a>
+                </PageOptions>
+
+                <div class="Docs">
+                    <DownloadTargets Values="@value?.Docfiles"></DownloadTargets>
+                </div>
+            }
+            else if (selectedTab == Tabs.Multes)
+            {
+                <div class="Docs">
+                    <Multas Vehicle="@value" ValueSelected="HandleMultaSelected" ></Multas>
+                </div>
+            }
+            else
+            {
+
+                <div class="PropertyGrid">
+
+                    <PropertyGrid Model="propertyGrid"
+                                  UpdateRequest="HandleUpdateRequest"
+                                  CancelRequest="HandleCloseRequest"
+                                  DeleteRequest="HandleDeleteRequest"
+                                  UpdateState="updateState"
+                                  DeleteState="deleteState">
+                    </PropertyGrid>
+                </div>
+            }
+
+            <Error @bind-Value="exception"></Error>
+        }
+
+    </div>
+}
+@code {
+    [Parameter] public VehicleModel? Value { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    private VehicleModel? value;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    List<ContactModel>? allContacts;
+    List<ContractModel>? allContracts;
+    List<GuidNom>? carModels;
+    DownloadTargetModel? selectedDoc;
+    MultaModel? selectedMulta;
+    bool isShowingDocs;
+    Tabs selectedTab = 0;
+
+    Exception? exception;
+
+    enum Tabs
+    {
+        Detalls,
+        Docs,
+        Multes
+    }
+
+    enum Fields
+    {
+        Emp,
+        Model,
+        Plate,
+        Bastidor,
+        Driver,
+        Seller,
+        Contract,
+        Insurance,
+        FchFrom,
+        FchTo
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _ = Task.Run(async () => await FetchContactsAsync());
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value?.IsNew ?? true)
+                value = Value;
+            else
+                value = await ApiService.GetAsync<VehicleModel>("vehicle", Value!.Guid.ToString());
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void Refresca()
+    {
+        propertyGrid = new PropertyGridModel();
+        propertyGrid.AddEmp(value?.Emp);
+        propertyGrid.AddGuidnom("Model", value?.Model, carModels);
+        propertyGrid.AddString("Matricula", value?.Matricula);
+        propertyGrid.AddString("Bastidor", value?.Bastidor);
+        propertyGrid.AddGuidnom("Conductor", value?.Conductor, Drivers());
+        propertyGrid.AddGuidnom("Venedor", value?.Venedor, Sellers());
+        propertyGrid.AddGuidnom("Contracte", value?.Contract, Contracts());
+        propertyGrid.AddGuidnom("Assegurança", value?.Insurance, Insurances());
+        propertyGrid.AddDateOnly("Alta", value?.Alta);
+        propertyGrid.AddDateOnly("Baixa", value?.Baixa);
+    }
+
+    List<GuidNom>? Drivers() => allContacts?.Where(x => x.Emp == value?.Emp).Select(x => new GuidNom(x.Guid, x.FullNom)).ToList();
+    List<GuidNom>? Sellers() => allContacts?.Where(x => x.Emp == value?.Emp).Select(x => new GuidNom(x.Guid, x.FullNom)).ToList();
+
+    List<GuidNom>? Contracts() => allContracts?
+    .Where(x => x.Emp == value!.Emp && x.Codi == ContractModel.CodiClass.Wellknown(ContractModel.CodiClass.Wellknowns.VehicleLeasings)!.Guid)
+    .Select(x => new GuidNom(x.Guid, x.Nom)).ToList();
+
+    List<GuidNom>? Insurances() => allContracts?
+    .Where(x => x.Emp == value!.Emp && x.Codi == ContractModel.CodiClass.Wellknown(ContractModel.CodiClass.Wellknowns.VehicleInsurances)!.Guid)
+    .Select(x => new GuidNom(x.Guid, x.Nom)).ToList();
+
+
+
+    void HandleCloseRequest()
+    {
+        CloseRequest.InvokeAsync();
+    }
+
+    async Task HandleUpdateRequest()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            value!.Model = propertyGrid!.GetGuidNom((int)Fields.Model);
+            value!.Matricula = propertyGrid!.Value<string>((int)Fields.Plate);
+            value!.Bastidor = propertyGrid!.Value<string>((int)Fields.Bastidor);
+            value!.Conductor = propertyGrid!.GetGuidNom((int)Fields.Driver);
+            value!.Venedor = propertyGrid!.GetGuidNom((int)Fields.Seller);
+            value!.Contract = propertyGrid!.GetGuidNom((int)Fields.Contract);
+            value!.Insurance = propertyGrid!.GetGuidNom((int)Fields.Insurance);
+            value!.Alta = propertyGrid!.GetDateOnly((int)Fields.FchFrom);
+            value!.Baixa = propertyGrid!.GetDateOnly((int)Fields.FchTo);
+
+            await ApiService.PostMultipartAsync<VehicleModel, bool>(value, "Vehicle");
+            value.IsNew = false;
+            await CloseRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task HandleDeleteRequest()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Vehicle/delete", value!.Guid.ToString());
+            await CloseRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    public async Task FetchContactsAsync()
+    {
+        try
+        {
+            carModels = await ApiService.GetAsync<List<GuidNom>>("vehicles/carmodels");
+            allContacts = await ApiService.GetAsync<List<ContactModel>>("Contacts/all") ?? new();
+            allContracts = await ApiService.GetAsync<List<ContractModel>>("Contracts") ?? new();
+            Refresca();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void HandleTabChanged(int args)
+    {
+        selectedTab = (Tabs)args;
+    }
+
+    void AddNewDoc()
+    {
+        selectedDoc = new DownloadTargetModel
+            {
+                Target = (Guid)Value!.Guid
+            };
+    }
+
+    void HandleMultaSelected(MultaModel args)
+    {
+        selectedMulta = args;
+    }
+}

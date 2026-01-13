@@ -1,0 +1,64 @@
+﻿@implements IDisposable
+
+<div Class="Step @(CanShow() ? "" : "Disabled")" >
+    <div class="Epigraf">
+        <CircleValue Value="@ordinal" Width="30"></CircleValue>
+        <span>@Caption</span>
+    </div>
+
+    <div class="Content @(CanShow() ? "":"Hidden")">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] private Steps? Parent { get; set; }
+
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private int ordinal { get; set; }
+    public bool Completed { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Parent.SetCompletedStep += SetCompletedStepHandler;
+
+    }
+
+    bool IsActive() => Parent?.SelectedStep >= ordinal;
+    bool CanShow()
+    {
+        bool retval = false;
+        if (ordinal == 1) retval = true;
+        else
+        {
+            var idx = ordinal - 1;
+            var previousStep = Parent?.Items[idx - 1];
+            retval = previousStep?.Completed ?? false;
+        }
+        return retval;
+    }
+
+
+    protected override void OnInitialized()
+    {
+        if (Parent == null)
+            throw new ArgumentNullException(nameof(Parent), "Step must exist within a Steps control");
+
+        base.OnInitialized();
+        Parent.AddStep(this);
+        ordinal = Parent.Items.Count();
+    }
+
+    void SetCompletedStepHandler(int step)
+    {
+        if (step == ordinal) Completed = true;
+    }
+
+    public void Dispose()
+    {
+        Parent.SetCompletedStep -= SetCompletedStepHandler;
+    }
+}

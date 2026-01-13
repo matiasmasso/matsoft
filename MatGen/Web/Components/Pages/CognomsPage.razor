@@ -1,0 +1,23 @@
+﻿@page "/Cognoms"
+
+<div class="PageWrapper">
+    @if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>Cognoms</h1>
+        <Cognoms ItemSelected="ItemSelectedHandler"></Cognoms>
+    }
+</div>
+
+@code {
+    object? selectedItem;
+
+    void ItemSelectedHandler(object item)
+    {
+        selectedItem = item;
+    }
+}

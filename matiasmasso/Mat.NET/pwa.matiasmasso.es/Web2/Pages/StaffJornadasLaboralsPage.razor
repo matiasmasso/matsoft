@@ -1,0 +1,28 @@
+﻿@page "/JornadasLaborals"
+@page "/{LangSegment}/JornadasLaborals"
+@inject CultureService culture
+@inject SessionStateService session
+
+<div class="PageWrapper600">
+    <h3>
+        @culture.Tradueix("Registro de Jornada Laboral",
+        "Registre de Jornada Laboral",
+        "Labor Day Record")
+    </h3>
+
+    <StaffJornadasLaborals Model="staff"></StaffJornadasLaborals>
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    StaffModel? staff;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        var user = session.User;
+        if (user?.DefaultContact != null)
+            staff = new StaffModel((Guid)user.DefaultContact);
+
+    }
+}

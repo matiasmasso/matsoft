@@ -1,0 +1,29 @@
+﻿/*issues found?*/
+
+.Header {
+    display:flex;
+    justify-content: space-between;
+}
+
+.CloseButton {
+    width: 24px;
+    fill: #BBBBBB;
+}
+
+.CloseButton:hover {
+    fill: black;
+}
+
+.ButtonsBar {
+    margin-top:10px;
+}
+
+.Ancestor {
+    color:red;
+}
+
+.HasGrau {
+    color:navy;
+}
+
+

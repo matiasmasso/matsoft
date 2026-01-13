@@ -1,0 +1,111 @@
+﻿@using System.Globalization
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="-1 -1 2 2"
+     transform="rotate(-90)">
+
+    @if (items.Count == 1 && items.First().Percent == 100)
+    {
+        <circle cx="0" cy="0" r="1" fill="@items.First().Color" />
+    }
+    else
+    {
+        <circle cx="0" cy="0" r="1" fill="white" />
+        @foreach (var item in items)
+        {
+            <path d="@item.Path()" fill="@item.Color"></path>
+        }
+    }
+
+</svg>
+
+@code {
+    [Parameter] public List<Slice>? Values { get; set; }
+    List<Item> items = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        var total = Values?.Sum(x => x.Value) ?? 1;
+        double accumulatedValue = 0;
+        foreach (var slice in Values ?? new())
+        {
+            var item = new Item();
+            item.Value = slice.Value;
+            item.Percent = 100 * slice.Value / total;
+            item.StartPoint = GetCoordinatesForPercent(accumulatedValue);
+            accumulatedValue += item.Percent;
+            item.EndPoint = GetCoordinatesForPercent(accumulatedValue);
+            item.Color = System.Drawing.ColorTranslator.ToHtml(slice.Color);
+            items.Add(item);
+        }
+
+    }
+
+    Point GetCoordinatesForPercent(double percent)
+    {
+        Point retval = new();
+        if (percent == 100)
+            retval = new Point { X = 1, Y = 0 };
+        else
+        {
+            percent = percent / 100;
+            retval.X = Math.Cos(2 * Math.PI * percent);
+            retval.Y = Math.Sin(2 * Math.PI * percent);
+        }
+        return retval;
+    }
+
+    public class Slices : List<Slice>
+    {
+        public void Add(double value, System.Drawing.Color color)
+        {
+            base.Add(new Slice
+                {
+                    Value = value,
+                    Color = color
+                });
+        }
+    }
+
+    public class Slice
+    {
+        public double Value { get; set; }
+        public System.Drawing.Color Color { get; set; }
+    }
+
+    private class Item
+    {
+        public double Value { get; set; }
+        public double Percent { get; set; }
+        public Point? StartPoint { get; set; }
+        public Point? EndPoint { get; set; }
+        public string? Color { get; set; }
+
+        public string Path()
+        {
+            var largeArcFlag = Percent > 50 ? 1 : 0;
+            var startX = StartPoint?.X.ToString(CultureInfo.InvariantCulture);
+            var startY = StartPoint?.Y.ToString(CultureInfo.InvariantCulture);
+            var endX = EndPoint?.X.ToString(CultureInfo.InvariantCulture);
+            var endY = EndPoint?.Y.ToString(CultureInfo.InvariantCulture);
+
+            var pathData = new List<string>{
+                $"M {startX} {startY}", // Move cursor to start point
+                $"A 1 1 0 {largeArcFlag} 1 {endX} {endY}", // draw Arc to end point
+                $"L 0 0" // Line to center
+                };
+
+            var retval = string.Join(" ", pathData);
+            return retval;
+        }
+    }
+
+    private class Point
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+
+}

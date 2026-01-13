@@ -1,0 +1,171 @@
+﻿@inject ApiService ApiService
+
+@if (selectedItem != null)
+{
+    <Extracte Value="selectedItem.Saldo"
+              Values="allSaldos"
+              CloseRequest="HandleCloseExtracte"></Extracte>
+}
+else if (selectedYear != null && selectedItem == null && allSaldos?.Where(x => x.Year == selectedYear).ToList().Count == 1)
+{
+    selectedItem = new Item(allSaldos.First(x => x.Year == selectedYear), ctas!);
+    StateHasChanged();
+}
+
+else if (allSaldos == null)
+{
+    <Title Value="@Contact?.FullNom" CloseRequest="HandleCloseRequest"></Title>
+    <Loading></Loading>
+}
+else if (selectedCca != null)
+{
+    <Cca Value="selectedCca"
+         AfterUpdate="HandleAfterCcaUpdate"
+         CloseRequest="@(()=>selectedCca = null)"></Cca>
+}
+else
+{
+
+    <div class="PageWrapper600">
+        <Title Value="@Contact?.FullNom" CloseRequest="HandleCloseRequest"></Title>
+
+        @if (selectedYear == null)
+        {
+            <div>
+                Aquest contacte no té assentaments en cap compte encara.
+            </div>
+            <a href="#" @onclick="AddNewCca" @onclick:preventDefault>
+                [Obrir nou assentament]
+            </a>
+        }
+        else
+        {
+            <LookupYears @bind-Value="selectedYear" Values="@Years()"></LookupYears>
+            <div class="Grid">
+                @foreach (var item in FilteredSaldos() ?? new())
+                {
+                    <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>selectedItem = item)">
+                        <div class="Nom">
+                            @item.Cta!.ToString()
+                        </div>
+                        <div class="Eur">
+                            @($"{item.Eur:N2} €")
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+
+        <Error @bind-Value=" exception"></Error>
+    </div>
+}
+
+@code {
+    [Parameter] public ContactModel? Contact { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    LangDTO lang = LangDTO.Cat();
+    List<PgcCtaModel.Extracte>? allSaldos;
+    List<PgcCtaModel>? ctas;
+    Item? selectedItem;
+    CcaModel? selectedCca;
+    int? selectedYear;
+    Exception? exception;
+
+
+    protected override void OnInitialized()
+    {
+        ctas = ApiService.GetCurrentPgcCtas();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            var request = new PgcCtaModel.Extracte { Emp = Contact!.Emp, Contact = Contact.Guid };
+            allSaldos = await ApiService.PostAsync<PgcCtaModel.Extracte, List<PgcCtaModel.Extracte>>(request, "PgcCtas/saldos");
+            selectedYear = allSaldos?.Count == 0 ? null : allSaldos!.Max(x => x.Year);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    List<int>? Years() => allSaldos?.Select(x => x.Year).Distinct().OrderByDescending(x => x).ToList();
+
+    List<Item>? FilteredSaldos()
+    {
+        var saldos = allSaldos!.Where(x => x.Year == selectedYear).ToList();
+        var retval = saldos.Select(x => new Item(x, ctas!)).ToList();
+        return retval;
+    }
+
+    void HandleYearChanged(int? args)
+    {
+        selectedYear = args;
+        selectedItem = FilteredSaldos()!.FirstOrDefault(x => x.Saldo!.Year == selectedYear && x.Cta == selectedItem?.Cta);
+    }
+
+    private class Item
+    {
+        public PgcCtaModel.Extracte? Saldo { get; set; }
+        public PgcCtaModel? Cta { get; set; }
+        public decimal? Eur { get; set; }
+
+        public Item(PgcCtaModel.Extracte saldo, List<PgcCtaModel> ctas)
+        {
+            Saldo = saldo;
+            Cta = ctas.FirstOrDefault(x => x.Guid == saldo.Cta);
+            Eur = Cta!.IsDeutora() ? saldo.Deb - saldo.Hab : saldo.Hab - saldo.Deb;
+        }
+    }
+
+    private void HandleCloseRequest()
+    {
+        CloseRequest.InvokeAsync();
+    }
+
+    private void HandleCloseExtracte()
+    {
+        if (selectedYear != null && allSaldos?.Where(x => x.Year == selectedYear).ToList().Count == 1)
+            CloseRequest.InvokeAsync();
+        else
+            selectedItem = null;
+    }
+
+    private void HandleCcaRequest(CcaModel args)
+    {
+        selectedCca = args;
+    }
+
+    private void AddNewCca()
+    {
+        selectedCca = CcaModel.Factory(ApiService.Emp, ApiService.CurrentUser()!, CcaModel.CcdEnum.Manual);
+        selectedCca.AddDebit(0, null, Contact?.Guid);
+    }
+
+    private void HandleAfterCcaUpdate(CcaModel args)
+    {
+        if (selectedYear == null) selectedYear = args.Fch.Year();
+        if (selectedItem == null)
+        {
+            var ccb = args.Items.FirstOrDefault(x => x.Contact == Contact?.Guid);
+            if (ccb != null)
+            {
+                var saldo = new PgcCtaModel.Extracte
+                    {
+                        Emp = args.Emp,
+                        Cta = ccb.Cta,
+                        Contact = ccb.Contact,
+                        Year = selectedYear ?? 0,
+                        Deb = ccb.Debit(),
+                        Hab = ccb.Credit()
+                    };
+                selectedItem = new Item(saldo, ctas!);
+            }
+        }
+        selectedCca = null;
+    }
+
+}

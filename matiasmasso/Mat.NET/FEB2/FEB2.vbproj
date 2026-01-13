@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RootNamespace>FEB2</RootNamespace>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="BreadCrumb.vb" />
+    <Compile Remove="FeedbackSource.vb" />
+    <Compile Remove="Helpers\ExcelEPPlusHelper.vb" />
+    <Compile Remove="Helpers\GhostscriptHelper.vb" />
+    <Compile Remove="Helpers\ImageHelper.vb" />
+    <Compile Remove="Helpers\PdfHelper.vb" />
+    <Compile Remove="Helpers\TextHelper.vb" />
+    <Compile Remove="Integracions\NominaEscuraHelper.vb" />
+    <Compile Remove="WebPortadaBrands.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AeatSii\AeatSii.vbproj" />
+    <ProjectReference Include="..\ApiHelper\ApiHelper.vbproj" />
+    <ProjectReference Include="..\DTO\DTO.csproj" />
+    <ProjectReference Include="..\LegacyHelper\LegacyHelper.vbproj" />
+    <ProjectReference Include="..\MatHelperStd\MatHelperStd.vbproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Import Include="DTO" />
+    <Import Include="MatHelperStd" />
+    <Import Include="SixLabors.ImageSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Microsoft.VisualBasic.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,136 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper">
+    <h1>@Model?.Nom</h1>
+
+    <TabControl>
+        <TabPage Text="General">
+            @if (dbState == DbState.IsLoading)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid Model="@gridModel"
+                SetDirty="@(()=>dbState = DbState.IsDirty)"
+                CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                    State="dbState"
+                    CanDelete="@(!(Model?.IsNew ?? false))"
+                    RequestToCancel="CancelRequestHandler"
+                    RequestToDelete="DeleteRequest"
+                    RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+        </TabPage>
+
+        <TabPage Text="Fonts">
+            @foreach (var item in DocSrcs())
+            {
+
+                <div>
+                    <ListItem Title="@item.NomLlarg"
+                    Tag="@item"
+                    OnClick="@(()=>ItemClick(item))"></ListItem>
+
+                </div>
+                <div class="GridRowDivider HideOnDesktop"></div>
+            }
+
+        </TabPage>
+
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public RepoModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+    private RepoModel? value;
+    private PropertyGridModel? gridModel;
+    //private List<DocSrcModel>? docSrcs;
+    private DbState dbState;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Nom,
+        Abr,
+        Adr,
+        Location,
+        Zip,
+        Country
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddString((int)Fields.Nom, value?.Nom, "Nom");
+        gridModel.AddString((int)Fields.Abr, value?.Abr, "Abr");
+        gridModel.AddString((int)Fields.Adr, value?.Adr, "Adr");
+        gridModel.AddString((int)Fields.Location, value?.Location, "Location");
+        gridModel.AddString((int)Fields.Zip, value?.Zip, "Zip");
+        gridModel.AddString((int)Fields.Country, value?.Country, "Country");
+
+    }
+
+    private async Task UpdateRequest()
+    {
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value!.Abr = gridModel!.GetString((int)Fields.Abr);
+        value!.Adr = gridModel!.GetString((int)Fields.Adr);
+        value!.Location = gridModel!.GetString((int)Fields.Location);
+        value!.Zip = gridModel!.GetString((int)Fields.Zip);
+        value!.Country = gridModel!.GetString((int)Fields.Country);
+        dbState = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value);
+            await AfterUpdate.InvokeAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        dbState = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+
+    private List<DocSrcModel>DocSrcs(){
+        return ApiService.DocSrcs()?.Where(x => x.Repo == value?.Guid)
+        .OrderBy(x=>x.NomLlarg)
+        .ToList() ?? new();
+    }
+
+    void ItemClick(IModel? item)
+    {
+        if (ItemSelected.HasDelegate)
+            ItemSelected.InvokeAsync(item);
+    }
+}

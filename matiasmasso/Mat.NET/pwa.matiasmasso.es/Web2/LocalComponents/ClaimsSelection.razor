@@ -1,0 +1,95 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject ClaimsService claimsService
+
+@if(selectedValues != null && selectedValues.Count == 0)
+{
+    <div class="Info">@culture.Tradueix("Aun no hay ningun claim asignado"
+    , "No hi ha cap claim assignat encara"
+    , "No claims assigned yet")</div>
+} else
+{
+<div class="SelectedValues">
+    @foreach(var guid in selectedValues ?? new())
+    {
+        <a href="#" @onclick="@(()=>SelectedValueClick(guid))" @onclick:preventDefault>
+            <div>@claimsService.GetValue(guid)?.Nom.Tradueix(culture.Lang())</div>
+            <Icon Id="Icon.Ids.Xmark"></Icon>
+        </a>
+    }
+</div>    
+}
+
+<p class="Info">
+    @if(PotentialValues()?.Count == 0)
+    {
+        @culture.Tradueix("Todos los claims disponibles estan asignados"
+    , "Tots els claims disponibkes estan assignats"
+    , "All claims have been assigned")
+    }
+    else
+    {
+        @culture.Tradueix("Puedes asignar claims seleccionándolos de la siguiente lista:"
+    , "Pots assignar claims triant-los de la següent llista"
+    , "Click on next list to assign claims ")
+    }
+</p>
+
+<div class="Grid">
+    @foreach (var item in PotentialValues() ?? new())
+    {
+        <a href="#" @onclick="@(()=>PotentialValueClick(item))" @onclick:preventDefault>
+            <div>@item.Nom.Tradueix(culture.Lang())</div>
+            <div>@item.Description.Tradueix(culture.Lang())</div>
+        </a>
+    }
+</div>
+
+
+@code {
+    [Parameter] public List<Guid>? Values { get; set; }
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    List<Guid>? selectedValues;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        claimsService.OnChange += Refresca;
+    }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        selectedValues = Values;
+        Refresca(null);
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<ClaimModel>? PotentialValues()
+    {
+        return claimsService.Values?.Where(x => !(selectedValues ?? new()).Any(y => x.Guid == y)).ToList();
+    }
+
+    void SelectedValueClick(Guid guid)
+    {
+        selectedValues!.Remove(guid);
+        OnChange.InvokeAsync();
+    }
+
+    void PotentialValueClick(ClaimModel item)
+    {
+        selectedValues?.Add(item.Guid);
+        OnChange.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        claimsService.OnChange -= Refresca;
+    }
+}

@@ -1,0 +1,111 @@
+﻿@inject CultureService culture
+@inject ClaimsService claimsService
+
+<div class="PageWrapper600">
+    <h3>Claim</h3>
+
+    <TabControl>
+        <TabPage Text="@culture.Localize("General")">
+            <PropertyGrid Model="gridModel"
+                          SetDirty="@(()=>state = DbState.IsDirty)"
+                          CanEdit="true"></PropertyGrid>
+
+            <div class="ButtonsBar">
+                <ButtonsBar CanEdit="true"
+                            State="state"
+                            CanDelete="@(!(Model?.IsNew ?? false))"
+                            RequestToCancel="CancelRequest"
+                            RequestToDelete="DeleteRequest"
+                            RequestToUpdate="UpdateRequest"></ButtonsBar>
+            </div>
+        </TabPage>
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public ClaimModel? Model { get; set; }
+    [Parameter] public EventCallback<ClaimModel> RequestToUpdate { get; set; }
+    [Parameter] public EventCallback<ClaimModel> RequestToDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    enum Fields
+    {
+        Cod,
+        NomEsp,
+        NomCat,
+        NomEng,
+        NomPor,
+        DscEsp,
+        DscCat,
+        DscEng,
+        DscPor
+    }
+
+    protected override void OnParametersSet()
+    {
+        gridModel = new PropertyGridModel(Model);
+        gridModel.AddEnum((int)Fields.Cod, new ClaimModel.Cods(), (int?)Model?.Cod ?? (int)ClaimModel.Cods.None, culture.Localize("Cod"));
+        gridModel.AddString((int)Fields.NomEsp, Model?.Nom.Esp, culture.Localize("Esp"));
+        gridModel.AddString((int)Fields.NomCat, Model?.Nom.Cat, culture.Localize("Cat"));
+        gridModel.AddString((int)Fields.NomEng, Model?.Nom.Eng, culture.Localize("Eng"));
+        gridModel.AddString((int)Fields.NomPor, Model?.Nom.Por, culture.Localize("Por"));
+        gridModel.AddString((int)Fields.DscEsp, Model?.Description.Esp, culture.Localize("Esp"));
+        gridModel.AddString((int)Fields.DscCat, Model?.Description.Cat, culture.Localize("Cat"));
+        gridModel.AddString((int)Fields.DscEng, Model?.Description.Eng, culture.Localize("Eng"));
+        gridModel.AddString((int)Fields.DscPor, Model?.Description.Por, culture.Localize("Por"));
+
+        StateHasChanged();
+    }
+
+    async Task CancelRequest()
+    {
+        await RequestToCancel.InvokeAsync();
+    }
+
+    async Task UpdateRequest()
+    {
+        state = DbState.IsUpdating;
+        Model!.Cod = (ClaimModel.Cods)gridModel!.GetEnum((int)Fields.Cod);
+        Model.Nom.Esp = gridModel!.GetString((int)Fields.NomEsp);
+        Model.Nom.Cat = gridModel!.GetString((int)Fields.NomCat);
+        Model.Nom.Eng = gridModel!.GetString((int)Fields.NomEng);
+        Model.Nom.Por = gridModel!.GetString((int)Fields.NomPor);
+        Model.Description.Esp = gridModel!.GetString((int)Fields.DscEsp);
+        Model.Description.Cat = gridModel!.GetString((int)Fields.DscCat);
+        Model.Description.Eng = gridModel!.GetString((int)Fields.DscEng);
+        Model.Description.Por = gridModel!.GetString((int)Fields.DscPor);
+
+        try
+        {
+            state = DbState.IsUpdating;
+            await claimsService.UpdateAsync(Model);
+            await CancelRequest();
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task DeleteRequest()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            await claimsService.DeleteAsync(Model!);
+            await CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+}

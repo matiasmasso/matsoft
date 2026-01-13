@@ -1,0 +1,369 @@
+﻿/* de la pagina de ProductCategory ----
+.PageWrapper {
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    max-width: 1200px !important;
+}
+
+    .PageWrapper .Title {
+        white-space: nowrap;
+    }
+
+        .PageWrapper .Title a:hover {
+            color: #167ac6;
+        }
+
+.Contingut {
+    max-width: 600px;
+    min-width: 300px;
+}
+
+h3 {
+    margin-top: 0;
+}
+
+@@media(max-width:700px) {
+    .PageWrapper {
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+    }
+
+    .SideMenuCaption {
+        display: block;
+        padding: 20px 0 15px 0;
+    }
+}
+
+------------------------*/
+
+
+
+
+h1 {
+    margin-top: 0;
+}
+
+    h1 span {
+        color: darkgray;
+    }
+
+/*side menu*/
+
+
+
+.Persiana {
+    padding: 20px 0;
+}
+
+    .Persiana a {
+        color: #167ac6;
+    }
+
+.SideMenuCaption {
+    display: none;
+}
+
+
+
+
+
+
+/*------------------------------------- Collection------------------------------------*/
+
+.Grid .item {
+    display: block;
+    text-align: center;
+}
+
+
+.CollectionGallery {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-auto-flow: row;
+    font-size: 0.8em;
+}
+
+
+.CollectionGalleryWide {
+    display: grid;
+    grid-gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-auto-flow: row;
+}
+
+.CollectionItem {
+    position: relative;
+
+}
+.CollectionItem:hover {
+    border: 1px solid #CCCCCC;
+}
+
+    .CollectionItem a {
+        text-decoration: none;
+    }
+
+
+    .CollectionItem img {
+         width:100%;
+         height: auto;
+    }
+
+.CollectionItem div {
+    text-align: center;
+    padding: 2px 4px;
+    margin: 0;
+    width: 100%;
+    /*
+        height: 16px;
+            */
+    font-size: 0.9em;
+}
+
+.ItemsCount {
+    margin-bottom:20px;
+}
+
+/*--------------------------------------- Accessories -------------------------------------------------*/
+
+.Accessories {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+    .Accessories .Item {
+        display: flex;
+        flex-direction: row;
+        color: black;
+        margin-bottom: 10px;
+    }
+
+    .Accessories a:hover .Nom {
+        color: #167ac6;
+    }
+
+    .Accessories .Item .Thumbnail {
+        flex: 0 0 75px;
+    }
+
+    .Accessories .Item .Thumbnail img {
+        width: 100%;
+        height: auto;
+    }
+
+    .Accessories .Item .Text {
+        flex: 1 1 auto;
+        padding: 0 0 0 10px;
+    }
+
+    .Accessories .Item .Nom {
+        font-weight: 600;
+        padding: 0;
+    }
+
+
+@media (max-width:450px) {
+    .Accessories .Item a {
+        flex-direction: column;
+    }
+
+    .PageWrapper {
+        text-align: center;
+    }
+
+    .Accessories .Item .Nom {
+        text-align: center;
+    }
+
+    .Accessories .Item .Thumbnail {
+        display: flex;
+        max-width: 100%;
+        justify-content: center;
+    }
+
+        .Accessories .Item .Thumbnail img {
+            width: 150px;
+            height: auto;
+        }
+}
+
+/*----------------------------------------------Downloads------------------------------------------*/
+
+#Downloads {
+    width: 100%;
+}
+.Downloads {
+    text-align: left;
+}
+
+    .Downloads .Item {
+        clear: both;
+        position: relative;
+        display: inline-block;
+        border: 1px solid darkgray;
+        width: 150px;
+        height: 239px;
+        padding: 0px;
+        background-color: lightgray;
+    }
+
+        .Downloads .Item a {
+            color: black;
+        }
+
+        .Downloads .Item:hover {
+            background-color: red;
+            color: white;
+        }
+
+        .Downloads .Item .Nom {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 148px;
+            height: 58px;
+            overflow: hidden;
+            padding: 5px 5px;
+            font-size: 0.8em;
+        }
+
+
+
+        .Downloads .Item .Thumbnail {
+            position: absolute;
+            top: 58px;
+            left: 22px;
+            width: 126px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+            .Downloads .Item .Thumbnail img {
+                width: 100%;
+                height: auto;
+            }
+
+        .Downloads .Item .Features {
+            position: absolute;
+            bottom: 79px; /*cap amunt*/
+            right: 48px; /*cap a l'esquerra*/
+            height: 23px;
+            font-size: 0.8em;
+            overflow: hidden;
+            width: 180px; /*alçada un cop girat*/
+            /*
+        margin-left: -100px;
+        margin-top: 96px;
+            */
+            padding-left: 5px;
+            background-color: gray;
+            color: white;
+            -webkit-transform: rotate(-90deg);
+            -moz-transform: rotate(-90deg);
+            -ms-transform: rotate(-90deg);
+            -o-transform: rotate(-90deg);
+            transform: rotate(-90deg);
+            /* also accepts left, right, top, bottom coordinates; not required, but a good idea for styling */
+            -webkit-transform-origin: 50% 50%;
+            -moz-transform-origin: 50% 50%;
+            -ms-transform-origin: 50% 50%;
+            -o-transform-origin: 50% 50%;
+            transform-origin: 50% 50%;
+            /* Should be unset in IE9+ I think. */
+            filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+        }
+
+
+/*----------------------------------------ImgGallery-----------------------------------------------*/
+.ImgGallery {
+    max-width: 100%;
+}
+
+.CategoryHeader {
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.CategoryBody {
+    height: 185px;
+    overflow: hidden;
+}
+
+.CategoryBody .Item {
+    display: inline-block;
+    width: 140px;
+    height: 180px;
+    border: 1px solid gray;
+    background-color: darkgray;
+    margin-bottom: 5px;
+}
+
+.CategoryBody .Item:hover {
+    background-color: red;
+}
+
+.CategoryBody .Item a {
+    text-decoration: none;
+}
+
+
+.CategoryBody .Item img {
+    height: 140px;
+    width: auto;
+    max-width: 100%;
+}
+
+.CategoryBody .Item div {
+    color: white;
+    text-align: center;
+    padding: 2px 4px;
+    margin: 0;
+    width: 100%;
+    height: 30px;
+    font-size: 0.6em;
+}
+
+.ImgGallery .ShowMore, .ImgGallery .ShowLess {
+    border-bottom: 1px solid gray;
+    margin-left: 150px;
+    text-align: right;
+}
+
+/*---------------------------------------Videos ---------------------------------------------------*/
+#Videos {
+    width:100%;
+}
+
+.VideoGallery {
+    display: grid;
+    grid-gap: 25px;
+    grid-template-columns: repeat( auto-fill, minmax(265px, 1fr) );
+    font-size: 0.8em;
+}
+
+    .VideoGallery .iframe-container {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
+        height: 0;
+    }
+
+        .VideoGallery .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+.itemsCount {
+    margin-bottom: 20px;
+}
+/*-------------------------------------------------------------------------------------------------*/
+/* max-width afectat a Layout*/
+

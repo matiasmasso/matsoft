@@ -1,0 +1,22 @@
+﻿@inherits _ComponentBase
+
+@foreach(var item in Items)
+{
+    <a href="@item.Url()" target="_blank" class="Item">
+        <div class="Nom">@item.Nom</div>
+    </a>
+}
+@code {
+    [Parameter] public Guid Target { get; set; }
+    private List<ImmobleDTO.InventariItem> Items { get; set; } = new();
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Items = await base.GetAsync<List<ImmobleDTO.InventariItem>>("immoble/inventari", Target.ToString());
+            StateHasChanged();
+        }
+
+    }
+}

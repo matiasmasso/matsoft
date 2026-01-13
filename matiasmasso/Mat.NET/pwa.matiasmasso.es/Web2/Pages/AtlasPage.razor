@@ -1,0 +1,164 @@
+﻿@page "/atlas"
+@page "/{LangSegment}/atlas"
+@layout ProLayout
+
+@implements IDisposable
+@inject CultureService culture
+@inject AtlasService atlasService
+@inject SessionStateService session
+
+<div class="PageWrapper600">
+    @if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <PageOptions>
+            <div class="ShowObsolets">
+                <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+            </div>
+            <div class="LookupEmps">
+            <LookupEmps @bind-Value="selectedEmp"></LookupEmps>
+            </div>
+        </PageOptions>
+
+        <SearchBox @bind-Value="@searchterm"></SearchBox>
+
+        <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+
+        <div class="Grid">
+            @if (!string.IsNullOrEmpty(searchterm))
+            {
+                <Virtualize Items="FilteredItems()" Context="item">
+                    <a href="#" class="Item" @onclick="@(()=>ContactClick(item))" @onclick:preventDefault>
+                        @item.FullNom
+                    </a>
+                </Virtualize>
+            }
+            else if (SelectedCountry() == null)
+            {
+                <a class="SeeMore" href="#" @onclick="@(()=>isShowingAllCountries = !isShowingAllCountries)" @onclick:preventDefault>
+                    @culture.Localize(isShowingAllCountries ? "SeeLess": "")
+                </a>
+                @foreach (var country in atlasService.Countries(isShowingAllCountries: isShowingAllCountries) ?? new())
+                {
+                    <a ref="#" class="Item" @onclick="@(()=>CountryClick(country))" @onclick:preventDefault>
+                        @(country.Nom?.Tradueix(culture.Lang()) ?? "?")
+                    </a>
+                }
+                <a class="SeeMore" href="#" @onclick="@(()=>isShowingAllCountries = !isShowingAllCountries)" @onclick:preventDefault>
+                    @culture.Localize(isShowingAllCountries ? "SeeLess": "SeeMore")
+                </a>
+
+            }
+            else if (SelectedZona() == null)
+            {
+                @foreach (var zona in atlasService.Zonas(SelectedCountry()) ?? new())
+                {
+                    <a ref="#" class="Item" @onclick="@(()=>ZonaClick(zona))" @onclick:preventDefault>
+                        @(zona.Nom ?? "?")
+                    </a>
+                }
+            }
+            else if (SelectedLocation() == null)
+            {
+                @foreach (var location in atlasService.Locations(SelectedZona(), isShowingObsolets) ?? new())
+                {
+                    <a class="Item" ref="#" @onclick="@(()=>LocationClick(location))" @onclick:preventDefault>
+                        @(location.Nom ?? "?")
+                    </a>
+                }
+            }
+            else
+            {
+                @foreach (var contact in atlasService.Contacts(SelectedLocation(), selectedEmp, isShowingObsolets) ?? new())
+                {
+                    <a ref="#" class="Item" @onclick="@(()=>ContactClick(contact))" @onclick:preventDefault>
+                        @(contact?.RaoSocialAndNomComercial() ?? "?")
+                    </a>
+                }
+            }
+
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    SelectedValues.Collection? selectedValues;
+    ContactModel? selectedContact;
+    EmpModel? selectedEmp;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+
+    bool isShowingAllCountries;
+    bool isShowingObsolets;
+    private string? searchterm;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        atlasService.OnChange += Refresca;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<ContactModel> FilteredItems()
+    {
+        var retval = atlasService.Contacts(searchterm) ?? new();
+        retval = retval.Where(x => x.Emp == selectedEmp?.Id).ToList();
+        return retval;
+    }
+
+    string Url(ContactModel item) => culture.RelativeUrl("/contact/" + item.Guid.ToString())!;
+
+    private CountryModel? SelectedCountry() => (CountryModel?)selectedValues?.FirstOrDefault()?.Value;
+    private ZonaModel? SelectedZona() => selectedValues?.Count > 1 ? (ZonaModel)selectedValues[1].Value : null;
+    private LocationModel? SelectedLocation() => selectedValues?.Count > 2 ? (LocationModel)selectedValues[2].Value : null;
+
+    void CountryClick(CountryModel value)
+    {
+        selectedValues = new();
+        selectedValues.Add(value, value.Nom?.Tradueix(culture.Lang()));
+    }
+
+    void ZonaClick(ZonaModel value)
+    {
+        selectedValues?.Add(value, value.Nom);
+    }
+
+    void LocationClick(LocationModel value)
+    {
+        selectedValues?.Add(value, value.Nom);
+    }
+
+
+    void SelectContact(ContactModel contact)
+    {
+        selectedContact = contact;
+    }
+
+    private void ContactClick(ContactModel item)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(item, item.ToString()));
+    }
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        atlasService.OnChange -= Refresca;
+    }
+
+
+}

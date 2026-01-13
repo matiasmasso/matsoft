@@ -1,0 +1,21 @@
+﻿@using DTO
+
+<div class="Wrapper2">
+    @foreach(var item in Items)
+    {
+        <a href=@NavigateTo(item)>
+            @item.Caption
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<Box> Items { get; set; } = new();
+
+    private string NavigateTo(Box item)
+    {
+        //prevent last item from anchoring since it refers to self page
+        return Items.IndexOf(item) == Items.Count - 1 ? "#" : item.Url;
+    }
+}

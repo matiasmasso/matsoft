@@ -1,0 +1,9 @@
+﻿@page "/claims"
+@page "/{LangSegment}/claims"
+@layout ProLayout
+
+<Claims></Claims>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+}

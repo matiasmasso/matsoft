@@ -1,0 +1,278 @@
+﻿@page "/Norma43"
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+@using DTO.Integracions.Banca
+
+
+@if (selectedItem == null)
+{
+    <div class="PageWrapper900">
+        <h3>Norma 43</h3>
+
+        @if (values?.Count == 0) //(emps?.Count == 0)
+        {
+
+            <PageOptions>
+                <a href="#" @onclick:preventDefault @onclick="HandleTemplates">Plantilles</a>
+                <FileInputButton ValuesChanged="HandleFilesInputAsync"></FileInputButton>
+            </PageOptions>
+
+            <div class="Info">
+                No hi han registres pendents de entrar. <br />
+                Cal pujar un nou fitxer de la norma 43 per Importar fitxer
+
+                <div class="FileInput">
+                    <div class="Button ButtonLemon">
+                        <FileInputButton ValuesChanged="HandleFilesInputAsync" Caption="Importar un fitxer ara"></FileInputButton>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+
+            if (values == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+
+
+                <PageOptions>
+                    @if (emps?.Count > 1 && emp != null)
+                    {
+                        <div class="Emps">
+                            <LookupEmp Value="emp" Values="emps" ValueChanged="EmpChanged" ></LookupEmp>
+                        </div>
+                    }
+                    <div class="Bancs">
+                        @foreach (var banc in bancs ?? new())
+                        {
+                            if (FilteredItems(banc)?.Count > 0)
+                            {
+                                <a href="#" class="Banc" @onclick="@(()=>selectedBanc = banc)" @onclick:preventDefault>
+                                    @banc.Abr
+                                    @banc.FormatedCcc();
+                                    (@(FilteredItems(banc)?.Count) apunts)
+                                </a>
+                            }
+                        }
+                    </div>
+                    <a href="#" @onclick:preventDefault @onclick="HandleTemplates">Plantilles</a>
+                    <FileInputButton ValuesChanged="HandleFilesInputAsync"></FileInputButton>
+                </PageOptions>
+
+                <div class="Searchbox">
+                    <SearchBox @bind-Value="searchterm"></SearchBox>
+                </div>
+
+
+                <div class="Grid">
+                    <div class="ColHeaders">
+                        <div>Data</div>
+                        <div class="Truncate">Concepte</div>
+                        <div class="Number">Ingressos</div>
+                        <div class="Number">Despeses</div>
+                    </div>
+
+                    @foreach (var item in FilteredItems(selectedBanc) ?? new())
+                    {
+                        <a href="#" class="Item" @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                            <div>@($"{item.Fch:dd/MM/yy}")</div>
+                            <div class="Truncate">@item.Concept</div>
+                            @if (item.Dh == Norma43.DHs.haber)
+                            {
+                                <div class="Number">@($"{item.Import:N2} €")</div>
+                                <div>&nbsp;</div>
+                            }
+                            @if (item.Dh == Norma43.DHs.debe)
+                            {
+                                <div>&nbsp;</div>
+                                <div class="Number">@($"{item.Import:N2} €")</div>
+                            }
+                        </a>
+                    }
+                </div>
+            }
+        }
+
+
+
+
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+else
+{
+    <Norma43Apunt Model="selectedItem"
+                  Ctas="ctas"
+                  Emp="emp"
+                  Projectes="projectes"
+                  Patterns="patterns"
+                  Banc="selectedBanc"
+                  CloseRequest="@(()=>selectedItem=null)"
+                  AfterTemplateUpdate="AfterTemplateUpdateHandler"
+                  AfterUpdate="AfterUpdateHandler"></Norma43Apunt>
+}
+
+@code {
+
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds? emp;
+
+    List<BancModel>? bancs;
+    List<BancModel>? allBancs;
+    List<Norma43.Apunt>? values;
+    List<PgcCtaModel>? ctas;
+    List<ProjecteModel>? allProjectes;
+    List<GuidNom>? projectes;
+    List<Norma43.Template>? patterns;
+
+    BancModel? selectedBanc;
+    Norma43.Apunt? selectedItem;
+
+    string? searchterm;
+    string? title;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            allBancs = await ApiService.GetAsync<List<BancModel>>("Bancs");
+            allProjectes = await ApiService.GetAsync<List<ProjecteModel>>("projectes");
+            var allCtas = await ApiService.GetAsync<List<PgcCtaModel>>("pgcctas");
+            ctas = allCtas?.Where(x => x.Plan == PgcPlanModel.Wellknown(PgcPlanModel.Wellknowns.Plan2007)!.Guid).ToList();
+            patterns = await ApiService.GetAsync<List<Norma43.Template>>("Norma43Templates");
+            emps = ApiService.CurrentUser()!.Emps;
+            await RefrescaAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        SetEmpData();
+    }
+
+    async Task RefrescaAsync()
+    {
+        values = await ApiService.GetAsync<List<Norma43.Apunt>>("Norma43s");
+
+        //restringeix els bancs a les dades de Norma43 i als habilitats per l'usuari
+        var cccs = values!.Select(x => x.FullCcc).Distinct().ToList();
+        //allBancs = allBancs!.Where(x => cccs.Any(y => x.Norma43Ccc() == y) && emps!.Any(y => x.Emp == y)).ToList();
+        var bancs1 = allBancs!.Where(x => cccs.Any(y => x.Norma43Ccc() == y)).ToList();
+        var bancs2 = allBancs!.Where(x => emps!.Any(y => x.Emp == y)).ToList();
+        // emps esta buit a bancs2
+        bancs = allBancs!.Where(x => cccs.Any(y => x.Norma43Ccc() == y) && emps!.Any(y => x.Emp == y)).ToList();
+
+        //restringeix les empreses als bancs habilitats
+        emps = bancs!.Select(x => x.Emp).Distinct().ToList();
+        if (emps.Count > 0)
+            emp = ApiService.DefaultEmp(emps);
+    }
+
+    private void SetEmpData()
+    {
+        if (emp != null)
+        {
+            bancs = allBancs!.Where(x => x.Emp == emp && FilteredItems(x)?.Count > 0).ToList();
+            selectedBanc = bancs!.FirstOrDefault();
+            projectes = allProjectes?.Where(x => x.Emp == emp)?.Select(x => x.ToGuidNom()).ToList();
+        }
+    }
+
+    private List<Norma43.Apunt>? FilteredItems(BancModel? banc)
+    {
+        if (banc == null)
+            return new();
+        else
+        {
+            List<Norma43.Apunt>? retval = values?.Where(x => x.FullCcc == banc!.Norma43Ccc()).ToList();
+            if (retval != null && !string.IsNullOrEmpty(searchterm))
+                retval = retval.Where(x => x.Matches(searchterm)).ToList();
+            return retval;
+        }
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+        SetEmpData();
+    }
+
+
+    void AfterUpdateHandler()
+    {
+        values!.Remove(selectedItem!);
+        if (values.Count == 0)
+        {
+            emps = ApiService.CurrentUser()!.Emps;
+            bancs = new();
+        } else
+        {
+            //restringeix els bancs a les dades de Norma43 i als habilitats per l'usuari
+            var cccs = values!.Select(x => x.FullCcc).Distinct().ToList();
+            //allBancs = allBancs!.Where(x => cccs.Any(y => x.Norma43Ccc() == y) && emps!.Any(y => x.Emp == y)).ToList();
+            var bancs1 = allBancs!.Where(x => cccs.Any(y => x.Norma43Ccc() == y)).ToList();
+            var bancs2 = allBancs!.Where(x => emps!.Any(y => x.Emp == y)).ToList();
+            // emps esta buit a bancs2
+            bancs = allBancs!.Where(x => cccs.Any(y => x.Norma43Ccc() == y) && emps!.Any(y => x.Emp == y)).ToList();
+
+            //restringeix les empreses als bancs habilitats
+            emps = bancs!.Select(x => x.Emp).Distinct().ToList();
+
+        }
+        selectedItem = null;
+    }
+
+    void AfterTemplateUpdateHandler(Norma43.Template pattern)
+    {
+        patterns?.Add(pattern);
+    }
+
+    async Task HandleFilesInputAsync(List<Media> values)
+    {
+        try
+        {
+            foreach(var media in values)
+            {
+                if (media.Mime == Media.MimeCods.Txt && DTO.Integracions.Banca.Norma43.Validate(media.Data))
+                {
+                    var bytes = media.Data!;
+                    var src = System.Text.Encoding.UTF7.GetString(bytes);
+                    await ApiService.PostAsync<string, bool>(src, "Norma43");
+                    await RefrescaAsync();
+                    await Task.Yield();
+                }
+                else
+                    throw new Exception("fitxer no valid com a Norma 43");
+            }
+                    await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    // async Task HandleFileInput(NavigationArgs args)
+    // {
+    //     await RefrescaAsync();
+    //     await InvokeAsync(StateHasChanged);
+    // }
+
+    void HandleTemplates()
+    {
+        NavigationManager.NavigateTo("Norma43Templates");
+    }
+
+}

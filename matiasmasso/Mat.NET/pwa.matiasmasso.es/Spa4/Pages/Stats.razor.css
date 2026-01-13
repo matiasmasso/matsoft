@@ -1,0 +1,26 @@
+﻿.Grid {
+    display: grid;
+    grid-template-columns: 1fr min-content min-content 40px;
+    grid-column-gap: 20px;
+    grid-row-gap: 10px;
+}
+
+.Caption {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.Qty, .Eur, .MenuButton {
+    text-align: right;
+}
+.Eur {
+    white-space:nowrap;
+}
+.MenuItem {
+    grid-column: 1/-1;
+}
+
+.Line {
+    grid-column: 1/-1;
+    border-bottom:1px solid gray;
+}

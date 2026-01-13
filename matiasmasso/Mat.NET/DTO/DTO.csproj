@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DTOContest.cs" />
+    <Compile Remove="DTOContestBase.cs" />
+    <Compile Remove="DTOIpLookup.cs" />
+    <Compile Remove="DTOProductUrl.cs" />
+    <Compile Remove="Extensions\EmptyStringDataAnnotationsModelMetadataProvider.cs" />
+    <Compile Remove="GlobalStrings.es.Designer.cs" />
+    <Compile Remove="Integracions\Vivace\ShipmentsReport_Deprecated.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--<None Remove="DTOJsonSchema.vb" />-->
+    <None Remove="DTOSubscription.vb" />
+    <None Remove="Integracions\Bebitus.vb" />
+    <None Remove="Integracions\DTOCsvPOBebitus.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EdiHelperStd\EdiHelperStd.csproj" />
+    <ProjectReference Include="..\MatHelperStd\MatHelperStd.vbproj" />
+    <ProjectReference Include="..\MatHelper\MatHelper.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="GlobalStrings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>GlobalStrings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="GlobalStrings.es.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="GlobalStrings.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>GlobalStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.ServiceModel">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.ServiceModel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Extensions">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Web.Extensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

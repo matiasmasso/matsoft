@@ -1,0 +1,134 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="Wrapper">
+    @if (ApiService.Enlaces() == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+             <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nou enllaç</a>
+         </PageOptions>
+     </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+            <Virtualize Items="@(FilteredItems() ?? new())" Context="item">
+                <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Details">
+                        <div>@item.FchLocation?.Fch?.Fch1</div>
+                        <div>@item.FchLocation?.Location</div>
+                        @* <div>@ApiService.Location(item.FchLocation?.Location?.Guid)</div> *@
+                    </div>
+                    <div class="Conjuge">
+                        <div class="Icon">
+                            <Icon Id="@(HasAncestor(Marit(item)) ? Icon.Ids.Star : Icon.Ids.None)"></Icon>
+                        </div>
+                        <div class="Nom Truncate">@Marit(item)?.FullNom2()</div>
+                    </div>
+                    <div class="Conjuge">
+                        <div class="Icon">
+                            <Icon Id="@(HasAncestor(Muller(item)) ? Icon.Ids.Star : Icon.Ids.None)"></Icon>
+                        </div>
+                        <div class="Nom Truncate">@Muller(item)?.FullNom2()</div>
+                    </div>
+                </a>
+                @* <div class="GridRowDivider"></div> *@
+            </Virtualize>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<EnlaceModel> ItemSelected { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+    List<EnlaceModel>? enlaces;
+    List<AncestorModel>? ancestors;
+    IModel? selectedItem;
+    string? searchTerm;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+        ancestors = ApiService.RootAncestors();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        var allEnlaces = ApiService.Enlaces();
+        if (allEnlaces != null && ApiService.Persons() != null)
+        {
+            enlaces = ApiService.Persons()?
+           .Where(x => x.Pare != null || x.Mare != null)
+           .Select(x => new Tuple<Guid?, Guid?>(x.Pare, x.Mare)).Distinct()
+           .Where(x => !allEnlaces.Any(y => x.Item1 == y.Marit && x.Item2 == y.Muller))
+           .Select(x => new EnlaceModel { Marit = x.Item1, Muller = x.Item2 })
+           .ToList();
+
+            enlaces?.AddRange(allEnlaces);
+
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    void ItemClick(EnlaceModel item)
+    {
+        if (ItemSelected.HasDelegate)
+            ItemSelected.InvokeAsync(item);
+        else
+            selectedItem = item;
+    }
+
+    void AddNew()
+    {
+        if (AddNewRequest.HasDelegate)
+            AddNewRequest.InvokeAsync();
+        else
+            ItemClick(EnlaceModel.Factory());
+    }
+
+    List<EnlaceModel>? FilteredItems()
+    {
+        List<EnlaceModel>? retval = null;
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = ApiService.Enlaces();
+        else
+        {
+            retval = enlaces?
+                .Where(x => (ApiService.Person(x.Marit)?.Matches(searchTerm) ?? false)
+                || (ApiService.Person(x.Muller)?.Matches(searchTerm) ?? false)
+                ).ToList();
+        }
+        return retval;
+    }
+
+    bool HasAncestor(PersonModel? item)
+    {
+        var retval = ApiService.HasAncestors(item, ancestors);
+        return retval;
+    }
+
+    PersonModel? Marit(EnlaceModel item) => ApiService.Person(item.Marit);
+    PersonModel? Muller(EnlaceModel item) => ApiService.Person(item.Muller);
+
+
+    public void Dispose()
+    {
+        ApiService.OnChange += Refresca;
+    }
+}

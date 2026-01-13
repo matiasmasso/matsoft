@@ -1,0 +1,16 @@
+﻿.Wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    font-size: 1.8em;
+    font-weight: 800;
+    color: gray;
+    margin-bottom: 20px;
+}
+.Wrapper > a {
+    display:inline-block;
+    margin-right:10px;
+}
+.Anchor {
+    color:black;
+}

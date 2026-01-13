@@ -1,0 +1,20 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@inject ApiEndpointService EndpointService
+@inject IWebAssemblyHostEnvironment HostEnv
+
+@if (HostEnv.IsDevelopment())
+{
+    <button @onclick="ClickHandler" class="btn btn-reset">
+        @EndpointService.CurrentClientName
+    </button>
+}
+
+@code {
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    async Task ClickHandler()
+    {
+        EndpointService.Toggle();
+        await OnClick.InvokeAsync();
+    }
+}

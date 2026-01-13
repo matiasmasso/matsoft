@@ -1,0 +1,23 @@
+﻿@page "/DocRels"
+
+<div class="PageWrapper">
+    @if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>Rols</h1>
+        <DocRels ItemSelected="ItemSelectedHandler"></DocRels>
+    }
+</div>
+
+@code {
+    IModel? selectedItem;
+
+    void ItemSelectedHandler(IModel item)
+    {
+        selectedItem = item;
+    }
+}

@@ -1,0 +1,110 @@
+﻿@inject CultureService culture
+@inject EmpsService empsService
+
+<div class="PageWrapper600">
+
+    @if (Model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h3>@(Model?.Abr ?? "Emp")</h3>
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("General")">
+
+
+                <div class="Properties">
+                    <div class="Label">@culture.Localize("Abr")</div>
+                    <div class="Value">
+                        <input type="text" @bind="Model.Abr"/>
+                    </div>
+                </div>
+
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>state = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequest"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateAsync"></ButtonsBar>
+                </div>
+
+            </TabPage>
+        </TabControl>
+    }
+
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public EmpModel Model { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    enum Fields
+    {
+        Abr,
+        Nom
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        gridModel = new PropertyGridModel(Model);
+        gridModel.AddString((int)Fields.Abr, Model?.Abr, culture.Localize("Abr"));
+        gridModel.AddString((int)Fields.Nom, Model?.Nom, culture.Localize("Nom"));
+        //gridModel.AddBool((int)Fields.NoEcom, Model?.NoEcom, culture.Localize("Sku.NoEcom"));
+    }
+
+
+    void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    async Task UpdateAsync()
+    {
+        try
+        {
+            //Model!.Brand = brand!.Guid;
+            //Model!.NoEcom = gridModel!.GetBool((int)Fields.NoEcom);
+            //await empsService.UpdateAsync(Model);
+            CancelRequest();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void DeleteRequest()
+    {
+        try
+        {
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task EditorRequestHandler(ModelEditor.Breadcrumb breadcrumb)
+    {
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+
+}

@@ -1,0 +1,55 @@
+﻿.CloseButton {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.UsrLog {
+    font-size: 0.8em;
+    color: darkgray;
+}
+
+.Items {
+    display: grid;
+    grid-column-gap: 10px;
+    margin-top:15px;
+}
+
+.Item {
+    display:contents;
+}
+
+
+.Qty, .Price, .Dto, .Amt{
+    white-space: nowrap;
+    text-align: right;
+}
+
+/*----------------mobile ---------------*/
+@media(max-width:600px) {
+
+    .Sku {
+        grid-column: 1/-1;
+    }
+
+    .Items.IsHiddingDto {
+        grid-template-columns: 1fr min-content min-content;
+    }
+
+    .Items.IsShowingDto {
+        grid-template-columns: 1fr min-content min-content min-content;
+    }
+
+}
+
+
+/*----------------desktop ---------------*/
+@media(min-width:599px) {
+
+    .Items.IsHiddingDto {
+        grid-template-columns: 1fr min-content min-content min-content;
+    }
+
+    .Items.IsShowingDto {
+        grid-template-columns: 1fr min-content min-content min-content min-content;
+    }
+}

@@ -1,0 +1,94 @@
+﻿@inherits _Base
+
+<div id="Overlay" class="@(_visible ? "":"Hidden")">
+    <div class="Dialog">
+        <div class="Header">
+            <div class="Title">
+                @if (Mode == Modes.Warning)
+                {
+                    <i class="fa-duotone fa-triangle-exclamation"></i>
+                }
+                else
+                {
+                    <i class="fa-light fa-circle-info"></i>
+                }
+                &nbsp;
+                @Title
+            </div>
+            <a href="#" @onclick="CancelClick" @onclick:preventDefault class="CloseButton">
+                <i class="fa-solid fa-xmark"></i>
+            </a>
+        </div>
+        <div class="Body">
+            @((MarkupString)Body)
+        </div>
+
+
+        <div class="Footer">
+            @if (Mode == Modes.OkCancel)
+            {
+                <a href="#" class="CancelButton" @onclick="CancelClick" @onclick:preventDefault>
+                    @Localizer("Cancel")
+                </a>
+                <a href="#" class="OkButton" @onclick="OkClick" @onclick:preventDefault>
+                    @Localizer("Submit")
+                </a>
+            }
+            else
+            {
+                <a href="#" class="CancelButton" @onclick="OkClick" @onclick:preventDefault>
+                    @Localizer("Cancel")
+                </a>
+            }
+        </div>
+
+    </div>
+</div>
+
+
+@code {
+    private bool _visible
+    {
+        get => Visible;
+        set
+        {
+            VisibleChanged.InvokeAsync(false);
+            if (OnClose.HasDelegate) OnClose.InvokeAsync(result);
+            StateHasChanged();
+        }
+    }
+
+    private Results result;
+
+    [Parameter] public bool Visible { get; set; } = false;
+    [Parameter] public Modes Mode { get; set; } = Modes.Info;
+    [Parameter] public string Title { get; set; } = "MATIAS MASSO, S.A.";
+    [Parameter] public string Body { get; set; } = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+    [Parameter] public EventCallback<Results> OnClose { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    public enum Modes
+    {
+        Info,
+        Warning,
+        OkCancel
+    }
+
+    public enum Results
+    {
+        Ok,
+        Cancel
+    }
+    private void CancelClick()
+    {
+        result = Results.Cancel;
+        _visible = false;
+    }
+
+    private void OkClick()
+    {
+        result = Results.Ok;
+        _visible = false;
+    }
+
+}

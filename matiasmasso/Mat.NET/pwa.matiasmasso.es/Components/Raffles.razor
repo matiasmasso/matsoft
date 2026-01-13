@@ -1,0 +1,131 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@Localizer("Raffles")</h1>
+
+        <div class="Grid">
+            @foreach (var item in model)
+            {
+                @if (item == next)
+                {
+                    <div class="Item">
+                        <div class="Thumbnail Banner">
+                            <i class="fa-light fa-alarm-clock"></i>
+                        </div>
+                        <div>
+                            <div class="Title">@Localizer("Raffle.NextFchFrom",string.Format("{0:dd/MM/yy} {0:HH:mm}",item.FchFrom))</div>
+                            <div class="Properties">
+                                <UxTimer FchTo="item.FchFrom" FchReached="@(()=>{StateHasChanged();})"></UxTimer>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a class="Item @(model.IndexOf(item)>seemore ? "Hidden":"")" href="#"
+                        @onclick="@(() => ItemClick(item))" @onclick:preventDefault="true">
+
+                        <div class="Thumbnail HideOnMobile">
+                            <img src="@item.ThumbnailUrl()" width="178" height="125" />
+                        </div>
+                        <div class="Banner HideOnDesktop">
+                            <img src="@item.ImgBanner600Url()" width="600" height="200" />
+                        </div>
+                        <div>
+                            <div class="Title">@item.Title</div>
+                            <div class="Properties">
+                                <div class="PropsGrid">
+                                    <div class="HideOnDesktop">@Localizer("Dates")</div>
+                                    <div class="HideOnDesktop">@string.Format("{0:dd/MM/yy}-{1:dd/MM/yy}",item.FchFrom,item.FchTo)</div>
+                                    <div class="HideOnMobile">@Localizer("StartDate")</div>
+                                    <div class="HideOnMobile">@string.Format("{0:dd/MM/yy}",item.FchFrom)</div>
+                                    <div class="HideOnMobile">@Localizer("RaffleDate")</div>
+                                    <div class="HideOnMobile">@string.Format("{0:dd/MM/yy}",item.FchTo)</div>
+                                    @if (item.IsActive())
+                                    {
+                                        <div class="HideOnMobile">&nbsp;</div>
+                                        <div class="CallToAction">@Localizer("PlayYoureStillOnTime")</div>
+                                    }
+                                    else
+                                    {
+                                        <div>@Localizer("Winner")</div>
+                                        <div>@item.WinnerFullNom()</div>
+                                    }
+
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            }
+        </div>
+
+        <a class="SeeMore" href="#" @onclick="(()=>{seemore+=12;})" @onclick:preventDefault="true">
+            @Localizer("SeeMore")
+        </a>
+    }
+
+
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    List<RaffleModel>? model;
+    private int seemore = 12;
+    private RaffleModel? next;
+    private RaffleModel? current;
+    private ProblemDetails? problemDetails;
+
+    void ItemClick(RaffleModel item)
+    {
+        if (item.IsActive())
+            navigationManager.NavigateTo(item.PlayUrl());
+        else
+            navigationManager.NavigateTo(item.PropertyPageUrl());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (model == null)
+            {
+                var apiResponse = await GetAsync<List<RaffleModel>>("raffles");
+                if (apiResponse.Value != null)
+                {
+                    var allRaffles = apiResponse.Value;
+                    var past = allRaffles.Where(x => x.FchTo <= DateTime.Today).ToList();
+                    current = allRaffles.FirstOrDefault(x => x.IsActive());
+                    next = allRaffles.Where(x => x.FchFrom > DateTime.Today).FirstOrDefault();
+                    model = past;
+                    if (current is null)
+                    {
+                        if (next != null)
+                        {
+                            model.Insert(0, next);
+                        }
+                    }
+                    else
+                        model.Insert(0, current);
+
+                }
+                else
+                    problemDetails = apiResponse.ProblemDetails;
+
+                StateHasChanged();
+            }
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+
+    //private TimeSpan TimeLeft() => (TimeSpan)(next.FchFrom - DateTime.Now);
+}

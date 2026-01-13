@@ -1,0 +1,27 @@
+﻿.Wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    /*overflow: auto;*/
+    /*gap:10px;*/
+}
+
+        .Wrapper ::deep > * {
+            padding: 0 10px;
+            white-space: nowrap;
+            width: max-content;
+        }
+
+            .Wrapper ::deep > *:hover {
+                background-color: #f0f0f0;
+            }
+
+            .Wrapper ::deep > *:first-child {
+                padding: 0 10px 0 0;
+                text-align: left;
+            }
+
+            .Wrapper ::deep > *:not(:first-child) {
+                border-left: 1px solid black;
+            }
+

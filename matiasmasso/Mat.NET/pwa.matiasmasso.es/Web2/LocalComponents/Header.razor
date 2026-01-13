@@ -1,0 +1,20 @@
+﻿@inject NavigationManager NavigationManager
+
+<div class="Wrapper">
+    
+    <NavLink class="Membrete" href="#">
+        <img src="img/Membrete-553x48.jpg" height=48 width=553 />
+    </NavLink>
+
+    <div class="Misc">
+        <a href="#" class="Hamburger"
+           @onclick="ToggleMenu"
+           @onclick:preventDefault>
+            <Icon Id = "@Icon.Ids.Hamburger"></Icon>
+        </a>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback ToggleMenu { get; set; }
+}

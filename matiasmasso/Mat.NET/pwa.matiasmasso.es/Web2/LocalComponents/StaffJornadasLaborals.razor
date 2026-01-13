@@ -1,0 +1,173 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject JornadasLaboralsService jornadasLaboralsService
+
+<div class="Wrapper">
+    @if (items == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="SelectedValues">
+            @foreach (var filter in filters)
+            {
+                <a href="#" @onclick="@(()=>FilterClick(filter))" @onclick:preventDefault>
+                    <div>@(filter.Caption ?? "?")</div>
+                    <Icon Id="Icon.Ids.Xmark"></Icon>
+                </a>
+            }
+        </div>
+
+        <div class="Grid">
+            @if (SelectedYear() == null)
+            {
+                @foreach (var year in Years() ?? new())
+                {
+                    <a class="SelectedYear" href="#" @onclick="@(()=>YearClick(year))" @onclick:preventDefault="true">
+                        <span>@year</span>
+                    </a>
+                    <div class="Line"></div>
+
+                }
+            }
+            else if (SelectedMonth() == null)
+            {
+                @foreach (var month in Months() ?? new())
+                {
+                    <a class="SelectedMonth" href="#" @onclick="@(()=>MonthClick(month))" @onclick:preventDefault="true">
+                        <span>@culture.Lang().MonthAbr(month)</span>
+                    </a>
+                    <div class="Line"></div>
+                }
+
+            }
+            else
+            {
+                <div class="Item ColumnHeaders">
+                    <div class="FchFrom">@culture.Localize("Day")</div>
+                    <div class="FchFrom">@culture.Localize("Entry")</div>
+                    <div class="FchTo">@culture.Localize("Exit")</div>
+                </div>
+
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a class="Item" href="#" @onclick:preventDefault="true">
+                        <div class="Day">@item.DayFullName(culture.Lang())</div>
+                        <div class="HourFrom">@item.FchFrom.ToString("HH:mm")</div>
+                        <div class="HourTo">@(item.FchTo?.ToString("HH:mm") ?? "")</div>
+                    </a>
+                    <div class="Line"></div>
+                }
+            }
+        </div>
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public StaffModel? Model { get; set; }
+
+    List<JornadaLaboralModel>? items;
+    List<Filter> filters = new();
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        jornadasLaboralsService.OnChange += Refresca;
+
+    }
+    protected override void OnParametersSet()
+    {
+        Refresca(null);
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        items = jornadasLaboralsService.Values?.Where(x => x.Staff == Model?.Guid).ToList();
+        var firstItem = items?.FirstOrDefault();
+        if (firstItem != null)
+        {
+            filters = new List<Filter>()
+            {
+                new Filter( Filter.Levels.Year, firstItem.FchFrom.Year, firstItem.FchFrom.Year.ToString()),
+                new Filter( Filter.Levels.Month, firstItem.FchFrom.Month,culture.Lang().MonthAbr(firstItem.FchFrom.Month))
+            };
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<int>? Years()
+    {
+        return items?.GroupBy(x => x.FchFrom.Year).Select(x => x.First().FchFrom.Year).ToList();
+    }
+
+    private List<int>? Months()
+    {
+        return items?
+        .Where(x => x.FchFrom.Year == SelectedYear())
+        .GroupBy(x => x.FchFrom.Month).Select(x => x.First().FchFrom.Month).ToList();
+    }
+
+    private List<JornadaLaboralModel>? FilteredItems()
+    {
+        var year = SelectedYear();
+        var month = SelectedMonth();
+        var retval = items?
+        .Where(x => x.FchFrom.Year == year && x.FchFrom.Month == month)
+        .ToList();
+        return retval;
+    }
+
+    private int? SelectedYear() => filters.FirstOrDefault(x => x.Level == Filter.Levels.Year)?.Value;
+    private int? SelectedMonth() => filters.FirstOrDefault(x => x.Level == Filter.Levels.Month)?.Value;
+
+    private void YearClick(int year)
+    {
+        filters.Add(new Filter(Filter.Levels.Year, year, year.ToString()));
+    }
+
+    private void MonthClick(int month)
+    {
+        filters.Add(new Filter(Filter.Levels.Month, month, culture.Lang().MonthAbr(month)));
+    }
+
+    private void FilterClick(Filter filter)
+    {
+        var idx = filters.IndexOf(filter);
+        filters.RemoveRange(idx, filters.Count - idx);
+    }
+
+    public class Filter
+    {
+        public Levels Level { get; set; }
+        public int Value { get; set; }
+        public string? Caption { get; set; }
+
+        public enum Levels
+        {
+            Year,
+            Month,
+            Log
+        }
+
+        public Filter(Levels level, int value, string caption)
+        {
+            this.Level = level;
+            this.Value = value;
+            this.Caption = caption;
+        }
+    }
+
+    public void Dispose()
+    {
+        jornadasLaboralsService.OnChange -= Refresca;
+    }
+
+
+
+}

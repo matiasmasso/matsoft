@@ -1,0 +1,147 @@
+﻿h3.Center {
+    text-align:center;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: 12px min-content 150px 1fr 100px 1fr;
+    margin: 10px 0;
+    grid-column-gap: 10px;
+    max-width: 100%;
+}
+
+    .Grid.IsHiddingAnswereds {
+        grid-template-columns: min-content 200px 1fr;
+    }
+
+    .ColumnHeaders {
+        display: contents;
+    }
+.ColumnHeaders > div {
+    padding: 0 0 10px 0;
+}
+
+.Item{
+    display:contents;
+    cursor:pointer;
+}
+
+.Fch {
+    white-space:nowrap;
+}
+
+.Remitent, .Answerer {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Consulta, .Answer {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.Message{
+    position: relative;
+    margin:70px 0 10px;
+}
+
+    .Message .Rebut {
+        background-color: palegreen;
+    }
+
+    .Message .Enviat {
+        background-color: moccasin;
+    }
+
+.Avatar {
+    display:block;
+    position:absolute;
+    top:-70px;
+}
+
+.Message .Features {
+    position: absolute;
+    top: -25px;
+    right:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+}
+.Message .Body {
+    border-radius: 10px;
+    border: 1px solid gray;
+    margin: -10px 0 0 60px;
+    padding: 15px 15px 15px 36px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.Message ::deep textarea {
+    border:5px solid red;
+}
+
+.NoPendingMessages {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 300px;
+    text-align: center;
+    margin: 30px auto;
+}
+
+.Info {
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    font-size:1.17em;
+}
+
+    .Info ::deep svg {
+        width: 24px;
+        max-width: 24px;
+    }
+
+    .Info ::deep path {
+        fill: navy;
+    }
+
+@media (max-width:639px){
+    .Grid {
+        display:flex;
+        flex-direction: column;
+    }
+    .ColumnHeaders {
+        display:none;
+    }
+
+    .Item {
+        display:grid;
+        grid-template-areas: "ico fch"
+            "ico remitent"
+            "ico consulta";
+        grid-template-columns: 12px 1fr;
+        grid-column-gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid gray;
+    }
+
+    .Ico {
+        grid-area:ico;
+    }
+
+    .Fch {
+        grid-area: fch;
+    }
+
+    .Remitent {
+        grid-area: remitent;
+    }
+
+    .Consulta {
+        grid-area: consulta;
+    }
+
+
+}
+

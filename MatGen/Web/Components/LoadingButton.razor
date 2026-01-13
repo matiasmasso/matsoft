@@ -1,0 +1,23 @@
+﻿@if (IsLoading)
+{
+    <Loading></Loading>
+}
+else
+{
+    <a href="#" @onclick="OnClickHandler" @onclick:preventDefault>
+        @ChildContent
+    </a>
+}
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    //[Parameter] public string Caption { get; set; } = "Caption";
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; } 
+
+
+    void OnClickHandler()
+    {
+        OnClick.InvokeAsync();
+    }
+}

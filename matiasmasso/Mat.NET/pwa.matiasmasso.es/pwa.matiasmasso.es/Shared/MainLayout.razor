@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+
+<div class="PageWrapper">
+    <header>
+        <div>MATIAS MASSO, S.A.</div>
+        <a href="#" id="Hamburger" title="Menu" @onclick="ToggleMenu" @onclick:preventDefault>
+            <img src="/img/hamburger32.png" alt="Menu" width="32" height="32" />
+        </a>
+    </header>
+    <aside class="NavMenu" hidden="@hideNavMenu">
+        <NavMenu></NavMenu>
+    </aside>
+    <aside class="Left" hidden="@hideLeftAside">
+        Aside left
+    </aside>
+    <main>
+        @Body
+    </main>
+    <aside class="Right">
+        Aside right
+    </aside>
+    <footer>
+        Footer
+    </footer>
+</div>

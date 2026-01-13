@@ -1,0 +1,199 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    <h1>@Model?.Nom</h1>
+
+    <div class="PageOptions">
+        <PageOptions >
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nova població</a>
+        </PageOptions>
+    </div>
+
+
+    <TabControl>
+        <TabPage Text="General">
+            @if (dbState == DbState.IsLoading)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>dbState = DbState.IsDirty)"
+                              ItemSelected="SelectPgItem"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="dbState"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequestHandler"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+        </TabPage>
+
+        <TabPage Text="Persones">
+            <Persons Model="GetPersons()"
+            ItemSelected="SelectItem"    
+            ></Persons>
+        </TabPage>
+        <TabPage Text="Docs">
+            <Docs Items="GetDocs()"
+                  ItemSelected="SelectItem"></Docs>
+        </TabPage>
+        <TabPage Text="Poblacions">
+            <ChildLocations Values="Children()"
+                            ItemSelected="SelectItem"></ChildLocations>
+        </TabPage>
+
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public LocationModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback<object> ItemSelected { get; set; }
+
+    private LocationModel? value;
+    private PropertyGridModel? gridModel;
+    //private List<PersonModel>? persons;
+    private DbState dbState;
+    // private int selectedTab = 1;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Parent,
+        Nom,
+        NomLlarg
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        var parent = ApiService.Location(value?.Parent);
+        var parentCandidates = ApiService.PotentialParents(value);
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddDropdown<LocationModel>((int)Fields.Parent, parentCandidates, parent, "Parent");
+        gridModel.AddString((int)Fields.Nom, value?.Nom, "Nom", 100);
+        gridModel.AddString((int)Fields.NomLlarg, value?.NomLlarg, "Nom llarg", 100);
+    }
+
+    void AddNew()
+    {
+        var item = new LocationModel();
+        item.Nom = "(nova població)";
+        item.Parent = Model?.Guid;
+        ItemSelected.InvokeAsync(item);
+    }
+
+    private async Task UpdateRequest()
+    {
+        value!.Parent = gridModel!.GetValue<LocationModel?>((int)Fields.Parent)?.Guid;
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value!.NomLlarg = gridModel!.GetString((int)Fields.NomLlarg);
+
+        dbState = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        dbState = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private void SelectPgItem(PropertyGridModel.Item pgItem)
+    {
+        if (pgItem.Field == (int)Fields.Parent)
+        {
+            var location = (IModel)pgItem.Value!;
+            ItemSelected.InvokeAsync(location);
+        }
+    }
+
+    private void SelectItem(object args)
+    {
+        ItemSelected.InvokeAsync(args);
+    }
+
+    private List<LocationModel>? Children()
+    {
+        var retval = value == null ? null : ApiService.Locations()?
+        .Where(x => x.Parent == value.Guid)
+        .OrderBy(x => x.Nom)
+        .ToList();
+        return retval;
+    }
+
+    private List<PersonModel>? GetPersons()
+    {
+        List<PersonModel>? retval = null;
+        if (Model != null)
+        {
+            var recursiveLocations = ApiService.RecursiveChildren(Model);
+            recursiveLocations.Add(Model);
+            retval = ApiService.RecursivePersons(recursiveLocations);
+        }
+        return retval;
+    }
+
+    private List<DocModel>? GetDocs()
+    {
+        List<DocModel>? retval = null;
+        if (Model != null)
+        {
+            var recursiveLocations = ApiService.RecursiveChildren(Model);
+            recursiveLocations.Add(Model);
+            retval = ApiService.RecursiveDocs(recursiveLocations);
+        }
+        return retval;
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+}

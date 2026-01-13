@@ -1,0 +1,47 @@
+﻿.ContextMenu {
+    position: absolute;
+    display: inline-block;
+    min-width: 150px;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
+    box-shadow: 10px 10px 5px #DDDDDD;
+    background-color: white;
+    z-index: 1;
+    top:20px;
+    left:20px;
+}
+
+.Item {
+    display: block;
+    padding: 10px;
+}
+
+    .Item:not(:first-child) {
+        border-top: 1px solid gray;
+    }
+
+    .Item.Selected {
+        display: flex;
+        justify-content: space-between;
+        background-color: lightgray;
+    }
+
+.Spacer {
+    padding: 10px;
+}
+
+a {
+    color: black;
+}
+
+
+@media screen and (min-width:600px) {
+    .Item {
+        border-top: 0;
+        padding: 0 10px;
+    }
+}
+
+@media (max-width:600px) {
+
+}

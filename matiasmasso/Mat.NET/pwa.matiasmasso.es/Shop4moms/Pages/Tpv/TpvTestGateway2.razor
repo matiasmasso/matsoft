@@ -1,0 +1,31 @@
+﻿@page "/tpv/test/gateway2"
+<EditForm Model="@request" OnValidSubmit="@HandleValidSubmit" >
+    @if (request != null)
+    {
+        <input type="text" name="Ds_MerchantParameters" value="@request.Ds_MerchantParameters" />
+        <input type="text" name="Ds_Signature" value="@request.Ds_Signature" />
+        <input type="text" name="Ds_SignatureVersion" value="@request.Ds_SignatureVersion" />
+        <button type="submit">Submit</button>
+    }
+</EditForm>
+
+@code {
+    TpvService.Request? request;
+    private TpvService.Tpv? tpv;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        request = new TpvService.Request
+            {
+                Ds_MerchantParameters = "eyJEc19EYXRlIjoiMTMlMkYwMSUyRjIwMjMiLCJEc19Ib3VyIjoiMDAlM0EyOCIsIkRzX1NlY3VyZVBheW1lbnQiOiIxIiwiRHNfQ2FyZF9Db3VudHJ5IjoiNzI0IiwiRHNfQW1vdW50IjoiNDUwMCIsIkRzX0N1cnJlbmN5IjoiOTc4IiwiRHNfT3JkZXIiOiJaWkRBV0lSWTFNIiwiRHNfTWVyY2hhbnRDb2RlIjoiMzU3NTkyOTIyIiwiRHNfVGVybWluYWwiOiIwMDEiLCJEc19SZXNwb25zZSI6IjAwMDAiLCJEc19NZXJjaGFudERhdGEiOiIiLCJEc19UcmFuc2FjdGlvblR5cGUiOiIwIiwiRHNfQ29uc3VtZXJMYW5ndWFnZSI6IjIiLCJEc19BdXRob3Jpc2F0aW9uQ29kZSI6IjE2MDI0MiIsIkRzX0NhcmRfQnJhbmQiOiIxIiwiRHNfUHJvY2Vzc2VkUGF5TWV0aG9kIjoiMSIsIkRzX0NvbnRyb2xfMTY3MzU2NjA5MzY1NSI6IjE2NzM1NjYwOTM2NTUifQ==",
+                Ds_Signature = "cvObpouMy-bf0JIdOcUk-YTugZVvacCbMqRIAcuAaeU=",
+                Ds_SignatureVersion = "HMAC_SHA256_V1"
+            };
+    }
+
+    void HandleValidSubmit()
+    {
+        var a = 1;
+    }
+}

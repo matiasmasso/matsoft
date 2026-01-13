@@ -1,0 +1,23 @@
+﻿<textarea @oninput="HandleOnChange" rows="@Rows" cols="Cols">@_value</textarea>
+
+@code {
+
+    private string? _value;
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public int? Cols { get; set; } = 20;
+    [Parameter] public int? Rows { get; set; } = 2;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    private async Task HandleOnChange(ChangeEventArgs args)
+    {
+        _value = args?.Value?.ToString();
+        await ValueChanged.InvokeAsync(_value);
+    }
+
+    protected override void OnParametersSet()
+    {
+        _value = Value;
+        base.OnParametersSet();
+    }
+}

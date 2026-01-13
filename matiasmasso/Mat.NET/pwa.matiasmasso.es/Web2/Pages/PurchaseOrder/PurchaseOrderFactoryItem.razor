@@ -1,0 +1,70 @@
+﻿@inject CultureService culture
+@inject ProductsService productsService
+
+<div class="Wrapper">
+    <div class="Grid">
+        <div class="Thumbnail">
+            <img src="@thumbnailUrl" />
+        </div>
+
+
+        <div class="Details @(HasDiscount ? "HasDiscount":"")">
+            <div class="Nom">@skuNom</div>
+
+            <div class="Qty">@culture.Localize("Qty")</div>
+            <div class="Price">@culture.Localize("Price")</div>
+            @if (HasDiscount)
+            {
+                <div class="Dto">@culture.Localize("Dto")</div>
+            }
+            <div class="Amt">@culture.Localize("Amt")</div>
+
+
+            <div class="Qty">
+                <PlusMinusNum Value="value?.Qty"
+                              Moq="moq"
+                              ValueChanged="QtyChanged"></PlusMinusNum>
+            </div>
+            <div class="Price">
+                @($"{value?.Price:N2} €")
+            </div>
+            @if (HasDiscount)
+            {
+                <div class="Dto">
+                    <span>@($"{value?.Dto:N2} %")</span>
+                </div>
+            }
+            <div class="Amt">
+                @($"{value?.Amt():N2} €")
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter] public PurchaseOrderModel.Item? Value { get; set; }
+    [Parameter] public PurchaseOrderModel.Resources? Resources { get; set; }
+    [Parameter] public bool HasDiscount { get; set; }
+    [Parameter] public EventCallback<PurchaseOrderModel.Item> ValueChanged { get; set; }
+
+    PurchaseOrderModel.Item? value;
+    private string? skuNom;
+    private string? thumbnailUrl;
+    private int moq = 1;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        value = Value;
+        var sku = productsService.Sku(value?.Sku);
+        skuNom = sku?.RefYNomLlarg(culture.Lang());
+        thumbnailUrl = sku?.ThumbnailUrl();
+        moq = productsService.Moq(sku);
+    }
+
+    void QtyChanged(int qty)
+    {
+        value!.Qty = qty;
+        ValueChanged.InvokeAsync(value);
+    }
+
+}

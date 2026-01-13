@@ -1,0 +1,35 @@
+﻿.Grid {
+    display:grid;
+    grid-template-columns:1fr min-content;
+    grid-gap:1px;
+}
+
+.ColumnHeader {
+    font-weight:600;
+}
+
+.Brand.Nom {
+/*    padding: 0 0 0 10px;
+*/}
+.Amt {
+    white-space:nowrap;
+    text-align:right;
+}
+
+.Brand {
+    background-color: #C9EBEF;
+}
+
+.Category {
+    background-color: #94DFFF;
+}
+
+.Sku {
+    background-color: #69A6D1;
+    color: white;
+}
+
+.Selected {
+/*    font-weight:600;
+*/}
+

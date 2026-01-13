@@ -1,0 +1,8 @@
+﻿.Wrapper {
+    max-width: 600px;
+}
+.Buttons {
+    display:flex;
+    justify-content:right;
+    gap:10px;
+}

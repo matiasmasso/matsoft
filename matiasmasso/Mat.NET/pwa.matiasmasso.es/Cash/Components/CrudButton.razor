@@ -1,0 +1,66 @@
+﻿@if (State != States.Hidden)
+{
+    if (State == States.Loading)
+    {
+        <div class="Loading">
+            <Loading></Loading>
+        </div>
+    }
+    else if (State == States.Disabled)
+    {
+        <a href="#" class="Button Disabled" disabled @onclick:preventDefault>@Caption()</a>
+    }
+    else
+    {
+        <a class="Button @Mode.ToString()"
+           href="#" @onclick="ClickHandler"
+        @onclick:preventDefault>
+            @Caption()
+        </a>
+    }
+}
+
+
+@code {
+    [Parameter] public Modes Mode { get; set; } = Modes.Cancel;
+    [Parameter] public States State { get; set; } = States.StandBy;
+    [Parameter] public EventCallback<Modes> OnClick { get; set; }
+
+    Modes mode;
+
+    public enum States
+    {
+        StandBy,
+        Loading,
+        Disabled,
+        Hidden
+    }
+
+    public enum Modes
+    {
+        Update,
+        Cancel,
+        Delete
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        mode = Mode;
+    }
+
+    private string Caption()
+    {
+        switch (mode)
+        {
+            case Modes.Update:
+                return "Acceptar";
+            case Modes.Delete:
+                return "Eliminar";
+            default:
+                return "Cancel·lar";
+        }
+    }
+
+    private void ClickHandler() => OnClick.InvokeAsync(mode);
+}

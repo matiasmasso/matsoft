@@ -1,0 +1,17 @@
+﻿.Wrapper{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.Item {
+    display: flex;
+    gap: 10px;
+}
+
+.GridRowDivider {
+    margin: 10px 0;
+}
+
+
+/*issues found?*/

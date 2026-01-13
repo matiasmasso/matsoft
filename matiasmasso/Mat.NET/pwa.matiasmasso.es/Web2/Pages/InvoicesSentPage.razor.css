@@ -1,0 +1,28 @@
+﻿.Emps {
+    display: flex;
+    flex-direction: column;
+}
+
+    .Emps a {
+        display: block;
+    }
+
+.Years {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+}
+
+    .Years a {
+        display: inline-block;
+    }
+
+.Item {
+    display:grid;
+    grid-template-columns: 60px 100px minmax(100px,1fr) 100px;
+}
+
+.Eur {
+    display:flex;
+    justify-content: flex-end;
+}

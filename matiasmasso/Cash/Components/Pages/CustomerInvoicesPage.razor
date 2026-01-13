@@ -1,0 +1,310 @@
+﻿@page "/CustomerInvoices"
+@using System.Text.Json
+@using DTO.Integracions.Verifactu
+@using static DTO.Helpers.JsonConverters
+@inject ApiService ApiService
+@inject VerifactuService VerifactuService
+@inject IJSRuntime JS
+@inject HttpClient Http
+
+
+<div class="PageWrapper900">
+    @if (selectedItem != null)
+    {
+        <Model Value="selectedItem"
+               CloseRequest="@(() => selectedItem=null)"
+               AfterUpdate="@(()=> selectedItem = null)"></Model>
+@*         <Cca Value="selectedItem.Cca"
+             AfterUpdate="@(()=> selectedItem = null)"
+             CloseRequest="@(()=> selectedItem = null)"></Cca>
+ *@    }
+    else if (isAddingNewInvoice)
+    {
+        <CustomerInvoiceBuilder Emp="emp" AfterUpdate="HandleAfterInvoiceUpdate" CancelRequest="@(() => isAddingNewInvoice = false)"></CustomerInvoiceBuilder>
+    }
+    else
+    {
+        <h3>Factures emeses</h3>
+
+        <div class="PageOptions">
+            <PageOptions>
+                <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChangedAsync"></LookupEmp>
+                <LookupYears Values="years" Value="year" ValueChanged="YearChanged"></LookupYears>
+                <ButtonExcel LoadRequest="LoadExcel"></ButtonExcel>
+                <a href="#" @onclick:preventDefault @onclick="@(() => isAddingNewInvoice = true)">Afegir</a>
+            </PageOptions>
+        </div>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            <div class="Item HideOnMobile ColHeaders">
+                <div class="Icon">&nbsp;</div>
+                <div class="Verifactu">&nbsp;</div>
+                <div class="Number">Factura</div>
+                <div class="Fch">Data</div>
+                <div class="Truncate">Client</div>
+                <div class="Number">Base</div>
+                <div class="Number">Iva</div>
+                <div class="Number">Irpf</div>
+                <div class="Number">Total</div>
+            </div>
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <div class="Item">
+                    <div class="Icon">
+                        @if (item.Docfile == null)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                                <path d="M352 448V192H240c-26.5 0-48-21.5-48-48V32H64C46.3 32 32 46.3 32 64V448c0 17.7 14.3 32 32 32H320c17.7 0 32-14.3 32-32zm-.5-288c-.7-2.8-2.1-5.4-4.2-7.4L231.4 36.7c-2.1-2.1-4.6-3.5-7.4-4.2V144c0 8.8 7.2 16 16 16H351.5zM0 64C0 28.7 28.7 0 64 0H220.1c12.7 0 24.9 5.1 33.9 14.1L369.9 129.9c9 9 14.1 21.2 14.1 33.9V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z" />
+                            </svg>
+                        }
+                    </div>
+                    <div class="Verifactu">
+                        @if (string.IsNullOrEmpty(item.VfCsv))
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            <a href="@item?.VeriFactuQrUrl()" target="_blank" title="Verifactu QR">
+                            <svg width="16px" viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                                <g id="🔍-Product-Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                    <g id="ic_fluent_qr_code_24_filled" fill="#212121" fill-rule="nonzero">
+                                        <path d="M18.3346843,15 L18.3346843,18.3333333 L21.6671089,18.3333333 L21.666268,21.665268 L25.0004423,21.6660851 L25.0004423,24.9994184 L21.6671089,24.9994184 L21.6671089,21.6666667 L18.3346843,21.6660851 L18.3346843,24.9994184 L15.0013509,24.9994184 L15.0013509,21.6660851 L18.3337756,21.6666667 L18.3337756,18.3333333 L15.0013509,18.3333333 L15.0013509,15 L18.3346843,15 Z M10.499732,15.000268 C11.8804438,15.000268 12.999732,16.1195562 12.999732,17.500268 L12.999732,22.499732 C12.999732,23.8804438 11.8804438,24.999732 10.499732,24.999732 L5.50026804,24.999732 C4.11955617,24.999732 3.00026804,23.8804438 3.00026804,22.499732 L3.00026804,17.500268 C3.00026804,16.1195562 4.11955617,15.000268 5.50026804,15.000268 L10.499732,15.000268 Z M10.499732,17.000268 L5.50026804,17.000268 C5.22412567,17.000268 5.00026804,17.2241257 5.00026804,17.500268 L5.00026804,22.499732 C5.00026804,22.7758743 5.22412567,22.999732 5.50026804,22.999732 L10.499732,22.999732 C10.7758743,22.999732 10.999732,22.7758743 10.999732,22.499732 L10.999732,17.500268 C10.999732,17.2241257 10.7758743,17.000268 10.499732,17.000268 Z M9.75,18.25 L9.75,21.75 L6.25,21.75 L6.25,18.25 L9.75,18.25 Z M25.0004423,15 L25.0004423,18.3333333 L21.6671089,18.3333333 L21.6671089,15 L25.0004423,15 Z M10.499732,3.00026804 C11.8804438,3.00026804 12.999732,4.11955617 12.999732,5.50026804 L12.999732,10.499732 C12.999732,11.8804438 11.8804438,12.999732 10.499732,12.999732 L5.50026804,12.999732 C4.11955617,12.999732 3.00026804,11.8804438 3.00026804,10.499732 L3.00026804,5.50026804 C3.00026804,4.11955617 4.11955617,3.00026804 5.50026804,3.00026804 L10.499732,3.00026804 Z M22.499732,3.00026804 C23.8804438,3.00026804 24.999732,4.11955617 24.999732,5.50026804 L24.999732,10.499732 C24.999732,11.8804438 23.8804438,12.999732 22.499732,12.999732 L17.500268,12.999732 C16.1195562,12.999732 15.000268,11.8804438 15.000268,10.499732 L15.000268,5.50026804 C15.000268,4.11955617 16.1195562,3.00026804 17.500268,3.00026804 L22.499732,3.00026804 Z M10.499732,5.00026804 L5.50026804,5.00026804 C5.22412567,5.00026804 5.00026804,5.22412567 5.00026804,5.50026804 L5.00026804,10.499732 C5.00026804,10.7758743 5.22412567,10.999732 5.50026804,10.999732 L10.499732,10.999732 C10.7758743,10.999732 10.999732,10.7758743 10.999732,10.499732 L10.999732,5.50026804 C10.999732,5.22412567 10.7758743,5.00026804 10.499732,5.00026804 Z M22.499732,5.00026804 L17.500268,5.00026804 C17.2241257,5.00026804 17.000268,5.22412567 17.000268,5.50026804 L17.000268,10.499732 C17.000268,10.7758743 17.2241257,10.999732 17.500268,10.999732 L22.499732,10.999732 C22.7758743,10.999732 22.999732,10.7758743 22.999732,10.499732 L22.999732,5.50026804 C22.999732,5.22412567 22.7758743,5.00026804 22.499732,5.00026804 Z M21.75,6.25 L21.75,9.75 L18.25,9.75 L18.25,6.25 L21.75,6.25 Z M9.7473196,6.2526804 L9.7473196,9.7473196 L6.2526804,9.7473196 L6.2526804,6.2526804 L9.7473196,6.2526804 Z" id="🎨-Color">
+                                        </path>
+                                    </g>
+                                </g>
+                            </svg>
+                            </a>
+                        }
+                    </div>
+                    <div class="Fra Number">@item.FraNum</div>
+                    <div class="Fch">@($"{item.Fch:dd/MM/yy}")</div>
+
+                    <ListItem Title="@ApiService.GetContact(item.Customer)?.ToString()"
+                              Tooltip="clic aquí per obrir l'assentament"
+                              OnClick="@(() => selectedItem = item)"
+                              ContextMenu="@ContextMenu(item)"
+                              BusyKey="contextMenuBusyKey"
+                              MenuClick="ContextMenuClickAsync"></ListItem>
+
+
+                    @* <div class="Nom Truncate">@ApiService.GetContact(item.CliGuid)</div> *@
+                    <div class="Base Number HideOnMobile">@($"{item.BaseImponible:N2} €")</div>
+                    <div class="Iva Number HideOnMobile">@($"{item.IVA:N2} €")</div>
+                    <div class="Irpf Number HideOnMobile">@($"{item.IRPF:N2} €")</div>
+                    <div class="Total Number">@($"{item.Total:N2} €")</div>
+                </div>
+            }
+        </div>
+    }
+
+    <Error @bind-Value="exception"></Error>
+
+</div>
+
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<EmpModel.EmpIds>? emps;
+    List<int>? years;
+    List<CustomerInvoiceModel>? values;
+    EmpModel.EmpIds? emp;
+    int? year;
+    int? contextMenuBusyKey;
+    CustomerInvoiceModel? selectedItem;
+    string? searchterm;
+    bool isAddingNewInvoice;
+
+    Exception? exception;
+
+    enum MenuKeys
+    {
+        Zoom,
+        AltaVerifactu,
+        GetQR,
+        CheckQR,
+        RebuildPdf,
+        Delete
+    }
+
+    protected override void OnInitialized()
+    {
+        //ApiService.OnChange += Refresca;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        emp = ApiService.Emp;
+        await FetchAsync();
+        years = values?.Select(x => x.Fch.Year)
+            .Distinct()
+            .OrderByDescending(y => y)
+            .ToList() ?? new List<int>();
+
+        year = years?.FirstOrDefault();
+    }
+    // private void AddNew()
+    // {
+    //     selectedItem = new CustomerInvoiceModel
+    //     {
+    //         Emp = (EmpModel.EmpIds)emp!,
+    //         Fch = DateOnly.FromDateTime(DateTime.Today),
+    //         User = ApiService.CurrentUser()
+    //     };
+    // }
+
+    private async Task EmpChangedAsync(EmpModel.EmpIds args)
+    {
+        emp = args;
+        await FetchAsync();
+        years = values?.Select(x => x.Fch.Year)
+        .Distinct()
+        .OrderByDescending(y => y)
+        .ToList();
+
+        year = years?.FirstOrDefault();
+
+    }
+
+    private void YearChanged(int? args)
+    {
+        year = args;
+    }
+
+    private void ItemClick(CustomerInvoiceModel item)
+    {
+        selectedItem = item;
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            values = await ApiService.GetAsync<List<CustomerInvoiceModel>>("CustomerInvoices", $"{emp}");
+            values = values?.OrderByDescending(x => x.FraNum)
+            .ToList();
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    private async Task HandleAfterInvoiceUpdate(CustomerInvoiceModel args)
+    {
+        isAddingNewInvoice = false;
+        await FetchAsync();
+    }
+
+
+    private List<CustomerInvoiceModel>? FilteredItems()
+    {
+        var retval = values?.Where(x => x.Fch.Year == year).OrderByDescending(x => x.FraNum).ToList();
+        if (!string.IsNullOrEmpty(searchterm))
+        {
+
+            var amount = CustomerInvoiceModel.ParseAmount(searchterm);
+            if (amount == null)
+                retval = retval?.Where(x => x.Matches(searchterm)).ToList();
+            else
+                retval = retval?.Where(x => x.Matches(searchterm) || x.Matches(amount)).ToList();
+        }
+        return retval;
+    }
+
+    ContextMenuModel ContextMenu(CustomerInvoiceModel args)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, args);
+        var item = retval.AddItem("Enviar a hisenda", (int)MenuKeys.AltaVerifactu, args);
+        //item.Disabled = args.VfCsv != null;
+        retval.AddItem("Baixar QR", (int)MenuKeys.GetQR, args);
+        retval.AddItem("Validar QR", (int)MenuKeys.CheckQR, args);
+        retval.AddItem("Refer Pdf", (int)MenuKeys.RebuildPdf, args);
+        retval.AddItem($"Eliminar fra.{args.FraNum}", (int)MenuKeys.Delete, args);
+        return retval;
+    }
+
+    async Task ContextMenuClickAsync(ContextMenuModel.ClickEventArgs args)
+    {
+        try
+        {
+            contextMenuBusyKey = args.Key;
+            await Task.Yield();
+            var item = (CustomerInvoiceModel?)args.Tag;
+            switch ((MenuKeys?)args.Key)
+            {
+                case MenuKeys.Zoom:
+                    selectedItem = item;
+                    break;
+                case MenuKeys.AltaVerifactu:
+                    await VerifactuService.SendAsync(item!);
+                    break;
+                case MenuKeys.GetQR:
+                    var qr = await VerifactuService.GetQrBase64Async(item!);
+                    break;
+                case MenuKeys.CheckQR:
+                    var url = item?.VeriFactuQrUrl();
+                    await JS.InvokeVoidAsync("open", url, "_blank");
+                    break;
+                case MenuKeys.RebuildPdf:
+                    var customerInvoice = await ApiService.GetAsync<CustomerInvoiceModel>("customerInvoice", item!.Guid.ToString());
+                    if (customerInvoice != null)
+                    {
+                        if (!string.IsNullOrEmpty(item.VfCsv)) customerInvoice.VfQr = await VerifactuService.GetQrBase64Async(item);
+                        var pdf = await ApiService.PostAsync<CustomerInvoiceModel?, Byte[]>(customerInvoice, "CustomerInvoice/Pdf");
+                        var media = new Media(Media.MimeCods.Pdf, pdf);
+                        customerInvoice.Docfile = DocfileHelper.CreateDocfile(media, 350, 400);
+                        await ApiService.PostMultipartAsync<CustomerInvoiceModel, bool>(customerInvoice.Docfile, customerInvoice, "customerInvoice/rebuildPdf");
+                    }
+                    break;
+                case MenuKeys.Delete:
+                    var success = await ApiService.GetAsync<bool>("customerInvoice/delete", item!.Guid.ToString());
+                    if (success) values?.Remove(item);
+                    break;
+            }
+            contextMenuBusyKey = null;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+
+
+    void LoadExcel(DTO.Excel.Book book)
+    {
+        book.Filename = $"Factures emeses {emp.ToString()} {year}.xlsx";
+        var sheet = book.AddSheet("Factures emeses");
+        sheet.AddColumn("Factura", DTO.Excel.Cell.NumberFormats.Integer);
+        sheet.AddColumn("Data", DTO.Excel.Cell.NumberFormats.DDMMYY);
+        sheet.AddColumn("Client");
+        sheet.AddColumn("Base", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("Iva", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("Irpf", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("Total", DTO.Excel.Cell.NumberFormats.Euro);
+
+        foreach (var item in FilteredItems() ?? new())
+        {
+            var row = sheet.AddRow();
+            row.AddInt(item.FraNum, item.Cca?.Docfile?.DownloadUrl());
+            row.AddFch(item.Fch);
+            row.AddCell(ApiService.GetContact(item.Customer)?.RaoSocial);
+            row.AddEur(item.BaseImponible);
+            row.AddEur(item.IVA);
+            row.AddEur(item.IRPF);
+            row.AddEur(item.Total);
+        }
+    }
+}

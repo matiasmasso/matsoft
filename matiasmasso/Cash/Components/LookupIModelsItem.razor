@@ -1,0 +1,95 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div class="Wrapper ContextMenuContainer @(IsSelected() ? "Selected" : "")"
+@oncontextmenu:preventDefault
+@oncontextmenu="HandleContextMenu">
+
+    <a href="#" class="Caption"
+    @onclick="HandleContextMenu"
+    @onclick:preventDefault>
+
+        @if (string.IsNullOrEmpty(Value?.ToString()))
+        {
+            <span>&nbsp;</span>
+        }
+        else
+        {
+            <span>@Value?.ToString()</span>
+        }
+
+    </a>
+
+    @if (IsSelected())
+    {
+        <div class="ContextMenu" style="left:@(contextMenuOffset)px">
+            @if (Value != null)
+            {
+                @if (Value is ContactModel.Telefon)
+                {
+                    <a href="tel:@(((ContactModel.Telefon)Value).DialNumber())" @onclick="@(()=>ContextMenuClick())">Dial</a>
+                }else if (Value is ContactModel.Email)
+                {
+                    <a href="mailto:@(((ContactModel.Email)Value).EmailAddress)" @onclick="@(()=>ContextMenuClick())">Email</a>
+                }
+
+                @if (ZoomRequest.HasDelegate)
+                {
+                    <a href="#" @onclick:preventDefault @onclick="@(()=>ContextMenuClick("Zoom"))">Zoom</a>
+                }
+                @if (RemoveRequest.HasDelegate)
+                {
+                    <a href="#" @onclick:preventDefault @onclick="@(()=>ContextMenuClick("Remove"))">Remove</a>
+                }
+            }
+            <a href="#" @onclick:preventDefault @onclick="@(() => ContextMenuClick("AddNew"))">Add new</a>
+            <a href="#" @onclick:preventDefault @onclick="@(() => ContextMenuClick("Cancel"))">Cancel</a>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public IModel? Value { get; set; }
+    [Parameter] public IModel? SelectedValue { get; set; }
+    [Parameter] public EventCallback<IModel> ZoomRequest { get; set; }
+    [Parameter] public EventCallback<IModel> AddNewRequest { get; set; }
+    [Parameter] public EventCallback<IModel> RemoveRequest { get; set; }
+    [Parameter] public EventCallback<IModel?> SelectedValueChanged { get; set; }
+
+    double contextMenuOffset;
+    bool isSelected;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    private bool IsSelected() => isSelected && Value == SelectedValue; // && SelectedValue != null;
+
+    async Task ContextMenuClick(string? tag = null)
+    {
+        switch (tag)
+        {
+            case "Zoom":
+                await ZoomRequest.InvokeAsync(Value);
+                break;
+            case "AddNew":
+                await AddNewRequest.InvokeAsync(Value);
+                break;
+            case "Remove":
+                await RemoveRequest.InvokeAsync(Value);
+                break;
+           default:
+                await SelectedValueChanged.InvokeAsync();
+                break;
+        }
+        isSelected = false;
+    }
+
+    void HandleContextMenu(MouseEventArgs eventArgs)
+    {
+        isSelected = !isSelected;
+        contextMenuOffset = eventArgs.OffsetX;
+        SelectedValueChanged.InvokeAsync(Value);
+    }
+}

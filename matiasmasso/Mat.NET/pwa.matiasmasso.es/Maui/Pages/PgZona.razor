@@ -1,0 +1,160 @@
+﻿@inherits _ComponentBase
+
+<PropertyGrid model="@gridModel"
+              RequestToUpdate="SaveRequest"
+              RequestToDelete="DeleteRequest"
+              RequestToCancel="CancelRequest"
+              ErrorMessage="@errorMessage"
+              GetOptions="GetOptions"></PropertyGrid>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private ZonaModel? value;
+    private PropertyGridModel? gridModel;
+    private AtlasModel? atlas;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        Country,
+        ISO,
+        Nom,
+        Provincia,
+        Lang,
+        ExportCod,
+        Mod347
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Guid != null)
+        {
+            atlas = await base.Atlas();
+            value = atlas.Zona((Guid)Guid);
+            if (value != null)
+            {
+                var model = new PropertyGridModel();
+                model.AddEnum((int)Fields.Country, value.Country, value.Country.ToString(), atlas.Country(value.Country)?.Nom?.Tradueix(base.Lang()), "Pais", "Pais", "Country");
+                model.AddString((int)Fields.ISO, value.ISO, "ISO"); //https://service.unece.org/trade/locode/2022-1%20SubdivisionCodes.htm
+                model.AddString((int)Fields.Nom, value.Nom, "Nombre", "Nom", "Name");
+                model.AddEnum((int)Fields.Provincia, value.Provincia, value.Provincia.ToString(), value.Provincia == null ? "" : atlas.Provincia((Guid)value.Provincia)?.Nom ?? "", "Provincia", "Provincia", "Province");
+                model.AddEnum((int)Fields.Lang, value.Lang, value.Lang?.Id.ToString(), value.Lang?.Nom(base.Lang()), "Idioma", "Idioma", "Language");
+                model.AddEnum((int)Fields.ExportCod, value.ExportCod, ((int)value.ExportCod!).ToString(), ((CountryModel.ExportCods)(value.ExportCod)).ToString(), "Cod.Exportación", "Cod.Exportació", "Export code");
+                model.AddBool((int)Fields.Mod347, value.Mod347, "Mod.347");
+                gridModel = model;
+                StateHasChanged();
+            }
+        }
+    }
+
+
+    private async Task SaveRequest()
+    {
+        value!.Country = (Guid)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Country)?.Value;
+        value!.ISO = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.ISO)?.Value?.ToString();
+        value!.Nom = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Nom)?.Value?.ToString();
+        value!.Provincia = (Guid)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Provincia)?.Value;
+        value!.Lang = (LangDTO)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Lang)?.Value;
+        value!.ExportCod = (int)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.ExportCod)?.Value;
+        value!.Mod347 = (bool)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Mod347)?.Value;
+
+        if (await PostAsync<ZonaModel, bool>(value, "Zona"))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Zona/delete", value!.Guid.ToString()))
+        {
+            atlas!.Zonas.Remove(value);
+            CancelRequest();
+        }
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+    public async Task<List<Option>> GetOptions(PropertyGridModel.Item item)
+    {
+        List<Option> retval = new();
+        if (item.Field == (int)Fields.Country)
+        {
+            retval = atlas!.Countries
+            .Select(x => new Option
+                {
+                    Id = x.Guid.ToString(),
+                    Nom = x.Nom?.Tradueix(base.Lang()) ?? "?",
+                    Tag = x.Guid
+                }).ToList();
+        }
+        else if (item.Field == (int)Fields.Provincia)
+        {
+            retval = atlas!.Provincias
+            .Select(x => new Option
+                {
+                    Id = x.Guid.ToString(),
+                    Nom = x.Nom ?? "?",
+                    Tag = x.Guid
+                }).ToList();
+        }
+        else if (item.Field == (int)Fields.Lang)
+        {
+            retval = Enum.GetValues(typeof(LangDTO.Ids))
+            .Cast<LangDTO.Ids>()
+            .Where(x => x != LangDTO.Ids.Unknown)
+            .Select(x => new Option
+                {
+                    Id = x.ToString(),
+                    Nom = (new LangDTO(x)).Nom(base.Lang()),
+                    Tag = new LangDTO(x)
+                }).ToList();
+        }
+        else if (item.Field == (int)Fields.ExportCod)
+        {
+            retval.Add(new Option
+                {
+                    Id = ((int)CountryModel.ExportCods.Nacional).ToString(),
+                    Nom = base.Tradueix("Nacional", "Nacional", "National"),
+                    Tag = (int)CountryModel.ExportCods.Nacional
+                });
+            retval.Add(new Option
+                {
+                    Id = ((int)CountryModel.ExportCods.Intracomunitario).ToString(),
+                    Nom = base.Tradueix("Intracomunitario", "Intracomunitari", "EU"),
+                    Tag = (int)CountryModel.ExportCods.Intracomunitario
+                });
+            retval.Add(new Option
+                {
+                    Id = ((int)CountryModel.ExportCods.Extracomunitario).ToString(),
+                    Nom = base.Tradueix("Extracomunitario", "Extracomunitari", "Off-EU"),
+                    Tag = (int)CountryModel.ExportCods.Extracomunitario
+                });
+        }
+        else if (item.Field == (int)Fields.Mod347)
+        {
+            retval.Add(new Option
+                {
+                    Id = "1",
+                    Nom = base.Tradueix("Sí", "Sí", "Yes"),
+                    Tag = true
+                });
+            retval.Add(new Option
+                {
+                    Id = "0",
+                    Nom = base.Tradueix("No", "No", "No"),
+                    Tag = false
+                });
+        }
+
+        return retval;
+    }
+}

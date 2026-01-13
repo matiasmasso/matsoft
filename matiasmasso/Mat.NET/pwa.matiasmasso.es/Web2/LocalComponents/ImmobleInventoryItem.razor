@@ -1,0 +1,115 @@
+﻿@inject CultureService culture
+@inject CredencialsService credencialsService
+@inject IJSRuntime JSRuntime
+
+<div class="Wrapper">
+    <div class="HeaderRow">
+        <h3>@culture.Localize("Inventory.Element")</h3>
+        <CloseButton CloseRequest="RequestToClose"></CloseButton>
+    </div>
+
+    <TabControl>
+        <TabPage Text="@culture.Localize("Details")">
+            <div class="Label">@culture.Localize("Immoble")</div>
+            <div class="Value">
+                <input type="text" value="@immoble" disabled />
+            </div>
+
+
+            <div class="Label">@culture.Localize("Nom")</div>
+            <div class="Value">
+                <input type="text" @bind-value="nom" @oninput="SetDirty" />
+            </div>
+
+            <div class="Label">@culture.Localize("Obs")</div>
+            <div class="Value">
+                <textarea @oninput="ObsChanged">@obs</textarea>
+            </div>
+
+            <div class="ButtonsBar">
+                <ButtonsBar CanEdit="true"
+                            State="state"
+                            CanDelete="@(!(Model?.IsNew ?? false))"
+                            RequestToCancel="RequestToClose"
+                            RequestToDelete="DeleteRequest"
+                            RequestToUpdate="UpdateRequest"></ButtonsBar>
+            </div>
+        </TabPage>
+        <TabPage Text="@culture.Localize("Docs")">
+            <DocFiles Model = "Item?.Docfiles"></DocFiles>
+        </TabPage>
+    </TabControl>
+
+</div>
+
+@code {
+    [Parameter] public ImmobleModel? Model { get; set; }
+    [Parameter] public ImmobleModel.InventariItem? Item { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    string? immoble;
+    string? nom;
+    string? obs;
+    DbState state;
+    bool isShowingPassword;
+    Exception? exception;
+
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Model != null)
+        {
+            immoble = Model.Nom;
+            nom = Item.Nom;
+            obs = Item.Obs;
+        }
+    }
+    private async Task RequestToClose()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    private void SetDirty()
+    {
+        state = DbState.IsDirty;
+    }
+
+    private void ObsChanged(ChangeEventArgs args)
+    {
+        obs = args.Value?.ToString();
+        SetDirty();
+    }
+
+    private async Task UpdateRequest()
+    {
+        Item.Nom = nom;
+        Item.Obs = obs;
+
+        //try
+        //{
+        //    await immoblesService.UpdateAsync(Model);
+        //    await RequestToClose();
+        //}
+        //catch (Exception ex)
+        //{
+        //    exception = ex;
+        //}
+    }
+
+    private async Task DeleteRequest()
+    {
+        //try
+        //{
+        //    await credencialsService.DeleteAsync(Model);
+        //    await RequestToClose();
+        //}
+        //catch (Exception ex)
+        //{
+        //    exception = ex;
+        //}
+    }
+
+
+}
+

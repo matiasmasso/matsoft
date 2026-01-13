@@ -1,0 +1,93 @@
+﻿@page "/basket"
+@inherits _ComponentBase
+@inject IStringLocalizer<AppResource> Localizer
+
+<div class="Wrapper">
+
+    @if (SessionProvider?.Session?.Basket?.Items.Count == 0)
+    {
+
+        <div class="NoItems">
+            <p>@Localizer["NoItemsInBasketYet"]</p>
+
+            <a class="KeepPurchasing" href="/">
+                <img src="/img/chevrons-duotone-left.svg" />
+                @Localizer["KeepPurchasing"]
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="CallToAction">
+            <a class="KeepPurchasing" href="/">
+                <img src="/img/chevrons-duotone-left.svg" />
+                @Localizer["KeepPurchasing"]
+            </a>
+            <a class="CloseBasket" href="/submit">
+                @Localizer["CloseBasket"]
+                <img src="/img/chevrons-duotone-right.svg" />
+            </a>
+        </div>
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders">
+                <div>&nbsp;</div>
+                <div class="Nom">@Localizer["Product"]</div>
+                <div class="Qty">@Localizer["Units"]</div>
+                <div class="Price">@Localizer["Price"]</div>
+                <div class="Amount">@Localizer["Amount"]</div>
+                <div>&nbsp;</div>
+            </div>
+
+            @if (SessionProvider?.Cache != null)
+            {
+                @if (SessionProvider.Session?.Basket.Items.Count > 1)
+                {
+                    <div class="Item Totals">
+                        <div>&nbsp;</div>
+                        <div class="Nom">
+                            @Localizer["Total"]
+                        </div>
+                        <div class="Amount">@string.Format("{0:N2} €",SessionProvider.Session.Basket.Cash())</div>
+                        <div>&nbsp;</div>
+                    </div>
+                }
+
+                @foreach (var item in SessionProvider.Session?.Basket?.Items ?? new())
+                {
+                    <div class="Item">
+                        <div class="Thumbnail">
+                            <img src="@SessionProvider.Cache.ImageUrl(item.Sku!)" />
+                        </div>
+                        <div class="Nom">
+                            <div>@SessionProvider.Cache.CategoryNom(item.Sku!, lang!)</div>
+                            <div>@item.Sku!.Nom.Tradueix(lang!)</div>
+                        </div>
+                        <div class="Qty"><input type="number" @bind-value="@item.Qty" /></div>
+                        <div class="Price">@string.Format("{0:N2} €",item.Price)</div>
+                        <div class="Amount">@string.Format("{0:N2} €",item.Amount())</div>
+                        <a href="#" class="Del" @onclick="@(()=>SessionProvider.RemoveItemFromBasket(item))" @onclick:preventDefault>
+                            &nbsp;
+                        </a>
+                    </div>
+                }
+
+            }
+        </div>
+    }
+
+
+</div>
+
+@code {
+    LangDTO? lang = null;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        lang = Lang();
+    }
+
+    string Nom(ShoppingBasketModel.Item item) => SessionProvider?.Cache?.SkuFullNom(item.Sku, lang!) ?? "";
+
+}

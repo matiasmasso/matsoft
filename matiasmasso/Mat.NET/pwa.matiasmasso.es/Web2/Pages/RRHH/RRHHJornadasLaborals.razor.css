@@ -1,0 +1,64 @@
+﻿.Wrapper {
+    max-width:450px;
+}
+
+.SelectedValues {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+    .SelectedValues a {
+        display: inline-flex;
+        gap: 10px;
+        padding: 4px 7px 2px 4px;
+        border-radius: 5px;
+        border: 1px solid gray;
+        background-color: aliceblue;
+        margin: 0 10px 10px 0;
+    }
+
+.Grid {
+    display:grid;
+    grid-template-columns: 1fr min-content min-content;
+    grid-column-gap:10px;
+}
+
+.ColumnHeaders {
+    color: gray;
+}
+
+.ColumnHeaders > div {
+    padding: 10px 0;
+}
+
+
+
+/*.SelectedYear {
+    background-color: #E5BA73;
+}
+
+.SelectedMonth {
+    background-color: #FAEAB1;
+}*/
+
+.Item {
+    display:contents;
+    height:36px;
+}
+
+.HourFrom, .HourTo {
+    text-align:center;
+}
+
+.Line {
+    grid-column: 1/-1;
+    border-bottom: 1px solid #DDDDDD;
+}
+
+@media (max-width:599px){
+    .Day, .HourFrom, .HourTo {
+        padding: 10px 0;
+    }
+}
+
+

@@ -1,0 +1,120 @@
+﻿@page "/Verifactu"
+@* inject ApiService ApiService *@
+@using DTO.Integracions.Verifactu
+@using System.Text.Json
+@using System.Text
+@using System.Net.Http
+@using static DTO.Helpers.JsonConverters
+
+<div class="PageWrapper600">
+    <h3>Verifactu</h3>
+
+    <a href="#" @onclick:preventDefault @onclick="SendAsync" class="btn btn-primary" disabled="@isSending">
+        @if (isSending)
+        {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true">Sending...</span>
+            
+        }
+        else
+        {
+            <span>Send Invoice</span>
+                }
+                </a>
+</div>
+
+@code {
+    //private const string IreneCreateInvoiceUrl = "https://api.irene.solutions/v1/invoices"; // Replace with real endpoint
+    private const string IreneCreateInvoiceUrl = "https://facturae.irenesolutions.com:8050/Kivu/Taxes/Verifactu/Invoices/Create";
+    
+    private bool isSending;
+    private bool isError;
+    private string statusMessage;
+    private VfInvoiceResult? lastResult;
+
+    // Add HttpClient as a dependency
+    [Inject] private HttpClient Http { get; set; } = default!;
+
+    private async Task SendAsync()
+    {
+        isSending = true;
+        isError = false;
+        statusMessage = "Sending invoice to IreneSolutions...";
+        lastResult = null;
+
+        try
+        {
+            var invoice = BuildInvoice();
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = false
+            };
+            options.Converters.Add(new DateOnlyJsonConverter());
+
+            var json = JsonSerializer.Serialize(invoice, options);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Set any required headers here, e.g. API key or auth token:
+            // Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "<token>");
+
+            using var response = await Http.PostAsync(IreneCreateInvoiceUrl, content);
+
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Try to parse into VfInvoiceResult if the API returns that shape
+                try
+                {
+                    var result = JsonSerializer.Deserialize<VfInvoiceResult>(responseBody, options);
+                    lastResult = result;
+                    statusMessage = result?.ResultMessage ?? "Invoice created successfully.";
+                    isError = false;
+                }
+                catch
+                {
+                    statusMessage = "Invoice created successfully (unable to parse detailed result).";
+                    isError = false;
+                }
+            }
+            else
+            {
+                statusMessage = $"Error creating invoice: {(int)response.StatusCode} {response.ReasonPhrase}. Response: {responseBody}";
+                isError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Unexpected error: {ex.Message}";
+            isError = true;
+        }
+        finally
+        {
+            isSending = false;
+            StateHasChanged();
+        }
+    }
+
+    VfInvoice BuildInvoice()
+    {
+        var retval = new VfInvoice
+        {
+            Status = "POST",
+            InvoiceType = VfInvoice.VfInvoiceTypes.F1.ToString(),
+            InvoiceDate = new DateOnly(2025, 11, 1),
+            InvoiceID = "21",
+            SellerID = "B67246132",
+            CompanyName = "TATITA 84, S.L.",
+            RelatedPartyID = "B65712721",
+            RelatedPartyName = "MAGASALFA, S.L.",
+            Text = "Alquiler de local",
+            TaxItems = new List<VfTaxItem>
+        {
+             new VfTaxItem { TaxRate = 21, TaxBase = 4705.8M, TaxAmount = 4705.8M * 21/100  }
+        }
+        };
+
+        return retval;
+    }
+
+}

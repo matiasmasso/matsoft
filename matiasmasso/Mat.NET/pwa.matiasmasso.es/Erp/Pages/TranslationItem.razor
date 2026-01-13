@@ -1,0 +1,155 @@
+﻿@inherits _ComponentBase
+
+
+
+
+
+@if (isExpanded)
+{
+    <div class="Item Expanded">
+        <div class="Label">
+            <div>@Localizer("Spanish")</div>
+            <div class="Fch">@string.Format("{0:dd/MM/yy HH:mm:ss}",Item.FchEsp)</div>
+        </div>
+        <div>
+            <UxTextarea CanEdit="true" Value="@Item.Esp" ValueChanged="EspChanged"></UxTextarea>
+        </div>
+
+        <div class="Label">
+            <div>@Localizer("Catalan")</div>
+            <div class="Fch">@string.Format("{0:dd/MM/yy HH:mm:ss}",Item.FchCat)</div>
+        </div>
+        <div class="@(Item.IsOutdated(LangDTO.Cat())?"Outdated":"")">
+            <UxTextarea CanEdit="true" Value="@Item.Cat" ValueChanged="CatChanged"></UxTextarea>
+        </div>
+
+        <div class="Label">
+            <div>@Localizer("English")</div>
+            <div class="Fch">@string.Format("{0:dd/MM/yy HH:mm:ss}",Item.FchEng)</div>
+        </div>
+        <div class="@(Item.IsOutdated(LangDTO.Eng())?"Outdated":"")">
+            <UxTextarea CanEdit="true" Value="@Item.Eng" ValueChanged="EngChanged"></UxTextarea>
+        </div>
+
+        <div class="Label">
+            <div>@Localizer("Portuguese")</div>
+            <div class="Fch">@string.Format("{0:dd/MM/yy HH:mm:ss}",Item.FchPor)</div>
+        </div>
+        <div class="@(Item.IsOutdated(LangDTO.Por())?"Outdated":"")">
+            <UxTextarea CanEdit="true" Value="@Item.Por" ValueChanged="PorChanged"></UxTextarea>
+        </div>
+
+        <a class="Close" 
+            href="#" 
+            @onclick="@(()=>isExpanded = !isExpanded)" 
+            @onclick:preventDefault>
+            (@Localizer("Close"))
+        </a>
+    </div>
+}
+else
+{
+    <div class="Item Compact">
+        <div class="Lang">
+            <UxTextbox CanEdit="true" Value="@Item.Esp" ValueChanged="EspChanged"></UxTextbox>
+        </div>
+
+        <div class="Lang @(Item.IsOutdated(LangDTO.Cat())?"Outdated":"")">
+            <UxTextbox CanEdit="true" Value="@Item.Cat" ValueChanged="CatChanged"></UxTextbox>
+        </div>
+
+        <div class="Lang @(Item.IsOutdated(LangDTO.Eng())?"Outdated":"")">
+            <UxTextbox CanEdit="true" Value="@Item.Eng" ValueChanged="EngChanged"></UxTextbox>
+        </div>
+
+        <div class="Lang @(Item.IsOutdated(LangDTO.Por())?"Outdated":"")">
+            <UxTextbox CanEdit="true" Value="@Item.Por" ValueChanged="PorChanged"></UxTextbox>
+        </div>
+
+        <a class="Icon" 
+            href="#"
+           title="@Localizer("Expand")"
+           @onclick="@(()=>isExpanded = !isExpanded)"
+           @onclick:preventDefault>
+                <UxIcon Id="UxIcon.Ids.EllipsisVertical" Width="auto" Height="21px"></UxIcon>
+        </a>
+    </div>
+}
+
+
+
+
+
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+
+
+@code {
+    [Parameter] public LangTextModel Item { get; set; }
+    private new ProblemDetails problemDetails;
+    private bool isExpanded = false;
+
+    void EspChanged()
+    {
+
+    }
+
+    async Task EspChanged(string args)
+    {
+        var langItem = Item.Item(LangDTO.Esp());
+        langItem.Text = args;
+        ApiResponse<DateTime> apiResponse = await HttpService.PostAsync<LangTextModel.LangItem, DateTime>(http, langItem, "langtext/langItem");
+        if (apiResponse.Success())
+        {
+            Item.Esp = langItem.Text;
+            Item.FchEsp = apiResponse.Value;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    async Task CatChanged(string args)
+    {
+        var langItem = Item.Item(LangDTO.Cat());
+        langItem.Text = args;
+        ApiResponse<DateTime> apiResponse = await HttpService.PostAsync<LangTextModel.LangItem, DateTime>(http, langItem, "langtext/langItem");
+        if (apiResponse.Success())
+        {
+            Item.Cat = langItem.Text;
+            Item.FchCat = apiResponse.Value;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    async Task EngChanged(string args)
+    {
+        var langItem = Item.Item(LangDTO.Eng());
+        langItem.Text = args;
+        ApiResponse<DateTime> apiResponse = await HttpService.PostAsync<LangTextModel.LangItem, DateTime>(http, langItem, "langtext/langItem");
+        if (apiResponse.Success())
+        {
+            Item.Eng = langItem.Text;
+            Item.FchEng = apiResponse.Value;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    async Task PorChanged(string args)
+    {
+        var langItem = Item.Item(LangDTO.Por());
+        langItem.Text = args;
+        ApiResponse<DateTime> apiResponse = await HttpService.PostAsync<LangTextModel.LangItem, DateTime>(http, langItem, "langtext/langItem");
+        if (apiResponse.Success())
+        {
+            Item.Por = langItem.Text;
+            Item.FchPor = apiResponse.Value;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+
+}

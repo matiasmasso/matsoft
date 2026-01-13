@@ -1,0 +1,169 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject NominasService nominasService
+
+<div class="PageWrapper600">
+    @if (values == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+
+        @if (selectedYear == null)
+        {
+            <div class="Summary">
+                @culture.Tradueix("Selecciona un ejercicio:","Tria un exercici:","Select a year:")
+            </div>
+
+            <div class="Years">
+                @foreach (var year in Years() ?? new())
+                {
+                    <a href="#" @onclick="@(()=>selectedYear=year)" @onclick:preventDefault="true">
+                        <span>@year</span>
+                    </a>
+                    <div class="Line"></div>
+
+                }
+            </div>
+        }
+        else
+        {
+            <div class="Summary">
+                @string.Format(
+                    culture.Tradueix(
+                    "Se han encontrado {0} hojas de nómina, {1} dentro del ejercicio {2}",
+                    "S'han trobat {0} fulls de nómina, {1} dins l'exercici {2}",
+                    "{0} payroll sheets found, {1} within year {2}"
+                    )
+                    ,values?.Count(), FilteredItems()?.Count, selectedYear)
+            </div>
+
+            <div class="SelectedValues">
+                <a href="#" @onclick="@(()=>selectedYear=null)" @onclick:preventDefault="true">
+                    <span>@selectedYear</span>
+                    <Icon Id="Icon.Ids.Xmark" Width="12px"></Icon>
+                </a>
+            </div>
+
+            <div class="Grid">
+                <div class="Item ColumnHeaders HideOnMobile">
+                    <div>&nbsp;</div>
+                    <a class="Fch" href="#"
+                    @onclick="@(()=>SortColumn(Cols.Fch))"
+                    @onclick:preventDefault="true">
+                        @culture.Localize("Fch")
+                    </a>
+                    <a class="Brut" href="#"
+                    @onclick="@(()=>SortColumn(Cols.Gross))"
+                    @onclick:preventDefault="true">
+                        @culture.Localize("Gross")
+                    </a>
+                    <a class="Net" href="#"
+                    @onclick="@(()=>SortColumn(Cols.Net))"
+                    @onclick:preventDefault="true">
+                        @culture.Localize("Net")
+                    </a>
+                </div>
+
+                <div class="GridRowDivider"></div>
+
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a class="Item" href="@item.PdfUrl()" target="_blank">
+                        <div>
+                            <Icon Id="Icon.Ids.Doc" Width="20px"></Icon>
+                        </div>
+                        <div class="Fch">@item.Cca?.Fch?.ToString("dd/MM/yy")</div>
+                        <div class="Brut HideOnMobile">@string.Format("{0:N2} €",item.Devengat)</div>
+                        <div class="Net HideOnMobile">@string.Format("{0:N2} €", item.Liquid)</div>
+
+                        <div class="Brut HideOnDesktop">@string.Format("{0}:{1:N2} €", culture.Localize("Gross"),item.Devengat)</div>
+                        <div class="Net HideOnDesktop">@string.Format("{0}:{1:N2} €", culture.Localize("Net"),item.Liquid)</div>
+                    </a>
+                    <div class="GridRowDivider"></div>
+                }
+
+
+            </div>
+
+        }
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public StaffModel? Model { get; set; }
+    List<NominaModel>? values;
+    private Cols? sortedColumn = Cols.Fch;
+    private bool isDescendingOrder = false;
+    private int? selectedYear;
+    private Exception? exception;
+
+    private enum Cols
+    {
+        Fch,
+        Gross,
+        Net
+    }
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        nominasService.OnChange += Refresca;
+
+    }
+    protected override void OnParametersSet()
+    {
+        Refresca(null);
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        values = nominasService.Values?.Where(x => x.Staff == Model?.Guid).ToList();
+        selectedYear = values?.FirstOrDefault()?.Cca?.Fch?.Year;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<int>? Years()
+    {
+        return values?.GroupBy(x => x.Cca?.Fch?.Year).Select(x => ((DateTime)x.First().Cca!.Fch!).Year).ToList();
+    }
+
+    private List<NominaModel>? FilteredItems()
+    {
+        return values?
+        .Where(x => x.Cca?.Fch?.Year == selectedYear)
+        .ToList();
+    }
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            case Cols.Fch:
+                values = isDescendingOrder ? values!.OrderByDescending(x => x.Cca?.Fch).ToList() : values!.OrderBy(x => x.Cca?.Fch).ToList();
+                break;
+            case Cols.Gross:
+                values = isDescendingOrder ? values!.OrderByDescending(x => x.Devengat).ToList() : values!.OrderBy(x => x.Devengat).ToList();
+                break;
+            case Cols.Net:
+                values = isDescendingOrder ? values!.OrderByDescending(x => x.Liquid).ToList() : values!.OrderBy(x => x.Liquid).ToList();
+                break;
+        }
+    }
+
+    public void Dispose()
+    {
+        nominasService.OnChange -= Refresca;
+    }
+}

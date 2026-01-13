@@ -1,0 +1,37 @@
+﻿.Wrapper {
+    max-width:450px;
+}
+
+.Grid {
+    margin-top: 20px;
+    display:grid;
+    grid-template-columns: 1fr min-content min-content;
+    grid-column-gap:10px;
+}
+
+.ColumnHeaders {
+    font-size:0.8em;
+    color:gray;
+}
+
+.Item {
+    display:contents;
+    height:36px;
+}
+
+.HourFrom, .HourTo {
+    text-align:center;
+}
+
+.Line {
+    grid-column: 1/-1;
+    border-bottom: 1px solid #DDDDDD;
+}
+
+@media (max-width:599px){
+    .Day, .HourFrom, .HourTo {
+        padding: 10px 0;
+    }
+}
+
+

@@ -1,0 +1,40 @@
+﻿.Grid {
+    display: grid;
+    grid-column-gap: 10px;
+}
+    .Grid.Cols6 {
+        grid-template-columns: min-content min-content 1fr min-content min-content min-content min-content min-content min-content;
+    }
+
+    .Grid.Cols5 {
+        grid-template-columns: min-content min-content 1fr min-content min-content min-content min-content min-content ;
+    }
+
+    .Grid.Cols4 {
+        grid-template-columns: min-content min-content 1fr min-content min-content min-content min-content;
+    }
+
+.Item, .ColHeaders {
+    display:contents;
+}
+
+.ColHeaders > div {
+    padding:10px 0;
+}
+
+.Emp {
+    grid-column:1/-1;
+    margin:10px 0;
+    font-weight:600;
+}
+
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Amt {
+    text-align: right;
+    white-space: nowrap;
+}

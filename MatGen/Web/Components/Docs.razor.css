@@ -1,0 +1,60 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.AddNew {
+    display: block;
+}
+
+.Grid {
+    margin-top: 15px;
+}
+
+@media(max-width:599px) {
+    .Item {
+        display: grid;
+        grid-template-columns: 32px 1fr;
+        grid-template-areas: "ico year"
+            "ico title";
+        padding: 10px 0;
+        grid-column-gap: 10px;
+    }
+
+    .Ico {
+        grid-area: ico;
+    }
+
+    .Year {
+        grid-area: year;
+    }
+
+    .Title {
+        grid-area: title;
+    }
+}
+
+@media(min-width:600px) {
+    .Item {
+        display: flex;
+        gap: 10px;
+    }
+
+        .Title:hover {
+            background-color: #E0E0E0;
+        }
+
+    .Ico {
+        width: 16px;
+        min-width: 16px;
+        height: 16px;
+    }
+
+    .Year {
+        width: 2.8em;
+        min-width: 2.8em;
+    }
+}

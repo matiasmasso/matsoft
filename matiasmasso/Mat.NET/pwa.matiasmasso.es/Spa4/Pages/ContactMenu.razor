@@ -1,0 +1,30 @@
+﻿@page "/ContactMenu/{Guid:guid}"
+@inherits _ComponentBase
+
+@if (model == null)
+{
+    <div>
+        <img src="/img/Spinner-24.gif" alt="loading..." />
+    </div>
+}
+else
+{
+    <h3>@model.Contact.FullNom</h3>
+    <Nav nav="@NavModel()"></Nav>
+}
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    private ContactDTO? model;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        model = await GetAsync<ContactDTO>("contact", Guid.ToString());
+    }
+
+    private NavDTO NavModel()
+    {
+        NavDTO retval = new();
+        return retval;
+    }
+}

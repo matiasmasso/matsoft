@@ -1,0 +1,64 @@
+﻿@page "/Immobles"
+@inherits _ComponentBase
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Inmuebles","Immobles","Real State")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="ShowObsolets">
+            <Toggle Label="@base.Tradueix("Incluir obsoletos","Inclou obsolets","Include outdated")"
+                @bind-Value="@IsShowingObsolets"></Toggle>
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems())
+            {
+                <a href="@item.Url()" class='Item @(item.FchTo != null ? "Obsoleto" : "")'>
+                    <div>
+                        @item.Nom
+                    </div>
+
+                    <div>
+                        @item.FchFrom?.ToString("dd/MM/yyyy")
+                    </div>
+                </a>
+            }
+
+        </div>
+    }
+
+</div>
+
+
+
+@code {
+    private List<ImmobleDTO>? model;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            model = await base.GetAsync<List<ImmobleDTO>>("Immobles");
+            StateHasChanged();
+        };
+    }
+
+    private List<ImmobleDTO> FilteredItems()
+    {
+        var retval = model.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.FchTo == null).ToList();
+        return retval.OrderBy(x=>x.Nom).ToList();
+    }
+
+}

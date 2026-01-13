@@ -1,0 +1,46 @@
+﻿@page "/MenuItems"
+
+@using Client.Shared
+@using Client.ViewModels
+@layout ProLayout
+
+@inject AppState AppState
+@inject Microsoft.Extensions.Localization.IStringLocalizer<MenuItems> Loc
+
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <h1>@Loc["Title"]</h1>
+        <SearchBox @bind-Value="@viewModel.SearchTerm" AddNewUrl="MenuItem"></SearchBox>
+
+        <div class="Grid">
+            <Virtualize Items="@viewModel.Items()" Context="item">
+                <a class="Item Truncate" href="menuitem/@item.Guid.ToString()">
+                    <i class="@item.Ico"></i>
+                    <span>
+                        @item.Caption.Tradueix(AppState.Lang)
+                    </span>
+                </a>
+            </Virtualize>
+        </div>
+    </div>
+}
+
+
+
+
+@code {
+
+    private MenuItemsViewModel? viewModel;
+
+    protected override  Task OnInitializedAsync()
+    {
+        viewModel = new MenuItemsViewModel(AppState);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+        return base.OnInitializedAsync();
+    }
+}

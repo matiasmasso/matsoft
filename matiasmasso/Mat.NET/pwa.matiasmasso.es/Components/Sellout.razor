@@ -1,0 +1,382 @@
+﻿@inherits _Base
+
+@using System.Globalization
+@using Newtonsoft.Json
+
+
+<div class="PageWrapper600">
+    <h1>Sellout</h1>
+
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedOrderGuid != null)
+    {
+        <PurchaseOrder Guid="(Guid)selectedOrderGuid" CloseRequest="CloseOrder"></PurchaseOrder>
+    }
+    else
+    {
+@*        <PageOptions IsShowingOptions="true">
+            <div>Filters</div>
+        </PageOptions>
+*@
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+            @if (string.IsNullOrEmpty(searchTerm))
+            {
+                if (selectedYear == null)
+                {
+                    foreach (var item in Years())
+                    {
+                        <div class="Row Year">
+                            <a href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                                @item.Caption
+                                <span class="Aux">@item.Aux</span>
+                            </a>
+
+                            @if (item.Eur == 0)
+                            {
+                                <div>s/c</div>
+                            }
+                            else
+                            {
+                                <div>@item.Eur.ToString("N2") €</div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="Row Year">
+                        <a href="#" @onclick="() => ItemClick(selectedYear)" @onclick:preventDefault="true">
+                            @selectedYear.Caption
+                            <span class="Aux">@selectedYear.Aux</span>
+                        </a>
+
+                        @if (selectedYear.Eur == 0)
+                        {
+                            <div>s/c</div>
+                        }
+                        else
+                        {
+                            <div>@selectedYear.Eur.ToString("N2") €</div>
+                        }
+
+                    </div>
+
+                    if (selectedMonth == null)
+                    {
+                        foreach (var item in Months())
+                        {
+                            <div class="Row Month">
+                                <a href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                                    @item.Caption
+                                    <span class="Aux">@item.Aux</span>
+                                </a>
+
+                                @if (item.Eur == 0)
+                                {
+                                    <div>s/c</div>
+                                }
+                                else
+                                {
+                                    <div>@item.Eur.ToString("N2") €</div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="Row Month">
+                            <a href="#" @onclick="() => ItemClick(selectedMonth)" @onclick:preventDefault="true">
+                                @selectedMonth.Caption
+                                <span class="Aux">@selectedMonth.Aux</span>
+                            </a>
+
+                            @if (selectedMonth.Eur == 0)
+                            {
+                                <div>s/c</div>
+                            }
+                            else
+                            {
+                                <div>@selectedMonth.Eur.ToString("N2") €</div>
+                            }
+                        </div>
+
+                        @if (selectedDay == null)
+                        {
+                            foreach (var item in Days())
+                            {
+                                <div class="Row Day">
+                                    <a href="#" @onclick="() => ItemClick(item)" @onclick:preventDefault="true">
+                                        @item.Caption
+                                        <span class="Lighter">@item.Aux</span>
+                                    </a>
+
+                                    @if (item.Eur == 0)
+                                    {
+                                        <div>s/c</div>
+                                    }
+                                    else
+                                    {
+                                        <div>@item.Eur.ToString("N2") €</div>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+
+                            if (IsLoadedDetail)
+                            {
+                                <div class="Row Day">
+                                    <a href="#" @onclick="() => ItemClick(selectedDay)" @onclick:preventDefault="true">
+                                        @selectedDay.Caption
+                                        <span class="Lighter">@selectedDay.Aux</span>
+                                    </a>
+
+                                    @if (selectedDay.Eur == 0)
+                                    {
+                                        <div>s/c</div>
+                                    }
+                                    else
+                                    {
+                                        <div>@selectedDay.Eur.ToString("N2") €</div>
+                                    }
+                                </div>
+
+                                foreach (var item in model!.Orders)
+                                {
+                                    <a href="#" class="Row Order" @onclick="@(()=>OrderClick(item.Guid))" @onclick:preventDefault>
+                                        <div class="Hh"> @item.FchCreated.ToString("HH:mm") </div>
+                                        <div class="Nom Truncate">@item.CustomerName</div>
+                                        @if (item.Eur == 0)
+                                        {
+                                            <div class="Eur">s/c</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="Eur">@item.Eur.ToString("N2") €</div>
+                                        }
+                                        <div class="Location Lighter Truncate">@item.Location</div>
+                                        <div class="Concept Lighter Truncate"> @item.Concept</div>
+                                    </a>
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+            }
+            else
+            {
+                foreach (var item in model!.Orders.Where(x => x.Matches(searchTerm)).ToList())
+                {
+                    <a href="/purchaseOrder/@item.Guid.ToString()" class="Row Order">
+                        <div class="Hh"> @item.FchCreated.ToString("HH:mm") </div>
+                        <div class="Nom Truncate">@item.CustomerName</div>
+                        @if (item.Eur == 0)
+                        {
+                            <div class="Eur">s/c</div>
+                        }
+                        else
+                        {
+                            <div class="Eur">@item.Eur.ToString("N2") €</div>
+                        }
+                        <div class="Location Lighter Truncate">@item.Location</div>
+                        <div class="Concept Lighter Truncate"> @item.Concept</div>
+                    </a>
+                }
+
+            }
+        </div>
+    }
+
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+
+@code {
+    private SelloutDTO? model;
+    private ControlItem? selectedYear;
+    private ControlItem? selectedMonth;
+    private ControlItem? selectedDay;
+    private Guid? selectedOrderGuid;
+    private string? searchTerm;
+    private bool IsLoadedDetail;
+    private ProblemDetails? problemDetails;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var pdcsnom = base.Lang().Tradueix("pedidos", "comandes", "orders", "encomendas");
+            await base.OnAfterRenderAsync(firstRender);
+            await Fetch();
+            var firstItem = model!.Items.First();
+
+            var items = model!.Items.Where(x => x.Year == firstItem.Year);
+            var caption = string.Format("{0} ({1} {2})", firstItem.Year.ToString(), items.Sum(x => x.Pdcs), pdcsnom);
+            selectedYear = new ControlItem()
+                {
+                    Cod = ControlItem.Cods.Year,
+                    Value = firstItem.Year,
+                    Caption = firstItem.Year.ToString(),
+                    Aux = string.Format("({0} {1})", items.Sum(x => x.Pdcs), pdcsnom),
+                    Eur = items.Sum(x => x.Eur)
+                };
+
+            items = model!.Items.Where(x => x.Year == firstItem.Year && x.Month == firstItem.Month);
+            selectedMonth = new ControlItem()
+                {
+                    Cod = ControlItem.Cods.Month,
+                    Value = firstItem.Month,
+                    Caption = base.Lang().MonthAbr(firstItem.Month),
+                    Aux = string.Format("({0} {1})", items.Sum(x => x.Pdcs), pdcsnom),
+                    Eur = items.Sum(x => x.Eur)
+                };
+
+            items = model!.Items.Where(x => x.Year == firstItem.Year && x.Month == firstItem.Month && x.Day == firstItem.Day);
+            selectedDay = new ControlItem()
+                {
+                    Cod = ControlItem.Cods.Day,
+                    Value = firstItem.Day,
+                    Caption = string.Format("dia {0:00} {1}", (int)firstItem.Day, base.Lang().Weekday(firstItem.Year, firstItem.Month, firstItem.Day)),
+                    Aux = string.Format("({0} {1})", items.Sum(x => x.Pdcs), pdcsnom),
+                    Eur = items.Sum(x => x.Eur)
+                };
+
+            StateHasChanged();
+        };
+    }
+
+    private async Task ItemClick(ControlItem item)
+    {
+        if (item.Cod == ControlItem.Cods.Year)
+        {
+            selectedYear = selectedYear == null ? item : null;
+            selectedMonth = null;
+            selectedDay = null;
+        }
+        else if (item.Cod == ControlItem.Cods.Month)
+        {
+            selectedMonth = selectedMonth == null ? item : null;
+            selectedDay = null;
+        }
+        else if (item.Cod == ControlItem.Cods.Day)
+        {
+            if (selectedDay == null)
+            {
+                selectedDay = item;
+                await FetchOrders();
+            }
+            else
+            {
+                selectedDay = null;
+                IsLoadedDetail = false;
+            }
+        }
+    }
+
+    private void OrderClick(Guid orderGuid)
+    {
+        selectedOrderGuid = orderGuid;
+    }
+
+    private List<ControlItem> Years()
+    {
+        return model!.Items.GroupBy(x => x.Year)
+            .OrderByDescending(a => a.Key)
+            .Select(y => new ControlItem()
+                {
+                    Cod = ControlItem.Cods.Year,
+                    Value = y.Key,
+                    Caption = y.Key.ToString(),
+                    Aux = string.Format("({0} {1})", y.Sum(x => x.Pdcs), base.Lang().Tradueix("pedidos", "comandes", "orders", "encomendas")),
+                    Eur = y.Sum(z => z.Eur)
+                }).ToList();
+    }
+
+    private List<ControlItem> Months()
+    {
+        return model!.Items.Where(a => a.Year == selectedYear!.Value)
+            .GroupBy(x => x.Month)
+            .OrderByDescending(a => a.Key)
+            .Select(y => new ControlItem()
+                {
+                    Cod = ControlItem.Cods.Month,
+                    Value = y.Key,
+                    Caption = base.Lang().MonthAbr(y.Key),
+                    Aux = string.Format("({0} {1})", y.Sum(x => x.Pdcs), base.Lang().Tradueix("pedidos", "comandes", "orders", "encomendas")),
+                    Eur = y.Sum(z => z.Eur)
+                }).ToList();
+    }
+
+    private List<ControlItem> Days()
+    {
+
+        var retval = model!.Items.Where(a => a.Year == selectedYear!.Value && a.Month == selectedMonth!.Value)
+            .GroupBy(x => x.Day)
+            .OrderByDescending(a => a.Key)
+            .Select(y => new ControlItem()
+                {
+                    Cod = ControlItem.Cods.Day,
+                    Value = y.Key,
+                    Caption = string.Format("dia {0:00} {1}", y.Key, base.Lang().Weekday(selectedYear!.Value, selectedMonth!.Value, y.Key)), 
+                    Aux = string.Format("({0} {1:N0})",  y.Sum(x => x.Pdcs), base.Lang().Tradueix("pedidos", "comandes", "orders", "encomendas")),
+                    Eur = y.Sum(z => z.Eur)
+                }).ToList();
+        return retval;
+    }
+
+
+    protected class ControlItem
+    {
+        public Cods Cod { get; set; }
+        public int Value { get; set; }
+        public string Caption { get; set; } = string.Empty;
+        public string Aux { get; set; } = string.Empty;
+        public decimal Eur { get; set; }
+        public enum Cods
+        {
+            Year,
+            Month,
+            Day,
+            Order
+        }
+    }
+
+    private async Task Fetch()
+    {
+        var request = new SelloutDTO.Request();
+        request.EmpId = 1;
+        var apiResponse = await PostAsync<SelloutDTO.Request, SelloutDTO>(request, "Sellout");
+        model = apiResponse.Value;
+        problemDetails = apiResponse.ProblemDetails;
+        IsLoadedDetail = true;
+    }
+
+    private async Task FetchOrders()
+    {
+        IsLoadedDetail = false;
+        var request = new SelloutDTO.Request();
+        request.EmpId = 1;
+        request.Fch = new DateTime(selectedYear!.Value, selectedMonth!.Value, selectedDay!.Value);
+        var apiResponse = await PostAsync<SelloutDTO.Request, SelloutDTO>(request, "sellout/orders");
+        model.Orders = apiResponse.Value?.Orders ?? new();
+        problemDetails = apiResponse.ProblemDetails;
+        IsLoadedDetail = true;
+        StateHasChanged();
+    }
+
+    private void CloseOrder()
+    {
+        selectedOrderGuid = null;
+    }
+}

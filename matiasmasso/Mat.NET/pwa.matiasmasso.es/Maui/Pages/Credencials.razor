@@ -1,0 +1,42 @@
+﻿@page "/Credencials"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Credenciales","Credencials","Credentials")</h1>
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} credencials", model.Items.Count())
+        </div>
+
+
+        <div class="Grid">
+            @foreach (var item in model.Items.Where(x => x.Matches(searchTerm)))
+            {
+            <a href="@item.UrlSegment()" class="Item">
+                <div class="Ref">@item.Referencia</div>
+                <div class="User">@item.Usuari</div>
+            </a>
+            }
+        </div>
+    }
+</div>
+
+
+@code {
+    private CredencialListDTO? model;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        model = await base.GetAsync<CredencialListDTO>("credencials");
+    }
+
+}

@@ -1,0 +1,48 @@
+﻿.Wrapper {
+    max-width:600px;
+}
+
+.Label {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.Buttons {
+    text-align: right;
+}
+
+
+/*------------- desktop --------------*/
+@media(min-width:600px) {
+    .Wrapper {
+        display:grid;
+        grid-template-columns:minmax(100px,min-content) minmax(100px, 1fr);
+        grid-column-gap:10px;
+    }
+
+    .SignUp {
+        grid-column: 1/-1;
+    }
+
+    .Buttons {
+        grid-column: 1/-1;
+    }
+}
+
+/*----------------mobiles ----------------*/
+
+@media(max-width:599px) {
+    .Label {
+        color: gray;
+    }
+
+    .Value {
+        margin-bottom: 10px;
+        color:black;
+    }
+
+    a.Value {
+        display:block;
+    }
+}

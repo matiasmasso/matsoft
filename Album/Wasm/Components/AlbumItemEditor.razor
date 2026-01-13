@@ -1,0 +1,125 @@
+﻿@inject ApiEndpointService _endpointService
+@inject AlbumsService _albumsService
+
+
+<div class="PageWrapper600">
+    <EditForm Model="@tmp" OnValidSubmit="Save">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            @if (values?.Count == 1)
+            {
+            <img src="@ImgUrl()" class="preview-img" />
+            }else
+            {
+            <ImageGallery Items="values" ReadOnly="true"></ImageGallery>
+            }
+        </div>
+
+        <div class="form-group">
+            <label>Album</label>
+            <InputSelect @bind-Value="selectedAlbumId" class="form-select">
+                <option value="">-- choose album --</option>
+
+                @foreach (var album in albums ?? new())
+                {
+                    <option value="@album.Guid.ToString()">@album.FolderName()</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="form-group">
+            <label>Titol</label>
+            <InputText @bind-Value="tmp.Title" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label>Descripció</label>
+            <InputTextArea @bind-Value="tmp.Description" class="form-control" />
+        </div>
+
+        <div class="buttonsBar">
+            <button type="button" class="mode-btn" @onclick="() => OnClose.InvokeAsync()">Cancel</button>
+            @if (isSaving)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <button type="submit" class="mode-btn mode-btn-active">Save</button>
+            }
+        </div>
+    </EditForm>
+    <Error @bind-Value="exception"></Error>
+</div>
+@code {
+    [Parameter] public List<AlbumModel>? Albums { get; set; }
+    [Parameter] public List<AlbumModel.Item>? Values { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<List<AlbumModel.Item>> AfterUpdate { get; set; }
+    private AlbumModel.Item tmp;
+    private List<AlbumModel>? albums;
+    private List<AlbumModel.Item>? values;
+    private Guid selectedAlbumId;
+    private bool isSaving = false;
+    private Exception? exception;
+
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        albums = Albums;
+        values = Values;
+        tmp = new AlbumModel.Item();
+        tmp.Album = values![0].Album;
+        if (values!.All(x => x.Title == values![0].Title))
+            tmp.Title = values![0].Title;
+        if (values!.All(x => x.Description == values![0].Description))
+            tmp.Description = values![0].Description;
+        selectedAlbumId = tmp.Album!.Guid;
+
+    }
+
+    private AlbumModel? SelectedAlbum =>
+        selectedAlbumId is Guid id
+            ? Albums?.FirstOrDefault(a => a.Guid == id)
+            : null;
+
+    private async Task Save()
+    {
+        try
+        {
+            foreach(var value in values!)
+            {
+                value.Album = SelectedAlbum;
+                if (tmp.Title != null) value.Title = tmp.Title;
+                if (tmp.Description != null) value.Description = tmp.Description;
+            }
+            await _albumsService.SaveAsync(values);
+            await AfterUpdate.InvokeAsync(values);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void HandleValidSubmit()
+    {
+        // Save logic here
+    }
+
+    private string ImgUrl()
+    {
+        var uri = new Uri(new Uri(_endpointService.CurrentBaseUrl!), values?[0].DownloadUrl);
+        return uri.ToString();
+    }
+
+
+    private string ThumbUrl(AlbumModel.Item item)
+    {
+        var uri = new Uri(new Uri(_endpointService.CurrentBaseUrl!), item.ThumbUrl);
+        return uri.ToString();
+    }
+}

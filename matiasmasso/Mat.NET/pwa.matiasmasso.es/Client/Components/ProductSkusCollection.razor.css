@@ -1,0 +1,17 @@
+﻿.Wrapper {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-auto-flow: row;
+    font-size: 0.8em;
+}
+
+a {
+    display: flex;
+    flex-direction:column;
+    max-width:150px;
+}
+
+.Caption {
+    text-align:center;
+}

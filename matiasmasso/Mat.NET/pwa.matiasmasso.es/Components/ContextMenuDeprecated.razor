@@ -1,0 +1,22 @@
+﻿@inject NavigationManager NavigationManager
+
+<div class="Wrapper">
+    @if (Model != null)
+    {
+        @foreach (var item in Model.Items)
+        {
+            <ContextMenuItem Model="item" ItemClick="OnClick"></ContextMenuItem>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public MenuModel Model { get; set; }
+    [Parameter] public EventCallback<MenuModel.Item> ItemClick { get; set; }
+
+    private void OnClick(MenuModel.Item item)
+    {
+        ItemClick.InvokeAsync(item);
+        //StateHasChanged();
+    }
+}

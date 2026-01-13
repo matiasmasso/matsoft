@@ -1,0 +1,94 @@
+﻿<div class="Wrapper">
+    @if (CanEdit && isEditing)
+    {
+        @if (Multiline ?? false)
+        {
+            <textarea @oninput="TextareaChange" 
+                @onblur="@(()=>{isEditing = false;})">
+                @_innerControlValue
+            </textarea>
+        }
+        else
+        {
+            <input type="@(IsPassword & !isShowingPassword ? "password" : "text")"
+                @bind-value="@_innerControlValue" 
+                @onblur="@(()=>{isEditing = false;})" />
+        }
+    }
+    else
+    {
+        <a href="#" @onclick="@(()=>{isEditing = true;})" @onclick:preventDefault="true">
+            @if (string.IsNullOrEmpty(_innerControlValue))
+            {
+                <div>&nbsp;</div>
+            }
+            else if (IsPassword & !isShowingPassword)
+            {
+                <div class="Truncate">@(new string('*', _innerControlValue.Length))</div>
+            }
+            else
+            {
+                <div class="@((Multiline ?? false) ? "":"Truncate")">@_innerControlValue</div>
+            }
+        </a>
+    }
+
+    <div class="ButtonsBar">
+        @if (IsPassword)
+        {
+            <a href="#" @onclick="@(()=>{isShowingPassword = !isShowingPassword;})" @onclick:preventDefault="true">
+                <i class="fa-solid fa-eye"></i>
+            </a>
+        }
+        <div>
+            <UxCopyToClipboard Text="@_innerControlValue" />
+        </div>
+    </div>
+
+</div>
+
+@code {
+    //[Parameter] public string? Value { get; set; }
+    [Parameter] public Object Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsPassword { get; set; } = false;
+
+    [Parameter] public bool? Multiline { get; set; }
+    [Parameter] public int? Cols { get; set; } = 20;
+    [Parameter] public int? Rows { get; set; } = 2;
+
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+    private bool isShowingPassword = false;
+
+
+    private string? _innerControlValue
+    {
+        get => Value?.ToString() ?? "";
+        set
+        {
+            if (Value?.ToString() != value)
+            {
+                Value = value;
+
+                if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+                    ObjChanged.InvokeAsync(value);
+                else
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    private void TextareaChange(ChangeEventArgs args)
+    {
+        var value = args?.Value?.ToString();
+        if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+            ObjChanged.InvokeAsync(value);
+        else
+            ValueChanged.InvokeAsync(value);
+    }
+
+    private bool isEditing = false;
+
+
+}

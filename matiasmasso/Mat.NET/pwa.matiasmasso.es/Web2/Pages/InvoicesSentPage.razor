@@ -1,0 +1,193 @@
+﻿@page "/invoicesSent"
+@page "/{LangSegment}/invoicesSent"
+@implements IDisposable
+@layout ProLayout
+@inject CultureService culture
+@inject SessionStateService session
+@inject InvoicesSentService invoicesSentService
+
+<div class="PageWrapper900">
+
+    @if (isLoading)
+    {
+        <h3>@culture.Localize("InvoicesSent")</h3>
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else if (SelectedEmp() == null)
+    {
+        <h3>@culture.Localize("InvoicesSent")</h3>
+        <div class="Info">@culture.Tradueix("Selecciona una empresa")</div>
+        <div class="Emps">
+            @foreach (var emp in session.Emps ?? new())
+            {
+                <a href="#" @onclick="@(()=>EmpClick(emp))" @onclick:preventDefault>
+                    @emp.Abr
+                </a>
+            }
+        </div>
+    }
+    else if (SelectedYear() == null)
+    {
+        <h3>@culture.Localize("InvoicesSent")</h3>
+        <SelectedValues nested @bind-Values="selectedValues"></SelectedValues>
+        <div class="Info">@culture.Tradueix("Selecciona un ejercicio")</div>
+        <div class="Years">
+            @foreach (var year in SelectedEmp()!.YearsDescendingRange())
+            {
+                <a href="#" @onclick="@(()=>YearClick(year))" @onclick:preventDefault>
+                    @year
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <h3>@culture.Localize("InvoicesSent")</h3>
+        <SelectedValues nested @bind-Values="selectedValues"></SelectedValues>
+
+        <SearchBox @bind-Value="searchterm"></SearchBox>
+
+        <div class="Grid">
+            <Virtualize Items="FilteredItems()" Context="item">
+                <a href="#" class="Item" @onclick="(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Id">
+                        @item.Value?.SerieYNum()
+                    </div>
+                    <div class="Fch">
+                        @item.Value?.Fch.ToString("dd/MM/yy")
+                    </div>
+                    <div class="Cli">
+                        @item.Nom
+                    </div>
+                    <div class="Eur">
+                        @($"{item.Value?.Amt?.Eur:N2} €")
+                    </div>
+                </a>
+            </Virtualize>
+        </div>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    bool isLoading;
+    bool isDirty;
+    string? searchterm;
+    SelectedValues.Collection? selectedValues;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+
+    List<InvoiceSentModel>? values;
+    List<XItem>? items;
+    Exception? exception;
+
+    EmpModel? SelectedEmp() => (EmpModel?)selectedValues?.FirstOrDefault()?.Value;
+    int? SelectedYear() => selectedValues?.Count > 1 ? (int?)selectedValues?[1].Value : null;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+        Refresca(null);
+    }
+
+    private void Refresca(Exception? ex)
+    {
+        if (selectedValues == null && session.Emps?.Count > 0)
+        {
+            selectedValues = new();
+            selectedValues.Add(session.Emps.First(), session.Emps.First().Abr);
+            selectedValues.Add(DateTime.Today.Year, DateTime.Today.Year.ToString());
+            isDirty = true;
+        }
+
+        if(isDirty & !isLoading) 
+            _ = Task.Run(async () => await LoadData());
+    }
+
+    List<XItem> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return items ?? new();
+        else
+            return items?.Where(x=>x.Matches(searchterm)).ToList() ?? new();
+    }
+
+
+
+    void EmpClick(EmpModel emp)
+    {
+        selectedValues = new();
+        selectedValues.Add(emp, emp.Abr);
+    }
+
+    void YearClick(int year)
+    {
+        selectedValues!.Add(year, year.ToString());
+        isDirty = true;
+    }
+
+    void ItemClick(XItem xItem)
+    {
+        var value = xItem.Value;
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, xItem.Nom ?? "?"));
+    }
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+
+    async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            values = await invoicesSentService.FetchAsync(SelectedEmp()!, (int)SelectedYear()!);
+            items = values?
+            .OrderBy(x=>x.Serie)
+            .ThenByDescending(x=>x.Id)
+            .Select(x => new XItem
+                {
+                    Value = x,
+                    Nom = invoicesSentService.Contact(x)?.RaoSocial
+                }).ToList();
+            isDirty = false;
+        } catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+    }
+
+    public class XItem
+    {
+        public InvoiceSentModel? Value { get; set; }
+        public string? Nom { get; set; }
+
+        public bool Matches(string? searchTerm)
+        {
+            bool retval = true;
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var searchTerms = searchTerm.Split("+", StringSplitOptions.RemoveEmptyEntries);
+                var searchTarget = Nom ?? "" + " " + Value?.SerieYNum() ?? "";
+                retval = searchTerms.All(x => searchTarget.Contains(x, StringComparison.OrdinalIgnoreCase));
+            }
+            return retval;
+        }
+    }
+}

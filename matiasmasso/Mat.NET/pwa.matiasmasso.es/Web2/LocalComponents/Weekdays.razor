@@ -1,0 +1,61 @@
+﻿@inject CultureService culture
+
+<div class="Grid">
+    @foreach (var item in items)
+    {
+        <a href="#" @onclick="@(()=>ItemClickAsync(item))" @onclick:preventDefault>
+            <Icon Id="@(item.Enabled ? Icon.Ids.ToggleOn : Icon.Ids.ToggleOff)" Width="1.5em"></Icon>
+        </a>
+        <span>@culture.Lang().Weekday((int)item.DayOfWeek)</span>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Returns a 7 digit string with 0 disabled or 1 enabled weekdays starting with 0 Sunday.
+    /// </summary>
+    ///
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChange { get; set; }
+    List<Item> items = new();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Value == null) Value = "0000000";
+        items = new List<Item>
+            {
+                new Item(DayOfWeek.Monday, Value),
+                new Item(DayOfWeek.Tuesday, Value),
+                new Item(DayOfWeek.Wednesday, Value),
+                new Item(DayOfWeek.Thursday, Value),
+                new Item(DayOfWeek.Friday, Value),
+                new Item(DayOfWeek.Saturday, Value),
+                new Item(DayOfWeek.Sunday, Value)
+            };
+    }
+
+    async Task ItemClickAsync(Item item)
+    {
+        var idx = (int)item.DayOfWeek;
+        var sb = new System.Text.StringBuilder(Value);
+        sb.Remove(idx, 1);
+        var enabled = !item.Enabled;
+        sb.Insert(idx, enabled ? '1' : '0');
+        var value = sb.ToString();
+        await ValueChange.InvokeAsync(value);
+
+    }
+
+    private class Item
+    {
+        public DayOfWeek DayOfWeek { get; set; }
+        public bool Enabled { get; set; }
+
+        public Item(DayOfWeek dayOfWeek, string enableds)
+        {
+            DayOfWeek = dayOfWeek;
+            Enabled = enableds[(int)DayOfWeek] != '0';
+        }
+    }
+}

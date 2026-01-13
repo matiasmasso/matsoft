@@ -1,0 +1,95 @@
+﻿@inherits _ComponentBase
+
+
+<a class="Wrapper" href="#" @onclick="@(()=>{isShowingSelector = true;})" @onclick:preventDefault="true">
+    <div class="@Class">
+        @DisplayNom()
+    </div>
+
+    <UxSelector IsShowing="@isShowingSelector"
+                Options="@Options()"
+                Value="@Value?.Guid.ToString()"
+                ValueChanged="SelectedValueChanged"
+                Menu="@Menu()"
+                ActionRequest="MenuActionRequest"></UxSelector>
+
+    <div class="@(isShowingPropertyGrid?"":"Hidden")">
+        <PgZona Guid="@pgGuid"></PgZona>
+    </div>
+</a>
+
+
+@code {
+    [Parameter] public AtlasModel? atlas { get; set; }
+    [Parameter] public CountryModel? Country { get; set; }
+    [Parameter] public ZonaModel? Value { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public EventCallback<ZonaModel> ValueChanged { get; set; }
+    private Guid? pgGuid = null;
+    private bool isShowingSelector = false;
+    private bool isShowingPropertyGrid = false;
+
+    private string DisplayNom()
+    {
+        if (Value == null || Country == null || Country.Guid != Value.Country)
+            return base.Tradueix("(seleccionar zona)", "(sel·leccionar zona)", "(select an area)");
+        else
+            return Value!.Nom ?? "nom?";
+    }
+
+    private List<Option> Options()
+    {
+        if (Country == null)
+            return new List<Option>();
+        else
+            return atlas?.Zonas
+            .Where(x => x.Country == Country.Guid)
+            .Select(x => new Option
+                {
+                    Id = x.Guid.ToString(),
+                    Nom = x.Nom ?? "?",
+                    Tag = x
+                })
+                .OrderBy(x => x.Nom)
+                .ToList() ?? new();
+    }
+
+
+    private void SelectedValueChanged(object item)
+    {
+        isShowingSelector = false;
+        Value = (ZonaModel)item;
+        StateHasChanged();
+        ValueChanged.InvokeAsync(Value);
+    }
+
+    private NavDTO Menu()
+    {
+        var retval = new NavDTO();
+        retval.AddAction("Zoom", "Ficha", "Fitxa", "Properties");
+        retval.AddAction("AddNew", "Añadir", "Afegir", "Add new");
+        retval.AddAction("Close", "Cancelar", "Cancel·lar", "Cancel");
+        return retval;
+    }
+
+
+    private void MenuActionRequest(string action)
+    {
+        if (action == "Zoom") Zoom();
+        else if (action == "AddNew") AddNew();
+        else if (action == "Close") isShowingSelector = false;
+        StateHasChanged();
+    }
+
+    private void Zoom()
+    {
+        pgGuid = Value?.Guid;
+        isShowingPropertyGrid = true;
+    }
+
+    private void AddNew()
+    {
+        pgGuid = null;
+        isShowingPropertyGrid = true;
+    }
+}

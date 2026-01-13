@@ -1,0 +1,34 @@
+﻿@using Spa.Shared
+@inject AppState AppState
+
+<div class="Wrapper">
+
+    <a href="/" class="Membrete">
+        <img src="img/Membrete-553x48.jpg" height=48 width=553 />
+    </a>
+
+    <a href="#" @onclick="HamburgerClicked" class="Hamburger @(ShowHamburger ? "ShowHamburger" : "")" @onclick:preventDefault>
+        <img src="img/Hamburger-32.png" height=32 width=32 />
+    </a>
+</div>
+
+@code {
+    [Parameter]
+    //hides hamburger on desktop pages where aside menu is always displayed
+    public bool ShowHamburger { get; set; } = false;
+
+    [Parameter]
+    //hides hamburger on desktop pages where aside menu is always displayed
+    public bool IsMenuVisibleValue { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> IsMenuVisibleValueChanged { get; set; }
+
+
+    async Task HamburgerClicked()
+    {
+        IsMenuVisibleValue = !IsMenuVisibleValue;
+        await IsMenuVisibleValueChanged.InvokeAsync(IsMenuVisibleValue);
+    }
+
+}

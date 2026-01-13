@@ -1,0 +1,134 @@
+﻿@inject NavigationManager NavigationManager
+
+<div class="Wrapper">
+
+    <!-- display -->
+
+    <div class="Display @(IsEditing ? "Hidden" : "")">
+        <a class="Caption" href="#" @onclick="CaptionClick" @onclick:preventDefault>
+            <span class="@(string.IsNullOrEmpty(caption) ? "" : "Hidden")">&nbsp;</span>
+            <span class="@(string.IsNullOrEmpty(caption) ? "Hidden" : "")">@caption</span>
+        </a>
+
+        <a href="#" class="Ellipsis @(ContextMenu == null ? "Hidden" : "")" @onclick="EllipsisClick" @onclick:preventDefault>
+            <img src="/img/ellipsis-stroke-thin.svg" style="height:24px;width:auto;" />
+        </a>
+    </div>
+
+    <!-- menu -->
+
+    <div class="ContextMenu @(isShowingMenu & !IsEditing ? "" : "Hidden")">
+        <ContextMenu Model="ContextMenu" ItemClick="MenuItemClick" />
+    </div>
+
+    <!-- editor -->
+
+    <div class="@(IsEditing ? "" : "Hidden")" @onblur="InputBlur">
+        <input type="text" @bind="caption" @bind:event="oninput" />
+        <div class="Dropdown">
+
+            <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="Items()" Context="item">
+
+                <a class="Item" href="#" @onclick="@(()=>OptionClick(item))" @onclick:preventDefault>
+                    @item.ToString()
+                </a>
+
+            </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+
+        </div>
+
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<IModel>? Values { get; set; }
+    [Parameter] public IModel? Value { get; set; }
+    [Parameter] public MenuModel? ContextMenu { get; set; }
+    [Parameter] public EventCallback<IModel> ValueChanged { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsEditing { get; set; }
+
+    private string? caption;
+    private bool isShowingDropdown = false;
+    private bool isShowingMenu = false;
+    //private MenuModel? contextMenu;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        caption = Value?.ToString() ?? "";
+    }
+
+    List<IModel>? Items()
+    {
+        if (Values == null)
+            return null;
+        else
+        {
+            if (caption == Value?.ToString() & Values.Count() < 10)
+                return Values.ToList();
+            else
+                return Values
+                .Where(x => x.Matches(caption))
+                .OrderBy(x => x.ToString())
+                .ToList();
+
+        }
+    }
+
+    private void CaptionClick()
+    {
+        if (Value == null)
+        {
+            IsEditing = true;
+            isShowingDropdown = true;
+        }
+        else
+        {
+            var url = Value.PropertyPageUrl();
+            if(string.IsNullOrEmpty(url))
+            {
+                IsEditing = true;
+                isShowingDropdown = true;
+            }
+            else
+            NavigationManager?.NavigateTo(Value.PropertyPageUrl());
+        }
+    }
+
+    private void EllipsisClick()
+    {
+        isShowingMenu = true;
+    }
+
+    private void MenuItemClick(MenuModel.Item item)
+    {
+        switch (item.Mode)
+        {
+            case MenuModel.Modes.Edit:
+                IsEditing = true;
+                break;
+            case MenuModel.Modes.Clear:
+                ValueChanged.InvokeAsync(null);
+                IsEditing = false;
+                break;
+        }
+        isShowingMenu = false;
+    }
+
+    private void OptionClick(IModel item)
+    {
+        ValueChanged.InvokeAsync(item);
+        IsEditing = false;
+    }
+
+    private void InputBlur()
+    {
+        IsEditing = false; // it is ignored
+    }
+
+    public void SetEditingMode()
+    {
+        IsEditing = true;
+    }
+}

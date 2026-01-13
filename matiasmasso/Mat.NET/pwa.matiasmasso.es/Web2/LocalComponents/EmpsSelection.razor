@@ -1,0 +1,95 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject EmpsService empsService
+
+@if(selectedValues != null && selectedValues.Count == 0)
+{
+    <div class="Info">@culture.Tradueix("Aun no hay ninguna empresa asignada"
+    , "No hi ha cap empresa assignada encara"
+    , "No companies assigned yet")</div>
+} else
+{
+<div class="SelectedValues">
+    @foreach(var id in selectedValues ?? new())
+    {
+        <a href="#" @onclick="@(()=>SelectedValueClick(id))" @onclick:preventDefault>
+            <div>@empsService.GetValue(id)?.Abr</div>
+            <Icon Id="Icon.Ids.Xmark"></Icon>
+        </a>
+    }
+</div>    
+}
+
+<p class="Info">
+    @if(PotentialValues()?.Count == 0)
+    {
+        @culture.Tradueix("Todas las empresas disponibles estan asignadas"
+    , "Totes les empreses disponibles estan assignades"
+    , "All companies have been assigned")
+    }
+    else
+    {
+        @culture.Tradueix("Puedes asignar empresas seleccionándolas de la siguiente lista:"
+    , "Pots assignar empreses triant-les de la següent llista"
+    , "Click on next list to assign companies ")
+    }
+</p>
+
+<div class="Grid">
+    @foreach (var item in PotentialValues() ?? new())
+    {
+        <a href="#" @onclick="@(()=>PotentialValueClick(item))" @onclick:preventDefault>
+            <div>@item.Abr</div>
+            <div>@item.Nom</div>
+        </a>
+    }
+</div>
+
+
+@code {
+    [Parameter] public List<EmpModel.EmpIds>? Values { get; set; }
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    List<EmpModel.EmpIds>? selectedValues;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        empsService.OnChange += Refresca;
+    }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        selectedValues = Values;
+        Refresca(null);
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<EmpModel>? PotentialValues()
+    {
+        return empsService.Values?.Where(x => !(selectedValues ?? new()).Any(y => x.Id == y)).ToList();
+    }
+
+    void SelectedValueClick(EmpModel.EmpIds id)
+    {
+        selectedValues!.Remove(id);
+        OnChange.InvokeAsync();
+    }
+
+    void PotentialValueClick(EmpModel item)
+    {
+        selectedValues?.Add(item.Id);
+        OnChange.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        empsService.OnChange -= Refresca;
+    }
+}

@@ -1,0 +1,18 @@
+﻿.Grid {
+    display:flex;
+    gap:10px;
+}
+
+.Item {
+    padding:4px 7px 2px 4px;
+    border:1px solid gray;
+    border-radius: 4px;
+}
+
+    .Item.Selected {
+        background-color: azure;
+    }
+
+    .Item:hover {
+        background-color: azure;
+    }

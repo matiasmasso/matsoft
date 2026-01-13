@@ -1,0 +1,104 @@
+﻿<div class="Wrapper">
+
+    @if (value == null)
+    {
+        <input type="text" placeholder="@PlaceHolder" class="Textbox" @bind-value="searchterm" @bind-value:event="oninput" />
+    }
+    else if (Values?.Count() > 0 && isShowingDropdown)
+    {
+        <div class="Caption" @onkeydown="OnKeyDownHandler">
+            <input type="text" class="Textbox"
+                   @bind-value="searchterm"
+                   @bind-value:event="oninput" />
+        </div>
+    }
+    else
+    {
+        <div class="Caption">
+            <a href="#" class="Nom" @onclick="@(()=>isShowingDropdown = !isShowingDropdown)" @onclick:preventDefault>
+                @if (Values == null)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    @value.ToString()
+                }
+            </a>
+        </div>
+    }
+
+    @if (Values?.Count() > 0 && (isShowingDropdown || !string.IsNullOrEmpty(searchterm)))
+    {
+        <div class="Dropdown">
+            @if (AddNewRequest.HasDelegate)
+            {
+                <a href="#" class="Item" @onclick="AddNew" @onclick:preventDefault>
+                    (afegir)
+                </a>
+            }
+
+            <Virtualize Items="FilteredItems()" Context="item" TItem="IModel">
+                <a href="#" class="Item"
+                   title="@(item == null ? NullCaption : item.ToString())"
+                @onclick="@(()=>ItemClick(item))" 
+                @onclick:preventDefault>
+                    @(item == null ? NullCaption : item.ToString())
+                </a>
+            </Virtualize>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public string? PlaceHolder { get; set; } 
+    [Parameter] public string NullCaption { get; set; } = "";
+    [Parameter] public IEnumerable<IModel?>? Values { get; set; }
+    [Parameter] public EventCallback<IModel?> ValueChanged { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+
+    IModel? value;
+    string? searchterm;
+    bool isShowingDropdown;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        value = Values?.FirstOrDefault(x => x.Guid == Value);
+    }
+
+    List<IModel> FilteredItems()
+    {
+        if (searchterm == value?.ToString())
+            return Values?.OrderBy(x=>x.ToString()).ToList() ?? new();
+        else
+            return Values?.Where(x => x.Matches(searchterm)).OrderBy(x => x.ToString()).ToList() ?? new();
+    }
+
+    void ItemClick(IModel? item)
+    {
+        isShowingDropdown = false;
+        searchterm = null;
+        ValueChanged.InvokeAsync(item);
+    }
+
+    void OnKeyDownHandler(KeyboardEventArgs args)
+    {
+        // isShowingDropdown = false;
+        // searchterm = null;
+        isShowingDropdown = !isShowingDropdown;
+        searchterm = isShowingDropdown ? value!.ToString() : "";
+
+        ValueChanged.InvokeAsync(null);
+    }
+
+    void AddNew()
+    {
+        AddNewRequest.InvokeAsync();
+    }
+
+
+}

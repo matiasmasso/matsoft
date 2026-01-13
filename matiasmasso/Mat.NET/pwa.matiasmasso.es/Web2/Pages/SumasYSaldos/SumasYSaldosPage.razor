@@ -1,0 +1,225 @@
+﻿@page "/sumasysaldos"
+@page "/{LangSegment}/sumasysaldos"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject PgcCtaSdosService pgcCtaSdosService
+
+<div class="PageWrapper900">
+    <h3>@culture.Localize("SumasYSaldos")</h3>
+
+
+    <div class="Filters">
+        @if (selectedEmp != null)
+        {
+            <a href="#" class="Filter" @onclick="SelectedEmpClicked" @onclick:preventDefault>
+                <div>@selectedEmp.Abr</div>
+                <Icon Id="Icon.Ids.Xmark"></Icon>
+            </a>
+        }
+        @if (selectedYear != null)
+        {
+            <a href="#" class="Filter" @onclick="SelectedYearClicked" @onclick:preventDefault>
+                <div>@selectedYear</div>
+                <Icon Id="Icon.Ids.Xmark"></Icon>
+            </a>
+        }
+        @if (selectedCta != null)
+        {
+            <a href="#" class="Filter" @onclick="SelectedCtaClicked" @onclick:preventDefault>
+                <div>@selectedCta.Nom?.Tradueix(culture.Lang())</div>
+                <Icon Id="Icon.Ids.Xmark"></Icon>
+            </a>
+        }
+        @if (selectedContact != null)
+        {
+            <a href="#" class="Filter" @onclick="SelectedContactClicked" @onclick:preventDefault>
+                <div>@selectedContact.RaoSocial</div>
+                <Icon Id="Icon.Ids.Xmark"></Icon>
+            </a>
+        }
+        @if (selectedCca != null)
+        {
+        }
+    </div>
+
+
+    @if (isLoading)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        @if (selectedEmp == null)
+        {
+            <div class="Emps">
+                @foreach (var emp in session.Emps ?? new())
+                {
+                    <a href="#" @onclick="@(()=>EmpClick(emp))" @onclick:preventDefault>
+                        @emp.Abr
+                    </a>
+                }
+            </div>
+        }
+        else if (selectedYear == null)
+        {
+            <div class="Years">
+                @for (var year = DateTime.Today.Year; year > 1984; year--)
+                {
+                    <a href="#" @onclick="@(()=>YearClick(year))" @onclick:preventDefault>
+                        @year
+                    </a>
+                }
+            </div>
+        }
+        else if (selectedCta == null)
+        {
+            <SumasYSaldosCtas Items="pgcCtaSdosService.Ctas()" ItemSelected="CtaClick"></SumasYSaldosCtas>
+        }
+
+        else if (selectedContact == null)
+        {
+            <SumasYSaldosContacts Items="pgcCtaSdosService.Contacts(selectedCta)" ItemSelected="ContactClick"></SumasYSaldosContacts>
+        }
+        else if (selectedCca == null)
+        {
+            <div class="Ccas">
+                ccas...
+            </div>
+        }
+        else
+        {
+            <div>displayCca</div>
+        }
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+
+    EmpModel? selectedEmp;
+    int? selectedYear;
+    PgcCtaModel? selectedCta;
+    ContactModel? selectedContact;
+    CcaModel? selectedCca;
+
+    bool isLoading;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.UserChange += UserChanged;
+        pgcCtaSdosService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        SetDefaults();
+    }
+
+    void UserChanged(UserModel? user)
+    {
+        SetDefaults();
+    }
+
+    void SetDefaults()
+    {
+        selectedEmp = session.Emps?.FirstOrDefault();
+        if (selectedEmp != null)
+        {
+            selectedYear = DateTime.Today.Year;
+            FetchData();
+        }
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        isLoading = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void EmpClick(EmpModel emp)
+    {
+        selectedEmp = emp;
+        selectedYear = DateTime.Today.Year;
+        FetchData();
+    }
+
+    void YearClick(int year)
+    {
+        selectedYear = year;
+        FetchData();
+    }
+
+    void CtaClick(PgcCtaModel cta)
+    {
+        selectedCta = cta;
+        Refresca(null);
+    }
+
+    void ContactClick(ContactModel contact)
+    {
+        selectedContact = contact;
+        Refresca(null);
+    }
+
+    void CcaClick(CcaModel cca)
+    {
+
+    }
+
+    void SelectedEmpClicked()
+    {
+        selectedEmp = null;
+        selectedYear=null;
+        selectedCta=null;
+        selectedContact = null;
+        selectedCca = null;
+    }
+
+    void SelectedYearClicked()
+    {
+        selectedYear = null;
+        selectedCta = null;
+        selectedContact = null;
+        selectedCca = null;
+    }
+
+    void SelectedCtaClicked()
+    {
+        selectedCta = null;
+        selectedContact = null;
+        selectedCca = null;
+    }
+
+    void SelectedContactClicked()
+    {
+        selectedContact = null;
+        selectedCca = null;
+    }
+
+    void SelectedCcaClicked()
+    {
+        selectedCca = null;
+    }
+
+    void FetchData()
+    {
+        isLoading = true;
+        _ = Task.Run(async () => await pgcCtaSdosService.FetchAsync(selectedEmp!, (int)selectedYear));
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        pgcCtaSdosService.OnChange -= Refresca;
+    }
+
+
+}

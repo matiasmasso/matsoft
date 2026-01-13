@@ -1,0 +1,41 @@
+﻿
+.Properties .Label {
+    color: gray;
+}
+.Properties .Value {
+    padding:0 0 15px 10px;
+}
+
+.Docfiles {
+    position: relative;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px;
+    margin: 15px 0;
+    padding:10px;
+}
+
+
+.Docfiles .Label {
+    position:absolute;
+    top:-15px;
+    left:5px;
+    background-color:white;
+    padding:0 5px;
+}
+
+.Gallery {
+    display:flex;
+    gap:10px;
+}
+
+.Thumbnail {
+    display:block;
+    max-height: 100px;
+    max-width:100px;
+
+}
+
+.Thumbnail img {
+    width:auto;
+    height:100%;
+}

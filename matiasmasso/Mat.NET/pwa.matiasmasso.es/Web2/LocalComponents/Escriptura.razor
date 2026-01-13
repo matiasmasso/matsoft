@@ -1,0 +1,40 @@
+﻿@inject CultureService culture
+@inject EscripturasService escripturasService
+
+<div class="PageWrapper600">
+    <h3>Escriptura</h3>
+    @if (value == null && exception == null)
+    {
+        <Loading></Loading>
+    } else
+    {
+
+        <div class="Details">
+            <div>@value?.Nom</div>
+            <div>@value?.DocFile?.Features()</div>
+        </div>
+
+        <a class="Thumbnail" href="@value?.DocFile?.DownloadUrl()" target="_blank">
+            <img src="@value?.DocFile?.ThumbnailUrl()" alt="escriptura" />
+        </a>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+@code {
+    [Parameter] public EscripturaModel? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    EscripturaModel? value;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            value = await escripturasService.Find(Model!.Guid);
+        } catch(Exception ex)
+        {
+            exception = ex;
+        }
+    }
+}

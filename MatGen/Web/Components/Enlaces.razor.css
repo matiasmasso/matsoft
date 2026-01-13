@@ -1,0 +1,26 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.Details {
+    display: flex;
+    gap: 10px;
+}
+.Conjuge {
+    display: flex;
+    gap: 10px;
+}
+
+.GridRowDivider {
+    margin: 10px 0;
+}
+
+@media(min-width:600px){
+    .Grid {
+        grid-row-gap:10px;
+    }
+}

@@ -1,0 +1,104 @@
+﻿@implements IDisposable
+
+@inject ApiService ApiService
+
+<div class="Wrapper">
+    @if (ApiService.Professions() == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nova professió</a>
+        </PageOptions>
+    </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+            <Virtualize Items="@(FilteredItems() ?? new())" Context="item">
+                <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Icon">
+                        <Icon Id="@(HasAncestor(item) ? Icon.Ids.Star : Icon.Ids.None)"></Icon>
+                    </div>
+                    <div class="Nom Truncate">@item.Nom</div>
+                </a>
+                <div class="GridRowDivider HideOnDesktop"></div>
+            </Virtualize>
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public EventCallback<ProfessionModel> ItemSelected { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+    List<AncestorModel>? ancestors;
+    IModel? selectedItem;
+    string? searchTerm;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+        ancestors = ApiService.RootAncestors();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    void ItemClick(ProfessionModel item)
+    {
+        if (ItemSelected.HasDelegate)
+            ItemSelected.InvokeAsync(item);
+        else
+            selectedItem = item;
+    }
+
+    void AddNew()
+    {
+        if (AddNewRequest.HasDelegate)
+            AddNewRequest.InvokeAsync();
+        else
+            ItemClick(ProfessionModel.Factory());
+    }
+
+    List<ProfessionModel>? FilteredItems()
+    {
+        List<ProfessionModel>? retval = null;
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = ApiService.Professions();
+        else
+            retval = ApiService.Professions()?.Where(x => x.Matches(searchTerm)).ToList();
+        return retval;
+    }
+
+    bool HasAncestor(ProfessionModel item)
+    {
+        var retval = ApiService.HasAncestors(item, ancestors);
+        return retval;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange += Refresca;
+    }
+}

@@ -1,0 +1,18 @@
+﻿
+.Item {
+    display:block;
+    padding: 10px;
+    border-bottom: 1px solid gray;
+}
+
+    .Item.SelectedCountry {
+        background-color: #AAC4FF
+    }
+
+    .Item.SelectedZona {
+        background-color: #D2DAFF
+    }
+
+    .Item.SelectedLocation {
+        background-color: #EEF1FF
+    }

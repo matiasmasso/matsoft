@@ -1,0 +1,161 @@
+﻿@using ImageMagick;
+@using DTO;
+@using Microsoft.AspNetCore.Components.Forms;
+
+<div class="Wrapper">
+    <div class="Dropzone" style="@(WrapperSize());">
+        @if (isLoading)
+        {
+        <span>importing @filename ...</span>
+        <Loading></Loading>
+        }
+        else if (IsEmpty())
+        {
+        <svg class="UploadIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+            <path d="M241 7c-9.4-9.4-24.6-9.4-33.9 0L79 135c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l87-87V328c0 13.3 10.7 24 24 24s24-10.7 24-24V81.9l87 87c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9L241 7zM48 344c0-13.3-10.7-24-24-24s-24 10.7-24 24v80c0 48.6 39.4 88 88 88H360c48.6 0 88-39.4 88-88V344c0-13.3-10.7-24-24-24s-24 10.7-24 24v80c0 22.1-17.9 40-40 40H88c-22.1 0-40-17.9-40-40V344z" />
+        </svg>
+
+        <span>click or drag to import a file</span>
+
+        <InputFile OnChange="@LoadFile" />
+        }
+        else if (isNew)
+        {
+        <img src="@base64data" />
+        <InputFile OnChange="@LoadFile" />
+        }
+        else
+        {
+        @if (!imgIsLoaded)
+        {
+        <Loading></Loading>
+        }
+        <a href="@docfile?.DownloadUrl()" target="_blank">
+            <img src="@docfile?.ThumbnailUrl()"
+                 @onload="@(()=>imgIsLoaded = true)"
+                 @onerror="@(()=>docfile=null)" />
+        </a>
+        }
+    </div>
+    <div class="Features">
+        @docfile?.Features()
+    </div>
+
+    <Error Exception="exception"></Error>
+
+</div>
+
+
+
+@code {
+    [Parameter] public DocFileModel? Value { get; set; }
+    [Parameter] public int Width { get; set; } = DocFileModel.THUMBNAIL_WIDTH;
+    [Parameter] public int Height { get; set; } = DocFileModel.THUMBNAIL_HEIGHT;
+    [Parameter] public EventCallback<DocFileModel>
+    ValueChanged { get; set; }
+
+
+    bool isLoading;
+    bool isNew;
+    bool imgIsLoaded;
+
+    string? filename;
+    string? base64data;
+    DocFileModel? docfile;
+    Exception? exception;
+
+    protected override void OnParametersSet()
+    {
+    if (Value != null && Value.Hash != docfile?.Hash)
+    {
+    isNew = false;
+    docfile = Value;
+    }
+    }
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+    isLoading = true;
+    isNew = true;
+    try
+    {
+    filename = e.File.Name;
+    docfile = await CreateDocfile(e.File, 350, 400);
+    base64data = docfile.Thumbnail?.DataUrl();
+    await ValueChanged.InvokeAsync(docfile);
+    }
+    catch (Exception ex)
+    {
+    exception = ex;
+    }
+    isLoading = false;
+    }
+
+    string WrapperSize() => $"width:{Width + 2}px;height:{Height + 2}px";
+
+    bool IsEmpty()
+    {
+    var retval = false;
+    if (docfile == null)
+    retval = true;
+    else if (docfile.Document?.Mime == Media.MimeCods.NotSet)
+    retval = true;
+    return retval;
+    }
+
+    async Task<DocFileModel>
+        CreateDocfile(IBrowserFile file, int thumbnailWidth, int thumbnailHeight)
+        {
+        var mimeCod = Media.MimeCodFromContentType(file.ContentType);
+        Stream stream = file.OpenReadStream(maxAllowedSize: 100000000);
+        MemoryStream ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        stream.Close();
+
+        ms.Seek(0, SeekOrigin.Begin);
+        var bytes = ms.ToArray();
+
+        DocFileModel retval = new DocFileModel();
+        retval.Document = new Media(mimeCod, bytes);
+        retval.Size = bytes.Length;
+        retval.Hash = DTO.Helpers.CryptoHelper.HashMD5(bytes);
+        retval.Filename = file.Name;
+        retval.FchCreated = file.LastModified.DateTime;
+
+        using (MagickImageCollection images = new MagickImageCollection())
+        {
+        MagickReadSettings settings = new MagickReadSettings();
+        settings.FrameIndex = 0;
+        settings.FrameCount = 1;
+
+        images.Ping(bytes);
+        retval.Pags = images.Count;
+
+        images.Read(ms, settings);
+        using (var image = images.First())
+        {
+        image.Format = MagickFormat.Png;
+        retval.Width = image.Width;
+        retval.Height = image.Height;
+        var landscape = retval.Width / retval.Height > thumbnailWidth / thumbnailHeight;
+        int resizeWidth = landscape ? thumbnailWidth : (int)retval.Width * thumbnailHeight / (int)retval.Height;
+        int resizeHeight = landscape ? (int)retval.Height * thumbnailWidth / (int)retval.Width : thumbnailHeight;
+        int frameWidth = (thumbnailWidth - resizeWidth) / 2;
+        int frameHeight = (thumbnailHeight - resizeHeight) / 2;
+        image.Resize(resizeWidth, resizeHeight);
+        retval.Thumbnail = new Media(Media.MimeCods.Png, image.ToByteArray());
+        }
+        return retval;
+        }
+        }
+
+        public class MediaChangedEventArgs:EventArgs{
+
+
+        }
+
+        public class DroppedFile{
+        public string? Filename {get; set;}
+        }
+        }
+        }

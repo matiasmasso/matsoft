@@ -1,0 +1,22 @@
+﻿<a href="#" @onclick="CaptionClick" @onclick:preventDefault>
+    <div class="Caption">
+        <Icon Id="@(isShowingPanel ? Icon.Ids.ChevronUp : Icon.Ids.ChevronDown)"></Icon>
+        <div>@Caption</div>
+    </div>
+    <div class="Panel @(isShowingPanel ? "" : "Hidden")">
+        @ChildContent
+    </div>
+
+</a>
+
+@code {
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+    bool isShowingPanel = false;
+
+    void CaptionClick()
+    {
+        isShowingPanel = !isShowingPanel;
+    }
+}

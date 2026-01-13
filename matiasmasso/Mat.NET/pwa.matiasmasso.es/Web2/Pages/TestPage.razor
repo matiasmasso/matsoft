@@ -1,0 +1,21 @@
+﻿@page "/test"
+@inject NavigationManager navigationManager
+
+Uri: @url
+
+
+<button @onclick="Click"></button>
+
+@code {
+    string? url;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        url = navigationManager.Uri;
+    }
+    void Click()
+    {
+        
+    }
+}

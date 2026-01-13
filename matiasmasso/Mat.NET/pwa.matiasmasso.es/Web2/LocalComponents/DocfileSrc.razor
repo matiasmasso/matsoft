@@ -1,0 +1,85 @@
+﻿@inject CultureService culture
+@inject NavigationManager navigationManager
+<div>
+    <input type="date" value="@($"{fch:yyyy-MM-dd}")" @onchange="FchChanged" @oninput="@(()=>state=DbState.IsDirty)" />
+    <input type="text" value="@nom" />
+    <div class="Filedrop">
+        <Filedrop 
+            Value="docfile" 
+            ValueChanged="FileChanged"></Filedrop>
+    </div>
+    <div class="ButtonsBar">
+        <ButtonsBar CanEdit="true"
+                    State="state"
+                    CanDelete="true"
+                    RequestToCancel="CancelRequest"
+                    RequestToUpdate="UpdateRequest"
+                    RequestToDelete="DeleteRequest"></ButtonsBar>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DocfileSrcModel? Model { get; set; }
+    [Parameter] public EventCallback<DocfileSrcModel> RequestToUpdate { get; set; }
+    [Parameter] public EventCallback<DocfileSrcModel> RequestToDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private DateTime? fch;
+    private string? nom;
+    private string? features;
+    private DbState state;
+    private DocfileModel? docfile;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        docfile = Model!.Docfile;
+        features = docfile?.Features();
+        nom = docfile?.Nom;
+        fch = docfile?.Fch;
+    }
+
+    private void FileChanged(DocfileModel args)
+    {
+        docfile = args;
+    }
+
+    void FchChanged(ChangeEventArgs args)
+    {
+        if (args.Value != null)
+        {
+            fch = DateTime.Parse(args.Value!.ToString()!);
+        }
+    }
+
+    void Browse()
+    {
+        navigationManager.NavigateTo(docfile!.DownloadUrl()!);
+    }
+
+    void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+    void UpdateRequest()
+    {
+        state = DbState.IsUpdating;
+        var value = Model!;
+        value.Docfile!.Fch = fch;
+        value.Docfile.Nom = nom;
+        RequestToUpdate.InvokeAsync(value);
+        state = DbState.StandBy;
+        RequestToCancel.InvokeAsync();
+    }
+
+    void DeleteRequest()
+    {
+        state = DbState.IsDeleting;
+        var value = Model!;
+        RequestToDelete.InvokeAsync(value);
+        state = DbState.StandBy;
+        RequestToCancel.InvokeAsync();
+    }
+   
+}

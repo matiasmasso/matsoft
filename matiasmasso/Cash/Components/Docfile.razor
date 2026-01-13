@@ -1,0 +1,115 @@
+﻿@inject ApiService ApiService
+
+<div>
+    <Title Value="fitxer" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (Model != null)
+    {
+        <div class="Wrapper">
+            <div class="PropertyGrid">
+
+                <PropertyGrid Model="propertyGrid"
+                              UpdateRequest="UpdateRequestHandler"
+                              CancelRequest="CloseRequestHandler"
+                              DeleteRequest="DeleteRequestHandler"
+                              UpdateState="updateState"
+                              DeleteState="deleteState">
+                </PropertyGrid>
+            </div>
+        </div>
+    }
+
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public DocfileModel? Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<DocfileModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<DocfileModel> AfterDelete { get; set; }
+
+    DocfileModel? value;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Nom,
+        Fch,
+        Docfile
+    }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            value = await ApiService.PostAsync<string, DocfileModel>(Model!.Hash!,"Docfile");
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+        StateHasChanged();
+    }
+
+    private PropertyGridModel PropertyGrid()
+    {
+        var retval  = new PropertyGridModel();
+        retval.AddString("Nom", value?.Nom);
+        //propertyGrid.AddDateOnly("Data", value?.Fch);
+        return retval;
+
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Nom = propertyGrid!.Value<string>((int)Fields.Nom);
+
+            await ApiService.PostMultipartAsync<DocfileModel, bool>(value, "Docfile");
+            //await ApiService.PostAsync<EscripturaModel, bool>(value, "Escriptura");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Escriptura/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+
+}

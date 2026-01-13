@@ -1,0 +1,19 @@
+﻿@page "/tpv/test"
+
+<form action="/tpv/feed" method="post">
+
+    <input type="hidden" name="Ds_SignatureVersion" value="@ds_SignatureVersion" />
+    <input type="hidden" name="Ds_Signature" value="@ds_Signature" />
+    <input type="hidden" name="Ds_MerchantParameters" value="@ds_MerchantParameters" />
+
+    <input type="submit" value="Submit" />
+</form>
+
+
+@code {
+    string ds_SignatureVersion = "HMAC_SHA256_V1";
+    string ds_Signature = "LNQk3GhI_J6tNaH1lwxF22lVVccjzk0pBm1lYgSVjXg=";
+    string ds_MerchantParameters = "eyJEc19EYXRlIjoiMTFcLzAxXC8yMDIzIiwiRHNfSG91ciI6IjA3OjQwIiwiRHNfU2VjdXJlUGF5bWVudCI6IjEiLCJEc19DYXJkX0NvdW50cnkiOiI3MjQiLCJEc19BbW91bnQiOiIzMjkwMCIsIkRzX0N1cnJlbmN5IjoiOTc4IiwiRHNfT3JkZXIiOiJWNTdQVjJWQUZUIiwiRHNfTWVyY2hhbnRDb2RlIjoiMjI0MjU1NzMiLCJEc19UZXJtaW5hbCI6IjAwMSIsIkRzX1Jlc3BvbnNlIjoiMDAwMCIsIkRzX01lcmNoYW50RGF0YSI6IiIsIkRzX1RyYW5zYWN0aW9uVHlwZSI6IjAiLCJEc19Db25zdW1lckxhbmd1YWdlIjoiMiIsIkRzX0F1dGhvcmlzYXRpb25Db2RlIjoiMTU3MzExIiwiRHNfQ2FyZF9CcmFuZCI6IjEiLCJEc19Qcm9jZXNzZWRQYXlNZXRob2QiOiI1In0=";
+
+    string queryString = "";
+}

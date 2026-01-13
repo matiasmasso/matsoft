@@ -1,0 +1,113 @@
+﻿@page "/Immobles"
+@inject ApiService ApiService
+
+@if (selectedItem == null)
+{
+    <div class="PageWrapper900">
+        <h3>Immobles</h3>
+
+        <div class="PageOptions">
+            <PageOptions>
+                <LookupEmp Values="availableEmps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+                <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir</a>
+            </PageOptions>
+        </div>
+
+        @if (values == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <div class="Searchbox">
+                <SearchBox @bind-Value="searchterm"></SearchBox>
+            </div>
+
+            <div class="Grid">
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a href="#" class="Item @(item.FchTo == null ? "" : "Baixa")" @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                        <div class="Nom Truncate">@item.Caption()</div>
+                        <div class="Cadastre">@item.Cadastre</div>
+                        <div class="Fch">@($"{item.FchFrom:dd/MM/yy}")</div>
+                    </a>
+                }
+            </div>
+        }
+
+
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+else
+{
+    <Immoble Value="selectedItem"
+             AfterUpdate="HandleAfterUpdate"
+             CloseRequest="@(()=>selectedItem=null)"></Immoble>
+}
+
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<EmpModel.EmpIds>? availableEmps;
+    EmpModel.EmpIds? emp;
+
+    List<ImmobleModel>? values;
+    ImmobleModel? selectedItem;
+    string? searchterm;
+    string? title;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+        await FetchAsync();
+        availableEmps = values!.Select(x => (EmpModel.EmpIds)x.Emp!).Distinct().ToList();
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            values = await ApiService.GetAsync<List<ImmobleModel>>("Immobles") ?? new();
+            values = values!.OrderBy(x => x.FchTo == null ? 0 : 1)
+            .ThenByDescending(x => x.FchFrom)
+            .ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private List<ImmobleModel>? FilteredItems()
+    {
+        List<ImmobleModel>? retval = values?.Where(x => x.Emp == emp).ToList();
+        if (!isShowingObsolets) retval = retval?.Where(x => x.FchTo == null).ToList();
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = retval?.Where(x => x.Matches(searchterm)).ToList();
+        return retval?.OrderBy(x=>x.Nom).ToList();
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    async Task HandleAfterUpdate(ImmobleModel args)
+    {
+        selectedItem = null;
+        await FetchAsync();
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    void AddNew()
+    {
+        selectedItem = new ImmobleModel { Emp = emp };
+    }
+}

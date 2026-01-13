@@ -1,0 +1,91 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    <h3>Cita</h3>
+
+    <PropertyGrid Model="@gridModel"
+                  SetDirty="@(()=>dbState = DbState.IsDirty)"
+                  CanEdit="true"></PropertyGrid>
+
+    <div class="ButtonsBar">
+        <ButtonsBar CanEdit="true"
+                    State="dbState"
+                    CanDelete="@(!(Value?.IsNew ?? false))"
+                    RequestToCancel="CancelRequest"
+                    RequestToDelete="DeleteRequest"
+                    RequestToUpdate="UpdateRequestHandler"></ButtonsBar>
+    </div>
+    <Error @bind-Exception="exception"></Error>
+</div>
+@code {
+    [Parameter] public CitaModel? Value { get; set; }
+    [Parameter] public EventCallback<CitaModel> UpdateRequest { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    CitaModel? value;
+    private PropertyGridModel? gridModel;
+    private DbState dbState;
+    Exception? exception;
+
+    private enum Fields : int
+    {
+        Title,
+        Author,
+        Year,
+        Container,
+        Pags,
+        Url,
+        Content
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Value;
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddString((int)Fields.Title, value?.Title, "Titol");
+        gridModel.AddString((int)Fields.Author, value?.Author, "Autor");
+        gridModel.AddInt((int)Fields.Year, value?.Year, "Any");
+        gridModel.AddString((int)Fields.Container, value?.Container, "Editorial");
+        gridModel.AddString((int)Fields.Pags, value?.Pags, "Pags");
+        gridModel.AddString((int)Fields.Url, value?.Url, "Url");
+        gridModel.AddMultiline((int)Fields.Content, value?.Content, "Contingut");
+    }
+
+    private async Task UpdateRequestHandler()
+    {
+        value!.Title = gridModel!.GetString((int)Fields.Title);
+        value!.Author = gridModel!.GetString((int)Fields.Author);
+        value!.Year = gridModel!.GetInt((int)Fields.Year);
+        value!.Container = gridModel!.GetString((int)Fields.Container);
+        value!.Pags = gridModel!.GetString((int)Fields.Pags);
+        value!.Url = gridModel!.GetString((int)Fields.Url);
+        value!.Content = gridModel!.GetString((int)Fields.Content);
+        dbState = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value);
+            await CancelRequest.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        dbState = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        dbState = DbState.StandBy;
+    }
+
+
+}

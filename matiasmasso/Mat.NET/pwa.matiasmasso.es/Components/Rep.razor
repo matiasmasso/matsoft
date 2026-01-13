@@ -1,0 +1,125 @@
+﻿@inherits _Base
+
+<h1>
+    @value?.AbrOrNom()
+</h1>
+
+<TabControl>
+    <TabPage Text="@Localizer("Properties")">
+
+        @if (value == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <PropertyGrid model="@gridModel"
+                      SetDirty="@(()=>isDirty=true)"
+                      CanEdit="@true"></PropertyGrid>
+
+            <div class="ButtonsBar">
+                <ButtonsBar CanEdit="@true"
+                          IsDirty="isDirty"
+                          IsUpdating="isUpdating"
+                          CanDelete="@(!(value?.IsNew ?? false))"
+                          RequestToCancel="CancelRequest"
+                          RequestToUpdate="UpdateRequest"></ButtonsBar>
+            </div>
+        }
+
+
+    </TabPage>
+
+</TabControl>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private RepModel? value;
+    private PropertyGridModel? gridModel;
+    private bool isDirty;
+    private bool isUpdating;
+    private ProblemDetails? problemDetails;
+
+    private enum Fields : int
+    {
+        Nom,
+        Abr,
+        Nif,
+        Address,
+        Description,
+        FchFrom,
+        FchTo,
+        Iban,
+        Tel,
+        Email
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var apiResponse = await GetAsync<RepModel>("Staff", Guid.ToString()!);
+        if (apiResponse.Value != null)
+        {
+            value = apiResponse.Value;
+            var model = new PropertyGridModel(value);
+            model.AddString((int)Fields.Nom, value.Nom, Localizer("Name"));
+            model.AddString((int)Fields.Abr, value.Abr, Localizer("Alias"));
+            model.AddString((int)Fields.Nif, value.Nif, Localizer("Vat"));
+            model.AddAddress((int)Fields.Address, value.Address, Localizer("Address"));
+            model.AddString((int)Fields.Description, value.Description, Localizer("Description"));
+            model.AddFch((int)Fields.FchFrom, value.FchFrom, Localizer("EntryDate"));
+            model.AddFch((int)Fields.FchTo, value.FchTo, Localizer("TerminationDate"));
+            model.AddIban((int)Fields.Iban, value.Iban);
+            foreach (var tel in value.Telefons)
+            {
+                model.AddTel((int)Fields.Tel, tel);
+            }
+            foreach (var email in value.Emails)
+            {
+                model.AddEmail((int)Fields.Email, email);
+            }
+            gridModel = model;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+        StateHasChanged();
+    }
+
+    private async Task UpdateRequest()
+    {
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value!.Abr = gridModel!.GetString((int)Fields.Abr);
+        value!.Nif = gridModel!.GetString((int)Fields.Nif);
+        value!.Description = gridModel!.GetString((int)Fields.Description);
+        value!.FchFrom = gridModel!.GetValue<DateTime>((int)Fields.FchFrom);
+        value!.FchTo = gridModel!.GetValue<DateTime>((int)Fields.FchTo);
+        value!.Iban = gridModel!.GetValue<IbanModel>((int)Fields.Iban);
+
+        var apiResponse = await PostAsync<RepModel, bool>(value, "Rep");
+        if (apiResponse?.Value != null)
+            CancelRequest();
+        else
+            problemDetails = apiResponse?.ProblemDetails;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<bool>("Rep/delete", value!.Guid.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse?.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        base.NavigateBack();
+    }
+
+
+}
+

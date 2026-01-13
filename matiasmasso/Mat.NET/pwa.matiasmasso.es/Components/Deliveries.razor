@@ -1,0 +1,134 @@
+﻿@inherits _Base
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+@if (model == null)
+{
+    <Loading></Loading>
+}
+else if (selectedItem == null)
+{
+    <div class="TitleBar">
+        <span>@Localizer("Deliveries")</span>
+        <select value="@year" @onchange="@YearChanged" class="@( model.Years.Count==0 ? "Hidden":"")">
+            @foreach (var i in model.Years)
+            {
+                <option>@i.ToString()</option>
+            }
+        </select>
+    </div>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Summary">
+        @Localizer("Deliveries.Count",model.Items.Count().ToString())
+    </div>
+
+
+    <div class="Grid">
+        <div class="DesktopContents">
+            <div class="TH Id">@Localizer("Id")</div>
+            <div class="TH Fch">@Localizer("Fch")</div>
+            <div class="TH Cli">@Localizer("Customer")</div>
+            <div class="TH Amt">@Localizer("Amount")</div>
+
+
+            <!-- to set margin from column captions -->
+            <div class="THSpacer">&nbsp;</div>
+
+
+            <!-- to compensate Virtualize bug, set an empty row of Columns.Count-1 -->
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <Virtualize Items="@FilteredItems()" Context="item">
+            <a class="ItemContents" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                <div class="Id">@item.Id</div>
+                <div class="Fch">@item.Fch.ToString("dd/MM/yy")</div>
+                <div class="Cli">@(item.Contact?.Nom ?? "")</div>
+                <div class="Amt">@item.Amt?.CurFormatted()</div>
+            </a>
+        </Virtualize>
+    </div>
+}
+else
+{
+    <Delivery Guid="selectedItem.Guid" CloseRequest="@(()=>selectedItem = null)"></Delivery>
+
+}
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    private DeliveryModel.List? model;
+    private string? searchTerm;
+    private int year;
+    private DeliveryModel? selectedItem;
+    private UserModel? user;
+    private ProblemDetails? problemDetails;
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            user = await GetUser();
+            await Refresca();
+        }
+    }
+
+
+    private List<DeliveryModel> FilteredItems()
+    {
+        return model!.Items
+        .Where(x => x.Matches(searchTerm))
+        .ToList();
+    }
+
+    private void ItemClick(DeliveryModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void RequestToClose()
+    {
+        selectedItem = null;
+    }
+
+    private async Task YearChanged(ChangeEventArgs e)
+    {
+        year = int.Parse(e.Value!.ToString()!);
+        model = null;
+        await Refresca();
+    }
+    private async Task Refresca()
+    {
+        ApiResponse<DeliveryModel.List>? apiResponse = null;
+        if (user?.IsCustomer() ?? false)
+            apiResponse = await GetAsync<DeliveryModel.List>("DeliveryList");
+        else
+            apiResponse = await GetAsync<DeliveryModel.List>("DeliveryList", ((int)Globals.DefaultEmp).ToString(), year.ToString());
+
+        if (apiResponse.Value != null)
+        {
+            model = apiResponse.Value;
+            if (year == 0) year = model!.Years.First();
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+        StateHasChanged();
+
+    }
+
+
+    private string LoadingMessage()
+    {
+        if (year == 0)
+            return base.Tradueix("Cargando últimos albaranes", "Carregant albarans recents", "Loading last deliveries");
+        else
+            return string.Format(base.Tradueix("Cargando albaranes del {0}", "Carregant albarans del {0}", "Loading {0} deliveries"), year);
+    }
+}

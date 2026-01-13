@@ -1,0 +1,37 @@
+﻿<div class="PanelWrapper">
+    <a class="Caption" href="#" @onclick="@(()=>IsExpanded = !IsExpanded)" @onclick:preventDefault>
+
+        <div class="Chevron Down @(IsExpanded ? "Hidden" : "")">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                <path class="fa-secondary" d="M224 416c-8.188 0-16.38-3.125-22.62-9.375l-192-192c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0L224 338.8l169.4-169.4c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25l-192 192C240.4 412.9 232.2 416 224 416z" />
+            </svg>
+        </div>
+
+        <div class="Chevron Up @(IsExpanded ? "" : "Hidden")">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                <path class="fa-secondary" d="M416 352c-8.188 0-16.38-3.125-22.62-9.375L224 173.3l-169.4 169.4c-12.5 12.5-32.75 12.5-45.25 0s-12.5-32.75 0-45.25l192-192c12.5-12.5 32.75-12.5 45.25 0l192 192c12.5 12.5 12.5 32.75 0 45.25C432.4 348.9 424.2 352 416 352z" />
+            </svg>
+        </div>
+
+        <label>
+            @Caption
+        </label>
+    </a>
+    <div class="Contingut @(IsExpanded ? "":"Hidden")">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Caption { get; set; } = "(click me to expand panel)";
+
+    [Parameter]
+    public bool IsExpanded { get; set; } = false;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+
+
+}

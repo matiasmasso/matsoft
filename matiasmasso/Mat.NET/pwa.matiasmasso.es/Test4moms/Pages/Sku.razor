@@ -1,0 +1,96 @@
+﻿@page "/Sku/{Guid:guid}"
+@inherits _ComponentBase
+@inject IStringLocalizer<AppResource> Localizer
+@inject NavigationManager NavigationManager
+
+<PageTitle>@title</PageTitle>
+
+<div class="Wrapper">
+    @if (model != null)
+    {
+        <div class="Title">
+            @title
+        </div>
+
+        <div class="Details">
+            <div class="Thumbnail">
+                <img src="@SessionProvider!.Cache!.ImageUrl(model)" width="410" height="410" />
+            </div>
+            <div class="Features">
+                <label>@Localizer["Ref"]</label>
+                <div>@model.Ref</div>
+                <label>@Localizer["Price"]</label>
+                <div>@string.Format("{0:N2} €",SessionProvider!.Cache!.Price(model))</div>
+                <label>@Localizer["Availability"]</label>
+                <div>@Availability()</div>
+                @if(basketItem == null)
+                {
+                    <button class="Button AddToBasket" @onclick="AddToBasket">
+                        @Localizer["Shop.AddToBasket"]
+                    </button>
+                } else
+                {
+                    <label>@Localizer["Purchased"]</label>
+                    <div><input type="number" @bind-value="basketItem.Qty" /></div>
+
+                    <button class="Button GotoBasket" @onclick="NavigateBasket">
+                        @Localizer["Shop.SeeBasket"]
+                    </button>
+                    <button class="Button CloseOrder" @onclick="CloseOrder">
+                        @Localizer["Shop.CloseOrder"]
+                    </button>
+
+                }
+
+            </div>
+        </div>
+    }
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+
+    ProductSkuModel? model;
+    ProductCategoryModel? category;
+    string? title;
+    ShoppingBasketModel.Item? basketItem;
+    ProblemDetails? problemDetails;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        model = SessionProvider?.Cache?.Skus.FirstOrDefault(x => x.Guid == guid);
+        category = SessionProvider?.Cache?.Categories.FirstOrDefault(x => x.Guid == model?.Category);
+        title = string.Format("{0} {1}", category?.CamelCase4moms(base.Lang()), model?.Nom.Tradueix(base.Lang()));
+
+        basketItem = SessionProvider?.BasketItem(model);
+    }
+
+
+    string Availability()
+    {
+        string retval = string.Empty;
+        var stock = SessionProvider!.Cache!.Stocks.FirstOrDefault(x => x.Sku == model!.Guid);
+        if (stock == null)
+            retval = Localizer["Sku.Availability.None"];
+        else
+            retval = Localizer["Sku.Availability.Some"];
+        return retval;
+    }
+
+    void AddToBasket()
+    {
+        SessionProvider?.AddItemToBasket(model);
+    }
+
+    void NavigateBasket()
+    {
+        NavigationManager.NavigateTo("/Basket");
+    }
+
+    void CloseOrder()
+    {
+        NavigationManager.NavigateTo("/Submit");
+    }
+}

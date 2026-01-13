@@ -1,0 +1,59 @@
+﻿@using DTO
+@using Spa.Shared
+@inject AppState AppState
+
+
+@if(IsEditing)
+{
+    <div class="form-group">
+        Adreça: <InputText @bind-Value="@Model.Text" class="form-control"/>
+    </div>
+    <div class="form-group">
+        Població:  <LookupTemplate TItem = "@ZipDTO"
+                            Items="@Zips"
+                            @bind-Value="@Model.Zip" 
+                            CssClass="form-control" />
+    </div>
+} else
+{
+    <div class="form-group">
+        Adreça: <InputText @bind-Value="@fullNom" class="form-control" @onfocus="Toggle"  />
+    </div>
+}
+
+
+@code {
+    private string fullNom = string.Empty;
+    private string zipFullnom = string.Empty;
+    private bool IsEditing = false;
+    private List<ZipDTO> Zips = new();
+
+    [Parameter]
+    public AddressDTO? Model { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        fullNom = Model?.FullNom(AppState.Lang) ?? "";
+        zipFullnom = Model?.Zip?.FullNom(AppState.Lang) ?? "";
+        base.OnParametersSet();
+    }
+
+    private void Submit()
+    {
+        IsEditing = false;
+    }
+
+    private void Cancel()
+    {
+        IsEditing = false;
+    }
+
+    private void Toggle()
+    {
+        IsEditing = true;
+    }
+
+}

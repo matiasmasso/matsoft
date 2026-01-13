@@ -1,0 +1,130 @@
+﻿@implements IDisposable
+
+@inject CultureService culture
+
+<div>
+
+    @if (isEditing)
+    {
+        <div class="Label">@culture.Localize("EmailAddress")</div>
+        <div class="Value">
+            @Participant?.Lead?.EmailAddress
+        </div>
+
+        <div class="Label">@culture.Localize("Firstname")</div>
+        <div class="Value">
+            @if (isEditing)
+            {
+                <input type="text" value="@Participant?.Lead?.Nom" @oninput="FirstnameChanged" />
+            }
+            else
+            {
+                <span>@Participant?.Lead?.Nom</span>
+            }
+        </div>
+
+        <div class="Label">@culture.Localize("Surnames")</div>
+        <div class="Value">
+            @if (isEditing)
+            {
+                <input type="text" @bind-value="@Participant!.Lead!.Cognoms" @oninput="CognomsChanged" />
+            }
+            else
+            {
+                <span>@Participant?.Lead?.Cognoms</span>
+            }
+
+        </div>
+
+            <div class="ButtonRow @(string.IsNullOrEmpty(WarningText()) ? "" : "HasWarning")">
+                <div class="Warning">
+                    <Icon Id="Icon.Ids.Warning" Width="1em"></Icon>
+                    <div>@WarningText()</div>
+                </div>
+
+                <button class="Button ButtonOk"
+                        disabled="@(!Participant?.HasValidNomAndCognoms())"
+                @onclick="NextStepRequestHandler">
+                    @culture.Localize("Accept")
+                </button>
+            </div>
+    }
+    else
+    {
+        <div>@Participant?.Lead?.NomiCognoms()</div>
+        <div>@Participant?.Lead?.EmailAddress</div>
+        <a href="#" class="ClickToChange"
+       @onclick="@(()=>isEditing = true)"
+        @onclick:preventDefault>
+            <Icon Id="Icon.Ids.Edit" Width="21px"></Icon> @culture.Localize("Edit")
+        </a>
+    }
+
+</div>
+
+
+@code {
+    [CascadingParameter] private Steps? Parent { get; set; }
+    [Parameter] public RaffleModel.Participant? Participant { get; set; }
+
+    DbState state = DbState.IsDirty;
+    PropertyGridModel? gridModel;
+    bool isDirty;
+    bool isEditing;
+    string? warning;
+    Exception? exception;
+
+    enum Fields
+    {
+        EmailAdr,
+        Firstname,
+        Surname
+    }
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        isEditing = !(Participant?.HasValidNomAndCognoms() ?? false);
+    }
+
+    void Refresca(Exception? ex)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    void FirstnameChanged(ChangeEventArgs args)
+    {
+        Participant!.Lead!.Nom = args.Value?.ToString();
+    }
+
+    void CognomsChanged(ChangeEventArgs args)
+    {
+        Participant!.Lead!.Cognoms = args.Value?.ToString();
+    }
+
+    string? WarningText()
+    {
+        string? retval = null;
+        if (!(Participant?.HasValidNomAndCognoms() ?? false))
+            retval = culture.Localize("Please.Enter.ValidNomAndCognoms");
+        return retval;
+    }
+
+    void NextStepRequestHandler()
+    {
+        isEditing = false;
+        Parent!.ActiveStep!.Completed = true;
+        Parent?.NextStep();
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+    }
+
+
+}

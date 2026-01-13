@@ -1,0 +1,71 @@
+﻿@inherits _ComponentBase
+
+<div class="Wrapper">
+    @if (isEditing)
+    {
+        <input type="text" @bind="searchTerm" @bind:event="oninput" />
+        <div class="Dropdown">
+            <ProductBrands_List Model="FilteredItems()" SelectedItemChanged="OnItemSelected"></ProductBrands_List>
+        </div>
+
+    }
+    else
+    {
+        <UxCaptionEllipsis Tag="Value"
+                       Caption="@caption"
+                       OnClick="EditRequest"
+                       HideEllipsis="HideEllipsis"
+                       OnEllipsis="ToggleContextMenu"></UxCaptionEllipsis>
+
+        @if (Value != null && isShowingMenu)
+        {
+            <ContextMenu_Deprecated Model="ContextMenuModel.Factory(Value)" OnClick="@(()=>isShowingMenu = false)"></ContextMenu_Deprecated>
+        }
+
+    }
+</div>
+
+@code {
+    [Parameter] public bool HideEllipsis { get; set; } = false;
+    [Parameter] public ProductBrandModel Value { get; set; }
+    [Parameter] public EventCallback<ProductBrandModel> ValueChanged { get; set; }
+
+    string caption;
+    string searchTerm;
+    bool isEditing = false;
+    bool isShowingMenu = false;
+    CacheDTO cache = AppState.DefaultCache();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        caption = Value?.Nom.Tradueix(base.Lang());
+    }
+
+    void ToggleContextMenu()
+    {
+        isShowingMenu = !isShowingMenu;
+    }
+
+    void EditRequest()
+    {
+        isEditing = true;
+        searchTerm = caption;
+    }
+
+    List<ProductBrandModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm) || searchTerm == caption)
+            return cache.Brands.ToList();
+        else
+            return cache.Brands.Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+
+    void OnItemSelected(ProductBrandModel item)
+    {
+        isEditing = false;
+        //caption = Value?.Nom.Tradueix(base.Lang());
+        ValueChanged.InvokeAsync(item);
+    }
+}

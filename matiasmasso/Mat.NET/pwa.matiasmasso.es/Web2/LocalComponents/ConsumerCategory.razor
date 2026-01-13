@@ -1,0 +1,31 @@
+﻿@inject CultureService culture
+@inject ProductsService productsService
+
+@if (Model == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="Wrapper">
+        <div class="Breadcrumbs">
+            <Breadcrumbs Model="@productsService.Breadcrumbs(Model, culture)"></Breadcrumbs>
+        </div>
+
+        <div class="Content">
+            @((MarkupString)(productsService.Content(Model,culture.Lang())))
+        </div>
+
+        <Error @bind-Exception="exception"></Error>
+    </div>
+}
+
+
+@code {
+    [Parameter] public ProductCategoryModel? Model { get; set; }
+
+    private string? content;
+    private List<Box> breadcrumbs = new();
+    private Exception? exception;
+
+}

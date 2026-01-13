@@ -1,0 +1,56 @@
+﻿<input @attributes="AdditionalAttributes"
+       class="@Class"
+       value="@_text"
+       @oninput="OnInput"
+       @onblur="OnBlur" />
+
+@code {
+    [Parameter] public decimal? Value { get; set; }
+    [Parameter] public EventCallback<decimal?> ValueChanged { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string _text = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        // Only update text when NOT typing
+        if (!_isTyping)
+            _text = Value is null ? string.Empty : $"{Value.Value:0.##} %";
+    }
+
+    private bool _isTyping = false;
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        _isTyping = true;
+
+        var raw = e.Value?.ToString()?.Replace("%", "").Trim();
+
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            await ValueChanged.InvokeAsync(null);
+            return;
+        }
+
+        if (decimal.TryParse(raw, out var parsed))
+        {
+            parsed = Math.Clamp(parsed, 0, 100);
+            await ValueChanged.InvokeAsync(parsed);
+        }
+
+        _text = raw; // keep unformatted while typing
+    }
+
+    private void OnBlur()
+    {
+        _isTyping = false;
+
+        if (Value is null)
+            _text = string.Empty;
+        else
+            _text = $"{Value.Value:0.##} %";
+    }
+}

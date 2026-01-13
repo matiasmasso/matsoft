@@ -1,0 +1,112 @@
+.MainLayout {
+    max-width: 1200px;
+    margin: auto;
+    height: 100%;
+    display: grid;
+    grid-template-areas: "header header header"
+        "left main right"
+        "footer footer footer";
+    grid-template-columns: minmax(min-content,265px) minmax(min-content,1fr) minmax(218px,265px);
+    grid-template-rows: max-content 1fr max-content;
+    gap: 10px;
+    padding: 10px;
+}
+
+    .MainLayout.MenuVisible aside.Menu {
+        display: block;
+    }
+    .MainLayout.MenuVisible aside.Left {
+        display: none;
+    }
+
+header {
+    grid-area: header;
+    width: 100%;
+}
+
+main {
+    grid-area: main;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+}
+
+aside {
+    max-width: 265px;
+}
+
+aside.Left {
+    grid-area: left;
+}
+
+aside.Right {
+    grid-area: right;
+}
+
+    aside.Menu {
+        grid-area: left;
+        display: none;
+    }
+
+
+footer {
+    grid-area: footer;
+}
+
+.Demo {
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+@media screen and (max-width:1000px) {
+    .MainLayout {
+        grid-template-areas: "header header"
+            "left main"
+            "footer footer";
+        grid-template-columns: minmax(218px,265px) minmax(min-content,1fr);
+    }
+
+
+
+
+    aside.Right {
+        display: none;
+    }
+}
+
+/* ------------- mobiles -----------------*/
+
+@media screen and (max-width:600px) {
+    .MainLayout {
+        grid-template-areas: "header"
+            "main"
+            "footer";
+        grid-template-columns: 1fr;
+    }
+
+    aside.Left {
+        display: none;
+    }
+
+    aside.Menu:not(.Hidden) {
+        grid-area: main;
+        max-width:100%;
+        z-index:10;
+        background-color:white;
+    }
+
+    .MainLayout aside.Menu {
+        display: block;
+    }
+    .MainLayout.HiddeMenuOnMobile aside.Menu {
+        display: none;
+    }
+
+/*    .MainLayout.HiddeMenuOnMobile aside.Left {
+        display: block;
+    }
+*/
+}

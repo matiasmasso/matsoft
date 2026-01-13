@@ -1,0 +1,30 @@
+.ButtonsBar {
+    display:flex;
+    justify-content: space-between;
+    gap:10px;
+    margin-bottom: 15px;
+}
+
+.Item {
+    display: block;
+    border-bottom: 1px solid gray;
+}
+
+    .Item.Selected {
+        background-color: #DDDDDD;
+    }
+
+.ToggleLocalApi {
+    display: block;
+    margin-top: 15px;
+}
+
+.ToggleLocalApi.Local {
+    color:red;
+}
+
+@media(max-width:499px) {
+    .Item {
+            padding:10px 0;
+        }
+    }

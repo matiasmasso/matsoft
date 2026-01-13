@@ -1,0 +1,54 @@
+﻿@inherits _Base
+
+<div class="PageWrapper900">
+    <h1>@Localizer("Incidences")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedItem is null)
+    {
+        <IncidenciasList Model="model"
+                     SelectedItemChanged="SelectedItemChanged"
+                     IsSingleCustomer="isSingleCustomer"></IncidenciasList>
+    }
+    else
+    {
+        <Incidencia Guid="selectedItem.Guid"
+                RequestToCancel="@(()=>selectedItem = null)"></Incidencia>
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    private List<IncidenciaModel>? model;
+    private IncidenciaModel? selectedItem = null;
+    private bool isSingleCustomer;
+    private ProblemDetails? problemDetails;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (model == null)
+        {
+            var apiResponse = await GetAsync<List<IncidenciaModel>>("Incidencias", ((int)Globals.DefaultEmp).ToString());
+            if (apiResponse.Success())
+            {
+                model = apiResponse.Value;
+                if (model != null)
+                    isSingleCustomer = model.All(x => x.Customer == (Guid)model.First().Customer);
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+    }
+
+    void SelectedItemChanged(IncidenciaModel item)
+    {
+        selectedItem = item;
+    }
+
+}

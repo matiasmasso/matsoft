@@ -1,0 +1,196 @@
+﻿@page "/visaCards"
+@inject ApiService ApiService
+@inject IJSRuntime JSRuntime
+
+
+@if (values == null)
+{
+    <h3>Targetes de Crèdit</h3>
+    <div>Loading...</div>
+}
+else if (selectedValue != null)
+{
+    <VisaCard Value="selectedValue"
+              Tab="tab"
+              AfterUpdate="HandleAfterUpdate"
+              AfterDelete="HandleAfterDelete"
+              CloseRequest="@(()=>selectedValue = null)"></VisaCard>
+}
+else
+{
+    <div class="PageWrapper600">
+
+        <h3>Targetes de Crèdit</h3>
+
+        <div class="OptionsBar">
+            <PageOptions>
+                <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+                <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir</a>
+            </PageOptions>
+        </div>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            <div class="ColHeaders HideOnMobile">
+                <div class="Ico">&nbsp;</div>
+                <div class="Nom">
+                    Alias
+                </div>
+                <div class="Digits">
+                    Digits
+                </div>
+                <div class="Nom">
+                    Caducitat
+                </div>
+                <div class="Cc">
+                    &nbsp;
+                </div>
+            </div>
+
+            @foreach (var item in FilteredValues())
+            {
+                <div class="Item @(item.IsCaducada()?"caducada":"")"
+                     @oncontextmenu="@(()=>ContextMenuHandler(item))"
+                @oncontextmenu:preventDefault>
+                    <div class="Ico ContextMenuContainer">
+                        <Icon Id="Icon.Ids.CreditCard"></Icon>
+
+                        @if (item == currentContextMenu & isShowingContextMenu)
+                        {
+                            <div class="ContextMenu">
+                                <a href="#" @onclick:preventDefault @onclick="@(()=>ZoomRequest(item))">Zoom</a>
+                                <a href="#" @onclick:preventDefault @onclick="@(()=>selectedValue = item)">Extracte</a>
+                                @if (isCopyingToClipboard)
+                                {
+                                    <Loading></Loading>
+                                }
+                                else
+                                {
+                                    <a href="#" @onclick="@(()=>CopyDigitsRequestAsync(item))" @onclick:preventDefault>Copiar</a>
+                                }
+                            </div>
+                        }
+
+                    </div>
+                    <a class="Nom" href="#" @onclick="@(()=>selectedValue = item)" @onclick:preventDefault>
+                        @item.Nom
+                    </a>
+                    <a class="Digits" href="#" @onclick="@(()=>selectedValue = item)" @onclick:preventDefault>
+                        @item.FormatedDigits()
+                    </a>
+
+                    <div class="Nom HideOnMobile">@item.FormatedCaducitat()</div>
+
+                    <div class="Cc">
+                        <CopyButton Value="@item.Digits"></CopyButton>
+                    </div>
+
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+}
+
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds emp;
+    List<VisaCardModel>? values;
+    List<ContactModel>? contacts;
+    VisaCardModel? selectedValue;
+    VisaCardModel? currentContextMenu;
+    string? searchterm;
+    bool isShowingContextMenu;
+    bool isCopyingToClipboard;
+    VisaCard.Tabs tab = VisaCard.Tabs.Extracte;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        try
+        {
+            values = await ApiService.GetAsync<List<VisaCardModel>>("VisaCards");
+            contacts = await ApiService.GetAsync<List<ContactModel>>("Contacts");
+            emps = values!.Select(x => x.Emp).Distinct().ToList();
+            emp = (EmpModel.EmpIds)ApiService.Emp!;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    private List<VisaCardModel> FilteredValues()
+    {
+        var retval = values!.Where(x => x.Emp == emp)
+        .OrderBy(X=>X.IsCaducada() ? "1":"0")
+        .ThenBy(x => x.Nom).ToList();
+        if (!string.IsNullOrEmpty(searchterm))
+        {
+            retval = retval.Where(x => x.Nom!.Contains(searchterm, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        }
+        return retval;
+    }
+
+    private void AddNew()
+    {
+        selectedValue = new VisaCardModel();
+        selectedValue.Emp = emp;
+        selectedValue.Nom = "(nova targeta de crèdit)";
+    }
+
+    private void HandleAfterUpdate(VisaCardModel args)
+    {
+        if (!values!.Any(x => x.Guid == args.Guid))
+        {
+            values!.Add(args);
+            values = values.OrderBy(x => x.Nom).ToList();
+            emps = values.Select(x => x.Emp).Distinct().ToList();
+            selectedValue = null;
+            StateHasChanged();
+        }
+    }
+
+    private void ContextMenuHandler(VisaCardModel args)
+    {
+        currentContextMenu = args;
+        isShowingContextMenu = true;
+    }
+
+    private void ZoomRequest(VisaCardModel args)
+    {
+        tab = VisaCard.Tabs.Detalls;
+        selectedValue = args;
+        isShowingContextMenu = false;
+    }
+
+    private async Task CopyDigitsRequestAsync(VisaCardModel args)
+    {
+        isCopyingToClipboard = true;
+        await Task.Yield();
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", args.Digits);
+        await Task.Delay(500);
+        isCopyingToClipboard = false;
+        isShowingContextMenu = false;
+    }
+
+    private void HandleAfterDelete(VisaCardModel args)
+    {
+        values!.Remove(args);
+    }
+}

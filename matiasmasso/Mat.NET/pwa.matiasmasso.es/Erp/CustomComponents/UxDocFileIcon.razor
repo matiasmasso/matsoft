@@ -1,0 +1,16 @@
+﻿<div class="IconWrapper">
+    @if (DocFile == null)
+    {
+        <span>&nbsp;</span>
+    }
+    else
+    {
+        <a href="@DocFile.DownloadUrl()" target="_blank" title="@DocFile.Features()">
+            <UxIcon Id="UxIcon.Ids.Doc"></UxIcon>
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public DocFileModel DocFile { get; set; }
+}

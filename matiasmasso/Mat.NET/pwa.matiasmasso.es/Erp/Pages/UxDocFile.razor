@@ -1,0 +1,182 @@
+﻿@inherits _ComponentBase
+@using System.Runtime.Versioning
+@using System.Text.RegularExpressions
+
+<div class="Wrapper">
+
+    <div>
+        @(features ?? "")
+    </div>
+
+    <div class="ButtonsBar">
+        <button @onclick="Navegar" disabled="@isUploading">Navegar</button>
+        <button @onclick="Importar" disabled="@isUploading">Importar</button>
+        <button @onclick="Exportar" disabled="@isUploading">Exportar</button>
+        <button @onclick="Reset" disabled="@isUploading">Reset</button>
+    </div>
+
+    <a class="Thumbnail" href="@(Value?.DownloadUrl() ?? "")" target="_blank">
+        <img src="@src"
+             @onerror="ImgOnError"
+             @onload="ImgOnLoad" />
+    </a>
+
+    <UxError ProblemDetails="@problemDetails"></UxError>
+</div>
+
+@code {
+    [Parameter] public DocFileModel Value { get; set; }
+    [Parameter] public EventCallback<DocFileModel> ValueChanged { get; set; }
+    private string? features;
+    private string noImg = "/img/noImg.svg";
+    private string imgLoader = "/img/spinner-200px.svg";
+    private string? src;
+    private bool hasLoadedPlaceHolder = false;
+    private bool hasParameters = false;
+    private bool isUploading = false;
+    private ProblemDetails? problemDetails = null;
+    private FileResult fileResult;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        //Quickly loads spinner
+        //as soon as loaded loads document image
+        src = imgLoader;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        hasParameters = true;
+        LoadImg();
+    }
+
+    private void LoadImg()
+    {
+        if (hasParameters && hasLoadedPlaceHolder)
+        {
+            if (Value?.Hash == null)
+            {
+                src = noImg;
+            }
+            else
+            {
+                features = Value.Features();
+                if (Value.Thumbnail == null)
+                    src = Value.ThumbnailUrl();
+                else
+                    src = Value.ThumbnailDataUrl();
+            }
+        }
+    }
+
+    void Navegar()
+    {
+        base.NavigateToPage(Value.DownloadUrl());
+    }
+
+    async Task Importar()
+    {
+        try
+        {
+            var customFileType = new FilePickerFileType(
+                new Dictionary<DevicePlatform, IEnumerable<string>>
+                                    {
+                    { DevicePlatform.iOS, new[] { ".pdf" } },
+                    { DevicePlatform.Android, new[] { ".pdf" } },
+                    { DevicePlatform.WinUI, new[] { ".pdf" } },
+                    { DevicePlatform.Tizen, new[] { ".pdf" } },
+                    { DevicePlatform.macOS, new[] { ".pdf" } },
+                                    });
+
+            PickOptions options = new()
+                {
+                    PickerTitle = "Importar document pdf",
+                    FileTypes = customFileType,
+                };
+
+            fileResult = await FilePicker.Default.PickAsync(options);
+            if (fileResult != null && fileResult.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            {
+                isUploading = true;
+                src = imgLoader;
+            }
+
+        }
+        catch (Exception ex)
+        {
+            // The user canceled or something went wrong
+            problemDetails = ProblemDetails.Factory(ex);
+        }
+
+    }
+
+
+    async Task FileUpload()
+    {
+        using var stream = await fileResult.OpenReadAsync();
+        var fileBytes = new byte[(int)stream.Length];
+        stream.Read(fileBytes, 0, (int)stream.Length);
+        var docfile = new DocFileModel
+            {
+                Document = fileBytes,
+                Size = fileBytes.Length,
+                Hash = DTO.Helpers.CryptoHelper.HashMD5(fileBytes)
+            };
+
+        var apiResponse = await PostMultipartAsync<DocFileModel, DocFileModel.Pdf>(docfile, docfile, DocFileModel.PDF2JPG_URL);
+        if (apiResponse.Fail())
+        {
+            problemDetails = apiResponse.ProblemDetails;
+            src = "";
+        }
+        else if (apiResponse.Value == null)
+        {
+            src = "";
+        }
+        else
+        {
+            var pdf = apiResponse.Value;
+            docfile.Thumbnail = pdf.ThumbnailBytes();
+            docfile.Pags = pdf.Pags;
+            docfile.Width = pdf.Width;
+            docfile.Height = pdf.Height;
+            docfile.Thumbnail = pdf.ThumbnailBytes();
+            //src = pdf.ThumbnailDataUrl;
+
+            await ValueChanged.InvokeAsync(docfile);
+        }
+    }
+
+    void Exportar()
+    {
+
+    }
+
+    void Reset()
+    {
+        Value = null;
+        ValueChanged.InvokeAsync(Value);
+    }
+
+    void ImgOnError()
+    {
+        src = noImg;
+    }
+
+    async Task ImgOnLoad()
+    {
+        if (!hasLoadedPlaceHolder)
+        {
+            hasLoadedPlaceHolder = true;
+            LoadImg();
+        }
+        else if (isUploading)
+        {
+            await FileUpload();
+            isUploading = false;
+        }
+    }
+
+}

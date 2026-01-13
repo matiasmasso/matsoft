@@ -1,0 +1,69 @@
+﻿.Grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media(max-width:599px) {
+    .Item {
+        padding: 10px;
+        display: grid;
+        grid-template-columns: 32px min-content min-content 1fr;
+        grid-template-areas: "ico fra fch eur" "ico nom nom nom";
+        grid-column-gap: 10px;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid gray;
+        }
+
+    .Icon {
+        grid-area: ico;
+    }
+
+    .Verifactu {
+        grid-area: vf;
+    }
+    .Fra {
+        grid-area: fra;
+    }
+
+    .Fch {
+        grid-area: fch;
+    }
+
+    .Nom {
+        grid-area: nom;
+    }
+
+    .Total {
+        grid-area: eur;
+    }
+}
+
+@media(min-width:599px) {
+    .Item > * {
+        padding: 0;
+    }
+
+    .Grid {
+        display: grid;
+        grid-template-columns: .8rem .8rem min-content min-content 1fr min-content min-content min-content min-content;
+        grid-column-gap: 10px;
+        grid-row-gap: 0;
+        font-size: .9rem;
+    }
+
+    .ColHeaders > * {
+        padding-bottom: 10px;
+    }
+
+/*    .Icon {
+        width: .8rem;
+    }*/
+}

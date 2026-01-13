@@ -1,0 +1,24 @@
+﻿<div class="alert alert-danger" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close" @onclick="HideError">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h3>@Title</h3>
+    <p>@Message</p>
+</div>
+
+
+@code {
+    //ref https://nightbaker.github.io/gitflow/azure/piplines/2020/01/22/blazor-error-component/
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Message { get; set; }
+
+    [Parameter]
+    public EventCallback HideError { get; set; }
+
+
+
+}

@@ -1,0 +1,29 @@
+﻿@page "/test"
+@inject ApiService ApiService
+
+@for (int i = 0; i < 5; i++)
+{
+    <ContextMenuContainer>
+        <Content>
+            This is my content @i
+        </Content>
+        <MenuItems>
+            <a href="#" @onclick:preventDefault @onclick="@(()=>OnClick("one"))">Test 1</a>
+            <a href="#" @onclick:preventDefault @onclick="@(()=>OnClick("two"))">Test 2</a>
+            <a href="#" @onclick:preventDefault @onclick="@(()=>OnClick("tres"))">Test 3</a>
+        </MenuItems>
+    </ContextMenuContainer>
+}
+
+<div>clicked:@result </div>
+
+
+@code {
+    string result = string.Empty;
+    void OnClick(string tag)
+    {
+        result = tag;
+    }
+
+
+}

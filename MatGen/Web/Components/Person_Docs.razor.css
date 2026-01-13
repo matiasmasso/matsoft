@@ -1,0 +1,32 @@
+﻿/*issues found?*/
+
+.AddNew {
+    margin-top:15px;
+    display:block;
+}
+
+.Epg {
+    font-size:1.2em;
+    margin: 10px 0 5px;
+}
+
+.Item {
+    display: grid;
+    grid-template-columns: 16px 30% 16px 60%;
+    grid-column-gap: 10px;
+}
+
+    .Item:hover div {
+        background-color: #E0E0E0;
+    }
+
+.Ico {
+    width: 16px;
+    height: 16px;
+}
+
+    .Ico img {
+        width: 100%;
+        height: auto;
+    }
+

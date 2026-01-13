@@ -1,0 +1,26 @@
+﻿@page "/Enlaces"
+<div class="PageWrapper">
+    @if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>Enllaços</h1>
+        <Enlaces ItemSelected="ItemSelectedHandler"></Enlaces>
+    }
+</div>
+
+
+
+@code {
+
+    IModel? selectedItem;
+
+    void ItemSelectedHandler(IModel item)
+    {
+        selectedItem = item;
+    }
+
+}

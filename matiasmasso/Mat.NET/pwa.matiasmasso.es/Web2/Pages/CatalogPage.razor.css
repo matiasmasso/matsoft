@@ -1,0 +1,61 @@
+﻿.SelectedValues {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+    .SelectedValues a {
+        display: inline-flex;
+        gap: 10px;
+        padding: 4px 7px 2px 4px;
+        border-radius: 5px;
+        border: 1px solid gray;
+        background-color: aliceblue;
+        margin: 0 10px 10px 0;
+    }
+
+
+.Item, .Brand, .Category, .Sku {
+    display:contents;
+}
+
+/* --------------- mobiles ---------------*/
+
+@media(max-width:599px) {
+
+    .Catalog {
+        display: flex;
+        flex-direction: column;
+        gap:10px;
+    }
+
+        .Catalog * {
+            font-size: 0.8rem;
+        }
+
+
+    .Item, .Brand, .Category, .Sku {
+        border-bottom: 1px solid gray;
+        padding: 10px;
+    }
+
+}
+
+/* --------------- desktop ---------------*/
+
+@media(min-width:600px){
+
+    .Catalog {
+        display: grid;
+        grid-template-columns: min-content min-content 1fr;
+        grid-gap: 10px;
+    }
+
+/*
+    .Item, .Brand, .Category, .Sku {
+        border-top: 1px solid white;
+        border-bottom: 1px solid white;
+        padding: 4px 7px 2px 4px;
+    }
+*/
+}
+

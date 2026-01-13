@@ -1,0 +1,234 @@
+﻿@page "/EciStocks"
+@page "/{LangSegment}/EciStocks"
+layout ProLayout
+@implements IDisposable
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@inject CultureService culture
+@inject AppStateService appstate
+@inject ProductsService productsService
+
+<div class="Wrapper">
+    <AuthorizeView>
+        <Authorized>
+            <h1>Stocks El Corte Ingles</h1>
+
+
+            <div class="PageOptions">
+                <PageOptions IsShowingOptions>
+                    <div>
+                        <input type="date"
+                               @onchange="FchChanged"
+                               value="@string.Format("{0:yyyy-MM-dd}", fch)" />
+                    </div>
+                    <div>
+                        <AnchorLoading IsLoading="isBuildingExcel" OnClick="DownloadFileFromStreamAsync">Excel</AnchorLoading>
+                    </div>
+                </PageOptions>
+            </div>
+
+            @if (model == null || xItems == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+
+                <TabControl>
+                    <TabPage Text="@culture.Localize("Products")">
+                        <ChildContent>
+                            <EdiversaInvRptProducts Model="xItems"></EdiversaInvRptProducts>
+                        </ChildContent>
+                    </TabPage>
+                    <TabPage Text="@culture.Localize("Centers")">
+                        <ChildContent>
+                            <EdiversaInvRptCenters Model="xItems"></EdiversaInvRptCenters>
+                        </ChildContent>
+                    </TabPage>
+                    <TabPage Text="@culture.Localize("Files")">
+                        <ChildContent>
+                            <EdiversaInvRptFiles Model="model"></EdiversaInvRptFiles>
+                        </ChildContent>
+                    </TabPage>
+                </TabControl>
+            }
+
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="Item" href="/Login">
+                <Login></Login>
+            </NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public Guid Holding { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+    private List<EdiversaInvrptModel>? model;
+    private List<EdiversaInvrptModel.Item> items;
+    private List<XItem>? xItems;
+    private DateTime? fch;
+    private bool isBuildingExcel;
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        productsService.OnChange += Refresca;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Holding = HoldingModel.Wellknown(HoldingModel.Wellknowns.ElCorteIngles)!.Guid; // fake
+        fch = DateTime.Today.Date;
+        await FetchData();
+    }
+
+    private async Task FchChanged(ChangeEventArgs args)
+    {
+        string? sfch = args.Value?.ToString();
+        fch = DateTime.ParseExact(sfch, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        model = null;
+        xItems = null;
+        await FetchData();
+    }
+
+    private async Task FetchData()
+    {
+        try
+        {
+            model = await appstate.PostAsync<DateTime, List<EdiversaInvrptModel>>((DateTime)fch!, "EdiversaInvRpts", Holding.ToString());
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            Refresca(ex);
+        }
+
+    }
+
+
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        if(model != null)
+        {
+            xItems = new List<XItem>();
+            foreach (var rpt in model)
+            {
+                foreach (var item in rpt.Items)
+                {
+                    xItems.Add(new XItem(rpt, item, productsService));
+                }
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    public class XItem
+    {
+        public ProductSkuModel Sku { get; set; }
+        public GuidNom Center { get; set; }
+        public object Tag { get; set; }
+        public string Ean { get; set; }
+        public int Qty { get; set; }
+        public decimal Rrpp { get; set; }
+        public decimal Amt { get; set; }
+
+        public XItem(EdiversaInvrptModel rpt, EdiversaInvrptModel.Item item, ProductsService productsService)
+        {
+            Tag = rpt;
+            Center = rpt.StockHolder ?? new GuidNom(FromGln(rpt.NadGy));
+            if (string.IsNullOrEmpty(Center.Nom)) Center.Nom = string.Format("GLN: {0}", rpt.NadGy);
+            Qty = item.Qty;
+            Sku = productsService.SkuFromEan(item.Ean);
+            Ean = item.Ean;
+            if (Sku != null)
+            {
+                Rrpp = productsService.RetailPrice(Sku.Guid) ?? 0;
+                Amt = Qty * (decimal)Rrpp;
+            }
+        }
+
+        private Guid FromGln(string gln) => new Guid(gln + new string('0', 32 - 13));
+    }
+
+    private async Task DownloadFileFromStreamAsync()
+    {
+        isBuildingExcel = true;
+        await FetchData();
+        var fileStream = GetFileStream();
+        var fileName = string.Format("Stocks ElCorteIngles {0:yyyy.MM.dd}.xlsx", fch);
+
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        isBuildingExcel = false;
+    }
+
+    private Stream? GetFileStream()
+    {
+        MemoryStream? retval = null;
+
+        var sheet = new DTO.Excel.Sheet();
+        sheet.AddColumn("Fecha");
+        sheet.AddColumn("Documento");
+        sheet.AddColumn("Centro");
+        sheet.AddColumn("Marca comercial");
+        sheet.AddColumn("Categoría");
+        sheet.AddColumn("Producto");
+        sheet.AddColumn("Ean");
+        sheet.AddColumn("Ref.Fabricante");
+        sheet.AddColumn("Ref.Cliente");
+        sheet.AddColumn("Unidades");
+
+        try
+        {
+            foreach (var rpt in model)
+            {
+                foreach (var item in rpt.Items)
+                {
+                    var center = rpt.StockHolder ?? new GuidNom(FromGln(rpt.NadGy));
+                    if (string.IsNullOrEmpty(center.Nom)) center.Nom = string.Format("GLN: {0}", rpt.NadGy);
+
+                    var sku = productsService.SkuFromEan(item.Ean);
+                    var category = sku == null ? null : productsService.Category(sku.Category);
+                    var brand = category == null ? null : productsService.Brand(category.Brand);
+                    var row = sheet.AddRow();
+                    row.AddCell(rpt.FchDoc.ToString("dd/MM/yy"));
+                    row.AddCell(rpt.DocNum);
+                    row.AddCell(center.Nom);
+                    row.AddCell(brand?.Nom?.Esp);
+                    row.AddCell(category?.Nom?.Esp);
+                    row.AddCell(sku?.Nom?.Esp);
+                    row.AddCell(item.Ean);
+                    row.AddCell(item.SupplierRef);
+                    row.AddCell(item.CustomerRef);
+                    row.AddCell(item.Qty);
+                }
+            }
+
+            var bytes = DTO.Excel.ClosedXml.Bytes(sheet);
+            retval = new MemoryStream(bytes);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        return retval;
+    }
+
+    private Guid FromGln(string gln) => new Guid(gln + new string('0', 32 - 13));
+
+    public void Dispose()
+    {
+        productsService.OnChange -= Refresca;
+    }
+}
+
+

@@ -1,0 +1,10 @@
+﻿.Thumbnail {
+    display: block;
+    border: 1px dashed gray;
+    background-color:lightblue;
+}
+
+img {
+    width:100%;
+    height:auto;
+}

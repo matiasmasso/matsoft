@@ -1,0 +1,43 @@
+﻿@page "/noticias"
+@page "/noticies"
+@page "/news"
+@page "/{LangSegment}/noticias"
+@page "/{LangSegment}/noticies"
+@page "/{LangSegment}/news"
+
+@implements IDisposable
+@layout ProLayout
+@inject CultureService culture
+@inject NoticiasService noticiasService
+
+<div class="PageWrapper900">
+    <h3>@culture.Localize("Noticias")</h3>
+
+    <NoticiasGallery VisibleCount="24" ></NoticiasGallery>
+
+</div>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+    }
+}

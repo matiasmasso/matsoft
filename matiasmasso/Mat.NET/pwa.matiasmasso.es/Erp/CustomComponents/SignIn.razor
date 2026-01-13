@@ -1,0 +1,246 @@
+﻿@inherits _Base
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager NavigationManager
+@inject HttpClient http
+@inject ICookie cookie
+
+
+<div class="Wrapper">
+
+    <label class="EmailAddress">@Localizer(emailChecked?"EmailAddress":"Login.Info.EmailAddress")</label>
+    <InputTextButton Mode="InputTextButton.Modes.Email"
+                     IsLoading="isCheckingEmail"
+                     IsEditing="IsEditingEmail"
+                     CallToAction="CheckEmail"></InputTextButton>
+
+    <div class="@(shouldShowPassword?"":"Hidden")">
+        <label class="Password">@Localizer("Password")</label>
+
+        <InputTextButton Mode="InputTextButton.Modes.Password"
+                         IsLoading="isCheckingPassword"
+                         IsEditing="@(()=>shouldOfferPasswordReset = false)"
+                         CallToAction="CheckPassword"></InputTextButton>
+
+        <div class="Persist">
+            <label>
+                <input type="checkbox" @bind="persist">
+                recorda'm en aquest navegador
+            </label>
+        </div>
+
+        <div class="IForgot @(shouldOfferPasswordReset ? "":"Hidden")">
+            <a href="#" @onclick="SendVerificationCode" @onclick:preventDefault>
+                @Localizer("Login.IForgot.Anchor")
+            </a>
+            <div class="@(isSendingverificationCode ? "" : "Hidden")">
+                <img src="/img/spinner-24.gif" />
+            </div>
+        </div>
+    </div>
+
+    <div class="@(shouldOfferVerificationCode?"":"Hidden")">
+        <p class="Warning">
+            @Localizer("Login.Err.WrongCredentials")
+        </p>
+
+        <button class="Button @(isSendingverificationCode ? "Hidden" : "")" @onclick="SendVerificationCode">Enviame un código de verificación</button>
+
+        <div class="@(isSendingverificationCode ? "" : "Hidden")">
+            <img src="/img/spinner-24.gif" />
+        </div>
+    </div>
+
+    <div class="@(hasSentVerificationCode & !isValidVerificationCode ? "" : "Hidden")">
+        <p>
+            @Localizer("Login.IForgot.VerificationCodeRequest",Localizer("Login.Email.VerificationCodeSubject"))".
+        </p>
+
+        <InputTextButton CallToAction="CheckVerificationCode"></InputTextButton>
+    </div>
+
+    <div class="@(isWrongVerificationCode ? "" : "Hidden")">
+        <p>@Localizer("Login.IForgot.VerificationCodeFail")</p>
+    </div>
+
+    <div class="@(isValidVerificationCode ? "" : "Hidden")">
+        <p>@Localizer("Login.NewPwdRequest")</p>
+        <InputTextButton Mode="InputTextButton.Modes.Password"
+                         CallToAction="CreateNewPassword"></InputTextButton>
+    </div>
+    <div class="@(ShouldShowPasswordConfirmation ? "" : "Hidden")">
+        <p>@Localizer("Login.NewPwdConfirm")</p>
+        <InputTextButton Mode="InputTextButton.Modes.Password"
+                         CallToAction="ResetPassword"></InputTextButton>
+    </div>
+    <div class="@(passwordMissmatch ? "" : "Hidden")">
+        <p>@Localizer("Login.NewPwd.Unmatch")</p>
+    </div>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> authenticationState { get; set; }
+    [Parameter] public EventCallback<string> Success { get; set; }
+    [Parameter] public EventCallback<ProblemDetails> Fail { get; set; }
+
+    string? emailAddress;
+    string? password;
+    string? passwordreset;
+    string? passwordresetConfirmation;
+    string? serverVerificationCode;
+    bool persist = true;
+    System.Security.Claims.ClaimsPrincipal? claimsPrincipal;
+    UserModel? userAccount;
+    ProblemDetails? problemDetails;
+
+    bool isCheckingEmail = false;
+    bool emailChecked = false;
+    bool emailExists = false;
+    bool shouldShowPassword = false;
+    bool shouldOfferPasswordReset = true;
+    bool shouldOfferVerificationCode = false;
+    bool isCheckingPassword = false;
+    bool isSendingverificationCode = false;
+    bool hasSentVerificationCode = false;
+    bool isValidVerificationCode = false;
+    bool isWrongVerificationCode = false;
+    bool ShouldShowPasswordConfirmation = false;
+    bool passwordMissmatch = false;
+    bool isResettingPassword = false;
+
+    int minPasswordLength = 6;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await authenticationState;
+        claimsPrincipal = authState?.User;
+    }
+
+    private void IsEditingEmail()
+    {
+        shouldShowPassword = false;
+        password = string.Empty;
+        hasSentVerificationCode = false;
+    }
+
+    private async Task CheckEmail(string args)
+    {
+        emailAddress = args;
+        if (!string.IsNullOrEmpty(emailAddress))
+        {
+            isCheckingEmail = true;
+            var apiResponse = await HttpService.PostAsync<string, UserModel>(http, emailAddress, "user/FromEmailAddress", ((int)EmpModel.EmpIds.MatiasMasso).ToString());
+            if (apiResponse.Success())
+            {
+                userAccount = apiResponse.Value;
+                emailExists = userAccount != null;
+                shouldShowPassword = emailExists;
+                emailChecked = true;
+            }
+            else
+                await Fail.InvokeAsync(apiResponse.ProblemDetails);
+
+            isCheckingEmail = false;
+        }
+
+    }
+
+
+    private async Task CheckPassword(string args)
+    {
+        isCheckingPassword = true;
+        password = args;
+        if (!string.IsNullOrEmpty(password))
+        {
+            var hash = DTO.Helpers.CryptoHelper.Hash(emailAddress!, password!);
+            if (userAccount!.Hash == hash)
+            {
+                var apiResponse = await HttpService.PostAsync<string, string>(http, hash, "Token", ((int)EmpModel.EmpIds.MatiasMasso).ToString());
+                if (apiResponse.Success())
+                {
+                    var token = apiResponse.Value;
+                    await cookie.SetValue("hash", persist ? hash : string.Empty);
+
+                    var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+                    await customAuthStateProvider.UpdateAuthenticationStateAsync(token);
+                    await Success.InvokeAsync((token));
+                }
+                else
+                    problemDetails = apiResponse.ProblemDetails;
+            }
+            else
+            {
+                shouldOfferVerificationCode = true;
+                shouldOfferPasswordReset = false;
+            }
+        }
+        isCheckingPassword = false;
+    }
+
+    private async Task SendVerificationCode()
+    {
+        if (!string.IsNullOrEmpty(emailAddress))
+        {
+            isSendingverificationCode = true;
+            serverVerificationCode = DTO.Helpers.CryptoHelper.RandomString(10);
+            //var apiResponse = await GetAsync<string>(NavigationManager.BaseUri, "mailingCshtml/VerificationCode", serverVerificationCode);
+            //var apiResponse = await GetAsync<string>(NavigationManager.BaseUri, "test2");
+            //var apiResponse = await GetAsync<string>(NavigationManager.BaseUri, "mailingCshtml/test3");
+            var apiResponse = await HttpService.GetAsync<string>(http, NavigationManager.BaseUri, "mailingCshtml/VerificationCode", serverVerificationCode);
+            if (apiResponse.Success())
+            {
+                //var body = apiResponse.Value ?? "";
+                //var subject = Localizer("Login.Email.VerificationCodeSubject");
+                //await mailService.SendMailAsync(emailAddress, subject, body);
+                //isSendingverificationCode = false;
+                //hasSentVerificationCode = true;
+                //shouldOfferPasswordReset = false;
+                //shouldShowPassword = false;
+                //shouldOfferVerificationCode = false;
+            }
+            else
+            {
+                await Fail.InvokeAsync(apiResponse.ProblemDetails);
+            }
+        }
+    }
+
+    private void CheckVerificationCode(string args)
+    {
+        isValidVerificationCode = args == serverVerificationCode;
+        isWrongVerificationCode = !isValidVerificationCode;
+    }
+
+    private void CreateNewPassword(string args)
+    {
+        passwordreset = args;
+        ShouldShowPasswordConfirmation = true;
+    }
+
+    private async Task ResetPassword(string passwordresetConfirmation)
+    {
+        passwordMissmatch = ((passwordreset?.Length ?? 0) < minPasswordLength | passwordreset != passwordresetConfirmation);
+        if (!passwordMissmatch)
+        {
+            var hash = DTO.Helpers.CryptoHelper.Hash(emailAddress!, passwordreset!);
+            var apiResponse = await HttpService.PostAsync<string, string>(http, hash, "user/resetPwd", userAccount!.Guid.ToString()!);
+            if (apiResponse.Success())
+            {
+                var token = apiResponse.Value;
+                await cookie.SetValue("hash", persist ? hash : string.Empty);
+
+                var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+                await customAuthStateProvider.UpdateAuthenticationStateAsync(token);
+                await Success.InvokeAsync(token);
+            }
+            else
+            {
+                await Fail.InvokeAsync(apiResponse.ProblemDetails);
+            }
+        }
+    }
+}

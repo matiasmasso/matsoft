@@ -1,0 +1,80 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+    @if (isEditing)
+    {
+        <input type="text" @bind="searchTerm" @bind:event="oninput" />
+        <div class="Dropdown">
+            <Locations_List Model="FilteredItems()" SelectedItemChanged="OnItemSelected"></Locations_List>
+        </div>
+
+    }
+    else
+    {
+        <UxCaptionEllipsis Tag="Value"
+                       Caption="@caption"
+                       OnClick="EditRequest"
+                       HideEllipsis="HideEllipsis"
+                       OnEllipsis="ToggleContextMenu"></UxCaptionEllipsis>
+
+        @if (Value != null && isShowingMenu)
+        {
+            <ContextMenu_Deprecated Model="ContextMenuModel.Factory(Value)" OnClick="@(()=>isShowingMenu = false)"></ContextMenu_Deprecated>
+        }
+
+    }
+</div>
+
+@code {
+    [Parameter] public bool HideEllipsis { get; set; } = false;
+    [Parameter] public LocationModel Value { get; set; }
+    [Parameter] public EventCallback<LocationModel> ValueChanged { get; set; }
+
+    string caption;
+    string searchTerm;
+    bool isEditing = false;
+    bool isShowingMenu = false;
+    CountryModel country;
+    ZonaModel zona;
+    CacheDTO cache = AppState.DefaultCache();
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Value != null)
+        {
+            caption = Value.Nom;
+            zona = cache.Zonas.FirstOrDefault(x => x.Guid == Value.Zona);
+        }
+    }
+
+    void ToggleContextMenu()
+    {
+        isShowingMenu = !isShowingMenu;
+    }
+
+    void EditRequest()
+    {
+        isEditing = true;
+        searchTerm = caption;
+    }
+
+    List<LocationModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm) || searchTerm == caption)
+            return ZonaLocations();
+        else
+            return ZonaLocations().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<LocationModel> ZonaLocations() => cache.Locations.Where(x => x.Zona == zona.Guid).ToList();
+
+
+    void OnItemSelected(LocationModel item)
+    {
+        isEditing = false;
+        //caption = Value?.Nom.Tradueix(base.Lang());
+        ValueChanged.InvokeAsync(item);
+    }
+}

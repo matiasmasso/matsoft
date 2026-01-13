@@ -1,0 +1,67 @@
+﻿@page "/"
+@inherits _ComponentBase
+
+<div class="Wrapper">
+
+
+    <div class="Banner">
+        <BannerRotator Banners="@model?.RotatingBanners"></BannerRotator>
+    </div>
+
+
+    @if (model != null && model.News.Count > 1)
+    {
+        <a href="@model.News[0].Url" class="News0 ShowOnMobile">
+            <img src="@model.News[0].ImageUrl" title="@(model.News[0].Caption ?? "")" />
+            <span>@model.News[0].Caption</span>
+        </a>
+        <a href="@model.News[0].Url" class="News1 ShowOnMobile">
+            <img src="@model.News[1].ImageUrl" title="@(model.News[1].Caption ?? "")" />
+            <span>@model.News[1].Caption</span>
+        </a>
+    }
+
+
+    <a href="/britax-roemer" class="Brand1">
+        <img src="/img/Portada/BrandsV/br-home-200x242.jpg" class="BrandsV" title="Britax Römer" width="200" height="242" />
+        <img src="/img/Portada/BrandsH/br-home-600.jpg" class="BrandsH" title="Britax Römer" width="600" height="338" />
+    </a>
+    <a href="/tommee-tippee" class="Brand2">
+        <img src="/img/Portada/BrandsV/tt-home-200x242.jpg" class="BrandsV" title="Tommee Tippee" width="200" height="242" />
+        <img src="/img/Portada/BrandsH/tt-home-600.jpg" class="BrandsH" title="Tommee Tippee" width="600" height="338" />
+    </a>
+    <a href="/4moms" class="Brand3">
+        <img src="/img/Portada/BrandsV/4moms-home-200x242.jpg" class="BrandsV" title="4moms" width="200" height="242" />
+        <img src="/img/Portada/BrandsH/4moms-home-600.jpg" class="BrandsH" title="4moms" width="600" height="338" />
+    </a>
+
+
+    <div class="Raffle">
+        @if (model?.Raffle is not null)
+        {
+            <a href="@model!.Raffle.Url" title="viewModel.Model.Raffle.Caption">
+                <img src="@model.Raffle.ImageUrl" alt="@model.Raffle.Caption" width="@RaffleDTO.BANNER600WIDTH" height="@RaffleDTO.BANNER600HEIGHT" />
+            </a>
+        }
+    </div>
+
+
+</div>
+
+
+@code {
+    private HomeDTO? model = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+            var userId = base.UserId();
+            var user = string.IsNullOrEmpty(userId) ? null : new UserDTO(new Guid(userId));
+            model = await GetAsync<HomeDTO>("Home");
+            StateHasChanged();
+        }
+    }
+
+}

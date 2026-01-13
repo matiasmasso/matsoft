@@ -1,0 +1,88 @@
+﻿@inject CultureService culture
+
+@if(selectedValues != null && selectedValues.Count == 0)
+{
+    <div class="Info">@culture.Tradueix("Aun no hay ningun rol asignado"
+    , "No hi ha cap rol assignat encara"
+    , "No roles assigned yet")</div>
+} else
+{
+<div class="SelectedValues">
+    @foreach(var rol in selectedValues ?? new())
+    {
+        <a href="#" @onclick="@(()=>SelectedValueClick(rol))" @onclick:preventDefault>
+            <div>@rol.ToString()</div>
+            <Icon Id="Icon.Ids.Xmark"></Icon>
+        </a>
+    }
+</div>    
+}
+
+<p class="Info">
+    @if(PotentialValues()?.Count == 0)
+    {
+        @culture.Tradueix("Todos los roles disponibles estan asignados"
+    , "Tots els rols disponibkes estan assignats"
+    , "All roles have been assigned")
+    }
+    else
+    {
+        @culture.Tradueix("Puedes asignar roles seleccionándolos de la siguiente lista:"
+    , "Pots assignar rols triant-los de la següent llista"
+    , "Click on next list to assign rols ")
+    }
+</p>
+
+<div class="Grid">
+    @foreach (var item in PotentialValues() ?? new())
+    {
+        <a href="#" @onclick="@(()=>PotentialValueClick(item))" @onclick:preventDefault>
+            <div>@item.ToString()</div>
+        </a>
+    }
+</div>
+
+
+@code {
+    [Parameter] public List<UserModel.Rols>? Values { get; set; }
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    List<UserModel.Rols>? selectedValues;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        selectedValues = Values;
+        Refresca(null);
+    }
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<UserModel.Rols>? PotentialValues()
+    {
+        var all = Enum.GetValues(typeof(UserModel.Rols)).Cast<UserModel.Rols>().ToList();
+        return all.Where(x => !(selectedValues ?? new()).Any(y => x == y)).ToList();
+    }
+
+    void SelectedValueClick(UserModel.Rols rol)
+    {
+        selectedValues!.Remove(rol);
+        OnChange.InvokeAsync();
+    }
+
+    void PotentialValueClick(UserModel.Rols rol)
+    {
+        selectedValues?.Add(rol);
+        OnChange.InvokeAsync();
+    }
+
+}

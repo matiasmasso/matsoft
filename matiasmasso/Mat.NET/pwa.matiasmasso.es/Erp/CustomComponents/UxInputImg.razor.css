@@ -1,0 +1,47 @@
+﻿.Wrapper {
+    position: relative;
+}
+
+label {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.Hidden {
+    display: none;
+}
+
+.Fallback {
+    opacity: 30%;
+    padding: 15%;
+}
+
+img {
+    width: 100%;
+    height: auto;
+}
+
+.Error {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    transform: translate(-10%, -50%);
+    padding: 20px;
+    width: 100%;
+    border: 1px solid black;
+    background-color: #993333;
+    color: white;
+    cursor:pointer;
+}
+
+
+.Warning {
+    width: 3rem;
+    height: auto;
+    filter: invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
+}

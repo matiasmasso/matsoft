@@ -1,0 +1,39 @@
+﻿.Image {
+    max-width:600px;
+}
+
+.Image img {
+    width:100%;
+}
+
+.Download {
+    text-align:center;
+}
+
+
+
+    .Download .Button {
+        display: inline-block;
+        font-weight: 400;
+        line-height: 1.5;
+        border-color: #198754;
+        text-align: center;
+        text-decoration: none;
+        vertical-align: middle;
+        border: 1px solid transparent;
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        border-radius: .25rem;
+        transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        -webkit-appearance: button;
+    }
+
+    .Button:hover {
+        background-color: #5a95f5 !important;
+        color: white !important;
+    }
+
+.Download .Button div {
+    display: flex;
+    gap: 10px;
+}

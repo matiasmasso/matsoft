@@ -1,0 +1,30 @@
+﻿.MenuWrapper {
+    margin: 15px 10px;
+    max-width: 100%;
+    height: 100%;
+}
+
+.CustomMenu {
+    margin-bottom: 20px;
+}
+
+.CustomMenuTitle {
+    font-weight: 600;
+}
+
+.ExpandableItem {
+    /*padding: 0 10px;*/
+}
+
+.SelectedItem {
+    background-color: #EEEEFF;
+    border: 1px solid navy;
+}
+
+@media screen and (max-width:540px) {
+    /* exclusive mobiles */
+    .ExpandableItem {
+        padding: 10px 0;
+        border-bottom: 0.5px solid gray;
+    }
+}

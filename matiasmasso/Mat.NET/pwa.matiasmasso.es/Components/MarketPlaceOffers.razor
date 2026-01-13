@@ -1,0 +1,133 @@
+﻿@inherits _Base
+
+@if (problemDetails != null)
+{
+    <Error ProblemDetails="problemDetails"></Error>
+}
+else if (model == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="EditRow">
+        <div class="Sku">@Localizer("Product")</div>
+        <div class="Offer">@Localizer("Offer")</div>
+        <div class="Spacer">&nbsp;</div>
+
+        <div class="Lookup">
+            <ProductSkuLookup Value="sku" ValueChanged="SkuChanged" EditMode></ProductSkuLookup>
+        </div>
+        <input type="number" @bind-value="price" />
+
+        <div class="ButtonCell">
+            @if (isUpdating)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <button class="Button ButtonOk ButtonAddRow" @onclick="AddRow" disabled="@(sku==null)">
+                    @Localizer("AddNew")
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (model.Count > 0)
+    {
+        <div class="Grid">
+            <div class="Sku">@Localizer("Product")</div>
+            <div class="Offer">@Localizer("Offer")</div>
+            <div class="Pvp">@Localizer("Pvp")</div>
+            <div class="Dto">@Localizer("Dto")</div>
+            <div>
+                &nbsp;
+            </div>
+
+            @foreach (var item in model)
+            {
+                var sku = Cache.Sku(item.Sku);
+                var category = sku == null ? null : Cache.Category(sku.Category);
+                var brand = category == null ? null : Cache.Brand(category.Brand);
+                var pvp = Cache.SkuPrice(item.Sku);
+                var dto = pvp == null || pvp == 0 ? 0 : Math.Round(100 * (1 - (decimal)item.Price / (decimal)pvp), 0);
+
+                <div class="Sku">@sku?.NomLlarg.Tradueix(base.Lang())</div>
+                <div class="Offer">@string.Format("{0:N2} €",item.Price)</div>
+                <div class="Pvp">@string.Format("{0:N2} €",pvp)</div>
+                <div class="Dto">@string.Format("{0} %",dto)</div>
+                <a href="#" class="Del @(item == isDeletingItem ? "Deleting":"")" @onclick="@(()=>DelRow(item))" @onclick:preventDefault>
+                    &nbsp;
+                </a>
+
+            }
+        </div>
+    }
+}
+
+
+
+@code {
+    [Parameter] public MarketPlaceModel Value { get; set; }
+    List<OfferModel> model;
+    private ProductSkuModel sku;
+    private ProblemDetails? problemDetails;
+    decimal price;
+    bool isDirty;
+    bool isUpdating = false;
+    OfferModel isDeletingItem;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var apiResponse = await GetAsync<List<OfferModel>>( "marketplace/offers", Value.Guid.ToString());
+            model = apiResponse.Value;
+            problemDetails = apiResponse.ProblemDetails;
+
+
+    }
+
+    void SkuChanged(ProductSkuModel args)
+    {
+        sku = args;
+    }
+
+    async Task AddRow()
+    {
+        isUpdating = true;
+        var offer = new OfferModel
+            {
+                Parent = Value.Guid,
+                Sku = sku.Guid,
+                Price = price
+            };
+
+        var apiResponse = await PostAsync<OfferModel, List<OfferModel>>( offer, "marketplace/offer");
+        if (apiResponse.Success())
+        {
+            sku = null;
+            price = 0;
+            model = apiResponse.Value;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+        isUpdating = false;
+    }
+
+    async Task DelRow(OfferModel item)
+    {
+        isDeletingItem = item;
+        var apiResponse = await PostAsync<OfferModel, List<OfferModel>>(item, "marketplace/offer/delete");
+        if (apiResponse.Success())
+        {
+            model = apiResponse.Value;
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        isDeletingItem = null;
+    }
+
+
+
+}

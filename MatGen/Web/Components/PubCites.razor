@@ -1,0 +1,33 @@
+﻿<div class="PageWrapper600">
+    <PageOptions>
+        <a href="#" @onclick:preventDefault @onclick="AddNew">
+            Afegir
+        </a>
+    </PageOptions>
+
+    <div class="Grid">
+    @foreach(var item in Values ?? new())
+    {
+       <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>ItemClick(item))">
+           <div class="Truncate">
+               @item.Title
+           </div>
+       </a> 
+    }
+    </div>
+</div>
+@code {
+    [Parameter] public List<CitaModel>? Values { get; set; }
+    [Parameter] public EventCallback<CitaModel> ItemSelected { get; set; }
+    [Parameter] public EventCallback RequestToAddNew { get; set; }
+
+    void ItemClick(CitaModel item)
+    {
+        ItemSelected.InvokeAsync(item);
+    }
+
+    void AddNew()
+    {
+        RequestToAddNew.InvokeAsync();
+    }
+}

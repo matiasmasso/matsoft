@@ -1,0 +1,245 @@
+﻿@inject IJSRuntime JSRuntime
+@inject ApiService ApiService
+
+@if (isLoading)
+{
+    <div class="Dropzone">
+        <Loading></Loading>
+    </div>
+}
+else
+{
+    <div class="Wrapper" @oncontextmenu="@(()=>isShowingMenu = true)" @oncontextmenu:preventDefault>
+
+        @if (State() == States.IsEmpty || isDragging)
+        {
+            <!--Click on dropzone should open an import file dialog-->
+
+            <label for="ppt"
+                   class="Dropzone @HoverClass"
+                   @ref="UploadButton"
+                   @ondragenter="OnDragEnter"
+                   @ondragleave="OnDragLeave"
+                   @ondragover="OnDragOver">
+
+                <div class="Info">Arrossega un fitxer aquí o fes click per seleccionar-ne un</div>
+
+                <InputFile id="ppt" OnChange="@LoadFile" />
+
+            </label>
+
+            @if (isShowingMenu)
+            {
+                <div class="Dropdown">
+                    <a href="#" class="Item" @onclick="Import" @onclick:preventDefault>import</a>
+                </div>
+            }
+
+        }
+        else if (State() == States.IsNew)
+        {
+            <!--Click on image should open an import file dialog-->
+
+            <label for="ppt"
+                   class="Dropzone IsNew @HoverClass"
+                   style="background-image: url(@Value?.Thumbnail?.DataUrl());"
+                   @ref="UploadButton"
+                   @ondragenter="OnDragEnter"
+                   @ondragleave="OnDragLeave"
+                   @ondragover="OnDragOver">
+
+                <InputFile id="ppt" OnChange="@LoadFile" />
+
+            </label>
+
+            <div class="Features IsNew">@Value?.Features()</div>
+
+            @if (isShowingMenu)
+            {
+                <div class="Dropdown">
+                    <a href="#" class="Item" @onclick="Import" @onclick:preventDefault>import</a>
+                    <a href="#" class="Item" @onclick="Clear" @onclick:preventDefault>clear</a>
+                </div>
+            }
+
+        }
+        else if (State() == States.IsPersisted)
+        {
+            <!--Click on image should open doc in a new tab-->
+
+            <a href="@Value?.DownloadUrl()"
+               target="_blank"
+               class="Dropzone @HoverClass"
+               style="background-image: url(@Value?.ThumbnailUrl());"
+               @ondragenter="OnDragEnter"
+               @ondragleave="OnDragLeave"
+               @ondragover="OnDragOver">
+
+                <label for="ppt" @ref="UploadButton" class="NoSize">
+                    <InputFile id="ppt" OnChange="@LoadFile" />
+                </label>
+
+            </a>
+
+            <div class="Features">@Value?.Features()</div>
+
+            @if (isShowingMenu)
+            {
+                <div class="Dropdown">
+                    <a href="@Value?.DownloadUrl()" class="Item" target="_blank">browse</a>
+                    <a href="#" class="Item" @onclick="Import" @onclick:preventDefault>import</a>
+                    <a href="#" class="Item" @onclick="Export" @onclick:preventDefault>export</a>
+                    <div class="Item"> <CopyButton Value="@Value?.DownloadUrl()">copy link</CopyButton></div>
+                    <a href="#" class="Item" @onclick="Clear" @onclick:preventDefault>clear</a>
+                </div>
+            }
+
+        }
+
+    </div>
+}
+
+
+@code {
+    // [Parameter] public Media? Media { get; set; }
+    [Parameter] public DocfileModel? Value { get; set; }
+    [Parameter] public EventCallback<DocfileModel> ValueChanged { get; set; }
+
+    ElementReference UploadButton;
+    bool isLoading;
+    bool isDragging;
+    bool isShowingMenu;
+    Exception? exception;
+
+    private enum States
+    {
+        IsEmpty,
+        IsNew,
+        IsPersisted
+    }
+
+    private string? HoverClass;
+
+
+    void OnDragEnter(DragEventArgs e)
+    {
+        HoverClass = "Hover";
+        isDragging = true;
+    }
+    void OnDragOver(DragEventArgs e)
+    {
+        HoverClass = "Hover";
+        isDragging = true;
+    }
+
+    void OnDragLeave(DragEventArgs e)
+    {
+        HoverClass = string.Empty;
+        isDragging = false;
+    }
+
+    private States State()
+    {
+        if (Value == null) return States.IsEmpty;
+        else if (Value.Document?.Data != null) return States.IsNew;
+        else return States.IsPersisted;
+    }
+
+    async Task OnClick()
+    {
+        await JSRuntime.InvokeVoidAsync("triggerClick", UploadButton);
+        isShowingMenu = false;
+    }
+
+    async Task Import()
+    {
+        await JSRuntime.InvokeVoidAsync("triggerClick", UploadButton);
+        isShowingMenu = false;
+    }
+
+    async Task Export()
+    {
+        Media? media;
+        if (Value?.Document?.Data == null)
+        {
+            var url = Value?.DownloadUrl();
+            media = await Download(url);
+        }
+        else
+            media = Value.Document;
+
+        if (media?.Data != null)
+        {
+            var filename = $"Gen {Value!.Hash}.{media.Mime.ToString()}";
+            var fileStream = new MemoryStream(media.Data);
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
+        }
+        isShowingMenu = false;
+    }
+
+    async Task Clear()
+    {
+        await ValueChanged.InvokeAsync(null);
+        isShowingMenu = false;
+    }
+
+    private async Task<Media?> Download(string? url)
+    {
+        Media? retval = null;
+        if (!string.IsNullOrEmpty(url))
+        {
+            using (var client = new HttpClient())
+            using (var response = await client.GetAsync(url))
+            {
+                if (response.IsSuccessStatusCode)
+                {
+                    var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/pdf";
+                    var bytes = await response.Content.ReadAsByteArrayAsync();
+                    retval = new Media(contentType, bytes);
+                }
+            }
+        }
+        return retval;
+    }
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        isLoading = true;
+        try
+        {
+            var docfile = await CreateDocfile(e.File, 350, 400);
+            docfile.Filename = e.File.Name;
+            await ValueChanged.InvokeAsync(docfile);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isLoading = false;
+        isDragging = false;
+        HoverClass = string.Empty;
+    }
+
+    async Task<DocfileModel> CreateDocfile(IBrowserFile file, int thumbnailWidth, int thumbnailHeight)
+    {
+        var mimeCod = Media.MimeCodFromContentType(file.ContentType);
+        Stream stream = file.OpenReadStream(maxAllowedSize: 100000000);
+        MemoryStream ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        stream.Close();
+
+        ms.Seek(0, SeekOrigin.Begin);
+        var bytes = ms.ToArray();
+
+        var sha256 = DTO.Helpers.CryptoHelper.Sha256(bytes);
+        var retval = await ApiService.PostAsync<string, DocfileModel>(sha256, "Docfile/findBySha256");
+        if(retval == null)
+        {
+            var media = new Media(mimeCod, bytes);
+            retval = DocfileHelper.CreateDocfile(media, thumbnailWidth, thumbnailHeight, file.Name);
+        }
+        return retval;
+    }
+
+}

@@ -1,0 +1,47 @@
+﻿.Wrapper {
+    display:grid;
+    grid-template-columns:24px 1fr 24px;
+    max-width:90px;
+}
+
+.Value {
+    text-align: right;
+    padding: 2px 7px 0 4px;
+    height: 23px;
+    border: 1px solid #D2D2D2;
+    width:100%;
+}
+
+.Btn {
+    /*padding: 2px 7px 0 4px;*/
+    background-color: #999999;
+    color:white;
+    font-weight: 800;
+    font-size:large;
+    text-align: center;
+    height:100%;
+    display:block;
+}
+
+    .Btn.Increment {
+        border-radius: 0 4px 4px 0;
+    }
+    .Btn.Decrement {
+        border-radius: 4px 0 0 4px;
+    }
+
+    .Btn.Increment:hover {
+        background-color: green;
+    }
+
+    .Btn.Decrement:hover {
+        background-color: red;
+    }
+
+a{
+    opacity:0.5;
+}
+
+a:hover {
+    opacity:1;
+}

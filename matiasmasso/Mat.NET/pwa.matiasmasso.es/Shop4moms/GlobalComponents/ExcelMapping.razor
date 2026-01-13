@@ -1,0 +1,85 @@
+﻿<div class="Wrapper">
+@if (Src != null)
+{
+    <div><button @onclick="Update">Update</button></div>
+    <div class="Grid" style="grid-template-columns:repeat(@cellCount,1fr);">
+        @if (colMappings != null)
+        {
+            @foreach (var srcColumn in srcColumns ?? new())
+            {
+                <div>
+                    <select value="-1" @onchange="@((args)=>OnChange(srcColumn,args))">
+                        <option value="-1" selected>(ignorar)</option>
+                        @foreach (var colMapping in colMappings)
+                        {
+                            <option value="@(colMappings.IndexOf(colMapping))">@colMapping.Caption</option>
+                        }
+                    </select>
+                </div>
+            }
+        }
+
+        @foreach (var srcRow in Src.Rows)
+        {
+            @for (var i = 0; i < cellCount; i++)
+            {
+                <div>@srcRow.Cells[i].Content</div>
+            }
+        }
+    </div>
+}
+</div>
+@code {
+
+    [Parameter] public DTO.Excel.Sheet? Src { get; set; }
+    [Parameter] public string[]? Mappings { get; set; }
+    [Parameter] public EventCallback<DTO.Excel.Sheet> ValueChanged { get; set; }
+
+    List<DTO.Excel.Column>? srcColumns;
+    List<DTO.Excel.ColMapping>? colMappings = new();
+    int cellCount;
+
+    protected override void OnParametersSet()
+    {
+        cellCount = Src?.MaxRowCells() ?? 0;
+        srcColumns = Src?.AllColumns();
+        colMappings = DTO.Excel.ColMapping.Factory(Mappings);
+        base.OnParametersSet();
+    }
+
+    void OnChange(DTO.Excel.Column srcColumn, ChangeEventArgs args)
+    {
+        //get mapped column from change event arguments
+        var mapIdx = Convert.ToInt32(args.Value);
+
+        //persist selection
+        if (colMappings?.Count > mapIdx && srcColumns != null)
+            colMappings[mapIdx].SrcIdx = srcColumns.IndexOf(srcColumn);
+    }
+
+    void Update()
+    {
+        var mappedSheet = new DTO.Excel.Sheet();
+        var mappedRow = mappedSheet.AddRow();
+        foreach (var colMapping in colMappings ?? new())
+        {
+            var content = colMapping.Caption;
+            mappedRow.AddCell(content);
+        }
+
+        foreach (var srcRow in Src!.Rows)
+        {
+            mappedRow = mappedSheet.AddRow();
+            foreach (var colMapping in colMappings ?? new())
+            {
+                string? content = null;
+                if (colMapping.SrcIdx >= 0 && colMapping.SrcIdx < srcRow.Cells.Count)
+                    content = srcRow.Cells[colMapping.SrcIdx]?.Content?.ToString() ?? "";
+                mappedRow.AddCell(content);
+            }
+        }
+
+        ValueChanged.InvokeAsync(mappedSheet);
+    }
+
+}

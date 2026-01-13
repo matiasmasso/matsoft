@@ -1,0 +1,22 @@
+﻿.Item {
+    display: block;
+}
+
+
+/*------------ mobiles -----------*/
+
+@media(max-width:599px) {
+    .Item {
+        padding: 10px;
+        border-bottom: 1px solid gray;
+    }
+}
+
+
+/*------------ desktop -------------*/
+
+@media(min-width:600px) {
+    .Item:hover {
+        background-color: lightcyan;
+    }
+}

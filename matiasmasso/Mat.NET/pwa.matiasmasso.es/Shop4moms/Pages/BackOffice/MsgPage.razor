@@ -1,0 +1,288 @@
+﻿@page "/backoffice/msg/{Guid}"
+@implements IDisposable
+
+@inject AppStateService appState
+@inject SessionStateService session
+@inject CultureService culture
+@inject NavigationManager? navigationManager
+
+<AuthorizeView>
+    <Authorized>
+
+        <div class="WrapperFullWidth">
+
+            @if (model == null)
+            {
+                <h3>@Title()</h3>
+
+                <Loading></Loading>
+            }
+            else
+            {
+
+                <h3>@Title()</h3>
+
+                <div class="Message">
+                    <div class="Features">
+                        <span>@string.Format("{0:dd/MM/yy HH:mm}",model.Fch)</span>
+                        <a href="#" @onclick="@(()=>selectedUser=model.User)" @onclick:preventDefault>
+                            @model.User?.NomiCognomsOrNicknameOrEmailAddress()
+                        </a>
+                        @if (model.AnsweringMsg != null)
+                        {
+                            <span>en resposta a</span>
+                            <span>@string.Format("{0:dd/MM/yy HH:mm}", model.FirstAnswer()!.Fch)</span>
+                            <span>@model.AnsweringMsg!.User?.NomiCognomsOrNicknameOrEmailAddress()</span>
+                        }
+                    </div>
+                    <div class="Body @(model.AnsweringMsg == null ? "Rebut" : "Enviat")">
+                        @((MarkupString)(model.Text?.Html() ?? ""))
+                    </div>
+
+                    <a class="Avatar"
+                       href="#"
+                    @onclick="@(()=>selectedUser=model?.User)"
+                    @onclick:preventDefault>
+                        <Gravatar User="model?.User" Size="100"></Gravatar>
+                    </a>
+                </div>
+
+                @if (model?.HasAnswers ?? false)
+                {
+                    <div class="Message">
+                        <div class="Features">
+                            <span>@string.Format("{0:dd/MM/yy HH:mm}",model.FirstAnswer()!.Fch)</span>
+                            contestat per
+                            <span>@model.FirstAnswer()!.User!.NomiCognomsOrNicknameOrEmailAddress()</span>
+                        </div>
+                        <div class="Body Enviat">
+                            @((MarkupString)(model.FirstAnswer()?.Text?.Html() ?? ""))
+                        </div>
+
+                        <a class="Avatar" href="#"
+                        @onclick="@(()=>selectedUser=model.FirstAnswer()!.User)"
+                        @onclick:preventDefault>
+                            <Gravatar User="model.FirstAnswer()!.User" Size="100"></Gravatar>
+                        </a>
+                    </div>
+
+                }
+                else if (model?.Answering == null) //avoid asking for an answer if it is already an answer
+                {
+                    <div class="Message">
+                        <div class="Features">
+                            <span>la meva resposta</span>
+                        </div>
+                        <div class="Body">
+                            <UxTextarea @bind-Value="answer" SetDirty="@(()=>state=DbState.IsDirty)"
+                                        CanEdit="@(!(model?.HasAnswers ?? false))"></UxTextarea>
+                        </div>
+
+                        <a class="Avatar" href="#"
+                        @onclick="@(()=>selectedUser=session.User)"
+                        @onclick:preventDefault>
+                            <Gravatar User="session.User" Size="100"></Gravatar>
+                        </a>
+                    </div>
+                }
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="true"
+                                RequestToCancel="RequestToCancelHandler"
+                                RequestToDelete="Delete"
+                                RequestToUpdate="Answer"></ButtonsBar>
+                </div>
+
+            }
+
+
+        </div>
+        <Error Exception="exception"></Error>
+
+    </Authorized>
+    <NotAuthorized>
+
+        <div class="SignIn">
+            <SignIn Success="SignInSuccess" Fail="SignInFail"></SignIn>
+        </div>
+
+    </NotAuthorized>
+    <Authorizing>
+        <Loading></Loading>
+    </Authorizing>
+</AuthorizeView>
+
+
+
+@code {
+    [Parameter] public string guid { get; set; }
+    Exception? exception;
+    List<ContentModel.Comment>? items;
+    ContentModel.Comment? model;
+    UserModel? selectedUser;
+    UserModel? currentUser;
+    bool isHiddingAnswereds = true;
+    DbState state;
+    string? answer;
+    string? searchTerm;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        session.UserChanged += UserChangedHandler;
+        currentUser = session.User;
+        await LoadData();
+    }
+
+    void UserChangedHandler(UserModel? user)
+    {
+        currentUser = session.User;
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    async Task LoadData()
+    {
+        state = DbState.IsLoading;
+        try
+        {
+            model = await appState.GetAsync<ContentModel.Comment>("comment", guid);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task Answer()
+    {
+        if (!string.IsNullOrEmpty(answer))
+        {
+            state = DbState.IsUpdating;
+            try
+            {
+                var comment = new ContentModel.Comment();
+                comment.ContentSrc = ContentModel.Comment.Srcs.Contact4moms;
+                comment.Answering = model!.Guid;
+                comment.User = session.User!;
+                comment.Fch = DateTime.Now;
+                comment.FchApproved = DateTime.Now;
+                comment.Text = answer;
+                comment.Lang = culture.Lang();
+
+                await appState.PostAsync<ContentModel.Comment, bool>(comment, "Comment");
+
+                var subject = model.Lang?.Tradueix("4moms responde", "4moms respon", "4moms answers", "4moms responde");
+                var answerUrl = culture.CanonicalUrl( culture.Lang(), culture.Tradueix("contacto", "contacte", "contact", "contato") + "/" + comment.Guid.ToString());
+                var body = comment.Text + "<p>En respuesta a su mensaje:</p><p>" + model.Text + "</p><div style='text-align:center'><a href='" + answerUrl + "' style='padding:5px 10px;border-radius: .25rem;border:1px solid gray;'>" + culture.Lang().Tradueix("Responder", "Contestar", "Answer", "Responder") + "</a></div>";
+                var templatedBody = Shop4moms.Services.MailService.TemplatedBody(body.Html());
+                await Shop4moms.Services.MailService.SendEmailAsync(model.User!.EmailAddress!, subject!, templatedBody);
+                answer = "";
+                model = null;
+                await LoadData();
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+            state = DbState.StandBy;
+
+        }
+    }
+
+    async Task Delete()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await appState.GetAsync<bool>("Comment/delete", model!.Guid.ToString());
+            model = null;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    async Task HideAnswereds()
+    {
+        isHiddingAnswereds = !isHiddingAnswereds;
+        await LoadData();
+    }
+
+
+    async Task LoginRequest(UserModel user)
+    {
+        await session.LoginAsync(user);
+    }
+
+    List<ContentModel.Comment> FilteredItems()
+    {
+        List<ContentModel.Comment> retval;
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = items?.Where(x => x.Answering == null).ToList() ?? new();
+        else
+            retval = items?.Where(x => x.Answering == null && x.Matches(searchTerm)).ToList() ?? new();
+        return retval;
+    }
+
+    string? Answerer(ContentModel.Comment item)
+    {
+        string? retval = null;
+        var answer = items?.Where(x => x.Answering == item.Guid).OrderByDescending(x => x.Fch).FirstOrDefault();
+        if (answer != null)
+        {
+            retval = answer.User?.NomiCognomsOrNicknameOrEmailAddress();
+        }
+        return retval;
+    }
+
+    string? Answer(ContentModel.Comment item)
+    {
+        string? retval = null;
+        var answer = items?.Where(x => x.Answering == item.Guid).OrderByDescending(x => x.Fch).FirstOrDefault();
+        if (answer != null)
+        {
+            retval = answer.Text;
+        }
+        return retval;
+    }
+
+    string Title()
+    {
+        string retval;
+        if (currentUser?.isStaff() ?? false)
+            retval = model == null ? culture.Localize("ConsumerMessages") : culture.Localize("ConsumerMessage");
+        else
+            retval = model == null ? culture.Localize("MyMessages") : culture.Localize("MyMessage");
+        return retval;
+
+    }
+
+    void SignInSuccess(UserModel user)
+    {
+        StateHasChanged();
+    }
+
+    void SignInFail()
+    {
+        StateHasChanged();
+    }
+
+    void RequestToCancelHandler()
+    {
+        navigationManager?.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        session.UserChanged -= UserChangedHandler;
+
+    }
+
+
+}

@@ -1,0 +1,41 @@
+﻿.Wrapper {
+    max-width: 600px;
+}
+
+.Banner img {
+    width:100%;
+    height:auto;
+}
+
+.Stepper {
+    margin: 20px 0;
+}
+
+.Answers {
+    margin: 15px 0;
+}
+
+.Bases {
+    max-height: 60px;
+    overflow: auto;
+    border:1px solid gray;
+    padding:10px;
+}
+
+.AcceptAndSubmit {
+    display: flex;
+    justify-content: space-between;
+    gap:15px;
+    margin-top:15px;
+}
+
+.Thanks {
+    margin-top: 15px;
+}
+/*----------------mobiles ----------------*/
+
+@media(max-width:599px){
+    .Answer {
+        padding:10px 0;
+    }
+}

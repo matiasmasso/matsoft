@@ -1,0 +1,49 @@
+﻿@inject NavigationManager NavigationManager
+
+<div class="Wrapper">
+    @if (Model.IsBusy)
+    {
+        <div class="Busy">
+            <div class="Item">
+                @Model.Caption
+            </div>
+            <div class="Loader">
+                <Loading Width="24"></Loading>
+            </div>
+        </div>
+    }
+    else
+    {
+        <a class="Item" href="#" @onclick="@(()=>OnClick(Model))" @onclick:preventDefault @onclick:stopPropagation>
+            @Model.Caption
+        </a>
+
+        <div class="@(isShowingChildren ? "" : "Hidden")">
+            @foreach (var item in Model.Items)
+            {
+                <ContextMenuItem Model="item" ItemClick="OnClick"></ContextMenuItem>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public MenuModel.Item Model { get; set; }
+    [Parameter] public EventCallback<MenuModel.Item> ItemClick { get; set; }
+
+    private bool isShowingChildren;
+
+    private void OnClick(MenuModel.Item item)
+    {
+        if (item.Mode == MenuModel.Modes.Parent)
+            isShowingChildren = !isShowingChildren;
+        else if (item.Mode == MenuModel.Modes.Navigate)
+            NavigationManager?.NavigateTo(item.Url);
+        else if (item.Mode == MenuModel.Modes.CustomAction)
+            item.Action();
+        else
+            ItemClick.InvokeAsync(item);
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,72 @@
+﻿@inject ApiService ApiService
+
+@* <LookupModel Value="Value" Values="values"
+             PlaceHolder="@PlaceHolder"
+             AddNewRequest="HandleAddNewRequest"
+             ValueChanged="HandleValueChanged"></LookupModel> *@
+
+
+    <Dropdown Values="values" 
+    Value="value" 
+    ValueChanged="HandleValueChanged"
+    PlaceHolder="@PlaceHolder"
+    ZoomRequest="HandleZoomRequest"
+    RequestToAdd="@(AddNewRequest.HasDelegate ? HandleAddNewRequest : null)"
+    AllowToClear="AllowToClear"></Dropdown>
+
+
+
+
+
+@code {
+    [Parameter] public EmpModel.EmpIds? Emp { get; set; }
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public string? PlaceHolder { get; set; }
+    [Parameter] public List<Guid?>? Values { get; set; }
+    [Parameter] public EventCallback<Guid?> ValueChanged { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+    [Parameter] public EventCallback<ContactModel> ZoomRequest { get; set; }
+    [Parameter] public bool AllowToClear { get; set; } = true;
+
+    // [Parameter] public EventCallback<ContactModel?> ValueChanged { get; set; }
+
+    //private List<ContactModel>? values;
+    private object[]? values;
+    private object? value;
+    private double contextMenuOffset;
+    private bool isShowingContextMenu;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        var allValues = ApiService.GetContacts(Emp);
+        value = allValues?.FirstOrDefault(x => x.Guid == Value);
+        if (Values == null)
+            values = allValues?.OrderBy(x => x.ToString()).Select(x=>(object)x).ToArray();
+        else
+            values = allValues?.Where(x => Values.Contains(x.Guid)).OrderBy(x => x.ToString()).Select(x => (object)x).ToArray();
+    }
+
+    void HandleValueChanged(object args)
+    {
+        if (args != null)
+        {
+            var value = (ContactModel)args;
+            ValueChanged.InvokeAsync(value.Guid);
+        }
+    }
+
+
+
+    void HandleZoomRequest()
+    {
+        var contact = ApiService.GetContact(Value);
+        ZoomRequest.InvokeAsync(contact);
+    }
+
+    void HandleAddNewRequest()
+    {
+        if(AddNewRequest.HasDelegate)
+        AddNewRequest.InvokeAsync();
+    }
+}

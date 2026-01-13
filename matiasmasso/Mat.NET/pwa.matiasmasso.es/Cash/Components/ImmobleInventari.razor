@@ -1,0 +1,54 @@
+﻿
+<div class="PageWrapper600">
+    <PageOptions>
+        <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir</a>
+    </PageOptions>
+
+    <div class="Searchbox">
+        <SearchBox @bind-Value="searchterm"></SearchBox>
+    </div>
+
+    <div class="Grid">
+        @foreach (var item in FilteredItems())
+        {
+            <a href="#"
+               class="Item"
+               @onclick="@(()=>HandleItemSelected(item))"
+               @onclick:preventDefault>
+                @item.Nom
+            </a>
+        }
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public ImmobleModel Value { get; set; }
+    [Parameter] public EventCallback<ImmobleModel.InventariItem> ItemSelected { get; set; }
+    string? searchterm;
+
+
+    List<ImmobleModel.InventariItem> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return Value.Inventari;
+        else
+            return Value.Inventari.Where(x => x.Matches(searchterm)).ToList();
+    }
+
+    void HandleItemSelected(ImmobleModel.InventariItem item)
+    {
+        ItemSelected.InvokeAsync(item);
+    }
+
+    void AddNew()
+    {
+        var item = new ImmobleModel.InventariItem
+            {
+                Target = Value.Guid,
+                Nom = "(Nova partida d'inventari)"
+            };
+        HandleItemSelected(item);
+    }
+
+}

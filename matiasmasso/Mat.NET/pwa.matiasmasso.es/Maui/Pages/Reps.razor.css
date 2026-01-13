@@ -1,0 +1,31 @@
+﻿.Wrapper {
+    max-width: 400px;
+}
+
+.ShowObsolets {
+    margin: 20px 0 10px;
+}
+
+.Summary {
+    margin-top: 10px;
+}
+
+.Item {
+    display: block;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+    .Item:not(:first-child) {
+        border-top: 1px solid gray;
+    }
+
+    .Description, .Age {
+        color: gray;
+    }
+
+.Obsoleto {
+    color: gray;
+}
+
+

@@ -1,0 +1,118 @@
+﻿@page "/miravia"
+
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject MarketPlacesService marketPlacesService
+@using Web.Integracions.Miravia
+
+<div class="PageWrapper600">
+    <h3>Miravia</h3>
+    <TabControl>
+        <TabPage Text="@culture.Localize("General")">
+
+            <p>
+                Miravia Seller Center:
+                <a target="_blank" href="https://sellercenter.miravia.es">
+                    https://sellercenter.miravia.es
+                    </a>
+            </p>
+            <p class="Label">
+                Url per descarregar un Csv amb el llistat de productes en catàleg amb els camps que requereix la seva api:
+            </p>
+            <p class="Url">
+                <a target="_blank" href="https://api2.matiasmasso.es/miraviafeeds/ProductListingUpdate_basic_4000087472422_ES.csv">
+                    https://api2.matiasmasso.es/miraviafeeds/ProductListingUpdate_basic_4000087472422_ES.csv
+                    </a>
+            </p>
+            <p class="Label">
+                Url per descarregar un Csv amb el llistat de preus i stocks amb els camps que requereix la seva api:
+            </p>
+            <p class="Url">
+                <a target="_blank" href="https://api2.matiasmasso.es/miraviafeeds/UpdatePriceAndStock_4000087472422_ES.csv">
+                    https://api2.matiasmasso.es/miraviafeeds/UpdatePriceAndStock_4000087472422_ES.csv
+                </a>
+            </p>
+
+        </TabPage>
+
+        <TabPage Text="@culture.Localize("Orders")">
+            <MiraviaOrders></MiraviaOrders>
+        </TabPage>
+        <TabPage Text="@culture.Localize("Depts")">
+            <CustomerDepts Customer="@(new ContactModel(MiraviaGuid))"></CustomerDepts>
+        </TabPage>
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    Guid MiraviaGuid = MarketPlaceModel.Wellknown(MarketPlaceModel.Wellknowns.Miravia)!.Guid;
+    MarketPlaceModel? model;
+    PropertyGridModel? gridModel;
+    DbState state;
+    Exception? exception;
+
+    private enum Fields
+    {
+        Nom
+    }
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        marketPlacesService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+
+        model = (guid == Guid.Empty) ? MarketPlaceModel.Factory() : marketPlacesService.GetValue(guid);
+        gridModel = new PropertyGridModel(model);
+        gridModel.AddString((int)Fields.Nom, model?.Nom, culture.Localize("Nom"));
+        StateHasChanged();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task UpdateRequest()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            model!.Nom = gridModel!.GetString((int)Fields.Nom);
+            await marketPlacesService.UpdateAsync(model);
+            state = DbState.StandBy;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            state = DbState.Failed;
+        }
+    }
+
+    async Task DeleteRequest()
+    {
+        try
+        {
+            await marketPlacesService.DeleteAsync(model);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        marketPlacesService.OnChange -= Refresca;
+    }
+}

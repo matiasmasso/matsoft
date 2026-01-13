@@ -1,0 +1,97 @@
+﻿@if (!ReadOnly)
+{
+    <div class="modeToggler">
+        <ModeToggler @bind-Value="mode"
+                     SelectedCount="@SelectedIds.Count"
+                     OnDeleteRequest="@(()=>OnDeleteRequest.InvokeAsync(SelectedIds))"
+                     OnEditRequest="@(()=>OnEditRequest.InvokeAsync(SelectedIds))" />
+    </div>
+}
+
+
+<div class="gallery-grid">
+    @foreach (var item in Items)
+    {
+        <div class="gallery-item" @key="item.Id">
+            <Thumbnail Item="item"
+                       IsSelected="@SelectedIds.Contains(item.Guid)"
+                       OnClick="() => HandleOnClick(item)"
+                       OnSelect="() => ItemSelected(item) "
+                       OnDragStart="() => HandleDragStart(item)"
+                       OnDrop="@(() => HandleDrop(item))"></Thumbnail>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<AlbumModel.Item> Items { get; set; } = default!;
+    [Parameter] public HashSet<Guid> SelectedIds { get; set; } = new();
+
+    [Parameter] public EventCallback<HashSet<Guid>> OnDeleteRequest { get; set; }
+    [Parameter] public EventCallback<HashSet<Guid>> OnEditRequest { get; set; }
+    [Parameter] public EventCallback<(int,int)> OnReordered { get; set; }
+
+    [Parameter] public EventCallback<AlbumModel.Item> OnItemClick { get; set; }
+
+    private AlbumModel.Item? _draggedItem;
+    private ModeToggler.Modes mode = ModeToggler.Modes.View;
+    [Parameter] public bool ReadOnly { get; set; } = false;
+
+    private void HandleDragStart(AlbumModel.Item item)
+    {
+        _draggedItem = item;
+    }
+
+    private async Task HandleOnClick(AlbumModel.Item args)
+    {
+        if(mode== ModeToggler.Modes.View)
+            await OnItemClick.InvokeAsync(args);
+        else
+        {
+            if (SelectedIds.Contains(args.Guid))
+                SelectedIds.Remove(args.Guid);
+            else
+                SelectedIds.Add(args.Guid);
+        }
+    }
+
+    private async Task HandleDrop(AlbumModel.Item targetItem)
+    {
+        if (_draggedItem is null || _draggedItem == targetItem)
+            return;
+
+        var oldIndex = Items.IndexOf(_draggedItem);
+        var newIndex = Items.IndexOf(targetItem);
+
+        if (oldIndex < 0 || newIndex < 0)
+            return;
+
+        if (OnReordered.HasDelegate)
+            await OnReordered.InvokeAsync((oldIndex,newIndex));
+
+        // // Remove dragged item
+        // Items.RemoveAt(oldIndex);
+
+        // // Insert at new position (account for shift when dragging downwards)
+        // if (newIndex >= Items.Count)
+        //     Items.Add(_draggedItem);
+        // else
+        //     Items.Insert(newIndex, _draggedItem);
+
+        // _draggedItem = null;
+
+        // // Notify parent if needed
+        // if (OnReordered.HasDelegate)
+        //     await OnReordered.InvokeAsync(Items);
+
+        StateHasChanged();
+    }
+
+    void ItemSelected(AlbumModel.Item item)
+    {
+        if (SelectedIds.Contains(item.Guid))
+            SelectedIds.Remove(item.Guid);
+        else
+            SelectedIds.Add(item.Guid);
+    }
+}

@@ -1,0 +1,69 @@
+﻿
+.storelocator {
+    max-width: 600px;
+    margin: 40px auto 20px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    column-gap: 20px;
+}
+
+.storelocator .online, .storelocator .offline {
+    width: 300px;
+}
+
+    #BrandSelector {
+        width: 280px;
+        font-size: 1em;
+        padding: 4px 7px 2px 4px;
+        margin-top: 20px;
+    }
+
+    .storelocator select {
+        width: 280px;
+        font-size: 1em;
+        padding: 4px 7px 2px 4px;
+    }
+
+    .storelocator .Distributor {
+        margin-top: 20px;
+    }
+
+        .storelocator .Distributor .Nom {
+            font-weight: 600;
+        }
+
+.OnlineStore {
+    display:block;
+    margin-top: 20px;
+}
+.OnlineStore:hover {
+    color: #167ac6;
+}
+
+    .OnlineStore .url {
+        color: #167ac6;
+    }
+
+    .OnlineStore .InStock {
+        color: green;
+    }
+
+    @media ( max-width: 500px) {
+        .storelocator {
+        flex-direction: column;
+    }
+
+        .storelocator select {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .storelocator .online {
+            margin-top: 20px;
+        }
+
+}
+
+
+

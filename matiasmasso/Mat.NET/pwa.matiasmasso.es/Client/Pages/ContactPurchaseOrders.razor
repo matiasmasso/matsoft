@@ -1,0 +1,64 @@
+﻿@page "/ContactPurchaseOrders/{ContactGuid:guid}"
+
+@using Client.Shared
+@using Client.ViewModels
+@layout ProLayout
+
+@inject AppState AppState
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ContactPurchaseOrders> Loc
+
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else {
+    <div class="Wrapper">
+
+        <h3>@Loc["Title"]</h3>
+        <SearchBox @bind-Value="@viewModel.SearchTerm"></SearchBox>
+
+        <Virtualize Items="@viewModel.Items()" Context="item">
+            <a class="Item" href="#" target="_blank">
+                <div class="Ico">
+                    @if(item.HasPdf)
+                {
+                    <img src="img/pdf-36-red.png"/>
+                } else
+                {
+                    <img src="img/pdf-36.png"/>
+                }
+                </div>
+                <div class="Id">
+                    @string.Format("{0:00000}",item.Id)
+                </div>
+                <div class="Fch">
+                    @string.Format("{0:dd/MM/yy}",item.Fch)
+                </div>
+                <div class="Amt">
+                    @item.Amt?.CurFormatted()
+                </div>
+                <div class="Concept Truncate">
+                    @item.Concept
+                </div>
+            </a>
+        </Virtualize>
+    </div>
+}
+
+
+
+
+@code {
+
+    [Parameter]
+    public Guid ContactGuid { get; set; }
+
+    private ContactPurchaseOrdersViewModel? viewModel;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        viewModel = new ContactPurchaseOrdersViewModel( AppState, ContactGuid);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+    }
+
+}

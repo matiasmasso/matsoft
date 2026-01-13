@@ -1,0 +1,88 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="Wrapper">
+
+        <div class="Grid">
+            @foreach (var item in values ?? new())
+            {
+                <div class="Item">
+                    <div class="Ico">
+                        @if (item.DocFile?.Hash == null)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            <a href="@item.DownloadUrl()" target="_blank">
+                                <Icon Id="Icon.Ids.File"></Icon>
+                            </a>
+                        }
+                    </div>
+
+                    <a href="#" class="Year" title="@item.Fch" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        @item.Year()
+                    </a>
+
+                    <a href="#" class="Title Truncate" title="@item.Tit" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        @item.Tit
+                    </a>
+                </div>
+
+                <div class="GridRowDivider HideOnDesktop"></div>
+            }
+        </div>
+</div>
+
+@code {
+    [Parameter] public EnlaceModel? Value { get; set; }
+    [Parameter] public List<DocModel>? Items { get; set; }
+    [Parameter] public EventCallback<DocModel> ItemSelected { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+    DocModel? selectedItem;
+    // string? searchTerm;
+    List<DocModel>? values;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        var maritDocs = ApiService.DocTargets()?
+        .Where(x => x.Target == Value?.Marit && x.Rel == DocRelModel.Wellknown(DocRelModel.Wellknowns.Nuvi)?.Guid)
+        .Select(x=>x.Doc).ToList();
+
+        var mullerDocs = ApiService.DocTargets()?
+        .Where(x => x.Target == Value?.Muller && x.Rel == DocRelModel.Wellknown(DocRelModel.Wellknowns.Nuvia)?.Guid)
+        .Select(x => x.Doc).ToList();
+
+        var docGuids = maritDocs?.Intersect(mullerDocs ?? new()).Distinct().ToList();
+        values = ApiService.Docs()?.Where(x => docGuids?.Contains(x.Guid) ?? false).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    void ItemClick(DocModel item)
+    {
+        if (ItemSelected.HasDelegate)
+            ItemSelected.InvokeAsync(item);
+        else
+            selectedItem = item;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+}

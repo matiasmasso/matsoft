@@ -1,0 +1,96 @@
+﻿@page "/vehicles"
+@inject ApiService ApiService
+
+@if (selectedItem == null)
+{
+    <div class="PageWrapper600">
+        <h3>Vehicles</h3>
+
+        <div class="PageOptions">
+            <PageOptions>
+                <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+                <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir</a>
+            </PageOptions>
+        </div>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <a href="#" class="Item @(item.Baixa == null ? "" : "Baixa")" @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                    <div class="Plate">@item.Matricula</div>
+                    <div class="Model Truncate">@item.Model?.Caption()</div>
+                    <div class="HideOnMobile">@($"{item.Alta:dd/MM/yy}")</div>
+                </a>
+            }
+        </div>
+
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+else
+{
+    <Vehicle Value="selectedItem" CloseRequest="@(()=>selectedItem=null)"></Vehicle>
+}
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds emp = EmpModel.EmpIds.MMC;
+
+    List<VehicleModel>? values;
+    VehicleModel? selectedItem;
+    string? searchterm;
+    string? title;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        try
+        {
+            values = await ApiService.GetAsync<List<VehicleModel>>("Vehicles");
+            values = values?.OrderBy(x => x.Baixa == null ? 0 : 1)
+            .ThenByDescending(x => x.Alta)
+            .ToList();
+            if (values?.Count>0 && values.Where(x => x.Baixa == null).ToList().Count == 0)
+                isShowingObsolets = true;
+            emps = values?.Select(x => x.Emp).Distinct().ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private List<VehicleModel>? FilteredItems()
+    {
+        List<VehicleModel>? retval = values?.Where(x => x.Emp == emp).ToList();
+        if (retval?.Count > 0 && retval.Where(x => x.Baixa == null).ToList().Count == 0)
+            isShowingObsolets = true;
+        if (!isShowingObsolets) retval = retval?.Where(x => x.Baixa == null).ToList();
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = retval?.Where(x => x.Matches(searchterm)).ToList();
+        return retval;
+    }
+
+    private void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    void AddNew()
+    {
+        selectedItem = new VehicleModel { Emp = emp };
+    }
+}

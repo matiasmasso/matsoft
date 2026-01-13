@@ -1,0 +1,86 @@
+﻿@inherits _ComponentBase
+
+<PropertyGrid model="@gridModel"
+              RequestToUpdate="SaveRequest"
+              RequestToDelete="DeleteRequest"
+              RequestToCancel="CancelRequest"
+              ErrorMessage="@errorMessage"
+              GetOptions="GetOptions"></PropertyGrid>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private ZipModel? value;
+    private Helpers.PropertyGridModel? gridModel;
+    private AtlasModel? atlas;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        Location,
+        ZipCod
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Guid != null)
+        {
+            atlas = await base.Atlas();
+            value = atlas.Zip((Guid)Guid);
+            if (value != null)
+            {
+                var model = new Helpers.PropertyGridModel();
+                model.AddEnum((int)Fields.Location, value.Location, value.Location.ToString(), atlas.Location(value.Location)?.Nom, "Población", "Població", "Location");
+                model.AddString((int)Fields.ZipCod,value.ZipCod,"Código postal", "Codi postal", "Zip code");
+                gridModel = model;
+                StateHasChanged();
+            }
+        }
+    }
+
+
+    private async Task SaveRequest()
+    {
+        value!.Location = (Guid)gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.Location)?.Value;
+        value!.ZipCod = gridModel!.Items.FirstOrDefault(x => x.Field == (int)Fields.ZipCod)?.Value?.ToString();
+
+        if (await PostAsync<ZipModel, bool>(value, "Zip"))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Zip/delete", value!.Guid.ToString())) {
+            atlas!.Zips.Remove(value);
+            CancelRequest();
+        }
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+    public async Task<List<Option>> GetOptions(Helpers.PropertyGridModel.Item item)
+    {
+        List<Option> retval = new();
+        if (item.Field == (int)Fields.Location)
+        {
+            retval = atlas!.Locations
+            .Select(x => new Option
+                {
+                    Id = x.Guid.ToString(),
+                    Nom = x.Nom ?? "?",
+                    Tag = x.Guid
+                }).ToList();
+        }
+
+        return retval;
+    }
+}

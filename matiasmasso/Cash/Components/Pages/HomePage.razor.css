@@ -1,0 +1,16 @@
+﻿a {
+    display:block;
+    width:40px;
+    margin:100px;
+}
+
+/*
+a ::deep .Svg, .CopyButton ::deep .Svg {
+    width:50px;
+    min-width:50px;
+}
+*/
+
+.CopyButton {
+    width: 50px;
+}

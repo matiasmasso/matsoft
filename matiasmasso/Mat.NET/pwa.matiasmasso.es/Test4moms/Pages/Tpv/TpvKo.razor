@@ -1,0 +1,29 @@
+﻿@page "/tpv/ko"
+
+@inject IStringLocalizer<AppResource> Localizer
+@inject PostFormService PostFormService;
+@inject AppState AppState;
+@inherits _ComponentBase
+
+<div>
+    <p>@Localizer["FailedPayment"]</p>
+</div>
+
+@code {
+    ShoppingBasketModel? basket;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        string? ds_MerchantParameters = PostFormService.Form?["Ds_MerchantParameters"];
+        string? ds_SignatureVersion = PostFormService.Form?["Ds_SignatureVersion"];
+        string? ds_Signature = PostFormService.Form?["Ds_Signature"];
+        var request = Redsys.Request.Factory(ds_MerchantParameters, ds_SignatureVersion, ds_Signature);
+        var basket = AppState.Basket(request!.OrderNum());
+    }
+}
+
+
+
+
+.

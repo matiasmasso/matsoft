@@ -1,0 +1,260 @@
+﻿@implements IDisposable
+
+@inject CultureService culture
+@inject NominasEscuraService nominasEscuraService
+@inject BancTransfersService bancTransfersService
+@inject SessionStateService session
+@inject IJSRuntime JSRuntime
+
+<div class="PageWrapper900">
+    @if (selectedPdf != null)
+    {
+        <PdfViewer Value="selectedPdf"></PdfViewer>
+    }
+    else
+    {
+        <h3>@culture.Localize("NominasFactory")</h3>
+
+        <Steps SelectedStep="@selectedStep">
+            <Step Caption="@culture.Localize("Upload")">
+
+                <div class="Concept">
+                    <div>
+                        Especifica un concepto (nómina, paga extra...)
+                    </div>
+                    <div>
+                        <input type="text" @bind-value="concept" />
+                    </div>
+                </div>
+
+                <Dropzone OnChange="FilesUploaded"></Dropzone>
+
+                <div class="ButtonsBar">
+                    @if (isLoadingNominas)
+                    {
+                        <Loading></Loading>
+                    }
+                    else
+                    {
+                        <button class="Button ButtonOk"
+                                disabled="@(uploadedFiles == null)"
+                        @onclick="NextStepRequestHandler">
+                            @culture.Localize("Next")
+                        </button>
+                    }
+                </div>
+
+            </Step>
+
+            <Step Caption="@culture.Localize("NominasFactory.CheckItems")">
+
+                @if (nominas == null)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <GridNominas Values="nominas" ShowPdf="ShowPdfHandler"></GridNominas>
+                }
+
+                <div class="ButtonsBar">
+                    @if (isLoadingTransfers)
+                    {
+                        <Loading></Loading>
+                    }
+                    else
+                    {
+                        <button class="Button ButtonOk"
+                                disabled="@(nominas == null || isLoadingNominas)"
+                        @onclick="NextStepRequestHandler">
+                            @culture.Localize("Next")
+                        </button>
+                    }
+
+                </div>
+            </Step>
+            <Step Caption="@culture.Localize("BankTransfers")">
+                <GridTransfers @bind-Values="transfers" Nominas="nominas"></GridTransfers>
+
+                <div class="ButtonsBar">
+                    <button class="Button ButtonOk"
+                            disabled="@(nominas == null)"
+                    @onclick="NextStepRequestHandler">
+                        @culture.Localize("Next")
+                    </button>
+                </div>
+
+
+            </Step>
+
+            <Step Caption="@culture.Localize("Download")">
+                <div class="Downloads">
+                    @foreach (var transfer in transfers ?? new())
+                    {
+                        <a href="#" @onclick="@(()=>DownloadSepaTransferAsync(transfer))" @onclick:preventDefault>
+                            @transfer.Filename()
+                        </a>
+                    }
+                </div>
+            </Step>
+
+        </Steps>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<byte[]> ShowPdf { get; set; }
+    List<NominaModel>? nominas;
+    List<BancModel.Transfer>? transfers;
+    List<IBrowserFile>? uploadedFiles;
+    string concept = "nómina";
+    byte[]? selectedPdf;
+    int selectedStep = 1;
+    bool isLoadingNominas;
+    bool isLoadingTransfers;
+    bool isDownloadingFile;
+    Exception? exception;
+
+    private enum StepEnum
+    {
+        None,
+        FileUpload,
+        Nominas,
+        Transfers
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        nominasEscuraService.OnChange += Refresca;
+        nominasEscuraService.NominaLoaded += NominaLoadedHandler;
+    }
+
+    void FilesUploaded(List<IBrowserFile> files)
+    {
+        uploadedFiles = files;
+    }
+
+    async Task NextStepRequestHandler()
+    {
+        try
+        {
+            switch (selectedStep)
+            {
+                case (int)StepEnum.FileUpload:
+                    isLoadingNominas = true;
+                    StateHasChanged();
+                    _ = Task.Run(async () =>
+                    {
+                        nominas = await nominasEscuraService.Nominas(uploadedFiles!, concept);
+                        isLoadingNominas = false;
+                        await InvokeAsync(StateHasChanged);
+                    });
+                    break;
+                case (int)StepEnum.Nominas:
+                    isLoadingTransfers = true;
+                    await nominasEscuraService.UpdateAsync(nominas!);
+
+                    var allTransfers = await nominasEscuraService.StaffPendingTransfers();
+                    var emps = nominas!.GroupBy(x => x.Cca!.Emp).Select(x => x.First().Cca!.Emp).ToList();
+                    transfers = allTransfers?.Where(x => emps.Any(y => x.Emp() == y)).ToList();
+                    foreach (var transfer in transfers)
+                    {
+                        transfer.Banc = bancTransfersService.Banc(transfer.Emp())?.Guid;
+                        foreach (var item in transfer.Items)
+                        {
+                            var emp = session.Emps?.Where(x => x.Id == transfer.Emp()).FirstOrDefault();
+                            var iban = bancTransfersService.ActiveIban(IbanModel.Cods.staff, item.Beneficiari);
+                            item.BankBranch = iban?.Branch;
+                            item.Ccc = iban?.Ccc;
+                            item.Concept = $"{emp!.Abr} - {concept}";
+                        }
+
+                    }
+                    isLoadingTransfers = false;
+                    break;
+
+                case (int)StepEnum.Transfers:
+                    var ctaBancs = bancTransfersService.PgcCta(PgcCtaModel.Cods.Bancs)!;
+                    var ctaDebit = bancTransfersService.PgcCta(PgcCtaModel.Cods.PagasTreballadors)!;
+                    foreach (var transfer in transfers ?? new())
+                    {
+                        var emp = session.Emps?.Where(x => x.Id == transfer.Emp()).FirstOrDefault();
+                        foreach (var item in transfer.Items)
+                        {
+                            item.PgcCta = ctaDebit.Guid;
+                            item.Concept = $"{emp!.Abr} - {concept}";
+                        }
+                        var banc = bancTransfersService.Banc((Guid)transfer.Banc!);
+                        transfer.Cca.Concept = $"{banc!.Abr} - {concept}";
+                        transfer.Cca.Items = transfer.Items.Select(x => x.Ccb()).ToList();
+                        transfer.Cca.AddSaldo(ctaBancs, transfer.Banc);
+                        transfer.Cca.UsrLog = UsrLogModel.Factory(session.User);
+                    }
+
+                    await bancTransfersService.UpdateAsync(transfers!);
+                    //var xmlFiles = bancTransfersService.SepaDocs(transfers);
+                    await CloseRequest.InvokeAsync();
+                    break;
+            }
+            selectedStep += 1;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void NominaLoadedHandler(List<NominaModel> items)
+    {
+        nominas = items;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ShowPdfHandler(byte[] pdfBytes)
+    {
+        ShowPdf.InvokeAsync(pdfBytes);
+    }
+
+
+    async Task DownloadSepaTransferAsync(BancModel.Transfer transfer)
+    {
+        isDownloadingFile = true;
+        try
+        {
+            var fileText = bancTransfersService.SepaDoc(transfer);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(fileText);
+            if (bytes == null)
+                throw new Exception("Empty Sepa transfer file");
+            else
+            {
+                var fileStream = new MemoryStream(bytes);
+                var fileName = transfer.Filename();
+                using var streamRef = new DotNetStreamReference(stream: fileStream);
+                await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+                await InvokeAsync(StateHasChanged);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isDownloadingFile = false;
+    }
+
+    public void Dispose()
+    {
+        nominasEscuraService.OnChange -= Refresca;
+        nominasEscuraService.NominaLoaded -= NominaLoadedHandler;
+    }
+
+}

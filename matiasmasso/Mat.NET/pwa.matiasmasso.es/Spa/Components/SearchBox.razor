@@ -1,0 +1,32 @@
+﻿<div class="Wrapper">
+    <input @bind="Value" @bind:event="oninput" />
+    @if(AddNewUrl != null)
+    {
+        <a href="@AddNewUrl" class="AddNew">+</a>
+    }
+</div>
+
+@code {
+    private string text;
+
+    [Parameter]
+    public string Value
+    {
+        get { return text; }
+        set
+        {
+            if (text != value) {
+                text = value;
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public string? AddNewUrl { get; set; }
+
+}

@@ -1,0 +1,54 @@
+﻿.Label {
+    color: gray;
+}
+
+.Value {
+    padding: 4px 7px 15px 15px;
+}
+
+    .Value input {
+        width: 100%;
+    }
+
+.ButtonRow {
+    text-align: right;
+}
+
+    .ButtonRow .Warning {
+        display: none;
+    }
+
+    .ButtonRow.HasWarning {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+        .ButtonRow.HasWarning .Warning {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            color: red;
+            align-items: baseline;
+            text-align: left;
+        }
+
+.ClickToChange {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    color: gray;
+    margin-top: 10px;
+}
+
+    .ClickToChange ::deep .fa-primary {
+        fill: gray;
+    }
+
+    .ClickToChange:hover {
+        color: black;
+    }
+
+        .ClickToChange:hover ::deep .fa-primary {
+            fill: black;
+        }

@@ -1,0 +1,44 @@
+﻿.Emps {
+    display:flex;
+    flex-direction:column;
+}
+
+.Emps a {
+    display:block;
+}
+
+.Years {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+}
+
+    .Years a {
+        display: inline-block;
+    }
+
+.Item {
+    display:grid;
+    grid-template-columns: 50px 80px 30px 1fr 120px 100px;
+}
+
+.Item > *:not(:first-child) {
+    padding-left:10px;
+}
+
+.Ico {
+    display: flex;
+    justify-content: center;
+}
+
+.Num {
+    white-space:nowrap;
+    display:flex;
+    justify-content: flex-end;
+}
+
+.Nom {
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}

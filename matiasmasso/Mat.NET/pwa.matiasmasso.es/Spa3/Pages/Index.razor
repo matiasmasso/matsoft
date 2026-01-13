@@ -1,0 +1,70 @@
+﻿@page "/"
+@inject AppState AppState
+@inject HttpClient Http
+
+
+ <div class="Wrapper">
+    <div class="Banner">
+        @if(viewModel?.IsLoaded() ?? false)
+        {
+            <BannerRotator Banners="@viewModel!.Model!.RotatingBanners"></BannerRotator>
+        } else
+        {
+            <div class="BannerPlaceHolder">
+                <img src="/img/Portada/BannerPlaceHolder.jpg" width="600" height="292"/>
+            </div>
+        }
+    </div>
+
+    @if(AppState.News?.Count>1)
+    {
+        <BoxComponent Model="@AppState.News[0]" Class="News0 ShowOnMobile"/>
+        <BoxComponent Model="@AppState.News[1]" Class="News1 ShowOnMobile"/>
+    }
+
+
+    <a class="Brand1" href="/britax-roemer">
+        <img src="/img/Portada/BrandsV/br-home-200x242.jpg" class="BrandsV" title="Britax Römer" />
+        <img src="/img/Portada/BrandsH/br-home-600.jpg" class="BrandsH" title="Britax Römer" />
+    </a>
+    <a class="Brand2" href="/tommee-tippee">
+        <img src="/img/Portada/BrandsV/tt-home-200x242.jpg" class="BrandsV" title="Tommee Tippee" />
+        <img src="/img/Portada/BrandsH/tt-home-600.jpg" class="BrandsH" title="Tommee Tippee" />
+    </a>
+    <a class="Brand3" href="/4moms">
+        <img src="/img/Portada/BrandsV/4moms-home-200x242.jpg" class="BrandsV" title="4moms" />
+        <img src="/img/Portada/BrandsH/4moms-home-600.jpg" class="BrandsH" title="4moms" />
+    </a>
+
+    <div class="Raffle">
+        @if(viewModel?.IsLoaded() ?? false && viewModel!.Model?.Raffle != null)
+        {
+            <a href="@viewModel!.Model!.Raffle.Url" title="viewModel.Model.Raffle.Caption">
+                <img src="@viewModel.Model.Raffle.ImageUrl" alt="@viewModel.Model.Raffle.Caption" width="@RaffleDTO.BANNER600WIDTH" height="@RaffleDTO.BANNER600HEIGHT"/>
+            </a>
+        }
+    </div>
+
+
+</div>   
+
+
+@code {
+    HomeViewModel? viewModel;
+
+    [Parameter] public List<Box> News { get; set; } = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        viewModel = new HomeViewModel(AppState);
+        viewModel.OnStateChange += StateChange;
+        viewModel.Fetch(Http);
+        return base.OnInitializedAsync();
+    }
+
+    private void StateChange()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+}

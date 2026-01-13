@@ -1,0 +1,27 @@
+﻿.Wrapper {
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+/*---------------------------------- mobiles ----------------------------*/
+
+@media(max-width:599px){
+
+}
+
+
+/*---------------------------------- desktop ----------------------------*/
+
+@media(min-width:600px) {
+
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content min-content 1fr min-content;
+        grid-column-gap: 10px;
+    }
+
+    .Item {
+        display:contents;
+    }
+}

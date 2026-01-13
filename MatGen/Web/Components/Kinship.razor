@@ -1,0 +1,89 @@
+﻿@inject ApiService ApiService
+@inject IPdfService PdfService
+
+<div class="PageWrapper900">
+    @if (line1?.Count == 0)
+    {
+        <div>no kinship found</div>
+    }
+    else
+    {
+        <PageOptions>
+            <a href="PdfUrl" target="_blank">Genera Pdf</a>
+        </PageOptions>
+        <div class="Grid">
+            @foreach (var item in line1!)
+            {
+                <div class="Item">
+                    <div class="Num">@(line1.Count - line1.IndexOf(item))</div>
+                    <div>@(item.Person.YearFrom)</div>
+                    <a class="Truncate" href="#" @onclick="@((e) => ItemClick(e, item))" @onclick:preventDefault>@item.Person.Nom</a>
+                </div>
+            }
+            @foreach (var item in line2 ?? new())
+            {
+                <div class="Item">
+                    <div class="Num">@(line2!.IndexOf(item) + 2)</div>
+                    <div>@(item.Person.YearFrom)</div>
+                    <a class="Truncate" href="#" @onclick="@((e) => ItemClick(e, item))" @onclick:preventDefault>@item.Person.Nom</a>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public Tuple<PersonModel?, PersonModel?>? Value { get; set; }
+    [Parameter] public EventCallback<PersonModel> ItemSelected { get; set; }
+
+    private PersonModel? person1;
+    private PersonModel? person2;
+    private List<AncestorModel>? line1;
+    private List<AncestorModel>? line2;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        person1 = Value?.Item1;
+        person2 = Value?.Item2;
+        var ancestors1 = person1?.Ancestors(ApiService.Persons()) ?? new();
+        var ancestors2 = person2?.Ancestors(ApiService.Persons()) ?? new();
+        var commonAncestors = ancestors1.Where(x => ancestors2.Any(y => x.Person.Guid == y.Person.Guid)).ToList();
+        var commonAncestor1 = commonAncestors.MinBy(x => x.Id);
+        var commonAncestor2 = ancestors2.FirstOrDefault(x => x.Person.Guid == commonAncestor1?.Person.Guid);
+        line1 = GetLine(ancestors1, commonAncestor1?.Id ?? 0);
+        line1.Reverse();
+        line2 = GetLine(ancestors2, commonAncestor2?.Id ?? 0);
+        line2.RemoveAt(0); // avoid repeating coomon ancestor
+    }
+
+    List<AncestorModel> GetLine(List<AncestorModel> ancestors, int rootId)
+    {
+        List<AncestorModel> retval = new();
+        var ancestor = ancestors.First(x => x.Id == rootId);
+        while (ancestor != null)
+        {
+            retval.Add(ancestor);
+            if (ancestor.Id == 1) break; // root ancestor
+            var nextId = ancestor.Id % 2 == 0 ? ancestor.Id / 2 : (ancestor.Id - 1) / 2;
+            ancestor = ancestors.FirstOrDefault(x => x.Id == nextId);
+        }
+        return retval;
+    }
+
+    void ItemClick(MouseEventArgs e, AncestorModel item)
+    {
+        if (e.Button == 0 && ItemSelected.HasDelegate)
+        {
+            ItemSelected.InvokeAsync(item.Person);
+        }
+    }
+
+    string PdfUrl()
+    {
+        return ApiService.ApiUrl("persons/lineage", person1?.Guid.ToString(), person2?.Guid.ToString());
+
+
+    }
+}

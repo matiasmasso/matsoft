@@ -1,0 +1,260 @@
+﻿@inject ApiService ApiService
+@inject IJSRuntime JSRuntime
+
+@if (Person != null)
+{
+    <div class="PageWrapper900">
+        <PageOptions>
+            @if (isWritingExcel || isWritingGedcom)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <a href="#" @onclick="Excel" @onclick:preventDefault>Excel</a>
+                <a href="#" @onclick="Gedcom" @onclick:preventDefault>Gedcom</a>
+            }
+        </PageOptions>
+
+        <div class="Grid">
+            @foreach (var gen in gens ?? new())
+            {
+                <a class="Gen" href="#" @onclick="@(()=>gen.IsExpanded = !gen.IsExpanded)" @onclick:preventDefault>
+                    <div class="Id">
+                        @(string.Format("Gen.{0:00}", gen.Id))
+                    </div>
+                    <div class="Caption">
+                        @gen.Caption(model)
+                    </div>
+                </a>
+
+                <div class="GenDetail @(gen.IsExpanded ? "" : "Hidden")">
+                    <div class="Spacer">&nbsp;</div>
+                    <div class="ColHeaders">
+                        <div>RCN</div>
+                        <div>BTG</div>
+                        <div>RCM</div>
+                        <div>MTR</div>
+                        <div>CMT</div>
+                        <div>RCD</div>
+                        <div>OBT</div>
+                        <div>TST</div>
+                        <div>Id</div>
+                        <div class="Nom Truncate">Avantpassat</div>
+                    </div>
+                    @foreach (var item in gen.Ancestors(model))
+                    {
+                        <a class="Ancestor" href="#" @onclick="(()=>AncestorClick(item))" @onclick:preventDefault>
+                            <div class="@(IsActive(item, DocCodModel.Wellknowns.RegistreCivilNaixement)?"RegCivil":"")">&nbsp;</div>
+                            <div class="@(IsActive(item, DocCodModel.Wellknowns.Bateig)?"RegParroquial":"")">&nbsp;</div>
+                            <div class="@(IsActive(item, DocCodModel.Wellknowns.RegistreCivilMatrimoni)?"RegCivil":"")">&nbsp;</div>
+                            <div class="@(IsActive(item, DocCodModel.Wellknowns.RegistreParroquialMatrimoni)?"RegParroquial":"")">&nbsp;</div>
+                            <div class="@(IsActive(item, DocCodModel.Wellknowns.CapitolsMatrimonials)?"RegNotarial":"")">&nbsp;</div>
+                            <div class="@(IsActive(item, DocCodModel.Wellknowns.RegistreCivilDefuncio)?"RegCivil":"")">&nbsp;</div>
+                            <div class="@(IsActive(item, DocCodModel.Wellknowns.RegistreParroquialObit)?"RegParroquial":"")">&nbsp;</div>
+                            <div class="@(IsActive(item, DocCodModel.Wellknowns.Testament)?"RegNotarial":"")">&nbsp;</div>
+                            <div class="Id">
+                                @item.Id
+                            </div>
+                            <div class="Nom Truncate @(item.Person.ParesUnknown() ? "LastAncestor":"")">
+                                @item.Person.FullNom()
+                            </div>
+                        </a>
+                    }
+                    <div class="Spacer">&nbsp;</div>
+                </div>
+            }
+        </div>
+        <Error @bind-Exception="exception"></Error>
+    </div>
+}
+
+
+@code {
+    [Parameter] public PersonModel? Person { get; set; }
+    [Parameter] public EventCallback<PersonModel> ItemSelected { get; set; }
+    List<AncestorModel>? model;
+    List<Gen>? gens;
+    AncestorModel? lastItem;
+    List<DocTargetModel>? docTargets;
+    bool isWritingExcel;
+    bool isWritingGedcom;
+    Exception? exception;
+
+    protected override void OnParametersSet()
+    {
+        model = Person?.Ancestors(ApiService.Persons());
+        gens = model?.GroupBy(x => x.Id)
+        .Where(x => model.Any(y => x.Key == y.Level))
+        .Select(x => new Gen
+            {
+                Id = x.Key
+            })
+            .OrderBy(x => x.Id)
+            .ToList();
+    }
+
+
+    async Task AncestorClick(AncestorModel ancestor)
+    {
+        await ItemSelected.InvokeAsync(ancestor.Person);
+    }
+
+    bool IsActive(AncestorModel item, DocCodModel.Wellknowns cod)
+    {
+        if (item != lastItem)
+        {
+            lastItem = item;
+            docTargets = ApiService.DocTargets()?.Where(x => x.Target == lastItem.Person.Guid & x.SubjectePassiu == true).ToList();
+        }
+        var docCod = DocCodModel.Wellknown(cod)!;
+        List<DocModel> docs = new();
+        if (cod == DocCodModel.Wellknowns.Testament)
+        {
+            DocCodModel[] items = { docCod, DocCodModel.Wellknown(DocCodModel.Wellknowns.AcceptacioHerencia)! };
+            docs = ApiService.Docs()?.Where(x => items.Any(y => x.Cod == y.Guid)).ToList() ?? new();
+
+        }
+        else
+        {
+            docs = ApiService.Docs()?.Where(x => x.Cod != null && x.Cod == docCod.Guid).ToList() ?? new();
+        }
+        var retval = docs.Any(x => docTargets?.Any(y => x.Guid == y.Doc) ?? false);
+        return retval;
+    }
+
+    string? Url(AncestorModel item, DocCodModel.Wellknowns cod)
+    {
+        if (item != lastItem)
+        {
+            lastItem = item;
+            docTargets = ApiService.DocTargets()?.Where(x => x.Target == lastItem.Person.Guid & x.SubjectePassiu == true).ToList();
+        }
+        var docCod = DocCodModel.Wellknown(cod)!;
+        List<DocModel> docs = new();
+        if (cod == DocCodModel.Wellknowns.Testament)
+        {
+            DocCodModel[] items = { docCod, DocCodModel.Wellknown(DocCodModel.Wellknowns.AcceptacioHerencia)! };
+            docs = ApiService.Docs()?.Where(x => items.Any(y => x.Cod == y.Guid)).ToList() ?? new();
+
+        }
+        else
+        {
+            docs = ApiService.Docs()?.Where(x => x.Cod != null && x.Cod == docCod.Guid).ToList() ?? new();
+        }
+        var doc = docs.FirstOrDefault(x => docTargets?.Any(y => x.Guid == y.Doc) ?? false);
+        string? retval = doc?.DocFile?.DownloadUrl();
+        return retval;
+    }
+
+    public class Gen
+    {
+        public int Id { get; set; }
+        public bool IsExpanded { get; set; } = false;
+
+        public string? Caption(List<AncestorModel>? all)
+        {
+            string? retval = null;
+            if (all != null)
+            {
+                var count = Ancestors(all).Count;
+                var levelCount = Math.Pow(2, Id);
+                retval = string.Format("completat {0:N0}% ({1:N0} de {2:N0})", 100 * count / levelCount, count, levelCount);
+            }
+            return retval;
+        }
+
+        public List<AncestorModel> Ancestors(List<AncestorModel>? all) => all?.Where(x => x.Level == Id).ToList() ?? new();
+
+    }
+
+    private async Task Gedcom(){
+        isWritingGedcom = true;
+        await Task.Yield();
+
+        try {
+            var gedcom = new Helpers.GedcomHelper(ApiService,Person!);
+            var bytes = gedcom.Bytes();
+            var filename = "gedcom.ged";
+            var fileStream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
+
+        } catch(Exception ex){
+            exception = ex;
+        }
+        isWritingGedcom = false;
+    }
+
+    private async Task Excel()
+    {
+        isWritingExcel = true;
+
+        DocCodModel.Wellknowns[] cols =
+                            {
+                DocCodModel.Wellknowns.RegistreCivilNaixement,
+                DocCodModel.Wellknowns.Bateig,
+                DocCodModel.Wellknowns.RegistreCivilMatrimoni,
+                DocCodModel.Wellknowns.RegistreParroquialMatrimoni,
+                DocCodModel.Wellknowns.CapitolsMatrimonials,
+                DocCodModel.Wellknowns.RegistreCivilDefuncio,
+                DocCodModel.Wellknowns.RegistreParroquialObit,
+                DocCodModel.Wellknowns.Testament
+            };
+        try
+        {
+            var sheet = new DTO.Excel.Sheet("Ancestors", "Gen.Ancestors.xlsx");
+            var row = sheet.AddRow();
+            row.AddCell("RCN");
+            row.AddCell("BTG");
+            row.AddCell("RCM");
+            row.AddCell("MTR");
+            row.AddCell("CMT");
+            row.AddCell("RCD");
+            row.AddCell("OBT");
+            row.AddCell("TST");
+            row.AddCell("Id");
+            foreach (var gen in gens ?? new())
+            {
+                row = sheet.AddRow();
+                foreach (var item in gen.Ancestors(model))
+                {
+                    row = sheet.AddRow();
+                    foreach(var col in cols)
+                    {
+                        row.AddCell(CellContent(item, col), Url(item, col));
+                    }
+                    // row.AddCell(CellContent(item, DocCodModel.Wellknowns.RegistreCivilNaixement), Url(item, DocCodModel.Wellknowns.RegistreCivilNaixement));
+                    // row.AddCell(IsActive(item, DocCodModel.Wellknowns.Bateig) ? "X" : "");
+                    // row.AddCell(IsActive(item, DocCodModel.Wellknowns.RegistreCivilMatrimoni) ? "X" : "");
+                    // row.AddCell(IsActive(item, DocCodModel.Wellknowns.RegistreParroquialMatrimoni) ? "X" : "");
+                    // row.AddCell(IsActive(item, DocCodModel.Wellknowns.CapitolsMatrimonials) ? "X" : "");
+                    // row.AddCell(IsActive(item, DocCodModel.Wellknowns.RegistreCivilDefuncio) ? "X" : "");
+                    // row.AddCell(IsActive(item, DocCodModel.Wellknowns.RegistreParroquialObit) ? "X" : "");
+                    // row.AddCell(IsActive(item, DocCodModel.Wellknowns.Testament) ? "X" : "");
+                    row.AddCell(item.Id);
+                    row.AddCell(item.Person.FullNom());
+                }
+            }
+
+            var bytes = DTO.Excel.ClosedXml.Bytes(sheet);
+            var fileStream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", sheet.Filename, streamRef);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isWritingExcel = false;
+    }
+
+    string CellContent(AncestorModel item, DocCodModel.Wellknowns docCod)
+    {
+        return IsActive(item, docCod) ? "X" : "";
+    }
+
+
+
+
+}

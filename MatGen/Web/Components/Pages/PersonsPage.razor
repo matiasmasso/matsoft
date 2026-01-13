@@ -1,0 +1,39 @@
+﻿@page "/Persons"
+
+<div class="PageWrapper">
+    @if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+        CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+    else
+    {
+        <h1>Persones</h1>
+        <Persons ItemSelected="ItemSelectedHandler"></Persons>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    IModel? selectedItem;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    void ItemSelectedHandler(IModel item)
+    {
+        selectedItem = item;
+    }
+
+    void AfterUpdateHandler(Object args)
+    {
+        AfterUpdate.InvokeAsync(args);
+    }
+}

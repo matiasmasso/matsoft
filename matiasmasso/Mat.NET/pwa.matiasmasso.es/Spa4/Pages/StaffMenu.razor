@@ -1,0 +1,23 @@
+﻿@page "/staffMenu/{Guid:guid}"
+@layout ProLayout
+
+<Nav nav="@model"></Nav>
+@code {
+    [Parameter] public Guid Guid { get; set; }
+    private NavDTO? model;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (model == null)
+        {
+            model = new NavDTO();
+            model.AddItem("/staff/" + Guid.ToString(), "Ficha", "Fitxa", "Details");
+            model.AddItem("/staff/nominas/" + Guid.ToString(), "Nóminas", "Nòmines", "Payroll");
+            model.AddItem("/certificatsIrpf/" + Guid.ToString(), "Certificados Irpf", "Certificats Irpf", "Tax certificates");
+            StateHasChanged();
+        }
+    }
+
+}
+

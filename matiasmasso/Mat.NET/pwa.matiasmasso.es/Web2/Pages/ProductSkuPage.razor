@@ -1,0 +1,9 @@
+﻿
+@inject CultureService culture;
+
+<h3>Sku @Model.Nom.Tradueix(culture.Lang())</h3>
+
+@code {
+    [Parameter] public ProductSkuModel Model { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+}

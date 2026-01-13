@@ -1,0 +1,59 @@
+﻿@typeparam TItem
+<div class="Wrapper">
+    @if (Data != null)
+    {
+        foreach (var item in Data)
+        {
+            var checkid = IdFactory();
+            var Text = TextField?.Invoke(item);
+            var Value = ValueField?.Invoke(item).ToString();
+            bool Checked = SelectedValues.Contains(Value);
+
+            <div class="Item">
+                <label for="@checkid">
+                    <input id="@checkid"
+                            type="checkbox" 
+                            checked=@Checked
+                            @onchange="eventArgs => { CheckboxClicked(Value, eventArgs.Value); }" />
+                        @Text
+                </label>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    //Data for the Checkbox
+    [Parameter] public IEnumerable<TItem> Data { get; set; }
+    // The field to be shown adjacent to checkbox
+    [Parameter] public Func<TItem, string> TextField { get; set; }
+    // The Value which checkbox will return when checked
+    [Parameter] public Func<TItem, object> ValueField { get; set; }
+    // The array which contains the list of selected checkboxs
+    [Parameter] public List<string> SelectedValues { get; set; }
+    // Enables Submit button on change
+    [Parameter] public EventCallback<List<string>> SelectedValuesChanged { get; set; }
+
+    private string IdFactory() => System.Guid.NewGuid().ToString();
+
+    //Method to update the selected value on click on checkbox
+    public void CheckboxClicked(string aSelectedId, object aChecked)
+    {
+        if ((bool)aChecked)
+        {
+            if (!SelectedValues.Contains(aSelectedId))
+            {
+                SelectedValues.Add(aSelectedId);
+            }
+        }
+        else
+        {
+            if (SelectedValues.Contains(aSelectedId))
+            {
+                SelectedValues.Remove(aSelectedId);
+            }
+        }
+        if (SelectedValuesChanged.HasDelegate) SelectedValuesChanged.InvokeAsync(SelectedValues);
+        StateHasChanged();
+    }
+}  

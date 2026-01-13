@@ -1,0 +1,33 @@
+﻿@page "/news/{Segment}"
+@page "/{LangSegment}/news/{Segment}"
+
+@inject CultureService culture
+@inject NoticiasService noticiasService
+
+<Noticia Model ="model"></Noticia>
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    [Parameter] public string? Segment { get; set; }
+
+    NoticiaModel? model;
+
+    protected override void OnInitialized()
+    {
+        noticiasService.OnChange += Refresca;
+    }
+    protected override void OnParametersSet()
+    {
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        model = noticiasService.FromLandingPage(Segment, culture.Lang());
+    }
+
+    public void Dispose()
+    {
+        noticiasService.OnChange -= Refresca;
+    }
+}

@@ -1,0 +1,72 @@
+﻿@inherits LayoutComponentBase
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<AppResource> Localizer
+@inject AppState AppState
+@inject ICookie cookie
+@inject HttpClient http
+
+<PageTitle>Test4moms</PageTitle>
+
+<div class="Layout @(isShowingMenu ? "IsShowingMenu" : "")">
+    <header>
+
+        <a class="Logo" href="/">
+            <img src="/img/logo4moms.jpg" width="135" height="37" />
+        </a>
+
+        <div class="Buttons">
+            <a href="/Basket">
+                <Counter></Counter>
+            </a>
+
+            <div>
+                <UserIcon></UserIcon>
+            </div>
+
+            <a href="#" class="Hamburger" @onclick="@(()=>isShowingMenu = !isShowingMenu)">
+                <img src="/img/hamburger-solid-white.svg" width="37" height="37" />
+            </a>
+        </div>
+
+        <div class="Claim">
+            Localizer["OfficialShop","4moms"]
+        </div>
+    </header>
+
+
+
+    <main>
+        <aside>
+            <NavMenu ItemClick="MenuItemClick" />
+        </aside>
+        <div class="Body">
+            @Body
+        </div>
+
+    </main>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+    <footer>
+        <div class="FooterNav">
+        <FooterNav Items="@NavService.FooterMenu(AppState.Cache)"></FooterNav>
+        </div>
+        <div>
+            &copy; Copyright 4moms
+        </div>
+    </footer>
+</div>
+
+@code {
+    private bool isShowingMenu = false;
+    bool isCookieChecked;
+    ProblemDetails? problemDetails;
+
+    private void MenuItemClick(MenuItemModel item)
+    {
+        if (item.Mode == MenuItemModel.Modes.Navigation)
+            NavigationManager.NavigateTo(item.Action ?? "/", true);
+    }
+
+}

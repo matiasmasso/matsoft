@@ -1,0 +1,264 @@
+﻿@implements IDisposable
+@inject CultureService culture
+@inject AppStateService appstate
+@inject SessionStateService session
+@inject AtlasService atlasService
+@inject ProductsService productsService
+
+<div class="Wrapper ModalContainer">
+    <div class="Header">
+        <div class="Label">
+            Comanda
+            @Model?.OrderNumber
+            registrat el
+            @string.Format("{0:dd/MM/yy HH:mm}",Model?.CreatedAt == null ? null : DateTime.Parse(Model.CreatedAt))
+        </div>
+        <div>
+            <div>@($"{Model?.AddressShipping?.FirstName} {Model?.AddressShipping?.LastName}")</div>
+            <div>@Model?.AddressShipping?.Address1</div>
+            <div>@($"{Model?.AddressShipping?.PostCode} {Model?.AddressShipping?.Address5}")</div>
+            <div>Email: @emailAddress</div>
+            <div>Tel: @Model?.AddressShipping?.Phone</div>
+
+            <a href="#" @onclick="@(()=>isShowingDetails = !isShowingDetails)" @onclick:preventDefault>
+                [@(isShowingDetails ? "menys" : "mes")detalls]
+            </a>
+            <div class="FurtherDetails @(isShowingDetails ? "":"Hidden")">
+                <div>Voucher</div><div>@Model?.Voucher</div>
+                <div>VoucherSeller</div><div>@Model?.VoucherSeller</div>
+                <div>CreatedAt</div><div>@Model?.CreatedAt</div>
+                <div>VoucherCode</div><div>@Model?.VoucherCode</div>
+                <div>GiftOption</div><div>@Model?.GiftOption</div>
+                <div>PromisedShippingTimes</div><div>@Model?.PromisedShippingTimes</div>
+                <div>NIF</div><div>@Model?.NationalRegistrationNumber</div>
+                <div>ShippingFeeOriginal</div><div>@Model?.ShippingFeeOriginal</div>
+                <div>PaymentMethod</div><div>@Model?.PaymentMethod</div>
+                <div>ShippingFeeDiscountSeller</div><div>@Model?.ShippingFeeDiscountSeller</div>
+                <div>ShippingFee</div><div>@Model?.ShippingFee</div>
+                <div>ExtraAttributes</div><div>@Model?.ExtraAttributes</div>
+                <div>Remarks</div><div>@Model?.Remarks</div>
+                <div>GiftMessage</div><div>@Model?.GiftMessage</div>
+            </div>
+
+            <div class="Zip">
+                @if (zip != null || isSelectingZip)
+                {
+                    <LookupZip Value="zip"
+                               DefaultCountry="country"
+                               DefaultZona="zona"
+                               DefaultLocation="location"
+                               ValueChanged="ZipChanged" Required></LookupZip>
+                }
+                else
+                {
+                    <a class="MissingZip" @onclick="@(()=> isSelectingZip = true)" @onclick:preventDefault>
+                        <WarningMsg Value="@culture.Localize("ZipNotFound.ClickToSelectOrCreate")"></WarningMsg>
+                    </a>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <div class="RegisterStatus">
+
+        @if (isUpdating)
+        {
+            <Loading></Loading>
+        }
+        else if (Model?.Ticket != null)
+        {
+            <span>@($"Ticket {Model?.Ticket?.Id:N0} registrat el {Model?.Ticket?.UsrLog?.FchCreated:dd/MM/yy HH:mm} per {Model?.Ticket?.UsrLog?.UsrCreated?.Nom}")</span>
+        }
+        else
+        {
+            <a href="#" class="@(WarnStocks() ? "NoStock" : "")" @onclick="CreateConsumerTicket" @onclick:preventDefault>
+                @if (WarnStocks())
+                {
+                    <Icon Id="Icon.Ids.Warning"></Icon>
+                }
+                <div>Registrar ticket</div>
+            </a>
+        }
+
+    </div>
+    <div class="Items">
+        @foreach (var item in Model?.Items ?? new())
+        {
+            <a class="Item" href="@item.ProductDetailUrl" target="_blank">
+                <div class="Thumbnail">
+                    <img src="@item.ProductMainImage" />
+                </div>
+                <div class="@(AvailableStock(item)<1 ? "OutOfStock" : "")">
+                    <div>sku @item.Sku</div>
+                    <div>@item.Name</div>
+                    <div>preu: @string.Format("{0:N2} €",item.ItemPrice)</div>
+                    <div>ports: @string.Format("{0:N2} €",item.ShippingAmount)</div>
+                    <div>stock: @string.Format("{0:N0}",AvailableStock(item))</div>
+                </div>
+            </a>
+        }
+    </div>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public DTO.Integracions.Miravia.Order? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    MarketPlaceModel miravia = MarketPlaceModel.Wellknown(MarketPlaceModel.Wellknowns.Miravia)!;
+    //List<DTO.Integracions.Miravia.Order.Item>? items;
+    ZipModel? zip;
+    LocationModel? location;
+    ZonaModel? zona;
+    CountryModel? country;
+    string? emailAddress;
+    bool isSelectingZip;
+    bool isUpdating;
+    bool isShowingDetails;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+        atlasService.OnChange += Refresca;
+        productsService.OnChange += Refresca;
+
+    }
+
+    private bool WarnStocks() => Model?.Items.Any(x => AvailableStock(x) < 1) ?? true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(Model?.OrderNumber))
+            {
+                var url = Web.Integracions.Miravia.ApiHelper.Url("/order/items/get", "order_id", Model.OrderNumber);
+                var response = await appstate.GetAsync<DTO.Integracions.Miravia.OrderItemsResponse>(url);
+                // ticket = await appstate.GetAsync<ConsumerTicketModel?>("ConsumerTicket/FromOrderNum", miravia.Guid.ToString(), Model.OrderNumber);
+                if (response?.Data != null)
+                {
+                    Model.Items = response.Data;
+                    emailAddress = Model.Items?.FirstOrDefault()?.DigitalDeliveryInfo;
+                    zip = atlasService.GetZips(CountryModel.Spain(), Model.AddressShipping?.PostCode)?.FirstOrDefault();
+
+                    if (zip == null)
+                    {
+                        country = atlasService.Country(CountryModel.Spain().Guid);
+                        var zonaCandidate = Model.AddressShipping?.Address3;
+                        zona = atlasService.Zonas(country)?.FirstOrDefault(x => x.Nom?.Equals(zonaCandidate, StringComparison.InvariantCultureIgnoreCase) ?? false);
+                        if (zona != null)
+                        {
+                            var locationCandidate = Model.AddressShipping?.Address4;
+                            location = atlasService.Locations(zona)?.FirstOrDefault(x => x.Nom?.Equals(locationCandidate, StringComparison.InvariantCultureIgnoreCase) ?? false);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    void Refresca(Exception? ex)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task CreateConsumerTicket()
+    {
+        try
+        {
+            if (zip == null) throw new Exception(culture.Tradueix("Falta validar el código postal", "Falta validar el código postal", "Please validate zip code"));
+
+            Model!.ShipmentLabels = new List<DocfileModel>(); // to avoid duplicates in case of reposying
+            Model.ZipGuid = zip.Guid;
+            Model.Operator = session.User?.Guid;
+
+            foreach (var item in Model.Items)
+            {
+                if (item.Sku == null) throw new Exception($"Article buit");
+                var oSku = productsService.SkuFromId(int.Parse(item.Sku));
+                if (oSku == null) throw new Exception($"Article no trobat per sku={item.Sku}");
+                item.SkuGuid = oSku.Guid;
+            }
+
+            isUpdating = true;
+            var apiName = "/order/pack";
+            var url = string.Format("{0}{1}", Web.Integracions.Miravia.ApiHelper.Host, apiName);
+            var packRequest = new DTO.Integracions.Miravia.PackRequest(Model.Items);
+            var packReqSerialized = Newtonsoft.Json.JsonConvert.SerializeObject(packRequest);
+            var payload = Web.Integracions.Miravia.ApiHelper.Payload(apiName, "packReq", packReqSerialized);
+            var response = await appstate.PostAsync<Dictionary<string, string>, DTO.Integracions.Miravia.PackResponse>(payload, url);
+            if (response.Code != "0") throw new Exception(response.Code);
+
+            //var awbRequest = response.AwbRequest();
+            //var getDocumentReq = Newtonsoft.Json.JsonConvert.SerializeObject(awbRequest);
+            //url = Web.Integracions.Miravia.ApiHelper.Url("/order/package/document/get", "getDocumentReq", getDocumentReq);
+            //var awbResponse = await appstate.GetAsync<DTO.Integracions.Miravia.AwbResponse>(url);
+            //var shipmentLabelUrl = awbResponse?.Result.Data?.PdfUrl;
+            //if (shipmentLabelUrl != null)
+            //{
+            //    var bytes = await appstate.GetAsync<byte[]>(shipmentLabelUrl);
+            //    if (bytes == null) throw new Exception("no shipment labels on " + url);
+            //    var shipmentDocfile = Helpers.DocfileHelper.CreatePdfDocfile(bytes);
+            //    shipmentDocfile.Nom = $"Miravia Shipment Label {Model.OrderId}";
+            //    Model.ShipmentLabels.Add(shipmentDocfile);
+            //}
+
+            Model.Ticket = await appstate.PostMultipartAsync<DTO.Integracions.Miravia.Order, ConsumerTicketModel>(Model, Model.ShipmentLabels, "miravia/saveOrder");
+            if (Model.Ticket != null)
+            {
+                Model.Ticket.UsrLog!.UsrCreated = new GuidNom(session.User!.Guid, session.User.NomiCognomsOrNicknameOrEmailAddress());
+                Model.Statuses = new List<string> { "packed" };
+                await RequestToCancel.InvokeAsync();
+            }
+            isUpdating = false;
+        }
+        catch (Exception ex)
+        {
+            isUpdating = false;
+            exception = ex;
+        }
+    }
+
+    void ZipChanged(ZipModel args)
+    {
+        zip = args;
+        isSelectingZip = false;
+    }
+
+    int AvailableStock(DTO.Integracions.Miravia.Order.Item? item)
+    {
+        int retval = 0;
+        try
+        {
+            if (item?.Sku != null)
+            {
+                var oSku = productsService.SkuFromId(int.Parse(item.Sku));
+                if (oSku == null) throw new Exception($"Article no trobat per sku={item.Sku}");
+                var oStock = productsService.Stock(oSku.Guid, MgzModel.Default()!.Guid);
+                var oPnc = productsService.Pnc(oSku.Guid);
+                retval = oStock?.Available(oPnc) ?? 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        return retval;
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        atlasService.OnChange -= Refresca;
+        productsService.OnChange -= Refresca;
+    }
+}

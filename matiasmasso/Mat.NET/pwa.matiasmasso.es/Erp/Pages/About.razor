@@ -1,0 +1,65 @@
+﻿@page "/About"
+@inherits _ComponentBase
+
+<h1>@Localizer("About.Title")</h1>
+
+<div class="Grid">
+    @foreach (var item in model)
+    {
+        <div class="Label">@item.Label</div>
+        <div class="Value">@item.Value</div>
+    }
+
+    <div class="ButtonsBar">
+        <button class="Button ButtonOk MailItSupport" @onclick="MailCTO">
+            @if (isMailingItSupport)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                @Localizer("MailCTO")
+            }
+        </button>
+    </div>
+</div>
+
+@code {
+    List<Item> model;
+    bool isMailingItSupport;
+
+    protected override void OnInitialized()
+    {
+        model = new List<Item>();
+        model.Add(new Item(Localizer("About.AppName"), AppInfo.Current.Name));
+        model.Add(new Item(Localizer("About.PackageName"), AppInfo.Current.PackageName));
+        model.Add(new Item(Localizer("About.VersionString"), AppInfo.Current.VersionString));
+        model.Add(new Item(Localizer("About.BuildString"), AppInfo.Current.BuildString));
+        model.Add(new Item(Localizer("About.User"), base.UserEmailAddress()));
+        model.Add(new Item(Localizer("About.Rol"), base.UserRol().ToString()));
+        base.OnInitialized();
+    }
+
+    async Task MailCTO()
+    {
+        isMailingItSupport = true;
+        string body = "<table>" + string.Join(" ", model.Select(x => x.Row()).ToList()) + "</table>";
+        await base.MailCTOAsync("About page", body);
+        isMailingItSupport = false;
+    }
+
+
+    private class Item
+    {
+        public string Label { get; set; }
+        public string Value { get; set; }
+
+        public Item(string label, string value)
+        {
+            Label = label;
+            Value = value;
+        }
+
+        public string Row() => string.Format("<tr><td>{0}</td><td>{1}</td></tr>", Label, Value);
+    }
+}

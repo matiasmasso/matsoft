@@ -1,0 +1,109 @@
+﻿@page "/Exercici"
+@inject ApiService ApiService
+
+<PageTitle>Cash</PageTitle>
+
+<div class="PageWrapper600">
+    <h3>Apertura exercici</h3>
+
+    <div>Regenera els assentaments d'apertura d'any en base als saldos de l'any anterior i renumera de nou els assentaments'</div>
+    <div>Si l'any seleccionat no es l'ultim, regenera tots els anys posteriors també</div>
+
+    @if (isLoading)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <PageOptions>
+            <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChanged"></LookupEmp>
+            <LookupYears Values="years" Value="year" ValueChanged="YearChanged"></LookupYears>
+        </PageOptions>
+
+
+        @if (fchDone == null)
+        {
+            <div class="ButtonsBar">
+
+                <CrudButton Mode="CrudButton.Modes.Update"
+                            OnClick="SubmitAsync"
+                            State="updateState"></CrudButton>
+            </div>
+        }
+        else
+        {
+            <div class="Info">
+                <Icon Id="Icon.Ids.CheckGreenCircle"></Icon>
+                Els assentaments han estat correctament regenerats a les @($"{fchDone:HH:mm}")
+            </div>
+
+        }
+    }
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    List<ExerciciModel>? values;
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds emp = EmpModel.EmpIds.MMC;
+    List<int>? years;
+    int? year;
+    bool isLoading;
+    DateTime? fchDone;
+
+    CrudButton.States updateState;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            values = await ApiService.GetAsync<List<ExerciciModel>>("exercicis");
+            emps = values!.Select(x => x.Emp).Distinct().ToList();
+            emp = (EmpModel.EmpIds)ApiService.DefaultEmp(emps)!;
+            years = CurrentYears(emp);
+            year = years?.FirstOrDefault();
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isLoading = false;
+    }
+
+    void EmpChanged(EmpModel.EmpIds args)
+    {
+        emp = args;
+        years = CurrentYears(args);
+        fchDone = null;
+    }
+
+    void YearChanged(int? args)
+    {
+        year = args;
+        fchDone = null;
+    }
+
+    List<int>? CurrentYears(EmpModel.EmpIds args) => values!.Where(x => x.Emp == args)
+        .Select(x => x.Year)
+        .OrderByDescending(x => x)
+        .ToList();
+
+    async Task SubmitAsync()
+    {
+        try
+        {
+            updateState = CrudButton.States.Loading;
+            await ApiService.GetAsync<bool>("exercici/apertura/", ((int)(emp)).ToString(), year.ToString()!);
+            fchDone = DateTime.Now;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+}

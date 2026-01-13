@@ -1,0 +1,72 @@
+﻿@page "/Escripturas"
+@inherits _ComponentBase
+@inject IStringLocalizer<Default> Localizer
+
+
+<div class="Wrapper">
+    <h1>@Localizer["Notarial deeds"]</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="ShowObsolets">
+            <Toggle Label="@base.Tradueix("Incluir obsoletos","Inclou obsolets","Include outdated")"
+                @bind-Value="@IsShowingObsolets"></Toggle>
+        </div>
+
+        <div class="Summary">
+            @string.Format(base.Tradueix("Se han encontrado {0} escrituras, {1} vigentes","S'han trobat {0} escriptures, {1} vigents","{0} deeds found, {1} active"),model.Count(), model.Where(x => x.FchTo == null).Count())
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems())
+            {
+                <a href="@item.DownloadUrl()" class='Item @(item.FchTo == null ? "Obsoleto" : "")'>
+
+                    <div>
+                        @item.Nom
+                    </div>
+
+                    <div>
+                        @item.FchFrom.ToString("dd/MM/yyyy")
+                    </div>
+                </a>
+            }
+
+        </div>
+    }
+
+</div>
+
+
+
+
+@code {
+    private List<EscripturaDTO>? model;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = await base.GetAsync<List<EscripturaDTO>>("Escripturas");
+            StateHasChanged();
+        };
+    }
+
+    private List<EscripturaDTO> FilteredItems()
+    {
+        var retval = model.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.FchTo == null).ToList();
+        return retval;
+    }
+
+}
+

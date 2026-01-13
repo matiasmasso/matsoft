@@ -1,0 +1,80 @@
+﻿
+<div class="Grid">
+    @if (availableValues?.Count == 0 && (isAdding || SelectedValues == null || SelectedValues?.Count == 0))
+    {
+        <LookupIModelsItem 
+        SelectedValueChanged="SelectedValueChangedHandler"
+        AddNewRequest="AddNewRequestHandler"></LookupIModelsItem>
+    }
+    else if (isAdding)
+    {
+        <LookupIModel Values="AvailableValues" ValueChanged="AddedValueChanged"></LookupIModel>
+    }
+    @foreach (var contact in SelectedValues ?? new())
+    {
+        <LookupIModelsItem Value="contact"
+        SelectedValue="selectedValue"
+        SelectedValueChanged="SelectedValueChangedHandler"
+        ZoomRequest="ZoomRequestHandler"
+        AddNewRequest="AddNewRequestHandler"
+        RemoveRequest="RemoveRequestHandler"></LookupIModelsItem>
+    }
+
+
+</div>
+
+
+
+@code {
+    [Parameter] public List<IModel>? SelectedValues { get; set; }
+    [Parameter] public List<IModel>? AvailableValues { get; set; }
+    [Parameter] public EventCallback<List<IModel>> SelectedValuesChanged { get; set; }
+    [Parameter] public EventCallback<IModel> ZoomRequest { get; set; }
+    [Parameter] public EventCallback<IModel> AddNewRequest { get; set; }
+
+    bool isAdding = false;
+    List<IModel>? selectedValues;
+    List<IModel>? availableValues;
+    IModel? selectedValue;
+    IModel? valueToAdd;
+    ContextMenuModel? contextMenu;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        availableValues = AvailableValues ?? new();
+        selectedValues = SelectedValues ?? new();
+    }
+
+    void SelectedValueChangedHandler(IModel args)
+    {
+        selectedValue = args;
+    }
+
+    void ZoomRequestHandler(IModel args)
+    {
+        ZoomRequest.InvokeAsync(args);
+    }
+
+    void AddNewRequestHandler(IModel args)
+    {
+        if (availableValues?.Count == 0)
+            AddNewRequest.InvokeAsync();
+            else
+        isAdding = true;
+    }
+
+    void RemoveRequestHandler(IModel args)
+    {
+        SelectedValues!.Remove(args);
+    }
+
+    void AddedValueChanged(IModel args)
+    {
+        isAdding = false;
+        selectedValues!.Add(args);
+        SelectedValuesChanged.InvokeAsync(selectedValues);
+    }
+}
+
+

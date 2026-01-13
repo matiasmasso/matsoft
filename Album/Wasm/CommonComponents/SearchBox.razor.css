@@ -1,0 +1,27 @@
+﻿/*xx*/
+
+.Wrapper {
+    position: relative;
+}
+
+input {
+    padding: 3px 0 2px 30px;
+    width: 100%;
+    border-color: #DDDDDD;
+    -webkit-appearance: none;
+    border-radius: 4px;
+}
+
+.Lupa {
+    position: absolute;
+    width: 1rem;
+    left: 5px;
+    top: 4px;
+}
+
+.ClearButton {
+    position: absolute;
+    right: 5px;
+    top: 4px;
+    z-index: 2;
+}

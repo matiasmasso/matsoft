@@ -1,0 +1,52 @@
+﻿@inherits _Base
+
+<div class="ItemWrapper">
+
+    <a href="#" class="Item Truncate" @onclick="ItemClick" @onclick:preventDefault>
+        @Caption
+    </a>
+
+    @if (!HideEllipsis)
+    {
+        <a href="#"
+       class="Ellipsis @(isShowingMenu ? "IsShowingMenu" : "")"
+       @onclick="EllipsisClick"
+       @onclick:preventDefault>
+
+            <img src="/img/Ellipsis.svg" alt="menu" width="21" height="21" />
+        </a>
+    }
+
+</div>
+
+
+@code {
+    [Parameter] public string Caption { get; set; }
+    [Parameter] public Object Tag { get; set; }
+    [Parameter] public bool HideEllipsis { get; set; } = false;
+    [Parameter] public EventCallback<Object> OnClick { get; set; }
+    [Parameter] public EventCallback<Object> OnEllipsis { get; set; }
+    [CascadingParameter] Object ContextMenuItem { get; set; }
+
+    bool isShowingMenu = false;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        isShowingMenu = Tag == ContextMenuItem;
+    }
+
+    void EllipsisClick()
+    {
+        OnEllipsis.InvokeAsync(Tag);
+        isShowingMenu = !isShowingMenu;
+    }
+
+    void ItemClick()
+    {
+        OnClick.InvokeAsync(Tag);
+        isShowingMenu = false;
+    }
+
+
+}

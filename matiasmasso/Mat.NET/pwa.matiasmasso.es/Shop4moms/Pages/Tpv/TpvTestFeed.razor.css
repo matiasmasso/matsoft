@@ -1,0 +1,19 @@
+﻿.Wrapper {
+    max-width:600px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    margin:20px auto;
+}
+
+textarea, input[type=text]{
+    width:100%;
+}
+
+.Label {
+    margin:15px 0 10px;
+}
+
+.RightAlign {
+    margin-top:15px;
+}

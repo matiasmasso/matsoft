@@ -1,0 +1,88 @@
+﻿@inject CultureService culture
+
+@if (CanEdit)
+{
+    <div class="Wrapper">
+        @if (RequestToDelete.HasDelegate && CanDelete)
+        {
+            if (State == DbState.IsDeleting)
+            {
+                <button class="Button Del" disabled>
+                    <Loading></Loading>
+                </button>
+            }
+            else
+            {
+                <button class="Button Del" @onclick="@(()=>RequestToDelete.InvokeAsync())" disabled="@(!CanDelete || State == DbState.IsUpdating)">
+                    @culture.Localize("Delete")
+                </button>
+            }
+
+        }
+        else
+        {
+            <div class="Spacer">&nbsp;</div>
+        }
+
+        <div class="RightButtons">
+            @if (RequestToCancel.HasDelegate)
+            {
+                <button class="Button Cancel" @onclick="@(()=>RequestToCancel.InvokeAsync())">
+                    @culture.Localize("Cancel")
+                </button>
+            }
+
+            @if (RequestToUpdate.HasDelegate)
+            {
+                if (State == DbState.IsUpdating)
+                {
+                    <button class="Button Updating" disabled>
+                        <Loading></Loading>
+                    </button>
+                }
+                else
+                {
+                    <button class="Button Ok" @onclick="@(()=>RequestToUpdate.InvokeAsync())" disabled="@(State != DbState.IsDirty || State == DbState.IsDeleting)">
+                        @submitLabel
+                    </button>
+                }
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter] public EventCallback RequestToUpdate { get; set; }
+    [Parameter] public EventCallback RequestToDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool CanDelete { get; set; }
+    [Parameter] public DbState State { get; set; }
+
+    [Parameter] public string? SubmitLabel { get; set; }
+
+    private string? submitLabel;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        submitLabel = SubmitLabel ?? culture.Localize("Submit");
+    }
+
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+    }
+
+}

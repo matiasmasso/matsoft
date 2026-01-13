@@ -1,0 +1,28 @@
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject AppState AppState
+@inject ProtectedSessionStorage storage
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+@inject HttpClient http
+
+@code {
+
+    [CascadingParameter] public SessionProvider? SessionProvider { get; set; }
+
+    protected async Task<ApiResponse<T>> GetAsync<T>(params string[] segments) => await HttpService.GetAsync<T>(http, segments);
+    protected async Task<ApiResponse<T>> PostAsync<U, T>(U payload, params string[] segments) => await HttpService.PostAsync<U, T>(http, payload, segments);
+
+    protected LangDTO Lang()
+    {
+        var cookie = HttpContextAccessor.HttpContext?.Request.Cookies[Microsoft.AspNetCore.Localization.CookieRequestCultureProvider.DefaultCookieName];
+        var cc = cookie == null ? "es" : cookie?.Split("|").First().Split("=")[1] ?? "es";
+        var retval = LangDTO.FromCultureInfo(cc);
+        return retval;
+    }
+
+    protected void NavigateTo(string uri, bool forceLoad = false)
+    {
+        NavigationManager.NavigateTo(uri, forceLoad);
+    }
+
+}

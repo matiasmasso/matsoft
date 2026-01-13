@@ -1,0 +1,172 @@
+﻿@page "/banks"
+@implements IDisposable
+@layout ProLayout
+@inject BanksService banksService
+@inject CultureService culture
+
+<div class="PageWrapper600">
+    @if (banksService.Values == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <h3>Banks</h3>
+
+        <PageOptions>
+            <ToggleObsolets @bind-Value="isShowingObsolets"></ToggleObsolets>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault >@culture.Localize("AddNew")</a>
+        </PageOptions>
+
+        <SearchBox @bind-Value="searchterm"></SearchBox>
+
+        @if (string.IsNullOrEmpty(searchterm))
+        {
+            <div class="SelectedValues">
+                <SelectedValues @bind-Values="selectedValues" Nested></SelectedValues>
+            </div>
+
+            @if (SelectedCountry() == null)
+            {
+                <div class="Info">@culture.Localize("Select.Country")</div>
+
+                <div class="Countries">
+                    @foreach (var country in banksService.Countries(isShowingAllCountries) ?? new())
+                    {
+                        <a ref="#" class="Item" title="@(country.Nom?.Tradueix(culture.Lang()) ?? "?")" @onclick="@(()=>selectedValues.Add(country, country.Nom?.Tradueix(culture.Lang())))" @onclick:preventDefault>
+                            @(country.Nom?.Tradueix(culture.Lang()) ?? "?")
+                        </a>
+                    }
+                </div>
+
+                <div class="ButtonsBar">
+                    <a class="SeeMore" href="#" @onclick="@(()=>isShowingAllCountries = !isShowingAllCountries)" @onclick:preventDefault>
+                        [@culture.Localize(isShowingAllCountries ? "SeeLess" : "seeMore")]
+                    </a>
+                </div>
+
+            }
+            else
+            {
+                @foreach (var bank in FilteredItems() ?? new())
+                {
+                    <a href="#" class="Item" @onclick="@(()=>BankClick(bank))" @onclick:preventDefault>
+                        <div class="Logo">
+                            @((MarkupString)(bank.Svg ?? ""))
+                        </div>
+                        <div class="Abr">
+                            @($"{bank.Id} {bank.NomComercial}")
+                        </div>
+                        <div class="RaoSocial">@bank.RaoSocial</div>
+                    </a>
+                }
+            }
+        }
+        else
+        {
+            @foreach (var bank in FilteredItems() ?? new())
+            {
+                <a href="#" class="Item" @onclick="@(()=>BankClick(bank))" @onclick:preventDefault>
+                    <div class="Logo">
+                        @((MarkupString)(bank.Svg ?? ""))
+                    </div>
+                    <div class="Abr">
+                        @($"{bank.Id} {bank.NomComercial}")
+                    </div>
+                    <div class="RaoSocial">@bank.RaoSocial</div>
+                    <div class="Country">@banksService.Country((Guid)bank.Country!)?.Nom?.Tradueix(culture.Lang())</div>
+                </a>
+            }
+        }
+    }
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+@code {
+    List<BankModel>? Model;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    SelectedValues.Collection selectedValues = new();
+    bool defaultCountrySet;
+    bool isShowingObsolets;
+    bool isShowingAllCountries;
+    string? searchterm;
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        banksService.OnChange += Refresca;
+        SelectCountry();
+    }
+
+    void Refresca(Exception? ex)
+    {
+        if (!defaultCountrySet) SelectCountry();
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void SelectCountry(CountryModel? country = null)
+    {
+        country ??= banksService.Country(CountryModel.Default().Guid);
+        if (country != null)
+        {
+            selectedValues.Clear();
+            selectedValues.Add(country, country?.Nom?.Tradueix(culture.Lang()));
+            defaultCountrySet = true;
+        }
+    }
+
+    List<BankModel>? FilteredItems()
+    {
+        List<BankModel>? retval;
+        if (string.IsNullOrEmpty(searchterm))
+        {
+            retval = banksService.GetValues(SelectedCountry()?.Guid)?
+                .Where(x => isShowingObsolets || !x.Obsoleto)
+                .OrderBy(x => x.NomComercialOrRaoSocial())
+                .ToList();
+        }
+        else
+            retval = banksService.Values?.Where(x => x.Matches(searchterm) && (isShowingObsolets || !x.Obsoleto)).ToList();
+        return retval;
+    }
+
+    CountryModel? SelectedCountry() => (CountryModel?)selectedValues?.FirstOrDefault()?.Value;
+
+    void CountryClick(CountryModel value)
+    {
+        selectedValues.Clear();
+        selectedValues.Add(value, value.Nom?.Tradueix(culture.Lang()));
+    }
+
+    void AddNew()
+    {
+        var value = new BankModel { Country = SelectedCountry()?.Guid };
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, culture.Lang().Tradueix("nueva entidad bancaria", "nova entitat bancaria", "new bank")));
+    }
+
+    private void BankClick(BankModel value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value.ToString()));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+
+    public void Dispose()
+    {
+        banksService.OnChange -= Refresca;
+    }
+}

@@ -1,0 +1,143 @@
+﻿.ContentColumn {
+    width:600px;
+    margin: auto;
+}
+.CustomerSelection {
+    margin-bottom: 20px;
+}
+
+.CustomerSelected {
+    margin-bottom: 20px;
+}
+
+a.AdvancedOptions {
+    margin-bottom: 10px;
+}
+
+table.AdvancedOptions {
+    margin-top: 20px;
+}
+
+#Concept {
+    width: 100%;
+}
+
+#TotJunt {
+    text-wrap: none;
+}
+
+#FchMin {
+}
+
+#Obs {
+    width: 100%;
+}
+
+.ProductSelection {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.ProductSelection select {
+    padding: 4px 7px 2px 4px;
+}
+
+.Focused {
+    background-color: lightyellow;
+}
+
+.QtySelection {
+    display: inline-block;
+    width: 150px;
+    vertical-align: bottom;
+    float: right;
+    margin-bottom: 20px;
+}
+
+section.Grid {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.SkuThumbnail {
+    height: 172px;
+    border: 1px solid gray;
+    vertical-align: top;
+}
+
+.SkuDetails {
+    width: 150px;
+}
+
+    .SkuDetails div {
+        margin-bottom: 20px;
+    }
+
+        .SkuDetails div span {
+            vertical-align: middle;
+        }
+
+#Qty {
+    width: 50px;
+    text-align: right;
+    margin-top: 5px;
+}
+
+#ButtonAdd {
+    float: right;
+    margin-top: 5px;
+    width: 85px;
+}
+
+
+
+.CellDto {
+    display: none;
+}
+
+
+
+#RequestForNewOrder {
+    text-align: right;
+}
+
+.Condition {
+    margin-top: 15px;
+}
+
+.ConditionCaption {
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+div.UploadLabel {
+    padding-top: 10px;
+}
+/*-------------------------------------------- upload files -------------------*/
+input[type=file] {
+    opacity: 0.0;
+}
+
+
+
+div.PostedFileThumbnail {
+    position: relative;
+    display: inline-block;
+    height: 100px;
+    margin: 10px 10px 10px 0;
+}
+
+img.PostedFileThumbnail {
+    height: 100%;
+}
+
+.IconRemoveThumbnail {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    /*
+            width:32px;
+            height:32px;
+                */
+    z-index: 10;
+}

@@ -1,0 +1,31 @@
+﻿<div class="Wrapper">
+
+    <input type="text" @oninput="OnInputHandler" value="@Value" />
+
+    <div class="Lupa">
+        <Icon Id="Icon.Ids.MagnifyingGlass"></Icon>
+    </div>
+
+    <a href="#"
+       class="ClearButton" @onclick="RequestToClear" @onclick:preventDefault>
+        <Icon Id="Icon.Ids.Xmark" Width="12px"></Icon>
+    </a>
+</div>
+
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public bool IsShowing { get; set; } = true;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+
+    async Task OnInputHandler(ChangeEventArgs args)
+    {
+        await ValueChanged.InvokeAsync(args.Value?.ToString());
+    }
+
+    async Task RequestToClear()
+    {
+        await ValueChanged.InvokeAsync("");
+    }
+}

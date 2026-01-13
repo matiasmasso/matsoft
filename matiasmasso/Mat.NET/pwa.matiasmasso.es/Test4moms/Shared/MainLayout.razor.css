@@ -1,0 +1,132 @@
+
+.Layout {
+    display: flex;
+    flex-direction: column;
+    background-color: aliceblue;
+    max-width:1200px;
+    margin:0 auto;
+}
+
+header {
+    background-color: black;
+    color: white;
+    display: grid;
+}
+
+    header .Logo {
+        display:block;
+        grid-area: logo;
+        padding: 20px;
+    }
+
+    header .Claim {
+        padding: 0 0 10px;
+        text-align: center;
+        grid-area: claim;
+    }
+
+    header .Buttons {
+        grid-area: buttons;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 20px;
+    }
+
+.Hamburger {
+    display: block;
+    width: 37px;
+    height: 37px;
+    align-self: center;
+}
+
+main {
+    position: relative;
+    min-height: 300px;
+    width: 100%;
+    max-width: 100%;
+    min-height: calc(100vh - 171px);
+}
+
+.Body {
+    width: 100%;
+    max-width: 100%;
+}
+
+aside {
+    width: 180px;
+    padding: 20px 10px;
+    background-color: #DDDDDD;
+}
+
+footer {
+    padding: 10px;
+    text-align: center;
+    color: white;
+    background-color: black;
+}
+
+.FooterNav{
+    padding-bottom:15px;
+}
+/*------------ mobiles -----------------*/
+@media(max-width:599px) {
+    header {
+        grid-template-areas: "logo buttons"
+            "claim claim";
+    }
+
+        header .Claim {
+            background-color: #555555;
+            white-space: nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            padding: 4px 7px 2px 4px;
+        }
+
+    aside {
+        z-index: 10;
+        position: absolute;
+        left: -180px;
+        top: 0;
+        bottom: 0;
+        transition: all 0.5s ease-in-out;
+        -webkit-transition: all 0.5s ease-in-out;
+        -moz-transition: all 0.5s ease-in-out;
+        -o-transition: all 0.5s ease-in-out;
+    }
+
+    .IsShowingMenu aside {
+        transform: translate(180px,0);
+        -webkit-transform: translate(180px,0);
+        -moz-transform: translate(180px,0);
+        -o-transform: translate(180px,0);
+        -ms-transform: translate(180px,0);
+    }
+}
+
+
+/*------------ desktop -----------------*/
+
+@media(min-width:600px) {
+    header {
+        grid-template-areas: "logo claim buttons";
+        align-items: center;
+    }
+
+    aside {
+        position: relative;
+        left: 0;
+    }
+
+    main {
+        display: flex;
+    }
+
+    .Hamburger {
+        display:none;
+/*        visibility: hidden;
+*/    }
+}

@@ -1,0 +1,9 @@
+﻿.Wrapper {
+    display:flex;
+    justify-content:space-between;
+    max-height:24px;
+}
+
+.Wrapper svg {
+    max-width:24px;
+}

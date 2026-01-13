@@ -1,0 +1,44 @@
+﻿@inject IJSRuntime JS;
+
+<div class="Wrapper">
+
+    <div><a href="#" @onclick="Test">test</a></div>
+
+    <div class="LoginForm">
+        <label for="email">Usuari:</label>
+        <input type="text" id="email" name="email" oninput="enableSubmit()">
+        <label for="password">Clau de pas:</label>
+        <input type="text" id="password" name="password" oninput="enableSubmit()">
+        <a href="#" id="submit" disabled="disabled">Entrar</a>
+    </div>
+
+    <div class="Errs"></div>
+
+    <pwa-auth id="pwa-auth"
+                microsoftkey="a17ec572-51cc-4c79-83e7-9eb331649249"
+                googlekey="535371030919-i0fns6kc49ovit7cob0k7cbpste49ksk.apps.googleusercontent.com"
+                facebookkey="758204114538607"
+                applekey="com.pwabuilder.myawesomepwaauthsvc"
+                appearance="list">
+    </pwa-auth>
+
+</div>
+
+@code {
+
+
+    protected override void OnInitialized() 
+    {
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        JS.InvokeVoidAsync("StylePwAuth");
+    }
+
+    void Test()
+    {
+         JS.InvokeVoidAsync("StylePwAuth");
+    }
+}

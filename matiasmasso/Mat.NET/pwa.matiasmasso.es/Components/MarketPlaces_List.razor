@@ -1,0 +1,62 @@
+﻿@inherits _Base
+
+<CascadingValue Value="contextMenuItem">
+    <div class="Grid">
+        @foreach (var item in Model)
+        {
+                <div class="Item">
+                    <UxCaptionEllipsis Tag="item"
+                               Caption="@item.Nom"
+                               OnClick="ItemClick"
+                               OnEllipsis="ToggleContextMenu"></UxCaptionEllipsis>
+
+                @if (item == contextMenuItem)
+                {
+                    <ContextMenu_Deprecated Model="contextMenu" OnClick="@(()=>contextMenuItem = null)"></ContextMenu_Deprecated>
+                }
+                </div>
+        }
+    </div>
+</CascadingValue>
+
+@code {
+    [Parameter] public List<MarketPlaceModel> Model { get; set; }
+    [Parameter] public EventCallback<MarketPlaceModel> SelectedItemChanged { get; set; }
+
+    /// <summary>
+    /// the item which has the context menu open, if any
+    /// </summary>
+    MarketPlaceModel contextMenuItem = null;
+    ContextMenuModel contextMenu = null;
+
+    /// <summary>
+    /// The user clicked on the item caption.
+    /// Forward the event to parent component so it takes the default action
+    /// </summary>
+    /// <param name="args">the item the context menu refers to</param>
+    void ItemClick(Object args)
+    {
+        MarketPlaceModel item = (MarketPlaceModel)args;
+        SelectedItemChanged.InvokeAsync(item);
+    }
+
+    /// <summary>
+    /// The user clicked on the item ellipsis.
+    /// Either collapse the context menu if it was being displayed
+    /// or display it if it was hidden
+    /// </summary>
+    /// <param name="args">the item the context menu refers to</param>
+    void ToggleContextMenu(Object args)
+    {
+        MarketPlaceModel item = (MarketPlaceModel)args;
+        if (item == contextMenuItem)
+            contextMenuItem = null;
+        else
+        {
+            contextMenuItem = item;
+            contextMenu = ContextMenuModel.Factory(item);
+        }
+    }
+
+
+}

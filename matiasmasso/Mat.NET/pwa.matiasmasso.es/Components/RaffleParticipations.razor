@@ -1,0 +1,26 @@
+﻿@if (Values != null)
+{
+    <div class="Grid">
+        @foreach (var item in Values)
+        {
+            <a href="#" class="Item">
+                <div class="Ico">
+                    @if (item.Answer == item.Raffle.RightAnswer)
+                    {
+                        <UxIcon Id="UxIcon.Ids.Vb" Width="24" Height="24"></UxIcon>
+                    }
+                    else
+                    {
+                        <UxIcon Id="UxIcon.Ids.Aspa" Width="24" Height="24"></UxIcon>
+                    }
+                </div>
+                <div class="Fch">@item.Fch</div>
+                <div class="Raffle">@item.Raffle.Title</div>
+            </a>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<RaffleModel.Participant> Values { get; set; }
+}

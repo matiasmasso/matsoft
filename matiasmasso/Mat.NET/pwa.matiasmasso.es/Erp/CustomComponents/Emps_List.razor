@@ -1,0 +1,37 @@
+﻿@inherits _ComponentBase
+
+<CascadingValue Value="contextMenuItem">
+    <div class="Grid">
+        @foreach (var item in Model)
+        {
+            <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                @item.Nom()
+            </a>
+        }
+    </div>
+</CascadingValue>
+
+@code {
+    [Parameter] public List<EmpModel> Model { get; set; }
+    [Parameter] public EventCallback<EmpModel> SelectedItemChanged { get; set; }
+
+    /// <summary>
+    /// the item which has the context menu open, if any
+    /// </summary>
+    EmpModel contextMenuItem = null;
+    ContextMenuModel contextMenu = null;
+
+    /// <summary>
+    /// The user clicked on the item caption.
+    /// Forward the event to parent component so it takes the default action
+    /// </summary>
+    /// <param name="args">the item the context menu refers to</param>
+    void ItemClick(Object args)
+    {
+        EmpModel item = (EmpModel)args;
+        SelectedItemChanged.InvokeAsync(item);
+    }
+
+
+
+}

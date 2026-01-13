@@ -1,0 +1,145 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+
+    <TabControl>
+        <TabPage Text="@Localizer("Details")">
+            @if(gridModel == null)
+            {
+                <Loading></Loading>
+            } else
+            {
+                <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          RequestToLoadOptions="LoadOptionsRequest"
+                          CanEdit="true"></PropertyGrid>
+            }
+        </TabPage>
+
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <UxButtonsBar CanEdit="true"
+                      IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(Model != null && !Model.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></UxButtonsBar>
+    </div>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+
+</div>
+
+@code {
+    [Parameter] public CountryModel Model { get; set; }
+    [Parameter] public EventCallback<CountryModel> OnUpdate { get; set; }
+    [Parameter] public EventCallback<CountryModel> OnDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private CountryModel _value;
+    private PropertyGridModel gridModel;
+    private CacheDTO cache;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    new ProblemDetails problemDetails;
+
+    private enum Fields : int
+    {
+        Iso,
+        NomEsp,
+        NomCat,
+        NomEng,
+        NomPor,
+        Lang,
+        ExportCod,
+        PrefixeTel
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (!Model.IsNew)
+        {
+            var apiResponse = await base.GetAsync2<CountryModel>("Country", Model.Guid.ToString());
+            if (apiResponse.Success())
+                Model = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+
+
+        var _gridModel = new PropertyGridModel(Model);
+        _gridModel.AddString((int)Fields.Iso, Model.ISO ?? "", "ISO 3166-2");
+        _gridModel.AddString((int)Fields.NomEsp, Model.Nom?.Esp, Localizer("Spanish"));
+        _gridModel.AddString((int)Fields.NomCat, Model.Nom?.Cat, Localizer("Catalan"));
+        _gridModel.AddString((int)Fields.NomEng, Model.Nom?.Eng, Localizer("English"));
+        _gridModel.AddString((int)Fields.NomPor, Model.Nom?.Por, Localizer("Portuguese"));
+        _gridModel.AddEnum((int)Fields.Lang, new LangDTO.Ids(), (int?)Model.Lang?.Id ?? (int)LangDTO.Eng().Id, Localizer("Language"));
+        _gridModel.AddEnum((int)Fields.ExportCod, new CountryModel.ExportCods(), (int)Model.ExportCod, Localizer("Export code"));
+        _gridModel.AddString((int)Fields.PrefixeTel, Model.PrefixeTelefonic ?? "", Localizer("Phone prefix"));
+        gridModel = _gridModel;
+    }
+
+    private void AtlasJustLoaded(Object sender, EventArgs args)
+    {
+        cache = base.DefaultCache();
+    }
+
+    private async Task UpdateRequest()
+    {
+        Model.ISO = gridModel.GetString((int)Fields.Iso);
+        Model.Nom = gridModel.GetLangText(Model.Nom, (int)Fields.NomEsp, (int)Fields.NomCat, (int)Fields.NomEng, (int)Fields.NomPor);
+        Model.Lang = new LangDTO(gridModel.GetString((int)Fields.Lang));
+        Model.ExportCod = (ZonaModel.ExportCods)gridModel.GetEnum((int)Fields.ExportCod);
+        Model.PrefixeTelefonic = gridModel.GetString((int)Fields.PrefixeTel);
+
+        var apiResponse = await HttpService.PostAsync<CountryModel, bool>(http,Model, "Country");
+        if (apiResponse.Success())
+        {
+            Model.IsNew = false;
+            await OnUpdate.InvokeAsync(Model);
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await HttpService.GetAsync<bool>(http,"Country/delete", Model!.Guid.ToString());
+        if (apiResponse.Success())
+            await OnDelete.InvokeAsync(Model);
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+
+    private async Task LoadOptionsRequest(PropertyGridModel.Item item)
+    {
+        ApiResponse<GuidNom[]> apiResponse = null;
+        switch ((Fields)item.Field)
+        {
+            default:
+                break;
+        }
+
+        if (apiResponse != null)
+        {
+            if (apiResponse.Fail())
+                problemDetails = apiResponse.ProblemDetails;
+            else
+            {
+                List<IModel> values = apiResponse.Value.OrderBy(x => x.Nom).ToList<IModel>();
+                gridModel.Items.First(x => x.Field == item.Field).Values = values;
+                StateHasChanged();
+            }
+        }
+    }
+}

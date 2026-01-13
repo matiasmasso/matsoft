@@ -1,0 +1,74 @@
+﻿@page "/Repliqs/{Rep:guid}"
+@inherits _ComponentBase
+@layout ProLayout
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Liquidaciones","Liquidacions","Statements")</h1>
+
+    @if (model == null)
+    {
+        <div>
+            <img src="/img/Spinner-24.gif" alt="loading..." />
+        </div>
+    }
+    else
+    {
+        <div class="Summary">
+            @string.Format(
+        base.Tradueix("Se han encontrado {0} liquidaciones desde {1:dd/MM/yy}",
+        "S'han trobat {0} liquidacions des de {1:dd/MM/yy}",
+        "{0} satements found since {1:dd/MM/yy}")
+        ,model.Count(),model.Min(x=> x.Fch) )
+        </div>
+
+        <div class="Grid">
+            @if (model != null)
+            {
+                foreach (var item in model)
+                {
+                    <a href=@(Globals.ApiUrl("cca/pdf/"+item.CcaGuid.ToString())) target="_blank" class='Item'>
+                                                <div class="Ico">
+                            <img src="img/pdf-36.png" alt="nómina" height="36" width="36" />
+                        </div>
+
+                        <div class="Details">
+                            <div class="Id">
+                                @string.Format("{0} {1:00} {2} {3:dd/MM/yy}"
+                                    ,base.Tradueix("Liquidación","Liquidació","Statement")
+                                    ,item.Id
+                                    ,base.Tradueix("del","del","from")
+                                    ,item.Fch)
+                            </div>
+                            <div class="Eur">@string.Format("{0} {1:n2} €",base.Tradueix("Bruto comisiones","Brut comisions","Commission base"), item.ComisioEur)</div>
+                            <div class="Eur">@string.Format("{0} {1:n2} €",base.Tradueix("Liquido","Liquid","Cash"), item.Cash())</div>
+                        </div>
+                    </a>
+                }
+            }
+            else
+            {
+                <div>loading...</div>
+            }
+        </div>
+    }
+
+</div>
+
+
+
+
+@code {
+    private List<RepliqDTO>? model;
+    [Parameter] public Guid Rep { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = await base.GetAsync<List<RepliqDTO>>("Repliqs", Rep.ToString());
+            StateHasChanged();
+        };
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

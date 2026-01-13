@@ -1,0 +1,6 @@
+﻿.Item {
+    display:flex;
+    justify-content:start;
+    gap:10px;
+    padding-top:10px;
+}

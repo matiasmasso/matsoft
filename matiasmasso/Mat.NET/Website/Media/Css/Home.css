@@ -1,0 +1,111 @@
+﻿main {
+    max-width:600px;
+    margin:auto;
+}
+
+
+.bannerRotator img {
+    width: 100%;
+    height: auto;
+    margin-bottom:5px;
+}
+
+.brandsV {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    column-gap: 10px;
+}
+
+.brandsH {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.brandsH div {
+    margin:5px 0;
+}
+    .brandsV img, .brandsH img {
+        width: 100%;
+        height:auto;
+    }
+
+
+
+    .brandsV > div:first-child {
+        margin-left: 0px;
+    }
+
+        .brandsV > div:last-child {
+            margin-right: 0px;
+        }
+
+        .raffle img {
+            width:100%;
+            height:auto;
+        }
+
+.lastPosts {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8em;
+}
+
+    .lastPosts > div {
+        flex: 1 1 0px;
+        min-width: 0;
+        background-color: #f5f5f5;
+        padding: 15px;
+        margin: 5px;
+    }
+
+        .lastPosts > div:first-child {
+            margin-left: 0px;
+        }
+
+        .lastPosts > div:last-child {
+            margin-right: 0px;
+        }
+
+    .lastPosts img {
+        width: 100%;
+        height: auto;
+    }
+
+.postTitle {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+}
+
+.raffle {
+    display: flex;
+    justify-content: center;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+    .raffle img {
+        width: 100%;
+        height: auto;
+    }
+
+
+@media screen and (max-width: 576px) {
+    .lastPosts {
+        flex-direction:column;
+    }
+
+}
+
+
+@media screen and (max-width: 600px) {
+    .brandsV {
+        display: none;
+    }
+    .brandsH {
+        display: flex;
+    }
+
+}

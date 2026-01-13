@@ -1,0 +1,111 @@
+﻿@page "/PgMulta/{Guid:guid}"
+@inherits _ComponentBase
+
+
+<h1>
+    @Localizer("Penalty")
+</h1>
+
+
+<TabControl>
+    <TabPage Text="@Localizer("Details")">
+
+        @if(gridModel == null){
+            <Loading></Loading>
+        } else {
+            <PropertyGrid model="@gridModel"
+                      RequestToUpdate="SaveRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToCancel="CancelRequest"
+                      ErrorMessage="@errorMessage"
+                      GetOptions="GetOptions"></PropertyGrid>
+        }
+
+    </TabPage>
+
+    <TabPage Text="@Localizer("Downloads")">
+        <UxDocfiles Values="@value.Docfiles"></UxDocfiles>
+    </TabPage>
+
+</TabControl>
+
+@code {
+    [Parameter] public Guid? Guid { get; set; }
+    [Parameter] public EventCallback AfterUpdate { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private MultaModel? value;
+    private PropertyGridModel? gridModel;
+    private string? errorMessage;
+
+    private enum Fields : int
+    {
+        Emisor,
+        Expedient,
+        Subjecte,
+        Fch,
+        Vto,
+        Pagat,
+        Amt
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (Guid != null)
+        {
+            value = await GetAsync<MultaModel>("Multa", Guid.ToString());
+            if (value != null)
+            {
+                //var model = new PropertyGridModel();
+                //model.AddGuidNom((int)Fields.Emisor, value.Emisor, "Emisor");
+                //model.AddString2((int)Fields.Expedient, value.Expedient, "Expediente");
+                //model.AddGuidNom((int)Fields.Subjecte, value.Subjecte, "Target");
+                //model.AddFch((int)Fields.Fch, value.Fch);
+                //model.AddFch((int)Fields.Vto, value.Vto, "Vto");
+                //model.AddFch((int)Fields.Pagat, value.Pagat, "PaymentDate");
+                //model.AddEur((int)Fields.Amt, value.Amt, "Amount");
+                //gridModel = model;
+                //StateHasChanged();
+            }
+        }
+    }
+
+
+    private async Task SaveRequest()
+    {
+        var cc = new System.Globalization.CultureInfo("es-ES");
+        //value!.Emisor = gridModel!.GetGuidNom((int)Fields.Emisor);
+        //value!.Target = gridModel!.GetGuidNom((int)Fields.Target);
+        value!.Expedient = gridModel!.GetString((int)Fields.Expedient);
+        value!.Fch = gridModel!.GetValue<DateTime?>((int)Fields.Fch);
+        value!.Vto = gridModel!.GetValue<DateTime?>((int)Fields.Vto);
+        value!.Pagat = gridModel!.GetValue<DateTime?>((int)Fields.Pagat);
+        value!.Amt = gridModel!.GetValue<Decimal?>((int)Fields.Amt);
+
+        if (await PostAsync<MultaModel, bool>(value, "Multa"))
+            CancelRequest();
+        else
+            errorMessage = base.Tradueix("Error al guardar los datos", "Error al desar les dades", "Error on updating data");
+    }
+
+    private async Task DeleteRequest()
+    {
+        if (await GetAsync<bool>("Multa/delete", value!.Guid.ToString()))
+        {
+            CancelRequest();
+        }
+        else
+            errorMessage = base.Tradueix("Error al eliminar los datos", "Error al eliminar les dades", "Error on deleting data");
+    }
+
+    private void CancelRequest()
+    {
+        base.BackToLastPage();
+    }
+
+    public async Task<List<Option>> GetOptions(PropertyGridModel.Item item)
+    {
+        List<Option> retval = new();
+        return retval;
+    }
+}
+

@@ -1,0 +1,92 @@
+﻿@page "/MarketPlaces"
+@page "/{LangSegment}/MarketPlaces"
+@layout ProLayout
+
+@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject MarketPlacesService MarketPlacesService
+@inject NavigationManager navigationManager
+
+<div class="PageWrapper600">
+    @inject NavigationManager navigationManager
+
+    <AuthorizeView>
+        <Authorized>
+            <h3>Market places</h3>
+
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+
+            <div class="Grid">
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a href="#"
+                       class="Item"
+                    @onclick="@(()=>ItemClick(item))"
+                    @onclick:preventDefault>
+                        @item.Nom
+                    </a>
+                }
+            </div>
+        </Authorized>
+        <NotAuthorized>
+
+            <Login></Login>
+
+        </NotAuthorized>
+        <Authorizing>
+            <Loading></Loading>
+        </Authorizing>
+    </AuthorizeView>
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+    List<MarketPlaceModel>? Items;
+    string? searchterm;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        MarketPlacesService.OnChange += Refresca;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void ItemClick(MarketPlaceModel item)
+    {
+        if (item.Nom == "Miravia")
+            navigationManager.NavigateTo("/Miravia");
+        else if (item.Nom == "VeePee")
+            navigationManager.NavigateTo("/VeePee");
+           else
+            navigationManager.NavigateTo("/MarketPlace/" + item.Guid.ToString());
+    }
+
+    List<MarketPlaceModel>? FilteredItems()
+    {
+        return MarketPlacesService.Values?.Where(x => x.Matches(searchterm)).ToList();
+    }
+
+    void AddNew()
+    {
+        navigationManager.NavigateTo("/MarketPlace/" + System.Guid.Empty.ToString());
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        MarketPlacesService.OnChange -= Refresca;
+    }
+}

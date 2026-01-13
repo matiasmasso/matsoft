@@ -1,0 +1,229 @@
+﻿@inject ApiService ApiService
+
+
+@if (selectedInventari != null)
+{
+    <ImmobleInventariItem Value="selectedInventari"
+                          AfterUpdate="HandleAfterUpdateInventariItem"
+                          CloseRequest="@(()=>selectedInventari = null)">
+    </ImmobleInventariItem>
+}
+else if (selectedDoc != null)
+{
+    <ImmobleDocSrc Value="selectedDoc"
+                   AfterUpdate="HandleAfterUpdateDoc"
+                   AfterDelete="HandleAfterDeleteDoc"
+                   CloseRequest="@(()=>selectedDoc=null)"></ImmobleDocSrc>
+
+}
+else
+{
+    <div class="PageWrapper600">
+        <Title Value="@($"Immoble {value?.Nom}")" CloseRequest="CloseRequestHandler"></Title>
+
+        @if (value == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <Tabs Value="@((int)selectedTab)" ValueChanged="HandleTabChanged" Captions="Detalls,Documents,Inventari"></Tabs>
+
+            @if (selectedTab == Tabs.Docs)
+            {
+                <PageOptions>
+                    <a href="#" @onclick:preventDefault @onclick="AddNewDoc">Afegir</a>
+                </PageOptions>
+
+                <div class="Docs">
+                    <DocfileSrcs Values="@value?.Docfiles"
+                                 ItemSelected="HandleDocSelected"></DocfileSrcs>
+                </div>
+            }
+            else if (selectedTab == Tabs.Inventari)
+            {
+                <div class="Inventari">
+                    <ImmobleInventari Value="@value" ItemSelected="HandleInventariSelected"></ImmobleInventari>
+                </div>
+            }
+            else
+            {
+
+                <div class="PropertyGrid">
+
+                    <PropertyGrid Model="propertyGrid"
+                                  UpdateRequest="UpdateRequestHandler"
+                                  CancelRequest="CloseRequestHandler"
+                                  DeleteRequest="DeleteRequestHandler"
+                                  UpdateState="updateState"
+                                  DeleteState="deleteState">
+                    </PropertyGrid>
+                </div>
+            }
+        }
+
+    </div>
+}
+
+@code {
+    [Parameter] public ImmobleModel? Value { get; set; }
+    [Parameter] public EventCallback<ImmobleModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    ImmobleModel? value;
+    Tabs selectedTab = 0;
+    ImmobleModel.InventariItem? selectedInventari;
+    DocfileSrcModel? selectedDoc;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Tabs
+    {
+        Detalls,
+        Docs,
+        Inventari
+    }
+
+    enum Fields
+    {
+        Emp,
+        Nom,
+        Cadastre,
+        Registre,
+        FchFrom,
+        FchTo,
+        Obs
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value.IsNew)
+                value = Value;
+            else
+                value = await ApiService.GetAsync<ImmobleModel>("immoble", Value!.Guid.ToString());
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void Refresca()
+    {
+        propertyGrid = new PropertyGridModel();
+        propertyGrid.AddEmp(value?.Emp);
+        propertyGrid.AddString("Nom", value?.Nom);
+        propertyGrid.AddString("Ref.Cadastral", value?.Cadastre);
+        propertyGrid.AddString("Registre Propietat", value?.Registre);
+        propertyGrid.AddDateOnly("Alta", value?.FchFrom);
+        propertyGrid.AddDateOnly("Baixa", value?.FchTo);
+        propertyGrid.AddTextArea("Observacions", value?.Obs);
+    }
+
+
+    void CloseRequestHandler()
+    {
+        CloseRequest.InvokeAsync();
+    }
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            value!.Nom = propertyGrid!.Value<string>((int)Fields.Nom);
+            value!.Cadastre = propertyGrid!.Value<string>((int)Fields.Cadastre);
+            value!.Registre = propertyGrid!.Value<string>((int)Fields.Registre);
+            value!.FchFrom = propertyGrid!.GetDateOnly((int)Fields.FchFrom);
+            value!.FchTo = propertyGrid!.GetDateOnly((int)Fields.FchTo);
+            value!.Obs = propertyGrid!.Value<string>((int)Fields.Obs);
+
+            await ApiService.PostAsync<ImmobleModel, bool>(value, "Immoble");
+            value.IsNew = false;
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Immoble/delete", value!.Guid.ToString());
+            await CloseRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+
+    void HandleTabChanged(int args)
+    {
+        selectedTab = (Tabs)args;
+    }
+
+    void AddNewDoc()
+    {
+        selectedDoc = new DocfileSrcModel
+            {
+                Target = (Guid)Value!.Guid
+            };
+    }
+
+    void HandleInventariSelected(ImmobleModel.InventariItem args)
+    {
+        selectedInventari = args;
+    }
+
+    void HandleAfterUpdateInventariItem(ImmobleModel.InventariItem args)
+    {
+        var previousItem = value.Inventari.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previousItem == null)
+            value.Inventari.Add(args);
+        value.Inventari = value.Inventari.OrderBy(x => x.Nom).ToList();
+        selectedInventari = null;
+    }
+
+    void HandleAfterUpdateDoc(DocfileSrcModel args)
+    {
+        var previousItem = value!.Docfiles.FirstOrDefault(x => x.Docfile?.Hash == args.Docfile?.Hash);
+        if (previousItem == null)
+            value.Docfiles.Add(args);
+        else
+        {
+            var idx = value.Docfiles.IndexOf(previousItem);
+            value.Docfiles[idx] = args;
+        }
+        selectedDoc = null;
+    }
+
+    void HandleAfterDeleteDoc(DocfileSrcModel args)
+    {
+        var previousItem = value!.Docfiles.FirstOrDefault(x => x.Docfile?.Hash == args.Docfile?.Hash);
+        if (previousItem != null)
+            value.Docfiles.Remove(previousItem);
+        selectedDoc = null;
+    }
+
+    void HandleDocSelected(DocfileSrcModel args)
+    {
+        selectedDoc = args;
+    }
+
+
+}

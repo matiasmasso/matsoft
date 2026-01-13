@@ -1,0 +1,49 @@
+﻿@inherits _ComponentBase
+
+
+<a class="Wrapper" href="#" @onclick="@(()=>{isShowingSelector = true;})" @onclick:preventDefault="true">
+    <div class="@Class">
+        @(Country?.Nom?.Tradueix(base.Lang()) ?? "?")
+    </div>
+
+    <div class="Selector @(isShowingSelector ? "":"Hidden")">
+        <UxSelector Options="@CountryOptions()" Value="@Country?.Guid.ToString()" ValueChanged="SelectedCountryChanged"></UxSelector>
+    </div>
+</a>
+
+
+@code {
+    [Parameter] public AtlasModel? Atlas { get; set; }
+    [Parameter] public CountryModel? Country { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public EventCallback<CountryModel> ValueChanged { get; set; }
+    private bool isShowingSelector = false;
+
+    protected override void OnParametersSet()
+    {
+        if (Atlas != null && Country == null)
+        {
+            Country = Atlas.DefaultCountry();
+        }
+    }
+
+    private List<Option> CountryOptions()
+    {
+        return Atlas?.Countries
+        .Select(x => new Option
+            {
+                Id = x.Guid.ToString(),
+                Nom = x.Nom?.Tradueix(base.Lang()) ?? "?",
+                Tag = x
+            }).ToList() ?? new();
+    }
+
+
+    private void SelectedCountryChanged(object item)
+    {
+        isShowingSelector = false;
+        Country = (CountryModel)item;
+        StateHasChanged();
+        ValueChanged.InvokeAsync(Country);
+    }
+}

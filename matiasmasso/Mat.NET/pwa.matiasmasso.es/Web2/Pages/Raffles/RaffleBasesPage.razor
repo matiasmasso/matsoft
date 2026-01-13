@@ -1,0 +1,51 @@
+﻿@page "/sorteo/bases/{Guid:guid}"
+@page "/{LangSegment}/sorteo/bases/{Guid:guid}"
+@inject CultureService culture
+@inject AppStateService appstate
+
+<div class="PageWrapper600">
+    @if (Model == null)
+    {
+        if (exception == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <Error @bind-Exception="exception"></Error>
+        }
+    }
+    else
+    {
+        <h1 class="Title">@culture.Localize("Raffle.Bases")</h1>
+
+        <div class="Banner">
+            <img src="@Model?.ImgBanner600Url()" alt="@Model?.Title" width="600" height="200" />
+        </div>
+        <div class="Content">
+            @content
+        </div>
+    }
+</div>
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    [Parameter] public Guid Guid { get; set; }
+    RaffleModel? Model;
+    MarkupString? content;
+    Exception? exception;
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            Model = await appstate.GetAsync<RaffleModel>("raffle", Guid.ToString());
+            content = (MarkupString)(Model?.Bases ?? "");
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+}

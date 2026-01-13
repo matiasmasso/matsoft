@@ -1,0 +1,53 @@
+﻿@*https://codeconvey.com/pure-css-vertical-stepper/ *@
+
+<CascadingValue Value="this">
+    <div class="Wrapper">
+        @ChildContent
+    </div>
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public int SelectedStep {
+        get => _selectedStep;
+        set{
+            if(_selectedStep != value){
+                if (value > 0 && value <= Steps.Count)
+                {
+                _selectedStep = value;
+                    ActivateStep(Steps[_selectedStep - 1]);
+                   SelectedStepChanged.InvokeAsync(_selectedStep);
+                }
+
+            }
+        }
+    }
+
+    [Parameter] public EventCallback<int> SelectedStepChanged { get; set; }
+
+    private int _selectedStep = 1;
+
+    public UxStep? ActiveStep { get; set; }
+
+    List<UxStep> Steps = new List<UxStep>();
+
+    internal int AddStep(UxStep step)
+    {
+        Steps.Add(step);
+        if (Steps.Count == _selectedStep)
+            ActiveStep = step;
+
+        StateHasChanged();
+        return Steps.Count;
+    }
+
+    internal void ActivateStep(UxStep step)
+    {
+        ActiveStep = step;
+        SelectedStep = Steps.IndexOf(step) + 1;
+        StateHasChanged();
+    }
+}

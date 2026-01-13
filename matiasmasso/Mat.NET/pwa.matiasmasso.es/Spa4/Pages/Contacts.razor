@@ -1,0 +1,56 @@
+﻿@page "/Contacts"
+@inherits _ComponentBase
+@layout ProLayout
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Contactos","Contactes","Contacts")</h1>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Grid">
+        <a class="Row" href="Reps">@base.Lang().Tradueix("Reps")</a>
+        <a class="Row" href="Staff">@base.Lang().Tradueix("Empleados","Empleats","Staff")</a>
+        <a class="Row" href="Bancs">@base.Lang().Tradueix("Bancos","Bancs","Banks")</a>
+    </div>
+    <!--atlas-->
+</div>
+
+
+
+
+@code {
+    private List<ContactDTO>? model;
+    private string _searchTerm = string.Empty;
+    private string searchTerm
+    {
+        get
+        {
+            return _searchTerm;
+        }
+        set
+        {
+            if(value != _searchTerm)
+            {
+                _searchTerm = value;
+                Search();
+            }
+        }
+    }
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            await Search();
+            StateHasChanged();
+        };
+    }
+
+    private async Task Search()
+    {
+        model = await base.PostAsync<string, List<ContactDTO>>(searchTerm, "Contacts");
+    }
+
+}

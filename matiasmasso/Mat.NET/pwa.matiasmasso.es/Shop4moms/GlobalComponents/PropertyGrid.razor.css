@@ -1,0 +1,54 @@
+﻿.Wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-items: flex-start;
+    min-height: 150px;
+}
+
+.Grid.Compact {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+    border: 1px solid #DDDDDD;
+}
+
+.Grid.Wide {
+    display: flex;
+    flex-direction: column;
+}
+
+.Grid .Label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Grid.Compact .Label {
+    background-color: #EEEEEE;
+    padding: 4px 7px 2px 4px;
+    border-bottom: 2px solid white;
+}
+
+.Grid.Wide .Label {
+    padding: 4px 7px 2px 0;
+}
+
+.Grid .Value {
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+}
+
+.Grid.Wide .Value {
+    margin:0 0 15px 10px;
+}
+
+
+
+
+.ButtonsBar {
+    margin-top: 15px;
+}
+
+.ErrorMessage {
+    margin-top: 15px;
+}

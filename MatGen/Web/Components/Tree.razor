@@ -1,0 +1,222 @@
+﻿@inject ApiService ApiService
+
+
+<div class="Grid">
+    @for (int i = Levels - 1; i >= 0; i--)
+    {
+        int idx = i;
+        if (ShouldDisplayRow(idx))
+        {
+            <div class="Row">
+                @for (int j = 0; j < Math.Pow(2, i); j++)
+                {
+                    int jdx = j;
+                    PersonModel? person = Person(idx, jdx);
+                    PersonModel? child = Child(idx, jdx);
+                    <div class="Cell">
+                        @if (person != Value && child == null)
+                        {
+                            <div class="Node">
+                                <div>&nbsp;</div>
+                                <div>&nbsp;</div>
+                                <div>&nbsp;</div>
+                            </div>
+                        }
+                        else if (person == null)
+                        {
+                            <a class="Node" href="#" 
+                            title="(click per afegir)"
+                            @onclick="@(()=>AddParent(idx,jdx))" @onclick:preventDefault>
+                                <div>&nbsp;</div>
+                                <div>&nbsp;</div>
+                                <div>&nbsp;</div>
+                                <div class="Background">?</div>
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="Node" href="#" 
+                            title="@person?.FullNom()"
+                            @onclick="@(()=>ItemClick(idx,jdx))" @onclick:preventDefault>
+                                <div>@Firstnom(i,j)</div>
+                                <div>@Cognom(i,j)</div>
+                                <div>@FchRange(i,j)</div>
+                            </a>
+                        }
+                        <div class="BottomLines">
+                            @if (i > 0)
+                            {
+                                <div>&nbsp;</div>
+                                <div>&nbsp;</div>
+                                <div>&nbsp;</div>
+                                <div>&nbsp;</div>
+                            }
+                        </div>
+                        @if (i > 0)
+                        {
+                            <div class="Fch">@Enlace(i,j)</div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+    </div>
+
+
+<Error @bind-Exception="exception"></Error>
+
+@code {
+    [Parameter] public PersonModel? Value { get; set; }
+    [Parameter] public int Levels { get; set; } = 4;
+    [Parameter] public EventCallback<PersonModel> ItemSelected { get; set; }
+
+
+
+    private PersonModel? person;
+    private PersonModel? fatherToAdd;
+    private List<AncestorModel> ancestors = new();
+    // private PersonModel? selectedPerson;
+    private Exception? exception;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        ancestors = Value?.Ancestors(ApiService.Persons()) ?? new();
+    }
+
+    private string? Firstnom(int i, int j)
+    {
+        var person = Person(i, j);
+        var firstnom = ApiService.Firstnom(person?.Firstnom);
+        return firstnom?.Nom;
+    }
+
+    private string? Cognom(int i, int j)
+    {
+        var person = Person(i, j);
+        return ApiService.Cognom(person?.Cognom)?.Nom;
+    }
+
+    private string? FchRange(int i, int j)
+    {
+        var person = Person(i, j);
+        var fchFrom = person?.FchLocationFrom?.Year;
+        var fchTo = person?.FchLocationTo?.Year;
+        var retval = (string.IsNullOrEmpty(fchFrom) && string.IsNullOrEmpty(fchTo)) ? null : $"{fchFrom}-{fchTo}";
+        return retval;
+    }
+
+    private PersonModel? Person(int i, int j)
+    {
+        var id = AncestorId(i, j);
+        var ancestor = ancestors.FirstOrDefault(x => x.Id == id);
+        return ancestor?.Person;
+    }
+
+    private int AncestorId(int i, int j) => (int)Math.Pow(2, i) + j;
+
+
+    private string? Enlace(int i, int j)
+    {
+        string? retval = null;
+        var person = Person(i, j);
+        if (person?.Sex == PersonModel.Sexs.Male)
+        {
+            var muller = Person(i, j + 1);
+            var enlace = ApiService.Enlace(person, muller);
+            retval = enlace?.FchLocation?.Fch?.Fch1;
+            if (!string.IsNullOrEmpty(retval))
+                retval = retval.Truncate(4);
+        }
+        return retval;
+    }
+
+    PersonModel? Child(int i, int j)
+    {
+        var ancestorId = AncestorId(i, j);
+        var childId = ancestorId.IsEven() ? ancestorId / 2 : (ancestorId - 1) / 2;
+        return ancestors.FirstOrDefault(x => x.Id == childId)?.Person;
+    }
+
+    bool ShouldDisplayRow(int i)
+    {
+        bool retval = i == 0;
+        if (!retval)
+        {
+            for (int j = 0; j < Math.Pow(2, i); j++)
+            {
+                if (Child(i, j) != null)
+                {
+                    retval = true;
+                    break;
+                }
+            }
+        }
+        return retval;
+    }
+
+    void ItemClick(int i, int j)
+    {
+        var person = Person(i, j);
+        ItemSelected.InvokeAsync(person);
+    }
+
+    void AddParent(int i, int j)
+    {
+        var ancestorId = AncestorId(i, j);
+        var sex = ancestorId.IsEven() ? PersonModel.Sexs.Male : PersonModel.Sexs.Female;
+        var childId = ancestorId.IsEven() ? ancestorId / 2 : (ancestorId - 1) / 2;
+        person = ancestors.FirstOrDefault(x => x.Id == childId)?.Person;
+        if (sex == PersonModel.Sexs.Male)
+        {
+            fatherToAdd = new PersonModel
+                    {
+                        Nom = $"(pare de {person?.Nom} )",
+                        Sex = sex,
+                        FchLocationFrom = ParentFchFrom(person),
+                        Cognom = person?.Cognom
+                    };
+            ItemSelected.InvokeAsync(fatherToAdd);
+        }
+
+    }
+
+    async Task AfterFatherUpdate(PersonModel father)
+    {
+        if (father == fatherToAdd)
+        {
+            try
+            {
+                person!.Pare = father.Guid;
+                await ApiService.UpdateAsync(person);
+                await InvokeAsync(StateHasChanged);
+            }catch(Exception ex)
+            {
+                exception = ex;
+            }
+
+        }
+
+    }
+
+    FchLocationModel? ParentFchFrom(PersonModel? px)
+    {
+        FchLocationModel? retval = null;
+        string? decenis = px?.FchLocationFrom?.Fch?.Fch1?.Truncate(3);
+        if (decenis?.Length == 3 && ("0123456789").Contains(decenis.Substring(2)))
+        {
+
+            var year = (int.Parse(decenis) - 3).ToString() + "X";
+            retval = new FchLocationModel
+                {
+                    Fch = new FchModel(year),
+                    Location = px?.FchLocationFrom?.Location
+                };
+        }
+        return retval;
+    }
+
+
+
+}

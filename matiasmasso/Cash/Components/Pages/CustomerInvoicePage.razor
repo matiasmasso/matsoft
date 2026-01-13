@@ -1,0 +1,395 @@
+﻿//deprecated
+@page "/CustomerInvoice" 
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    @if (isAddingNewTemplate)
+    {
+        <Model Value="selectedTemplate" AfterUpdate="AfterAddingTemplate"></Model>
+    }
+    else
+    {
+
+
+        <h3>Customer Invoice</h3>
+
+        <PageOptions>
+            <PageOptions>
+                <LookupCustomerInvoiceTemplate Values="templates"
+                                               Value="selectedTemplate?.Guid"
+                                               AddNewRequest="AddNewTemplateHandler"
+                                               ValueChanged="SelectedTemplateChanged"></LookupCustomerInvoiceTemplate>
+                <a href="#" @onclick="AddItemRequest" @onclick:preventDefault>afegir linia</a>
+            </PageOptions>
+        </PageOptions>
+
+        <div class="Grid">
+            <div class="ColHeaders HideOnMobile">
+                <div class="Concept">Concepte</div>
+                <div class="Price">Import</div>
+            </div>
+
+            @foreach (var item in value?.Items ?? new())
+            {
+                <a class="Item" href="#" @onclick:preventDefault @onclick="@(() => selectedItem = item)">
+                    <div class="Concept">
+                        @item.Concept
+                    </div>
+                    @if (item.Price == null || item.Price == 0)
+                    {
+                        <div>&nbsp;</div>
+                    }
+                    else
+                    {
+
+                        <div class="Price">@($"{item.Price:N2} €")</div>
+                    }
+                </a>
+            }
+
+            @if (value?.ShouldShowBaseImponible() ?? false)
+            {
+                <div class="Item">
+                    <div class="Concept">
+                        Base imponible
+                    </div>
+                    <div class="Price">@($"{value?.BaseImponible:N2} €")</div>
+                </div>
+            }
+            @if (value?.ShouldShowIVA() ?? false)
+            {
+                <div class="Item">
+                    <div class="Concept">
+                        IVA @(value?.IVApct)%
+                    </div>
+                    <div class="Price">@($"{value?.IVA:N2} €")</div>
+                </div>
+            }
+            @if (value?.ShouldShowIRPF() ?? false)
+            {
+                <div class="Item">
+                    <div class="Concept">
+                        IRPF @(value?.IRPFpct)%
+                    </div>
+                    <div class="Price">-@($"{value?.IRPF:N2} €")</div>
+                </div>
+            }
+            @if (value?.ShouldShowTotal() ?? false)
+            {
+                <div class="Item">
+                    <div class="Concept">
+                        Total
+                    </div>
+                    <div class="Price">@($"{value?.Total:N2} €")</div>
+                </div>
+            }
+
+        </div>
+
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="UpdateAsync"
+                      ItemChanged="HandleItemChanged"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    }
+    <Error @bind-Value="exception"></Error>
+</div>
+@code {
+    CustomerInvoiceModel? value { get; set; }
+    List<PgcCtaModel>? ctas;
+    List<ContactModel>? allContacts;
+    List<ContactModel>? contacts;
+    ContactModel? contactToAdd;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    private CustomerInvoiceModel.Item? selectedItem;
+    private List<CustomerInvoiceModel.LastFraNum>? lastFraNums;
+    private List<CustomerInvoiceModel.Template>? templates;
+    private CustomerInvoiceModel.Template? selectedTemplate;
+    bool isAddingNewTemplate = false;
+    bool hasLoadedTemplate = false;
+
+    Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Contact,
+        RaoSocial,
+        Address,
+        Zip,
+        Nif,
+        FraNum,
+        Fch,
+        IvaPct,
+        IrpfPct,
+        Total,
+        CtaCredit,
+        CtaDebit,
+        Docfile
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApiService.OnChange += Refresca;
+
+        ctas = ApiService.GetCurrentPgcCtas();
+        allContacts = ApiService.GetContacts();
+        lastFraNums = await ApiService.GetAsync<List<CustomerInvoiceModel.LastFraNum>>("fras/lastfranums");
+        templates = await ApiService.GetAsync<List<CustomerInvoiceModel.Template>>("CustomerInvoiceTemplates");
+        selectedTemplate = templates?.FirstOrDefault();
+        value = await ValueFromTemplateAsync();
+        Refresca();
+    }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+    }
+
+    // DocfileModel? CreateDocfile()
+    // {
+    //     var media = new Media(mimeCod, bytes);
+    //     retval = DocfileHelper.CreateDocfile(media, thumbnailWidth, thumbnailHeight, file.Name);
+
+    // }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid(value!);
+    }
+
+    PropertyGridModel PropertyGrid(CustomerInvoiceModel value)
+    {
+        contacts = allContacts?.Where(x => x.Emp == value?.Emp).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value?.Emp);
+        //retval.AddGuidnom("Subcompte", value?.Contact, contacts, HandleAddContact);
+        retval.AddModel("Client", value?.Customer, contacts, HandleAddContact);
+        retval.AddString("Rao Social", value?.RaoSocial);
+        retval.AddString("Adreça", value?.Address);
+        retval.AddModel("Població", value?.Zip?.Guid, ApiService.GetZipNoms()?.ToArray());
+        retval.AddString("Nif", value?.NIF);
+        retval.AddInt("Factura", value?.FraNum);
+        retval.AddDateOnly("Data", value?.Fch);
+        retval.AddDecimal("IVA", value?.IVApct);
+        retval.AddDecimal("IRPF", value?.IRPFpct);
+        retval.AddEur("Total", value?.Total);
+        retval.AddGuidnom("Compte credit", value?.CtaCredit, ctas);
+        retval.AddGuidnom("Compte debit", value?.CtaDebit, ctas);
+        retval.AddDocfile(value?.Docfile);
+
+        return retval;
+    }
+
+    CustomerInvoiceModel? CurrentValue()
+    {
+        var retval = value;
+        if (retval != null)
+        {
+            var zipGuid = propertyGrid!.GetModelGuid((int)Fields.Zip);
+            var tmp = ApiService.GetZip(zipGuid);
+            var location = ApiService.GetLocation(tmp?.Location);
+            var zona = ApiService.GetZona(location?.Zona);
+            var country = ApiService.GetCountry(zona?.Country);
+            var zip = new ZipDTO()
+            {
+                Guid = tmp!.Guid,
+                ZipCod = tmp.ZipCod,
+                Location = new LocationDTO()
+                {
+                    Guid = (Guid)location!.Guid,
+                    Nom = location.Nom,
+                    Zona = new ZonaDTO()
+                    {
+                        Guid = (Guid)zona!.Guid,
+                        Nom = zona.Nom,
+                        Country = new CountryDTO()
+                        {
+                            Guid = (Guid)country!.Guid,
+                            Nom = new LangTextDTO(country.Nom?.Esp)
+                        }
+                    }
+                }
+            };
+            retval.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            retval.Customer = propertyGrid.GetModelGuid((int)Fields.Contact);
+            retval.RaoSocial = propertyGrid.GetString((int)Fields.RaoSocial);
+            retval.Address = propertyGrid.GetString((int)Fields.Address);
+            retval.Zip = zip;
+            retval.NIF = propertyGrid.GetString((int)Fields.Nif);
+            retval.FraNum = (int)propertyGrid.GetInt((int)Fields.FraNum)!;
+            retval.Fch = (DateOnly)propertyGrid!.GetDateOnly((int)Fields.Fch)!;
+            retval.Vto = retval.Fch;
+            retval.IVApct = propertyGrid.GetDecimal((int)Fields.IvaPct);
+            retval.IRPFpct = propertyGrid!.GetDecimal((int)Fields.IrpfPct);
+            retval.CtaCredit = propertyGrid.GetGuidNom((int)Fields.CtaCredit)?.Guid;
+            retval.CtaDebit = propertyGrid.GetGuidNom((int)Fields.CtaDebit)?.Guid;
+            retval.Docfile = propertyGrid.GetDocfile((int)Fields.Docfile);
+        }
+        return retval;
+    }
+
+    async Task SelectedTemplateChanged(CustomerInvoiceModel.Template? args)
+    {
+        // selectedTemplate = args;
+        // value = await ValueFromTemplateAsync();
+        // Refresca();
+    }
+
+    async Task<CustomerInvoiceModel> ValueFromTemplateAsync()
+    {
+        var lastFraNum = lastFraNums!.FirstOrDefault(x => x.Emp == EmpModel.EmpIds.Tatita)?.FraNum ?? 0;
+        var customer = await ApiService.GetAsync<ContactModel>("Contact", selectedTemplate!.Customer.ToString()!);
+        CustomerInvoiceModel retval = new CustomerInvoiceModel()
+        {
+            Emp = selectedTemplate!.Emp,
+            Customer = selectedTemplate.Customer,
+            RaoSocial = customer!.RaoSocial,
+            Address = customer.Address!.Text,
+            Zip = customer.Address.Zip,
+            NIF = customer.Nifs.FirstOrDefault()?.Value,
+            FraNum = lastFraNum + 1,
+            Fch = DateOnly.FromDateTime(DateTime.Now),
+            IVApct = selectedTemplate.IVApct,
+            IRPFpct = selectedTemplate.IRPFpct,
+            CtaCredit = selectedTemplate.CtaCredit,
+            CtaDebit = selectedTemplate.CtaDebit,
+            Lang = LangDTO.Esp(),
+            User = ApiService.CurrentUser()
+        };
+
+        foreach (var item in selectedTemplate.Items)
+        {
+            retval.Items.Add(new CustomerInvoiceModel.Item()
+            {
+                Concept = item.Concept,
+                Price = item.Price
+            });
+        }
+
+        retval!.Docfile = await CreateDocfileAsync(retval);
+        return retval;
+    }
+
+    void AddItemRequest()
+    {
+        selectedItem = new CustomerInvoiceModel.Item();
+    }
+
+    // async Task HandleCloseRequest()
+    // {
+    //     await CloseRequest.InvokeAsync();
+    // }
+
+    // void ZoomRequestHandler(IModel args)
+    // {
+    //     ZoomRequest.InvokeAsync(args);
+    // }
+
+
+    async Task UpdateAsync()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            var value = CurrentValue();
+            if (value != null)
+            {
+                await ApiService.PostMultipartAsync<CustomerInvoiceModel, bool>(value.Docfile, value, "fra/update");
+                //await AfterUpdate.InvokeAsync(fra);
+            }
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+            updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        // await DeleteRequest.InvokeAsync(Value);
+    }
+
+    void AfterAddDespesa(CcaModel args)
+    {
+        // year = ((DateOnly)args.Fch!).Year;
+        // tab = Tabs.Extracte;
+    }
+
+    async Task HandleItemChanged(PropertyGridModel.Item args)
+    {
+        value = CurrentValue();
+        value!.Docfile = await CreateDocfileAsync(value);
+        Refresca();
+    }
+
+    async Task<DocfileModel?> CreateDocfileAsync(CustomerInvoiceModel value)
+    {
+        var pdf = await ApiService.PostAsync<CustomerInvoiceModel, Byte[]>(value, "CustomerInvoice/Pdf");
+        var media = new Media(Media.MimeCods.Pdf, pdf);
+        var retval = DocfileHelper.CreateDocfile(media, 350, 400);
+        return retval;
+    }
+
+    void HandleCcaRequest(CcaModel args)
+    {
+        // selectedCca = args;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+    void HandleAddContact()
+    {
+        contactToAdd = new ContactModel
+        {
+            Emp = (EmpModel.EmpIds)ApiService.Emp!,
+            RaoSocial = "(Nou contacte)"
+        };
+    }
+
+    void HandleOnContactAdded(ContactModel args)
+    {
+        var previous = contacts!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous == null)
+            contacts!.Add(args);
+        else
+        {
+            var idx = contacts!.IndexOf(previous);
+            contacts[idx] = args;
+        }
+
+        // var value = Value!;
+        // value.Cta = propertyGrid!.GetGuid((int)Fields.Cta);
+        // value.Contact = args?.Guid;
+        // value.Eur = (decimal?)(propertyGrid!.GetEur((int)Fields.Eur)) ?? 0;
+        // value.Dh = (CcaModel.Item.DhEnum)(propertyGrid!.GetId((int)Fields.Dh)! + 1);
+        // propertyGrid = PropertyGrid(value);
+        // contactToAdd = null;
+    }
+
+    void AddNewTemplateHandler()
+    {
+        isAddingNewTemplate = true;
+        selectedTemplate = new CustomerInvoiceModel.Template();
+        Refresca();
+    }
+
+    void AfterAddingTemplate(IModel args)
+    {
+        var template = (CustomerInvoiceModel.Template)args;
+        templates!.Add(template);
+        selectedTemplate = template;
+        isAddingNewTemplate = true;
+    }
+}
+

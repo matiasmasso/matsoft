@@ -1,0 +1,33 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    display:flex;
+    flex-direction:column;
+}
+
+    .Wrapper:not(.IsRoot) {
+        margin-left: 25px;
+    }
+
+.Value {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    grid-column-gap: 10px;
+    height: 1.2em;
+    max-height: 1.2em;
+}
+
+
+.Enlaces {
+    margin-left: 25px;
+}
+
+.Enlace {
+    display: flex;
+    gap: 10px;
+}
+
+.Ancestor {
+    color:red;
+}
+

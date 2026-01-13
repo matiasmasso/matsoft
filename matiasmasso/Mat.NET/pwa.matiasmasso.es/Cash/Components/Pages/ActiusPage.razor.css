@@ -1,0 +1,75 @@
+﻿.Grid {
+    display: grid;
+    grid-template-columns: 1fr min-content min-content min-content;
+    grid-column-gap: 10px;
+}
+
+.ColHeaders, .Item, .ColTotals {
+    display: contents;
+}
+
+    .ColHeaders > * {
+        padding-bottom: 10px;
+    }
+
+    .ColTotals > * {
+        padding-top: 10px;
+    }
+
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Qty, .Avg, .Val {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}
+
+.Item.Epg{
+    font-weight: 700;
+}
+
+    .Item.Epg > * {
+        padding-bottom: 10px;
+    }
+
+    .Item.Epg:not(:first-child) > * {
+        padding-top: 15px;
+    }
+
+@media(max-width:599px) {
+    .HideOnMobile {
+        display:none;
+    }
+
+    .Grid {
+        display:flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 1fr min-content;
+        grid-column-gap: 10px;
+        padding:10px 0;
+    }
+
+    .Item:not(:last-child){
+        border-bottom: 1px solid gray;
+    }
+}
+
+@media(min-width:600px){
+    .HideOnDesktop {
+        display:none;
+
+    }
+    .Grid {
+        display: grid;
+        grid-template-columns: 1fr min-content min-content min-content;
+        grid-column-gap: 10px;
+    }
+}

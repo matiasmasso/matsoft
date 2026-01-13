@@ -1,0 +1,13 @@
+﻿.Item {
+    display:block;
+    font-size:0.9em;
+    margin:10px 0;
+}
+
+.Nom {
+}
+
+.Details {
+    padding-left: 15px;
+    color:darkgray;
+}

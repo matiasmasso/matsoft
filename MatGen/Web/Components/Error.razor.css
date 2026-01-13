@@ -1,0 +1,37 @@
+﻿.Wrapper {
+    background-color: darkred;
+    color: white;
+    padding: 15px;
+}
+
+.IconText {
+    display: flex;
+    gap: 10px;
+}
+
+p {
+    max-width: 100%;
+    word-wrap: anywhere;
+}
+
+.IconContainer {
+    width: 32px;
+    min-width: 32px;
+}
+
+.ButtonsBar {
+    text-align: right;
+}
+
+    .ButtonsBar a {
+        padding: 10px;
+        border: 1px solid white;
+        border-radius: 3px;
+        text-decoration: none;
+        color: white;
+        background-color: red;
+    }
+
+.SeeMore, .SeeLess {
+    color: white;
+}

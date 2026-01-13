@@ -1,0 +1,114 @@
+﻿@inject CultureService culture
+@inject VehiclesService vehiclesService
+@inject IJSRuntime JSRuntime
+
+<div class="Wrapper">
+    @if(Model == null)
+    {
+        <Loading></Loading>
+    }  else
+    {
+        <div class="HeaderRow">
+            <h3>Vehicle</h3>
+            <CloseButton CloseRequest="RequestToClose"></CloseButton>
+        </div>
+
+
+        <TabControl>
+            <TabPage Text="@culture.Localize("Details")">
+
+                <div class="Label">@culture.Localize("Matricula")</div>
+                <div class="Value">
+                    <input type="text" @bind-value="matricula" @oninput="SetDirty" />
+                    <CopyButton Value="@matricula"></CopyButton>
+                </div>
+
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="RequestToClose"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+
+            </TabPage>
+            <TabPage Text="@culture.Localize("Docs")">
+                <DocFiles Model="GetDocfiles()"></DocFiles>
+            </TabPage>
+
+        </TabControl>
+    }
+
+    <Error @bind-Exception="exception"></Error>
+
+</div>
+
+@code {
+    [Parameter] public VehicleModel? Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    string? matricula;
+    DbState state;
+    Exception? exception;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Model != null)
+        {
+            try
+            {
+                Model = await vehiclesService.FindAsync(Model.Guid);
+                matricula = Model?.Matricula;
+
+            } catch(Exception ex)
+            {
+                exception = ex;
+            }
+        }
+    }
+    private async Task RequestToClose()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    private void SetDirty()
+    {
+        state = DbState.IsDirty;
+    }
+
+    private async Task UpdateRequest()
+    {
+        Model.Matricula = matricula;
+
+        try
+        {
+            await vehiclesService.UpdateAsync(Model);
+            await RequestToClose();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private async Task DeleteRequest()
+    {
+        try
+        {
+            await vehiclesService.DeleteAsync(Model);
+            await RequestToClose();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private List<DocfileModel> GetDocfiles(){
+        return Model?.Docfiles.Where(x=>x.DocFile != null).Select(x=>x.DocFile!).ToList() ?? new();
+    }
+
+}

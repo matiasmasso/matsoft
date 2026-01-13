@@ -1,0 +1,90 @@
+﻿@page "/sorteos"
+@page "/sortejos"
+@page "/raffles"
+@page "/sorteios"
+
+@using Client.Shared
+@using Client.ViewModels
+@using DTO
+@using System
+
+@inject AppState AppState
+@inject HttpClient Http
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Raffles> Loc
+
+
+@if (viewModel!.LoadStatus == AppState.StatusEnum.Loading) {
+    <div>Loading...</div>
+} else if (@viewModel!.LoadStatus == AppState.StatusEnum.Failed) {
+    <div>Failed...</div>
+} else {
+    <div class="Wrapper">
+    <h1>@Loc["Title"]</h1>
+    <div class="Grid">
+        @foreach(var item in viewModel.Model.Items)
+        {
+           <a class="Thumbnail" hidden="@(IsHidden(item))"
+               title = "@item.Caption" 
+           data-idx="@viewModel.Model.Items.IndexOf(item)"
+           data-seemore="@hideAfter">
+                <img src="@item.ImageUrl" alt="@item.Caption" width="@RaffleDTO.THUMBNAILWIDTH" height="@RaffleDTO.THUMBNAILHEIGHT"/>
+           </a>
+
+           <a class="Properties" hidden="@(IsHidden(item))"
+           title = "@item.Caption" >
+                <div class="Caption">@item.Caption</div>
+                <div class="Details">
+                    <div>Fecha de inicio:</div>
+                    <div>@item.FchFrom!.ToString()</div>
+                    <div>Fecha del sorteo:</div>
+                    <div>@item.FchTo.ToString()</div>
+                    <div>Ganador:</div>
+                    <div>@item.Winner</div>
+                </div>
+           </a>
+
+           <a class="SeeMore" hidden="@HideSeeMore(item)" @onclick=SeeMore>@SeeMoreText(item)...</a>
+        }
+
+    </div>
+    </div>
+}
+
+
+@code {
+    private RafflesViewModel viewModel;
+    private int seeMoreInterval = 2;
+    private int hideAfter = 2;
+
+    protected override Task OnInitializedAsync()
+    {
+        viewModel = new Client.ViewModels.RafflesViewModel(Http, AppState);
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch();
+        return base.OnInitializedAsync();
+    }
+
+    private void SeeMore()
+    {
+        hideAfter += seeMoreInterval;   
+    }
+
+    private bool IsHidden(RafflesDTO.Item item)
+    {
+        var idx = viewModel.Model.Items.IndexOf(item);
+        return idx > (hideAfter - 1);
+    }
+
+    private bool HideSeeMore(RafflesDTO.Item item)
+    {
+        var idx = viewModel.Model.Items.IndexOf(item);
+        return idx != (hideAfter - 1);
+    }
+
+    private string SeeMoreText(RafflesDTO.Item item)
+    {
+        var str =string.Format("{0} {1} {2}", Loc["See"] ,seeMoreInterval, Loc["More"]);
+        return str;
+    }
+
+}

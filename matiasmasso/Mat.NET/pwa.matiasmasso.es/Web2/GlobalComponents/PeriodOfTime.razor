@@ -1,0 +1,21 @@
+﻿<input type="time" value="@value" @onchange="OnChangeAsync" />
+
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    TimeSpan value;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        value = System.Xml.XmlConvert.ToTimeSpan(Value ?? "PT0H");
+    }
+
+    async Task OnChangeAsync(ChangeEventArgs args)
+    {
+        var timespan = TimeSpan.Parse(args.Value?.ToString() ?? "00.00");
+        var duration = System.Xml.XmlConvert.ToString(timespan);
+        await ValueChanged.InvokeAsync(duration);
+    }
+}

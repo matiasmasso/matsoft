@@ -1,0 +1,23 @@
+﻿.Wrapper {
+}
+
+.Grid {
+    margin-top: 15px;
+}
+
+.Item {
+    display: grid;
+    grid-template-columns: 50px 80px 1fr;
+    column-gap: 10px;
+    margin-bottom: 10px;
+}
+
+.Id {
+}
+
+.Fch {
+}
+
+.Amt {
+    justify-self: end;
+}

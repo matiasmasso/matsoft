@@ -1,0 +1,113 @@
+﻿@inherits _Base
+
+<div class="PageWrapper600">
+    <h1>@Localizer("Ccas")</h1>
+
+
+    @if (selectedItem == null)
+    {
+        @if (model == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <PageOptions IsShowingOptions>
+                
+                <EmpLookup Value="emp" ValueChanged="EmpChanged"></EmpLookup>
+                <div>@year</div>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+            </PageOptions>
+
+            <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+            <div class="Summary">
+                @Localizer("Ccas.Found",model.Count(),year)
+            </div>
+
+            <Ccas_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></Ccas_List>
+        }
+
+    }
+    else
+    {
+        <Cca Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></Cca>
+    }
+
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    List<CcaModel> model;
+    string searchTerm;
+    EmpModel emp;
+    int year;
+    private ProblemDetails problemDetails;
+
+    CcaModel selectedItem = null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        emp = new EmpModel((int)EmpModel.EmpIds.MatiasMasso);
+        year = DateTime.Today.Year;
+        await Refresca();
+    }
+
+    async Task Refresca()
+    {
+        var apiResponse = await GetAsync<List<CcaModel>>("Ccas", emp.Id.ToString(), year.ToString());
+        if (apiResponse.Success())
+            model = apiResponse.Value;
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        StateHasChanged();
+    }
+
+    List<CcaModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+            return model;
+        else
+            return model.Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    private void ItemClick(CcaModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new CcaModel();
+    }
+
+    private void OnUpdate(CcaModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderByDescending(x => x.Id).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(CcaModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private async Task EmpChanged(EmpModel args)
+    {
+        emp = args;
+        model = null;
+        await Refresca();
+    }
+
+}

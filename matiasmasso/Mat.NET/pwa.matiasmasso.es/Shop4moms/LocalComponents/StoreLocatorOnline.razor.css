@@ -1,0 +1,12 @@
+﻿.Online {
+    display: flex;
+    flex-direction: column;
+}
+
+.Item {
+    padding: 10px 0 5px 0;
+}
+
+.Nom {
+    font-weight: 600;
+}

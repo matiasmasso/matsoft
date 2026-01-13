@@ -1,0 +1,80 @@
+﻿@inherits _ComponentBase
+@using System.Net.Http.Formatting
+
+<div>
+
+    @if (Model != null)
+    {
+
+        <EditForm Model="@Model" OnValidSubmit=@ValidFormSubmitted >
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                Abr: <InputText @bind-Value="Model.Abr" class="form-control" />
+            </div>
+            <div class="form-group">
+                Num.Seguretat Social: <InputText @bind-Value="Model.NumSS" class="form-control" />
+            </div>
+
+            <br />
+
+            <div class="Buttons">
+                <!--<button type="submit" form="my-form-ref" class="btn btn-success" value="Update"/>-->
+                <button type="submit" class="btn btn-success">Update</button>
+                <input type="button" class="btn btn-secondary" value="Delete" />
+                <input type="button" class="btn btn-secondary" @onclick="Cancel" value="Cancel" />
+            </div>
+
+        </EditForm>
+    }
+
+</div>
+
+@code {
+    
+    private StaffModel? _model;
+
+    [Parameter]
+    public StaffModel? Model
+    {
+        get => _model;
+        set
+        {
+            if (_model == value ) return;
+            _model = value;
+            ModelChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<StaffModel> ModelChanged { get; set; }   
+
+    [Parameter]
+    public EventCallback<StaffModel> SaveRequest { get; set; }   
+
+
+
+    async void ValidFormSubmitted(EditContext editContext)
+    {
+        if(editContext.IsModified())
+        {
+            StaffModel model = (StaffModel)editContext.Model;
+            var url = Globals.ApiUrl("Staff");
+
+            var content = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+            var response = await base.http.PostAsync(url, content, new JsonMediaTypeFormatter());
+            if ((int)response.StatusCode == 200)
+                NavigationManager.NavigateTo("Staffs");
+            else
+                throw new Exception("error on updating staff");
+        }
+    }
+
+        private void Cancel()
+    {
+        NavigationManager.NavigateTo("Staffs");
+    }
+
+
+}

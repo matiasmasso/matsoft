@@ -1,0 +1,54 @@
+﻿@page "/MarketPlaces"
+@inherits _ComponentBase
+@layout ProLayout
+
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Market Places")</h1>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Grid">
+        @if (base.IsLoaded)
+        {
+            foreach (var item in model.Where(x => x.Matches(searchTerm)))
+            {
+                <a href="@("/MarketPlaceMenu/"+item.Guid.ToString())" class='Row'>
+
+                    <div>
+                        @item.Nom
+                    </div>
+                </a>
+            }
+        }
+        else
+        {
+            <div>loading...</div>
+        }
+    </div>
+</div>
+
+
+
+
+@code {
+    private List<GuidNom>? model;
+    private string searchTerm = string.Empty;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            await Fetch();
+            StateHasChanged();
+        };
+    }
+
+
+    private async Task Fetch()
+    {
+        model = await base.GetAsync<List<GuidNom>>("MarketPlaces",((int)EmpDTO.EmpIds.MatiasMasso).ToString());
+    }
+
+}

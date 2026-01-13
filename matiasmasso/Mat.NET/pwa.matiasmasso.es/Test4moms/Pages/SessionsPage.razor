@@ -1,0 +1,35 @@
+﻿@page "/Sessions"
+@inject AppState AppState
+
+<div class="Wrapper">
+    <h1>Sessions</h1>
+    <div class="Grid">
+        <div class="ColHeaders">
+            <div class="Fch">Data</div>
+            <div class="Order">Comanda</div>
+            <div class="Email">Usuari</div>
+        </div>
+        @foreach (var item in AppState.Sessions)
+        {
+            <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                <div class="Fch">
+                    @String.Format("{0:dd/MM/yy HH:mm}",item.FchCreated)
+                </div>
+                <div class="Order">
+                    @(item.Basket?.TicketNumber ?? "Order pending")
+                </div>
+                <div class="Email">
+                    @(item.Basket?.User?.EmailAddress ?? "not logged yet")
+                </div>
+            </a>
+        }
+    </div>
+</div>
+@code {
+
+    void ItemClick(Session item)
+    {
+
+    }
+
+}

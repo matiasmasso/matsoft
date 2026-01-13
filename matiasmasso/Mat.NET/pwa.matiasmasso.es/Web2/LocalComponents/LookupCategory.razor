@@ -1,0 +1,192 @@
+﻿@inject CultureService culture
+@inject ProductsService productsService
+
+@if (SelectedBrand() == null)
+{
+    @if (isSelectingBrands)
+    {
+        <div class="Modal">
+
+            <div class="Header">
+                <div class="Info">@culture.Localize("Select.Brand")</div>
+                <a href="#" @onclick="@(()=>isSelectingBrands = false)" @onclick:preventDefault>
+                    <Icon Id="Icon.Ids.Xmark"></Icon>
+                </a>
+            </div>
+
+            <div>
+                <PageOptions>
+                    <ToggleObsolets @bind-Value="isShowingObsoletBrands"></ToggleObsolets>
+                    <a href="#" @onclick="AddNewBrand" @onclick:preventDefault>
+                        @culture.Localize("AddNew")
+                    </a>
+                </PageOptions>
+
+                <SearchBox @bind-Value="brandSearchterm"></SearchBox>
+            </div>
+
+            <div class="Brands">
+
+                @foreach (var item in FilteredBrands() ?? new())
+                {
+                    <a href="#" @onclick="@(()=>BrandClick(item))" @onclick:preventDefault>
+                        @item.Nom?.Tradueix(culture.Lang())
+                    </a>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <a href="#" @onclick="@(()=>isSelectingBrands = !isSelectingBrands)" @onclick:preventDefault>
+            [Click to select a brand]
+        </a>
+    }
+}
+else if (SelectedCategory() == null)
+{
+    @if (isSelectingCategories)
+    {
+        <div class="Modal">
+
+            <div class="Header">
+                <div class="Info">@culture.Localize("Select.Category")</div>
+                <a href="#" @onclick="@(()=>isSelectingCategories = false)" @onclick:preventDefault>
+                    <Icon Id="Icon.Ids.Xmark"></Icon>
+                </a>
+            </div>
+
+            <div>
+                <PageOptions>
+                    <ToggleObsolets @bind-Value="isShowingObsoletCategories"></ToggleObsolets>
+                    <a href="#" @onclick="AddNewCategory" @onclick:preventDefault>
+                        @culture.Localize("AddNew")e
+                    </a>
+                </PageOptions>
+
+                <SearchBox @bind-Value="categorySearchterm"></SearchBox>
+            </div>
+
+            <div class="Categories">
+
+                @foreach (var item in FilteredCategories() ?? new())
+                {
+                    <a href="#" @onclick="@(()=>CategoryClick(item))" @onclick:preventDefault>
+                        @item.Nom?.Tradueix(culture.Lang())
+                    </a>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="Bar">
+            <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+             <a href="#" @onclick="@(()=>isSelectingCategories = !isSelectingCategories)" @onclick:preventDefault>
+                 [Click to select a category]
+             </a>
+         </div>
+    }
+}
+else
+{
+    <div class="Display">
+    <SelectedValues Nested @bind-Values="selectedValues"></SelectedValues>
+         <a href="#" @onclick="@(()=>isVisibleMenu = !isVisibleMenu)" @onclick:preventDefault>
+             <Icon Id="Icon.Ids.HEllipsis"></Icon>
+         </a>
+     </div>
+    @if (isVisibleMenu)
+    {
+        <div class="ContextMenu Modal">
+            <a href="#" @onclick="Zoom" @onclick:preventDefault>
+                zoom
+            </a>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public ProductCategoryModel? Value { get; set; }
+    [Parameter] public EventCallback<ProductCategoryModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+
+    SelectedValues.Collection? selectedValues;
+    bool isVisibleMenu;
+    bool isSelectingBrands;
+    bool isSelectingCategories;
+    bool isShowingObsoletBrands;
+    bool isShowingObsoletCategories;
+    string? brandSearchterm;
+    string? categorySearchterm;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if(Value != null)
+        {
+            var brand = productsService.Brand(Value.Brand);
+            selectedValues = new();
+            selectedValues.Add(brand, brand?.Nom.Tradueix(culture.Lang()));
+            selectedValues.Add(Value, Value.Nom.Tradueix(culture.Lang()));
+
+        }
+    }
+
+    ProductBrandModel? SelectedBrand() => (ProductBrandModel?)selectedValues?.FirstOrDefault()?.Value;
+    ProductCategoryModel? SelectedCategory()
+    {
+        ProductCategoryModel? retval = null;
+        if (selectedValues != null && selectedValues.Count > 1)
+            retval = (ProductCategoryModel?)selectedValues[1].Value;
+        return retval;
+    }
+
+    List<ProductBrandModel>? FilteredBrands()
+    {
+        var retval = productsService.Brands(false)?
+        .Where(x => x.Matches(brandSearchterm) && (isShowingObsoletBrands || !x.Obsoleto))
+        .ToList();
+        return retval;
+    }
+
+    List<ProductCategoryModel>? FilteredCategories()
+    {
+        return productsService.Categories(SelectedBrand(), false)?
+        .Where(x => x.Matches(categorySearchterm) && (isShowingObsoletCategories || !x.Obsoleto))
+        .ToList();
+    }
+
+    void BrandClick(ProductBrandModel value)
+    {
+        selectedValues = new();
+        selectedValues.Add(value, value.Nom.Tradueix(culture.Lang()));
+    }
+
+    void CategoryClick(ProductCategoryModel value)
+    {
+        selectedValues?.Add(value, value.Nom.Tradueix(culture.Lang()));
+        ValueChanged.InvokeAsync(value);
+    }
+
+    async Task AddNewBrand()
+    {
+        ProductBrandModel value = new();
+        var breadcrumb = new ModelEditor.Breadcrumb(value, culture.Localize("New.Brand"));
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+    async Task AddNewCategory()
+    {
+        ProductCategoryModel value = new() { Brand = SelectedBrand()!.Guid };
+        var breadcrumb = new ModelEditor.Breadcrumb(value, culture.Localize("New.Brand"));
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+
+    async Task Zoom()
+
+    {
+        var breadcrumb = new ModelEditor.Breadcrumb(Value, Value?.Nom?.Tradueix(culture.Lang()) ?? "?");
+        await EditorRequest.InvokeAsync(breadcrumb);
+        isVisibleMenu = false;
+    }
+}

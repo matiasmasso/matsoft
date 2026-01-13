@@ -1,0 +1,12 @@
+﻿.ExpandableItem input {
+    margin-right: 7px;
+}
+i {
+    width: 20px;
+    text-align: center;
+}
+
+.Toggle.Hidden {
+    display:none;
+}
+

@@ -1,0 +1,30 @@
+﻿.Grid {
+    display: grid;
+    grid-template-columns: min-content 1fr;
+}
+
+.Label {
+    background-color: #EEEEEE;
+    padding: 4px 7px 2px 4px;
+    border-bottom: 1px solid white;
+    white-space: nowrap;
+}
+
+.ButtonsBar{
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+}
+
+    .ButtonsBar a {
+        border: 1px solid gray;
+        padding: 4px 7px 2px 4px;
+        border-radius: 3px;
+    }
+
+    .RightButtons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+

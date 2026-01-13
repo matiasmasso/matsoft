@@ -1,0 +1,7 @@
+﻿@page "/Rep/{Guid:guid}"
+
+<Rep Guid="@Guid"></Rep>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+}

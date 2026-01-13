@@ -1,0 +1,35 @@
+﻿@inject IJSRuntime JSRuntime
+
+@if (isDownloading || !IsReady)
+{
+    <Loading></Loading>
+} else
+{
+    <a href="#" @onclick:preventDefault @onclick="DownloadAsync">
+        @Caption
+    </a>
+}
+
+
+@code {
+    [Parameter] public string Caption { get; set; } = "Excel";
+    [Parameter] public bool IsReady { get; set; } = true;
+    [Parameter] public EventCallback<DTO.Excel.Book> LoadRequest { get; set; }
+    bool isDownloading;
+
+    async Task DownloadAsync()
+    {
+        isDownloading = true;
+        await Task.Yield();
+
+        DTO.Excel.Book? book = new();
+        await LoadRequest.InvokeAsync(book);
+
+        var bytes = DTO.Excel.ClosedXml.Bytes(book);
+        var fileStream = new MemoryStream(bytes);
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", book.Filename, streamRef);
+        isDownloading = false;
+    }
+
+}

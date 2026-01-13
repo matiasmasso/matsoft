@@ -1,0 +1,636 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{33359707-0970-4B6C-82E0-E2F833691E27}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DTO</RootNamespace>
+    <AssemblyName>DTO</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>Windows</MyType>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>DTO.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>DTO.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="C1.C1Pdf.4, Version=4.1.20142.269, Culture=neutral, PublicKeyToken=79882d576c6336da, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\TestMvc\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="SixLabors.ImageSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
+      <HintPath>..\packages\SixLabors.ImageSharp.1.0.0-rc0001\lib\net472\SixLabors.ImageSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.7\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.7\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="MatHelperStd" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="Newtonsoft.Json" />
+    <Import Include="SixLabors.ImageSharp" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.ComponentModel.DataAnnotations" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Runtime.Serialization" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DTOApiLog.vb" />
+    <Compile Include="DTOApp.vb" />
+    <Compile Include="DTOAtlas.vb" />
+    <Compile Include="DTOBalance.vb" />
+    <Compile Include="DTOBaseGuid2.vb" />
+    <Compile Include="DTOBaseGuidCodNom.vb" />
+    <Compile Include="DTOBaseGuidNom.vb" />
+    <Compile Include="DTOBasketCatalog.vb" />
+    <Compile Include="DTOCatalog.vb" />
+    <Compile Include="DTOCertificatIrpf.vb" />
+    <Compile Include="DTOCobrament.vb" />
+    <Compile Include="DTOCobramentPerTransferencia.vb" />
+    <Compile Include="DTOCompactCustomerPO.vb" />
+    <Compile Include="DTOCsbResult.vb" />
+    <Compile Include="DTODistributorOffline.vb" />
+    <Compile Include="DTOEdiversaInvoicD96a.vb" />
+    <Compile Include="DTOExcelMaybornPOFarma.vb" />
+    <Compile Include="DTOIrpf.vb" />
+    <Compile Include="DTOKpi.vb" />
+    <Compile Include="DTOLocalizedString.vb" />
+    <Compile Include="DTOMailingLog.vb" />
+    <Compile Include="DTOPost.vb" />
+    <Compile Include="DTOProductPlugin.vb" />
+    <Compile Include="DTOProductRank.vb" />
+    <Compile Include="DTOProductSkuExcelMap.vb" />
+    <Compile Include="DTOSalesQuery.vb" />
+    <Compile Include="DTOCompactPO.vb" />
+    <Compile Include="DTOCompactStock.vb" />
+    <Compile Include="DTOCustomerCluster.vb" />
+    <Compile Include="DTODeliveryHeader.vb" />
+    <Compile Include="DTOSalesReport.vb" />
+    <Compile Include="DTOHolding.vb" />
+    <Compile Include="DTOInvoicePrintLog.vb" />
+    <Compile Include="DTOIVALiquidacio.vb" />
+    <Compile Include="DTOQualityDistribution.vb" />
+    <Compile Include="DTODefaultImage.vb" />
+    <Compile Include="DTODeliveryTraspas.vb" />
+    <Compile Include="DTODept.vb" />
+    <Compile Include="DTOEci.vb" />
+    <Compile Include="DTOEpgcBase.vb" />
+    <Compile Include="DTOGravatar.vb" />
+    <Compile Include="DTOMenu.vb" />
+    <Compile Include="DTOMonthQtyEur.vb" />
+    <Compile Include="DTONumSs.vb" />
+    <Compile Include="DTOProductStat.vb" />
+    <Compile Include="DTOSatRecall.vb" />
+    <Compile Include="DTOSkuBundle.vb" />
+    <Compile Include="DTOStaffHoliday.vb" />
+    <Compile Include="DTOMenuItem.vb" />
+    <Compile Include="DTOProductDimensions.vb" />
+    <Compile Include="DTOBudget.vb" />
+    <Compile Include="DTOBudgetItemTicket.vb" />
+    <Compile Include="DTOBudgetOrderFra.vb" />
+    <Compile Include="DTOCarrefourItem.vb" />
+    <Compile Include="DTOCcdDescuadre.vb" />
+    <Compile Include="DTOClientFacturable.vb" />
+    <Compile Include="DTOCod.vb" />
+    <Compile Include="DTOCompactBrand.vb" />
+    <Compile Include="DTOCompactContact.vb" />
+    <Compile Include="DTOCompactContract.vb" />
+    <Compile Include="DTOCompactCredencial.vb" />
+    <Compile Include="DTOCompactDocfile.vb" />
+    <Compile Include="DTOCompactEscriptura.vb" />
+    <Compile Include="DTOCompactGuid.vb" />
+    <Compile Include="DTOCompactGuidNom.vb" />
+    <Compile Include="DTOCompactNeighbour.vb" />
+    <Compile Include="DTOCompactNode.vb" />
+    <Compile Include="DTOCompactNoticia.vb" />
+    <Compile Include="DTOCompactOnlineVendor.vb" />
+    <Compile Include="DTOCompactPurchaseOrder.vb" />
+    <Compile Include="DTOCustomerPlatform.vb" />
+    <Compile Include="DTOAmortization.vb" />
+    <Compile Include="DTOApiCsv.vb" />
+    <Compile Include="DTOAsciiRow.vb" />
+    <Compile Include="DTOAuditStock.vb" />
+    <Compile Include="DTOBancSdo.vb" />
+    <Compile Include="DTOBancTransfer.vb" />
+    <Compile Include="DTOBancTransferOld.vb" />
+    <Compile Include="DTOBancTransferPool.vb" />
+    <Compile Include="DTOBaseQuota.vb" />
+    <Compile Include="DTOBlogPost2.vb" />
+    <Compile Include="DTOBoxItem.vb" />
+    <Compile Include="DTOCategoriaDeNoticia.vb" />
+    <Compile Include="DTOCert.vb" />
+    <Compile Include="DTOCliReturn.vb" />
+    <Compile Include="DTOComarca.vb" />
+    <Compile Include="DTOCompactUserObject.vb" />
+    <Compile Include="DTOCompactVehicle.vb" />
+    <Compile Include="DTOCondicio.vb" />
+    <Compile Include="DTOContactDoc.vb" />
+    <Compile Include="DTOContactMessage.vb" />
+    <Compile Include="DTOContestBase.vb" />
+    <Compile Include="DTOContract.vb" />
+    <Compile Include="DTOContractCodi.vb" />
+    <Compile Include="DTOContactClass.vb" />
+    <Compile Include="DTOCreditLastAlb.vb" />
+    <Compile Include="DTODistributionChannel.vb" />
+    <Compile Include="DTODocFileSrc.vb" />
+    <Compile Include="DTODocRpt.vb" />
+    <Compile Include="DTOECITransmCentre.vb" />
+    <Compile Include="DTOECITRansmGroup.vb" />
+    <Compile Include="DTOEdiversaDesadv.vb" />
+    <Compile Include="DTOEdiversaGenral.vb" />
+    <Compile Include="DTOEdiversaInterlocutor.vb" />
+    <Compile Include="DTOEdiversaOrdrsp.vb" />
+    <Compile Include="DTOEdiversaRemadv.vb" />
+    <Compile Include="DTOEdiversaSalesReport.vb" />
+    <Compile Include="DTOePubBook.vb" />
+    <Compile Include="DTOFacturaRebuda.vb" />
+    <Compile Include="DTOForecast.vb" />
+    <Compile Include="DTOGoogleMap.vb" />
+    <Compile Include="DTOGuidNomAmt.vb" />
+    <Compile Include="DTOGuidNomNode.vb" />
+    <Compile Include="DTOCompactGuidNomQtyEur.vb" />
+    <Compile Include="DTOIfemaGuest.vb" />
+    <Compile Include="DTOImportacio.vb" />
+    <Compile Include="DTOImportPrevisio.vb" />
+    <Compile Include="DTOImportTransit.vb" />
+    <Compile Include="DTOImportValidacio.vb" />
+    <Compile Include="DTOInsolvencia.vb" />
+    <Compile Include="DTOIntlAgent.vb" />
+    <Compile Include="DTOIntrastat.vb" />
+    <Compile Include="DTOIntrastatException.vb" />
+    <Compile Include="DTOIpLookup.vb" />
+    <Compile Include="DTOJsonSchema.vb" />
+    <Compile Include="DTOLangText.vb" />
+    <Compile Include="DTOLiniaTelefon.vb" />
+    <Compile Include="DTOMailMessage.vb" />
+    <Compile Include="DTOMatsoftSupportCase.vb" />
+    <Compile Include="DTOMediaResource.vb" />
+    <Compile Include="DTOMsg.vb" />
+    <Compile Include="DTOMulta.vb" />
+    <Compile Include="DTONeighbour.vb" />
+    <Compile Include="DTONoticiaDestacada.vb" />
+    <Compile Include="DTOOnlineVendor.vb" />
+    <Compile Include="DTOOnlineVendorSerp.vb" />
+    <Compile Include="DTOOnlineVendorTrack.vb" />
+    <Compile Include="DTOOrderConfirmation.vb" />
+    <Compile Include="DTOPgcRatio.vb" />
+    <Compile Include="DTOPortsCondicio.vb" />
+    <Compile Include="DTOPostComment.vb" />
+    <Compile Include="DTOPremiumLine.vb" />
+    <Compile Include="DTOProductArea.vb" />
+    <Compile Include="DTOProductAtlas.vb" />
+    <Compile Include="DTOProductChannel.vb" />
+    <Compile Include="DTOProductDto.vb" />
+    <Compile Include="DTODatagridviewCell.vb" />
+    <Compile Include="DTOMonthDay.vb" />
+    <Compile Include="DTONoticiaBase.vb" />
+    <Compile Include="DTOProductMonthQtySalepoint.vb" />
+    <Compile Include="DTOProductSkuQtyEur.vb" />
+    <Compile Include="DTOProjecte.vb" />
+    <Compile Include="DTOPromoPos.vb" />
+    <Compile Include="DTOPrvCliNum.vb" />
+    <Compile Include="DTOPublicityOrder.vb" />
+    <Compile Include="DTOQ58.vb" />
+    <Compile Include="DTOQtySku.vb" />
+    <Compile Include="DTORatio.vb" />
+    <Compile Include="DTORecall.vb" />
+    <Compile Include="DTORecollida.vb" />
+    <Compile Include="DTORepCliCom.vb" />
+    <Compile Include="DTORepObj.vb" />
+    <Compile Include="DTOSabiasQuePost.vb" />
+    <Compile Include="DTOSegSocialGrup.vb" />
+    <Compile Include="DTOSellOut.vb" />
+    <Compile Include="DTOSepaMandato.vb" />
+    <Compile Include="DTOSepaText.vb" />
+    <Compile Include="DTOSiiConsulta.vb" />
+    <Compile Include="DTOSiiLog.vb" />
+    <Compile Include="DTOSiteMap.vb" />
+    <Compile Include="DTOSkuAmtOrigin.vb" />
+    <Compile Include="DTOSocialMediaBrand.vb" />
+    <Compile Include="DTOSpvOut.vb" />
+    <Compile Include="DTOStaffCategory.vb" />
+    <Compile Include="DTOStaffJornada.vb" />
+    <Compile Include="DTOStaffPos.vb" />
+    <Compile Include="DTOStaffSched.vb" />
+    <Compile Include="DTOStatQuery.vb" />
+    <Compile Include="DTORaffle.vb" />
+    <Compile Include="DTORebut.vb" />
+    <Compile Include="DTORepCertRetencio.vb" />
+    <Compile Include="DTORepComFollowUp.vb" />
+    <Compile Include="DTORepeticio.vb" />
+    <Compile Include="DTOSermepaConfig.vb" />
+    <Compile Include="DTOShip.vb" />
+    <Compile Include="DTOSpvIn.vb" />
+    <Compile Include="DTOStatQuotaOnline.vb" />
+    <Compile Include="DTOStoreLocator.vb" />
+    <Compile Include="DTOStoreLocator2.vb" />
+    <Compile Include="DTOStreetView.vb" />
+    <Compile Include="DTOTaller.vb" />
+    <Compile Include="DTOTask.vb" />
+    <Compile Include="DTOTaskLog.vb" />
+    <Compile Include="DTOTaskResult.vb" />
+    <Compile Include="DTOTaskSchedule.vb" />
+    <Compile Include="DTOBaseTel.vb" />
+    <Compile Include="DTOTest.vb" />
+    <Compile Include="DTOTpvLog.vb" />
+    <Compile Include="DTOTpvRedsysResponse.vb" />
+    <Compile Include="DTOTpvRequest.vb" />
+    <Compile Include="DTOTpvRedsysPasarela.vb" />
+    <Compile Include="DTOTrpCost.vb" />
+    <Compile Include="DTOTrpZon.vb" />
+    <Compile Include="DTOTxt.vb" />
+    <Compile Include="DTOUserDefault.vb" />
+    <Compile Include="DTOUserTaskId.vb" />
+    <Compile Include="DTOUserTaskLog.vb" />
+    <Compile Include="DTOVacacion.vb" />
+    <Compile Include="DTOValidationResult.vb" />
+    <Compile Include="DTOValueNom.vb" />
+    <Compile Include="DTOValueText.vb" />
+    <Compile Include="DTOVehicle.vb" />
+    <Compile Include="DTOVehicleMarca.vb" />
+    <Compile Include="DTOVehicleModel.vb" />
+    <Compile Include="DTOVisofarContact.vb" />
+    <Compile Include="DTOVivaceCost.vb" />
+    <Compile Include="DTOWebAppLog.vb" />
+    <Compile Include="DTOWebBug.vb" />
+    <Compile Include="DTOWebPageAlias.vb" />
+    <Compile Include="DTOWebPortadaBrand.vb" />
+    <Compile Include="DTOWellknown.vb" />
+    <Compile Include="DTOWinBug.vb" />
+    <Compile Include="DTOWpPolylang.vb" />
+    <Compile Include="DTOWtbol.vb" />
+    <Compile Include="DTOWtbolSerp.vb" />
+    <Compile Include="DTOXec.vb" />
+    <Compile Include="DTOXecsPresentacio.vb" />
+    <Compile Include="DTOYear.vb" />
+    <Compile Include="Extensions\DatetimeOffsetExtensions.vb" />
+    <Compile Include="DTOFacturaDeImportacio.vb" />
+    <Compile Include="Extensions\ExcelExtensions.vb" />
+    <Compile Include="Helpers\Delegates.vb" />
+    <Compile Include="DTOAeatDoc.vb" />
+    <Compile Include="DTOAeatModel.vb" />
+    <Compile Include="DTOAlbBloqueig.vb" />
+    <Compile Include="DTOBalanceItem.vb" />
+    <Compile Include="DTOBalanceSaldo.vb" />
+    <Compile Include="DTOBaseGuidNumFch.vb" />
+    <Compile Include="DTOCliApertura.vb" />
+    <Compile Include="DTOCce.vb" />
+    <Compile Include="DTOCustomerCataleg.vb" />
+    <Compile Include="DTOCustomerProduct.vb" />
+    <Compile Include="DTODoc.vb" />
+    <Compile Include="DTOEdiversaOrder_Old.vb" />
+    <Compile Include="DTOEdiversaOrder.vb" />
+    <Compile Include="DTOGrfMesValue.vb" />
+    <Compile Include="DTOGuidNode.vb" />
+    <Compile Include="DTOTaxBaseQuota.vb" />
+    <Compile Include="DTOLeadArea.vb" />
+    <Compile Include="DTOPagination.vb" />
+    <Compile Include="DTOPgcClass.vb" />
+    <Compile Include="DTOProductAreaQty.vb" />
+    <Compile Include="DTOBankGroup.vb" />
+    <Compile Include="DTOBaseGuid.vb" />
+    <Compile Include="DTOBaseId.vb" />
+    <Compile Include="DTOConsumerBasket.vb" />
+    <Compile Include="DTOBlogger.vb" />
+    <Compile Include="DTOBloggerPost.vb" />
+    <Compile Include="DTOBookFra.vb" />
+    <Compile Include="DTOBreadCrumb.vb" />
+    <Compile Include="DTOCliCreditLog.vb" />
+    <Compile Include="DTOCliProduct.vb" />
+    <Compile Include="DTOCliProductBlocked.vb" />
+    <Compile Include="DTOCliProductDto.vb" />
+    <Compile Include="DTOCodiMercancia.vb" />
+    <Compile Include="DTOContactTab.vb" />
+    <Compile Include="DTOContest.vb" />
+    <Compile Include="DTOCredencial.vb" />
+    <Compile Include="DTOCurExchangeRate.vb" />
+    <Compile Include="DTOCustomerRanking.vb" />
+    <Compile Include="DTOCustomerTarifaDto.vb" />
+    <Compile Include="DTODelivery.vb" />
+    <Compile Include="DTODiari.vb" />
+    <Compile Include="DTODocFileLog.vb" />
+    <Compile Include="DTOAddress.vb" />
+    <Compile Include="DTOAeatMod347.vb" />
+    <Compile Include="DTOAmt.vb" />
+    <Compile Include="DTOArea.vb" />
+    <Compile Include="DTOAreaProvincia.vb" />
+    <Compile Include="DTOAreaRegio.vb" />
+    <Compile Include="DTOAtlas2.vb" />
+    <Compile Include="DTOBanc.vb" />
+    <Compile Include="DTOBancTerm.vb" />
+    <Compile Include="DTOBank.vb" />
+    <Compile Include="DTOBankBranch.vb" />
+    <Compile Include="DTOBanner.vb" />
+    <Compile Include="DTOBlogPost.vb" />
+    <Compile Include="DTOBrandArea.vb" />
+    <Compile Include="DTOBrowser.vb" />
+    <Compile Include="DTOCca.vb" />
+    <Compile Include="DTOCcb.vb" />
+    <Compile Include="DTOCcd.vb" />
+    <Compile Include="DTOCnap.vb" />
+    <Compile Include="DTOCommercialMargin.vb" />
+    <Compile Include="DTOContact.vb" />
+    <Compile Include="DTOCountry.vb" />
+    <Compile Include="DTOCsa.vb" />
+    <Compile Include="DTOCsb.vb" />
+    <Compile Include="DTOCsv.vb" />
+    <Compile Include="DTOCur.vb" />
+    <Compile Include="DTOCustomer.vb" />
+    <Compile Include="DTODefault.vb" />
+    <Compile Include="DTODimension.vb" />
+    <Compile Include="DTODocFile.vb" />
+    <Compile Include="DTOEan.vb" />
+    <Compile Include="DTOEdiversaFile.vb" />
+    <Compile Include="DTOEmail.vb" />
+    <Compile Include="DTOEmp.vb" />
+    <Compile Include="DTOEnums.vb" />
+    <Compile Include="DTOEscriptura.vb" />
+    <Compile Include="DTOEvento.vb" />
+    <Compile Include="DTOExercici.vb" />
+    <Compile Include="DTOExtracte.vb" />
+    <Compile Include="DTOGalleryItem.vb" />
+    <Compile Include="DTOGrf.vb" />
+    <Compile Include="DTOGuidNom.vb" />
+    <Compile Include="DTOIban.vb" />
+    <Compile Include="DTOIbanStructure.vb" />
+    <Compile Include="DTOImpagat.vb" />
+    <Compile Include="DTOIncentiu.vb" />
+    <Compile Include="DTOIncidencia.vb" />
+    <Compile Include="DTOIncidenciaCod.vb" />
+    <Compile Include="DTOInvoice.vb" />
+    <Compile Include="DTOCorrespondencia.vb" />
+    <Compile Include="DTOMailing.vb" />
+    <Compile Include="DTOMeeting.vb" />
+    <Compile Include="DTOMem.vb" />
+    <Compile Include="DTONavbar.vb" />
+    <Compile Include="DTONewsletter.vb" />
+    <Compile Include="DTONif.vb" />
+    <Compile Include="DTONomina.vb" />
+    <Compile Include="DTONoticia.vb" />
+    <Compile Include="DTOPaymentTerms.vb" />
+    <Compile Include="DTOPerson.vb" />
+    <Compile Include="DTOPgcCta.vb" />
+    <Compile Include="DTOPgcExtracte.vb" />
+    <Compile Include="DTOPgcGeo.vb" />
+    <Compile Include="DTOPgcPLan.vb" />
+    <Compile Include="DTOPgcSaldo.vb" />
+    <Compile Include="DTOPnd.vb" />
+    <Compile Include="DTOPricelistCustomer.vb" />
+    <Compile Include="DTOPriceListSupplier.vb" />
+    <Compile Include="DTOProduct.vb" />
+    <Compile Include="DTOProductBrand.vb" />
+    <Compile Include="DTOProductCatalog.vb" />
+    <Compile Include="DTOProductCategory.vb" />
+    <Compile Include="DTOProductDistributor.vb" />
+    <Compile Include="DTOProductAmt.vb" />
+    <Compile Include="DTOProductDownload.vb" />
+    <Compile Include="DTOProductFeatureImage.vb" />
+    <Compile Include="DTOLang.vb" />
+    <Compile Include="DTOLocation.vb" />
+    <Compile Include="DTOManufacturer.vb" />
+    <Compile Include="DTOMgz.vb" />
+    <Compile Include="DTOPdf.vb" />
+    <Compile Include="DTOProductPageQuery.vb" />
+    <Compile Include="DTOProductRanking.vb" />
+    <Compile Include="DTOProductRetailer.vb" />
+    <Compile Include="DTOProductSku.vb" />
+    <Compile Include="DTOProductSkuExtended.vb" />
+    <Compile Include="DTOProveidor.vb" />
+    <Compile Include="DTOPurchaseOrder.vb" />
+    <Compile Include="DTOPurchaseOrderConcepte.vb" />
+    <Compile Include="DTOQtyDto.vb" />
+    <Compile Include="DTORemittanceAdvice.vb" />
+    <Compile Include="DTORep.vb" />
+    <Compile Include="DTOBasket.vb" />
+    <Compile Include="DTORepCliComOld.vb" />
+    <Compile Include="DTORepCom.vb" />
+    <Compile Include="DTORepComLiquidable.vb" />
+    <Compile Include="DTORepLiq.vb" />
+    <Compile Include="DTORepProduct.vb" />
+    <Compile Include="DTORol.vb" />
+    <Compile Include="DTOrrssWidget.vb" />
+    <Compile Include="DTOSearchRequest.vb" />
+    <Compile Include="DTOSelfies.vb" />
+    <Compile Include="DTOSepaDirectDebit.vb" />
+    <Compile Include="DTOSession.vb" />
+    <Compile Include="DTOSkuWith.vb" />
+    <Compile Include="DTOSpv.vb" />
+    <Compile Include="DTOStaff.vb" />
+    <Compile Include="DTOStat.vb" />
+    <Compile Include="DTOStock.vb" />
+    <Compile Include="DTOStockAvailable.vb" />
+    <Compile Include="DTOSubscription.vb" />
+    <Compile Include="DTOSubscriptor.vb" />
+    <Compile Include="DTOSumasYSaldos.vb" />
+    <Compile Include="DTOTarifa.vb" />
+    <Compile Include="DTOCustomerTarifa.vb" />
+    <Compile Include="DTOTax.vb" />
+    <Compile Include="DTOContactTel.vb" />
+    <Compile Include="DTOTpvInfo.vb" />
+    <Compile Include="DTOTransmisio.vb" />
+    <Compile Include="DTOTransportista.vb" />
+    <Compile Include="DTOUser.vb" />
+    <Compile Include="DTOUsrLog.vb" />
+    <Compile Include="DTOVisaCard.vb" />
+    <Compile Include="DTOVisaEmisor.vb" />
+    <Compile Include="DTOVivaceStock.vb" />
+    <Compile Include="DTOWebLogBrowse.vb" />
+    <Compile Include="DTOWebMenu.vb" />
+    <Compile Include="DTOWebPage.vb" />
+    <Compile Include="DTOWinMenu.vb" />
+    <Compile Include="DTOXmlDocument.vb" />
+    <Compile Include="DTOYearMonth.vb" />
+    <Compile Include="DTOYouTubeMovie.vb" />
+    <Compile Include="DTOZip.vb" />
+    <Compile Include="DTOZona.vb" />
+    <Compile Include="Helpers\Defaults.vb" />
+    <Compile Include="Helpers\Divers.vb" />
+    <Compile Include="iMedia.vb" />
+    <Compile Include="DTOImmoble.vb" />
+    <Compile Include="Integracions\Bebitus.vb" />
+    <Compile Include="Integracions\Britax.vb" />
+    <Compile Include="Integracions\DTO3cxContact.vb" />
+    <Compile Include="Integracions\DTOCsvPOBebitus.vb" />
+    <Compile Include="Integracions\ElCorteIngles.vb" />
+    <Compile Include="Integracions\Google.vb" />
+    <Compile Include="Integracions\MmoUrl.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="DTORanking.vb" />
+    <Compile Include="Templates\DTOTemplate.vb" />
+    <Compile Include="DTOWebLog.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\word.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zip_140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ai_140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NoImg140.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Carrefour.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pdf_100.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\info.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\warn.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wrong.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Checked13.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\scissors24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RecycleSonae.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MatHelperStd\MatHelperStd.vbproj">
+      <Project>{6feda739-79f5-459f-9967-553095f23816}</Project>
+      <Name>MatHelperStd</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Pdf\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,65 @@
+﻿@page "/Immoble/fromInventoryItem/{InventoryItem:guid}"
+@page "/Immoble/{Guid:guid?}"
+@layout ProLayout
+
+@inherits _ComponentBase
+@using System.Net.Http.Formatting
+
+<div class="Wrapper">
+    <h1>Immoble</h1>
+
+    <TabControl SelectedTab="@selectedTab">
+
+        <ChildContent>
+
+            <TabPage Text="General">
+                <ImmobleEditor @bind-Model="@Model"></ImmobleEditor>
+            </TabPage>
+
+            <TabPage Text="Documentacio">
+                @if (Guid != null)
+                {
+                    <SrcDownloads Src="@((Guid)Guid!)"></SrcDownloads>
+                }
+            </TabPage>
+
+            <TabPage Text="Inventari">
+                @if (Guid != null)
+                {
+                    <InventariItems Target="@((Guid)Guid!)"></InventariItems>
+                }
+            </TabPage>
+
+        </ChildContent>
+
+    </TabControl>
+
+
+
+</div>
+@code {
+    private ImmobleDTO? Model = null;
+    private int selectedTab = 1;
+
+    [Parameter]
+    public Guid? Guid { get; set; }
+
+    [Parameter]
+    public Guid InventoryItem { get; set; }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Guid == null)
+            Model = new ImmobleDTO();
+        else
+        {
+            if(Guid != null)
+                Model = await base.GetAsync<ImmobleDTO>("immoble", ((Guid)Guid!).ToString());
+            else if(InventoryItem != null)
+                Model = await base.GetAsync<ImmobleDTO>("immoble/fromInventoryItem", ((Guid)InventoryItem!).ToString());
+        }
+        StateHasChanged();
+    }
+
+
+}

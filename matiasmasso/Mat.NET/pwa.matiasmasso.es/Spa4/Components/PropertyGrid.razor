@@ -1,0 +1,85 @@
+﻿@inherits _ComponentBase
+
+@if (model != null)
+{
+    <div class="Grid">
+        @foreach (var item in model.Items)
+        {
+            <div class="Label">
+                @item.Label.Tradueix(base.Lang())
+            </div>
+
+            <PropertyGridEditorControl Item="@item"
+                               RequestToSave="UpdateRequest"
+                               GetOptions="OptionsRequest">
+            </PropertyGridEditorControl>
+
+        }
+    </div>
+
+    @if(ErrorMessage != null){
+        <div class="ErrorMessage">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            @ErrorMessage
+        </div>
+    }
+
+    <div class="ButtonsBar">
+        @if (RequestToDelete.HasDelegate)
+        {
+            <a href="#" @onclick="DeleteRequest" @onclick:preventDefault="true">
+                @base.Tradueix("Eliminar","Eliminar","Delete")
+            </a>
+        }
+        else
+        {
+            <div class="Spacer">&nbsp;</div>
+        }
+        <div class="RightButtons">
+            @if (RequestToCancel.HasDelegate)
+            {
+                <a href="#" @onclick="CancelRequest" @onclick:preventDefault="true">
+                    @base.Tradueix("Cancelar","Cancel·lar","Cancel")
+                </a>
+            }
+            @if (RequestToUpdate.HasDelegate)
+            {
+                <a href="#" @onclick="UpdateRequest" @onclick:preventDefault="true">
+                    @base.Tradueix("Guardar","Desar","Update")
+                </a>
+            }
+        </div>
+    </div>
+
+
+}
+
+@code {
+    [Parameter] public Helpers.PropertyGridModel model { get; set; }
+    [Parameter] public Func<Helpers.PropertyGridModel.Item, Task<List<Option>>> GetOptions { get; set; }
+    [Parameter] public EventCallback RequestToUpdate { get; set; }
+    [Parameter] public EventCallback RequestToDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+
+    private void UpdateRequest()
+    {
+        RequestToUpdate.InvokeAsync();
+    }
+    private void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+    private void DeleteRequest()
+    {
+        RequestToDelete.InvokeAsync();
+    }
+
+
+
+    public async Task<List<Option>> OptionsRequest(Helpers.PropertyGridModel.Item item)
+    {
+        var retval = await GetOptions(item);
+        return retval;
+    }
+}

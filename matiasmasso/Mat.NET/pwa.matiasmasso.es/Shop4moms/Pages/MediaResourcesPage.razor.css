@@ -1,0 +1,37 @@
+﻿.Epigraf {
+    padding:10px 0;
+}
+
+.Items {
+    display: flex;
+    white-space: nowrap;
+    overflow-x: auto;
+    gap: 10px;
+}
+
+.Items::-webkit-scrollbar {
+    display: none;
+}
+
+.Item {
+    display: block;
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    gap: 10px;
+    border: 1px solid gray;
+    height: 164px;
+}
+
+.DragItem {
+    border: solid 2px red;
+    cursor: move;
+}
+
+.Features {
+    white-space:pre-wrap;
+    text-align: center;
+}
+

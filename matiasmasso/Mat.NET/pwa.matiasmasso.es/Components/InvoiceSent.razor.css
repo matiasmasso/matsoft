@@ -1,0 +1,49 @@
+﻿.Wrapper {
+    max-width:600px;
+}
+
+.CloseButton {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.Items {
+    display: grid;
+    grid-template-columns: 1fr min-content min-content min-content;
+    grid-column-gap:10px;
+    margin-top:15px;
+}
+
+    .Items.IsShowingDto {
+        grid-template-columns: 1fr min-content min-content min-content min-content;
+    }
+
+.ColumnHeader {
+    font-weight:600;
+}
+
+.Delivery {
+    display: block;
+    grid-column: 1/-1;
+    font-weight: 600;
+}
+
+.PurchaseOrder {
+    display: block;
+    grid-column: 1/-1;
+    font-style: italic;
+    padding: 0 0 0 15px;
+}
+
+.Item {
+    display: contents;
+}
+
+.Item:not(.ColumnHeader) .Sku {
+    padding: 0 0 0 30px;
+}
+
+.Qty, .Price, .Dto, .Amt {
+    white-space: nowrap;
+    text-align: right;
+}

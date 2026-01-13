@@ -1,0 +1,150 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <TabControl>
+        <TabPage Text="@Localizer("Details")">
+
+            <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                         ></PropertyGrid>
+
+        </TabPage>
+
+        <TabPage Text="@Localizer("Document")">
+            <UxDocFile Value="@Value.DocFile" ValueChanged="DocFileChanged"></UxDocFile>
+        </TabPage>
+
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <ButtonsBar 
+                      IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(Value != null && !Value.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></ButtonsBar>
+    </div>
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    [Parameter] public EscripturaModel? Value { get; set; }
+    [Parameter] public EventCallback<EscripturaModel> OnUpdate { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    private List<DownloadTargetModel> documents = new();
+    private PropertyGridModel? gridModel;
+    private DocFileModel? docfile;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    private ProblemDetails? problemDetails;
+
+    private enum Fields : int
+    {
+        Nom,
+        Notari,
+        FchFrom,
+        FchTo,
+        NumProtocol,
+        RegistreMercantil,
+        Tomo,
+        Folio,
+        Hoja,
+        Inscripcio
+    }
+
+
+    private enum Tabs
+    {
+        General,
+        DocFile
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (!Value.IsNew){
+            var apiResponse = await GetAsync<EscripturaModel>("Escriptura", Value.Guid.ToString());
+            if (apiResponse.Success())
+                Value = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+
+        var model = new PropertyGridModel(Value);
+        if (Value != null)
+        {
+            model.AddString((int)Fields.Nom, Value.Nom, Localizer("Concept"));
+            model.AddDropdown<GuidNom>((int)Fields.Notari, Cache.Contacts, Value.Notari, Localizer("Escriptura.Notary"));
+            model.AddFch((int)Fields.FchFrom, Value.FchFrom, Localizer("Fch"));
+            model.AddFch((int)Fields.FchTo, Value.FchTo, Localizer("TerminationDate"));
+            model.AddInt((int)Fields.NumProtocol, Value.NumProtocol, Localizer("Escriptura.ProtocolNumber"));
+            model.AddDropdown<GuidNom>((int)Fields.RegistreMercantil, Cache.Contacts, Value.RegistreMercantil, Localizer("Escriptura.MercantileRegistry"));
+            model.AddInt((int)Fields.Tomo, Value.Tomo, Localizer("Escriptura.Volume"));
+            model.AddInt((int)Fields.Folio, Value.Folio, Localizer("Escriptura.Page"));
+            model.AddString((int)Fields.Hoja, Value.Hoja, Localizer("Escriptura.Sheet"));
+            model.AddInt((int)Fields.Inscripcio, Value.Inscripcio, Localizer("Escriptura.Inscription"));
+            gridModel = model;
+        }
+        StateHasChanged();
+
+        model.LoadDropdownValues<GuidNom>((int)Fields.Notari, Cache.Contacts);
+        model.LoadDropdownValues<GuidNom>((int)Fields.RegistreMercantil, Cache.Contacts);
+        StateHasChanged();
+    }
+
+
+    private async Task UpdateRequest()
+    {
+        isUpdating = true;
+        Value.Nom = gridModel.GetString((int)Fields.Nom);
+        Value.Notari = gridModel.GetValue<GuidNom>((int)Fields.Notari);
+        Value.FchFrom = gridModel.GetValue<DateTime?>((int)Fields.FchFrom);
+        Value.FchTo= gridModel.GetValue<DateTime?>((int)Fields.FchTo);
+        Value.NumProtocol = gridModel.GetInt((int)Fields.NumProtocol);
+        Value.RegistreMercantil = gridModel.GetValue<GuidNom>((int)Fields.RegistreMercantil);
+        Value.Tomo = gridModel.GetInt((int)Fields.Tomo);
+        Value.Folio = gridModel.GetInt((int)Fields.Folio);
+        Value.Hoja = gridModel.GetString((int)Fields.Hoja);
+        Value.Inscripcio = gridModel.GetInt((int)Fields.Inscripcio);
+
+        if(docfile != null) Value.DocFile = docfile;
+
+        var apiResponse = await PostMultipartAsync<EscripturaModel, bool>(Value, Value.DocFile, "Escriptura");
+        if (apiResponse.Value)
+            await OnUpdate.InvokeAsync(Value);
+        else
+            problemDetails = apiResponse.ProblemDetails;
+        isUpdating = false;
+    }
+
+    private void DocFileChanged(DocFileModel args)
+    {
+        isDirty = true;
+        docfile = args;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<bool>("Escriptura/delete", Value!.Guid.ToString());
+        if (apiResponse.Success())
+            await OnDelete.InvokeAsync();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        RequestToCancel.InvokeAsync();
+    }
+
+
+   private void AddNewDocfile()
+    {
+        problemDetails = new ProblemDetails { Title = "Not implemented yet" };
+    }
+
+}
+

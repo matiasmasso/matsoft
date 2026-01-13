@@ -1,0 +1,55 @@
+﻿
+
+.Eur {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.Pagat {
+    display: flex;
+    justify-content: center;
+}
+
+@media(max-width:599px){
+    .HideOnMobile {
+        display:none;
+    }
+
+    .Grid {
+        display: flex;
+        flex-direction:column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: min-content 1fr min-content min-content;
+        grid-column-gap: 10px;
+        padding:5px 0;
+    }
+
+    .Item:not(:last-child){
+        border-bottom:1px solid gray;
+    }
+
+}
+
+@media(min-width:600px){
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content 1fr min-content min-content;
+        grid-column-gap: 10px;
+    }
+
+    .Item, .ColHeaders {
+        display: contents;
+    }
+
+    .ColHeaders div {
+        padding-bottom: 10px;
+    }
+
+    .Item div {
+        padding:5px 0;
+    }
+
+}

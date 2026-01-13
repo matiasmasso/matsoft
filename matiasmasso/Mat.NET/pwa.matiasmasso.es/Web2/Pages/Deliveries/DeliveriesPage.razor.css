@@ -1,0 +1,44 @@
+﻿.Years {
+    display:flex;
+    flex-wrap:wrap;
+    column-gap: 10px;
+}
+
+.Years a {
+    display:inline-block;
+}
+
+.SelectedYear {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.SelectedYear a {
+    display: inline-flex;
+    gap: 10px;
+    padding: 4px 7px 2px 4px;
+    border-radius: 5px;
+    border: 1px solid gray;
+    background-color: aliceblue;
+    margin: 0 10px 10px 0;
+}
+
+
+
+.Item {
+    display: grid;
+    grid-template-columns: min-content min-content 1fr min-content;
+    grid-column-gap: 10px;
+}
+
+.Num {
+    white-space:nowrap;
+    display:flex;
+    justify-content:flex-end;
+}
+
+.Nom {
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}

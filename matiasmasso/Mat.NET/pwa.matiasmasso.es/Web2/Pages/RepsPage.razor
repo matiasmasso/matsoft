@@ -1,0 +1,177 @@
+﻿@page "/reps"
+@page "/{LangSegment}/reps"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject RepsService repsService
+
+<div class="PageWrapper600">
+
+    @if (model == null)
+    {
+        <h1>@culture.Localize("Reps")</h1>
+        <Loading></Loading>
+    }
+    else if (breadcrumbs.Count > 0)
+    {
+        <ModelEditor Breadcrumbs="breadcrumbs" BreadcrumbsChanged="BreadcrumbsChanged"></ModelEditor>
+    }
+    else
+    {
+        <h1>@culture.Localize("Reps")</h1>
+        <PageOptions>
+            <ChildContent>
+                <ToggleObsolets @bind-Value="IsShowingObsolets"></ToggleObsolets>
+            </ChildContent>
+        </PageOptions>
+
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} representants, {1} en actiu",model.Count(), model.Where(x => x.FchTo == null).Count())
+        </div>
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders HideOnMobile">
+                <a class="Abr" href="#"
+               @onclick="@(()=>SortColumn(Cols.Nom))"
+               @onclick:preventDefault="true">
+                    @culture.Localize("Name")
+                </a>
+                <a class="Description" href="#"
+               @onclick="@(()=>SortColumn(Cols.Dsc))"
+               @onclick:preventDefault="true">
+                    @culture.Localize("Description")
+                </a>
+                <a class="FchFrom" href="#"
+               @onclick="@(()=>SortColumn(Cols.FchFrom))"
+               @onclick:preventDefault="true">
+                    @culture.Localize("Alta")
+                </a>
+            </div>
+
+            <div class="GridRowDivider"></div>
+
+            @foreach (var item in FilteredItems())
+            {
+                <div class='Item
+                    @(item.FchTo == null ? "" : "Obsoleto" )
+                    '
+             href="#" @onclick="@(()=>ItemClick(item))"
+             @onclick:preventDefault="true">
+
+                    <div class="Abr Truncate">@item.Abr</div>
+                    <div class="Description Truncate">@item.Description</div>
+                    <div class="FchFrom">
+                        @(string.Format("{0:dd/MM/yy}", item.FchFrom))
+                    </div>
+
+                    <div class="GridRowDivider">
+
+@*                        @if (item == selectedItem)
+                        {
+                            <div class="ContextMenu">
+                                <Nav nav="@selectedItem.ContextMenu()"></Nav>
+                            </div>
+                        }
+*@                    </div>
+                </div>
+            }
+
+
+        </div>
+    }
+
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private List<RepModel>? model;
+    List<ModelEditor.Breadcrumb> breadcrumbs = new();
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+    private Cols? sortedColumn = Cols.Nom;
+    private bool isDescendingOrder = false;
+    private Exception? exception;
+
+    private enum Cols
+    {
+        Nom,
+        Dsc,
+        FchFrom
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        culture.OnChange += Refresca;
+        repsService.OnChange += Refresca;
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = repsService.Values;
+            StateHasChanged();
+        };
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        model = repsService.Values;
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<RepModel> FilteredItems()
+    {
+        var retval = model!.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.FchTo == null).ToList();
+        return retval;
+    }
+
+    private void ItemClick(RepModel value)
+    {
+        breadcrumbs.Add(new ModelEditor.Breadcrumb(value, value.ToString()));
+    }
+
+
+    private void BreadcrumbsChanged(List<ModelEditor.Breadcrumb> values)
+    {
+        breadcrumbs = values;
+        StateHasChanged();
+    }
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            case Cols.Nom:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Abr).ToList() : model!.OrderBy(x => x.Abr).ToList();
+                break;
+            case Cols.Dsc:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Description).ToList() : model!.OrderBy(x => x.Description).ToList();
+                break;
+            case Cols.FchFrom:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.FchFrom).ToList() : model!.OrderBy(x => x.FchFrom).ToList();
+                break;
+        }
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        repsService.OnChange -= Refresca;
+    }
+}

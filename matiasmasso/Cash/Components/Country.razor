@@ -1,0 +1,202 @@
+﻿@inject ApiService ApiService
+
+
+<div class="PageWrapper600">
+
+
+    <Title Value="Country" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (Value == null)
+    {
+    }
+    else if (selectedTab == Tabs.Detalls)
+    {
+        <Tabs Value="(int?)selectedTab" ValueChanged="HandleTabChanged" Captions="Detalls, Zonas"></Tabs>
+
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="UpdateRequestHandler"
+                      CancelRequest="CloseRequestHandler"
+                      DeleteRequest="DeleteRequestHandler"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+
+    }
+    else if (selectedTab == Tabs.Children)
+    {
+        <Tabs Value="(int?)selectedTab" ValueChanged="HandleTabChanged" Captions="Detalls, Zonas"></Tabs>
+
+        @foreach (var child in children ?? new List<ZonaModel>())
+        {
+            <ListItem Title="@child.Nom"
+                      Tooltip="@child.Nom"
+                      OnClick="@(()=>ChildClick(child))"
+                      ContextMenu="@ContextMenu(child)"
+                      MenuClick="ContextMenuClick"></ListItem>
+        }
+    }
+
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+
+@code {
+    [Parameter] public CountryModel? Value { get; set; }
+    [Parameter] public EventCallback<CountryModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<CountryModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback<ZonaModel> ChildSelected { get; set; }
+    [Parameter] public EventCallback<ZonaModel> ChildZoomRequest { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    CountryModel? value;
+
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Tabs selectedTab = Tabs.Detalls;
+    List<ZonaModel>? children;
+    Exception? exception;
+
+    enum Tabs
+    {
+        Detalls,
+        Children
+    }
+
+    enum Fields
+    {
+        Iso,
+        Esp,
+        Cat,
+        Eng,
+        Por
+    }
+
+    enum MenuKeys
+    {
+        Select,
+        Zoom,
+        Add
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Value;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+        children = ApiService.GetZonas()?.Where(x => x.Country == value!.Guid).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddString("Iso", value?.ISO);
+        retval.AddString("Esp", value?.Nom?.Esp);
+        retval.AddString("Cat", value?.Nom?.Cat);
+        retval.AddString("Eng", value?.Nom?.Eng);
+        retval.AddString("Por", value?.Nom?.Por);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            var esp = propertyGrid!.GetString((int)Fields.Esp);
+            var cat = propertyGrid!.GetString((int)Fields.Cat);
+            var eng = propertyGrid!.GetString((int)Fields.Eng);
+            var por = propertyGrid!.GetString((int)Fields.Por);
+            value!.Nom = new LangTextModel(esp, cat, eng, por);
+            value!.ISO = propertyGrid!.GetString((int)Fields.Iso);
+            await ApiService.PostAsync<CountryModel, bool>(value, "Country");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Country/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void HandleTabChanged(int args)
+    {
+        selectedTab = (Tabs)args;
+    }
+
+    void ChildClick(ZonaModel args)
+    {
+        ChildSelected.InvokeAsync(args);
+    }
+
+    ContextMenuModel ContextMenu(ZonaModel args)
+    {
+        var retval = new ContextMenuModel();
+        retval.AddItem("Select", (int)MenuKeys.Select, args);
+        retval.AddItem("Zoom", (int)MenuKeys.Zoom, args);
+        retval.AddItem("Afegir", (int)MenuKeys.Add, args);
+        return retval;
+    }
+
+    void ContextMenuClick(ContextMenuModel.ClickEventArgs args)
+    {
+        var zona = (IModel?)args.Tag;
+        switch ((MenuKeys?)args.Key)
+        {
+            case MenuKeys.Select:
+                ChildSelected.InvokeAsync((ZonaModel?)zona);
+                break;
+            case MenuKeys.Zoom:
+                ChildZoomRequest.InvokeAsync((ZonaModel?)zona);
+                break;
+            case MenuKeys.Add:
+                var tmp = new ZonaModel();
+                tmp.Nom = $"(nova zona de {value!.ToString()})";
+                tmp.Country = value.Guid;
+                ChildZoomRequest.InvokeAsync((ZonaModel?)tmp);
+                break;
+        }
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+}

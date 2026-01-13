@@ -1,0 +1,25 @@
+﻿.Ico{
+    grid-area:ico;
+}
+
+.Nom {
+    grid-area:nom;
+}
+
+.Digits {
+    grid-area:digits;
+}
+
+@media(max-width:599px){
+    .Header {
+        display: grid;
+        grid-template-columns: 50px 1fr;
+        grid-template-areas: "ico nom" "ico digits";
+        padding: 10px 0;
+    }
+
+    .Ico ::deep .Svg {
+        width: 40px;
+        min-width: 40px;
+    }
+}

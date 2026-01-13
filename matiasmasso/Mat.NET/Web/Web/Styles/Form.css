@@ -1,0 +1,69 @@
+﻿
+    .row {
+        margin-bottom: 15px;
+    }
+
+    .label {
+        vertical-align: top;
+        display: inline-block;
+        width: 150px;
+    }
+
+
+    .control {
+        margin-left: 20px;
+        display: inline-block;
+        width:300px;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+
+    #submit {
+        margin-bottom: 20px;
+    }
+
+    input[type=text], input[type=number], input[type=email], input[type=password], select {
+        padding: 5px;
+        border: 2px solid #ccc;
+        /*
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+            */
+    }
+
+        input[type=text]:focus {
+            border-color: #333;
+        }
+
+        .WidthFull {
+            width:100%;
+        }
+
+        .WidthMed {
+            width:50%;
+        }
+
+        .WidthShort {
+            width:6em;
+        }
+
+    input[type=submit], input[type=button] {
+        padding: 5px 15px;
+        background: #ccc;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        -webkit-border-radius: 5px;
+        border-radius: 5px;
+    }
+
+    input[type=submit]:hover, input[type=button]:hover {
+        background: #ddd;
+        border: 1px solid black;
+    }
+
+    @media (max-width:350px) {
+
+    }

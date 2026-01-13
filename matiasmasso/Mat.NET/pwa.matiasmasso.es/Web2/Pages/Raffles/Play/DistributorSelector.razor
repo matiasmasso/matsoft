@@ -1,0 +1,148 @@
+﻿@implements IDisposable
+
+@inject CultureService culture
+@inject RafflesService rafflesService
+
+<p>
+    @culture.Tradueix("El premio se recoge en el distribuidor que cada participante selecciona, donde se hará una foto de la entrega para su publicación en nuestros medios",
+    "El premi es recull al distribuidor que cada participant selecciona, on es fará una fotografía de la entrega per publicar als nostres mitjans",
+    "The participant will pick up the prize prize at the distributor store, where a picture of the delivery will be taken to be published on our media",
+    "O prémio recolhe-se no distribuidor que cada participante seleciona, onde se fará uma fotografia da entrega para a sua publicação nas nossas redes sociais.")
+</p>
+
+<div class="StoreLocator">
+    @if (selectedDistributor == null)
+    {
+        <div>
+            <select @onchange="AreaChanged">
+                <option value="">(@culture.Localize("Select.Zona"))</option>
+                @foreach (var area in areas ?? new())
+                {
+                    <option value="@area.Guid.ToString()">@area.Nom</option>
+                }
+            </select>
+        </div>
+
+        @if(locations?.Count > 1)
+        {
+            <div>
+                <select hidden="@(locations == null)" @onchange="LocationChanged">
+                    <option value="">@culture.Localize("Select.Location"))</option>
+                    @foreach (var location in locations ?? new())
+                    {
+                        <option value="@location.Guid.ToString()">@location.Nom</option>
+                    }
+                </select>
+            </div>
+        }
+
+        <div>
+            @if (distributors?.Count > 0)
+            {
+                <div>@culture.Localize("Select.Distributor"):</div>
+                @foreach (var distributor in distributors ?? new())
+                {
+                    <a href="#" class="Distributor" @onclick="@(()=>DistributorChanged(distributor))" @onclick:preventDefault>
+                        <div>@distributor.NomComercialOrRaoSocial()</div>
+                        <div>@rafflesService.DistributorAddress(distributor)</div>
+                        <div>@rafflesService.DistributorZipyCit(distributor)</div>
+                    </a>
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <a href="#" class="Distributor" @onclick="DistributorChangeRequest" @onclick:preventDefault>
+            <div>@selectedDistributor.NomComercialOrRaoSocial()</div>
+            <div>@rafflesService.DistributorAddress(selectedDistributor)</div>
+            <div>@rafflesService.DistributorZipyCit(selectedDistributor)</div>
+            <div class="ClickToChange"><Icon Id="Icon.Ids.Edit" Width="21px"></Icon> @culture.Localize("Edit")</div>
+        </a>
+    }
+</div>
+
+
+@code {
+    [CascadingParameter] private Steps? Parent { get; set; }
+    [Parameter] public RaffleModel.Participant? Participant { get; set; }
+
+    List<GuidNom>? areas;
+    List<GuidNom>? locations;
+    List<ContactModel>? distributors;
+    ContactModel? selectedDistributor;
+
+    protected override void OnInitialized()
+    {
+        rafflesService.OnChange += Refresca;
+        culture.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        areas = rafflesService.Areas(Participant?.Raffle);
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        areas = rafflesService.Areas(Participant?.Raffle);
+        InvokeAsync(StateHasChanged);
+    }
+
+    void AreaChanged(ChangeEventArgs args)
+    {
+        Guid? areaGuid = string.IsNullOrEmpty(args.Value?.ToString()) ? null : new Guid(args.Value.ToString()!);
+        if (areaGuid == null)
+        {
+            locations = null;
+            distributors = null;
+        }
+        else
+        {
+        locations = rafflesService.Locations(Participant?.Raffle, areaGuid);
+            if(locations.Count == 1)
+            {
+                distributors = rafflesService.Distributors(Participant?.Raffle, locations.First().Guid);
+                if (distributors?.Count == 1)
+                    DistributorChanged(distributors.First());
+            }
+        }
+    }
+
+    void LocationChanged(ChangeEventArgs args)
+    {
+        Guid? locationGuid = string.IsNullOrEmpty(args.Value?.ToString()) ? null : new Guid(args.Value.ToString()!);
+        if (locationGuid == null)
+            distributors = null;
+        else
+        {
+            distributors = rafflesService.Distributors(Participant?.Raffle, locationGuid);
+            if (distributors?.Count == 1)
+                DistributorChanged(distributors.First());
+        }
+    }
+
+    void DistributorChangeRequest()
+    {
+        selectedDistributor = null;
+        Participant!.Distributor = null;
+        distributors = null;
+        locations = null;
+    }
+
+    void DistributorChanged(ContactModel distributor)
+    {
+        selectedDistributor = distributor;
+        Participant!.Distributor = new RaffleModel.Distributor(selectedDistributor.Guid);
+        Parent!.ActiveStep!.Completed = true;
+        Parent?.NextStep();
+    }
+
+
+    public void Dispose()
+    {
+        rafflesService.OnChange -= Refresca;
+        culture.OnChange -= Refresca;
+    }
+
+}

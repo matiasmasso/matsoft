@@ -1,0 +1,46 @@
+﻿@inject CultureService culture
+@inject ProductsService products
+
+<div class="Grid">
+    @foreach (var item in Model)
+    {
+
+        <NavLink href="@products.LandingPage(item, culture)"
+                 title="@item.Nom?.Tradueix(culture.Lang())">
+
+            <div class="Item">
+                <div class="Label">
+                    @item.Nom?.Tradueix(culture.Lang())
+                </div>
+
+                <div class="Thumbnail">
+                    <img src="@item.ThumbnailUrl()"
+                         width="@ProductDeptModel.THUMBNAIL_WIDTH"
+                         height="@ProductDeptModel.THUMBNAIL_HEIGHT" />
+                </div>
+            </div>
+
+        </NavLink>
+    }
+    <div class="clearfix"></div>
+</div>
+
+
+@code {
+    [Parameter] public List<ProductDeptModel> Model { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        products.OnChange += Refresca;
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Dispose()
+    {
+        products.OnChange -= Refresca;
+    }
+}

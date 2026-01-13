@@ -1,0 +1,56 @@
+﻿.Wrapper {
+    position: relative;
+}
+
+.Display {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 0 0 10px;
+}
+
+    .Display .Caption {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .Display .Ellipsis {
+        display: none;
+        height: 24px;
+    }
+
+        .Display .Ellipsis img {
+            height: 100%;
+            width: auto;
+        }
+
+    .Display:hover .Ellipsis {
+        display: block;
+    }
+
+input[type=text] {
+    width: 100%;
+}
+
+.Item {
+    display: block;
+    padding: 4px 7px 2px 4px;
+    border-bottom: 1px solid gray;
+}
+
+.Dropdown {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    z-index: 3;
+    background-color: aliceblue;
+}
+
+.ContextMenu {
+    position: absolute;
+    top: 24px;
+    left: 10px;
+    z-index: 4;
+    background-color: antiquewhite;
+}

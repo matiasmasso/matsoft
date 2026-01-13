@@ -1,0 +1,41 @@
+﻿@page "/Login"
+@page "/{LangSegment}/Login"
+@layout ProLayout
+@inject SessionStateService session
+@inject NavigationManager navigationManager
+
+<AuthorizeView>
+    <Authorized>
+
+        Welcome @session.User?.EmailAddress
+
+    </Authorized>
+    <NotAuthorized>
+
+        <Login></Login>
+
+    </NotAuthorized>
+    <Authorizing>
+        <Loading></Loading>
+    </Authorizing>
+</AuthorizeView>
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+
+    protected override void OnInitialized()
+    {
+        session.UserChange += UserChangeHandler;
+    }
+
+    void UserChangeHandler(UserModel? user)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        session.UserChange -= UserChangeHandler;
+    }
+}

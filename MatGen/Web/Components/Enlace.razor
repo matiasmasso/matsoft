@@ -1,0 +1,469 @@
+﻿@implements IDisposable
+
+@inject ApiService ApiService
+
+@if (selectedItem != null)
+{
+    <ModelEditor Model="selectedItem"
+                 AfterUpdate="SelectItemUpdated"
+                 CancelRequest="@(()=>selectedItem =null)"></ModelEditor>
+}
+else
+{
+    <div class="PageWrapper900">
+
+        <h1>Enllaç</h1>
+
+        <PageOptions>
+
+            <div class="ContextMenuContainer">
+                @if (isBuildingDoc)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <a href="#"
+                       disabled="@(value?.Marit == null | value?.Muller == null)"
+                       @onclick="@(()=>isShowingDocBuilderContextMenu=!isShowingDocBuilderContextMenu)" @onclick:preventDefault>
+                        Genera Documents
+                    </a>
+                }
+                <div class="ContextMenu @(isShowingDocBuilderContextMenu ? "Active":"")">
+                    <a href="#" @onclick="BuildActaParroquialAsync" @onclick:preventDefault>
+                        Acta parroquial
+                    </a>
+                    <a href="#" @onclick="BuildCapitolsAsync" @onclick:preventDefault>
+                        Capitols
+                    </a>
+                </div>
+            </div>
+        </PageOptions>
+
+        <TabControl @bind-SelectedTab="selectedTab">
+            <TabPage Text="General">
+                @if (state == DbState.IsLoading)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <PropertyGrid Model="@gridModel"
+                                  RequestToAddNew="AddNewRequest"
+                                  ItemSelected="SelectPgItem"
+                                  SetDirty="@(()=>state = DbState.IsDirty)"
+                                  CanEdit="true"></PropertyGrid>
+
+                    <div class="ButtonsBar">
+                        <ButtonsBar CanEdit="true"
+                                    State="state"
+                                    CanDelete="true"
+                                    RequestToCancel="CancelRequestHandler"
+                                    RequestToDelete="DeleteRequestHandler"
+                                    RequestToUpdate="UpdateRequestHandler"></ButtonsBar>
+                    </div>
+                }
+            </TabPage>
+
+            <TabPage Text="Fills">
+                <Persons Model="children"
+                         ItemSelected="PersonSelectedHandler"
+                         AddNewRequest="AddNewChildHandler"></Persons>
+            </TabPage>
+
+            <TabPage Text="Documents">
+                <EnlaceDocs Value="value"
+                            ItemSelected="DocSelectedHandler"></EnlaceDocs>
+            </TabPage>
+
+            <TabPage Text="Kinship">
+                <Kinship Value="kinshipValue"
+                         ItemSelected="ItemSelectedHandler"></Kinship>
+            </TabPage>
+
+        </TabControl>
+
+
+
+        <Error @bind-Exception="exception"></Error>
+    </div>
+}
+
+@code {
+    [Parameter] public EnlaceModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    [Parameter] public EventCallback<object> ItemSelected { get; set; }
+
+    private EnlaceModel? value;
+    private Tuple<PersonModel?, PersonModel?>? kinshipValue;
+    private PropertyGridModel? gridModel;
+    private List<PersonModel>? children;
+    //private PersonModel? selectedPerson;
+    private Object? selectedItem;
+    private DbState state;
+    private int selectedTab;
+    private Fields? editingField;
+    bool isBuildingDoc;
+    bool isShowingDocBuilderContextMenu;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Marit,
+        Muller,
+        NupciesMarit,
+        NupciesMuller,
+        FchLocation
+    }
+
+    private enum Tabs
+    {
+        None,
+        General,
+        Children
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        selectedTab = (int)Tabs.General;
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+        kinshipValue = new Tuple<PersonModel?, PersonModel?>(ApiService.Person(Model?.Marit), ApiService.Person(Model?.Muller));
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddDropdown((int)Fields.Marit, ApiService.Males(), ApiService.Person(value?.Marit), "Marit");
+        gridModel.AddDropdown((int)Fields.Muller, ApiService.Females(), ApiService.Person(value?.Muller), "Muller");
+        gridModel.AddInt((int)Fields.NupciesMarit, value?.NupciesMarit, "Nupcies marit");
+        gridModel.AddInt((int)Fields.NupciesMuller, value?.NupciesMuller, "Nupcies muller");
+        gridModel.AddFchLocation((int)Fields.FchLocation, ApiService.Locations(), value?.FchLocation, "Data i lloc");
+
+
+        children = ApiService.Children(Model);
+        StateHasChanged();
+    }
+
+    private void AddNewRequest(PropertyGridModel.Item item)
+    {
+        editingField = (Fields)item.Field;
+        switch (editingField)
+        {
+            case Fields.Marit:
+            case Fields.Muller:
+                selectedItem = new PersonModel();
+                //ItemSelected.InvokeAsync(selectedItem);
+                break;
+        }
+    }
+
+    // private void PersonSelectedHandler(IModel args)
+    // {
+    //     if (ItemSelected.HasDelegate)
+    //         ItemSelected.InvokeAsync(args);
+    //     else
+    //         selectedPerson = (PersonModel)args;
+    // }
+
+    private void PersonSelectedHandler(IModel args)
+    {
+        //ItemSelected.InvokeAsync(args);
+        selectedItem = args;
+    }
+
+    private void DocSelectedHandler(IModel args)
+    {
+        selectedItem = args;
+    }
+
+    private void AddNewChildHandler()
+    {
+        selectedItem = ApiService.NewChild(Model);
+        // var marit = ApiService.Person(Model!.Marit);
+        // var muller = ApiService.Person(Model!.Muller);
+        // var cognomMarit = ApiService.Cognom(marit?.Cognom);
+        // var cognomMuller = ApiService.Cognom(muller?.Cognom);
+        // selectedItem = new PersonModel
+        //     {
+        //         Nom = cognomMarit?.Nom?.ToUpper() + (cognomMuller == null ? "" : " " + cognomMuller.Nom.ToUpper()),
+        //         Pare = Model!.Marit,
+        //         Mare = Model!.Muller,
+        //         Cognom = marit?.Cognom,
+        //         FchCreated = DateTime.Now
+        //     };
+        //ItemSelected.InvokeAsync(selectedItem);
+    }
+
+    private void ReadFromForm()
+    {
+        value!.Marit = gridModel!.GetModelGuid((int)Fields.Marit);
+        value!.Muller = gridModel!.GetModelGuid((int)Fields.Muller);
+        value!.NupciesMarit = gridModel!.GetInt((int)Fields.NupciesMarit);
+        value!.NupciesMuller = gridModel!.GetInt((int)Fields.NupciesMuller);
+        value!.FchLocation = gridModel.GetFchLocation((int)Fields.FchLocation);
+    }
+
+    private async Task UpdateRequestHandler()
+    {
+        state = DbState.IsUpdating;
+        try
+        {
+            ReadFromForm();
+            await ApiService.UpdateAsync(value);
+            await AfterUpdate.InvokeAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private async Task DeleteRequestHandler()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+
+    async Task ItemSelectedHandler(object item)
+    {
+        await ItemSelected.InvokeAsync(item);
+    }
+
+    void SelectItemUpdated(object args)
+    {
+        if (editingField != null)
+        {
+            var item = gridModel!.Items.First(x => x.Field == (int)editingField!);
+            switch (editingField)
+            {
+                case Fields.Marit:
+                    value!.Marit = ((PersonModel)args).Guid;
+                    break;
+                case Fields.Muller:
+                    value!.Muller = ((PersonModel)args).Guid;
+                    break;
+            }
+            state = DbState.IsDirty;
+        }
+        selectedItem = null;
+        editingField = null;
+        Refresca();
+    }
+
+    private void SelectPgItem(PropertyGridModel.Item args)
+    {
+        //ItemSelected.InvokeAsync(args.Value);
+        selectedItem = args.Value;
+    }
+
+    private async Task BuildCapitolsAsync()
+    {
+        isBuildingDoc = true;
+        await Task.Yield();
+        ReadFromForm();
+        var doc = new DocModel();
+        var maritNom = ApiService.NormalizedPersonNom((Guid)value!.Marit!);
+        var mullerNom = ApiService.NormalizedPersonNom((Guid)value!.Muller!);
+        doc.Tit = $"Capitols {maritNom} i {mullerNom}";
+        doc.Cod = DocCodModel.Wellknown(DocCodModel.Wellknowns.CapitolsMatrimonials)!.Guid;
+        doc.Fch = value!.FchLocation?.Year;
+        await ApiService.UpdateAsync(doc);
+
+        DocTargetModel target;
+        target = new DocTargetModel
+            {
+                Doc = doc.Guid,
+                Target = (Guid)value!.Marit!,
+                TargetCod = DocTargetModel.TargetCods.Person,
+                Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.Nuvi)!.Guid,
+                SubjectePassiu = true
+            };
+        await ApiService.UpdateAsync(target);
+
+        target = new DocTargetModel
+            {
+                Doc = doc.Guid,
+                Target = (Guid)value!.Muller!,
+                TargetCod = DocTargetModel.TargetCods.Person,
+                Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.Nuvia)!.Guid,
+                SubjectePassiu = true
+            };
+        await ApiService.UpdateAsync(target);
+
+        var marit = ApiService.Person(value.Marit);
+        if (marit?.Pare != null)
+        {
+            target = new DocTargetModel
+                {
+                    Doc = doc.Guid,
+                    Target = marit?.Pare,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.PareDelNuvi)!.Guid,
+                    Difunt = ApiService.Person(marit?.Pare)?.IsDifuntAt(value?.FchLocation?.Fch?.Fch1) ?? false
+                };
+            await ApiService.UpdateAsync(target);
+        }
+        if (marit?.Mare != null)
+        {
+            target = new DocTargetModel
+                {
+                    Doc = doc.Guid,
+                    Target = marit?.Mare,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.MareDelNuvi)!.Guid,
+                Difunt = ApiService.Person(marit?.Mare)?.IsDifuntAt(value?.FchLocation?.Fch?.Fch1) ?? false
+                };
+            await ApiService.UpdateAsync(target);
+        }
+
+        var muller = ApiService.Person(value?.Muller);
+        if (muller?.Pare != null)
+        {
+            target = new DocTargetModel
+                {
+                    Doc = doc.Guid,
+                    Target = muller?.Pare,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.PareDeLaNuvia)!.Guid,
+                Difunt = ApiService.Person(muller?.Pare)?.IsDifuntAt(value?.FchLocation?.Fch?.Fch1) ?? false
+                };
+            await ApiService.UpdateAsync(target);
+        }
+        if (muller?.Mare != null)
+        {
+            target = new DocTargetModel
+                {
+                    Doc = doc.Guid,
+                    Target = muller?.Mare,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.MareDeLaNuvia)!.Guid,
+                Difunt = ApiService.Person(muller?.Mare)?.IsDifuntAt(value?.FchLocation?.Fch?.Fch1) ?? false
+                };
+            await ApiService.UpdateAsync(target);
+        }
+
+        isBuildingDoc = false;
+        isShowingDocBuilderContextMenu = false;
+    }
+
+    private async Task BuildActaParroquialAsync()
+    {
+        isBuildingDoc = true;
+        await Task.Yield();
+        ReadFromForm();
+        var doc = new DocModel();
+        var maritNom = ApiService.NormalizedPersonNom((Guid)value!.Marit!);
+        var mullerNom = ApiService.NormalizedPersonNom((Guid)value!.Muller!);
+        doc.Tit = $"Matrimoni {maritNom} i {mullerNom}";
+        doc.Cod = DocCodModel.Wellknown(DocCodModel.Wellknowns.RegistreParroquialMatrimoni)!.Guid;
+        doc.Fch = value!.FchLocation?.Fch?.Fch1;
+        await ApiService.UpdateAsync(doc);
+
+        DocTargetModel target;
+        target = new DocTargetModel
+            {
+                Doc = doc.Guid,
+                Target = (Guid)value!.Marit!,
+                TargetCod = DocTargetModel.TargetCods.Person,
+                Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.Nuvi)!.Guid,
+                SubjectePassiu = true
+            };
+        await ApiService.UpdateAsync(target);
+
+        target = new DocTargetModel
+            {
+                Doc = doc.Guid,
+                Target = (Guid)value!.Muller!,
+                TargetCod = DocTargetModel.TargetCods.Person,
+                Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.Nuvia)!.Guid,
+                SubjectePassiu = true
+            };
+        await ApiService.UpdateAsync(target);
+
+        var marit = ApiService.Person(value.Marit);
+        if (marit?.Pare != null)
+        {
+            target = new DocTargetModel
+                {
+                    Doc = doc.Guid,
+                    Target = marit?.Pare,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.PareDelNuvi)!.Guid,
+                Difunt = ApiService.Person(marit?.Pare)?.IsDifuntAt(value?.FchLocation?.Fch?.Fch1) ?? false
+                };
+            await ApiService.UpdateAsync(target);
+        }
+        if (marit?.Mare != null)
+        {
+            target = new DocTargetModel
+                {
+                    Doc = doc.Guid,
+                    Target = marit?.Mare,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.MareDelNuvi)!.Guid,
+                Difunt = ApiService.Person(marit?.Mare)?.IsDifuntAt(value?.FchLocation?.Fch?.Fch1) ?? false
+                };
+            await ApiService.UpdateAsync(target);
+        }
+
+        var muller = ApiService.Person(value?.Muller);
+        if (muller?.Pare != null)
+        {
+            target = new DocTargetModel
+                {
+                    Doc = doc.Guid,
+                    Target = muller?.Pare,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.PareDeLaNuvia)!.Guid,
+                Difunt = ApiService.Person(muller?.Pare)?.IsDifuntAt(value?.FchLocation?.Fch?.Fch1) ?? false
+                };
+            await ApiService.UpdateAsync(target);
+        }
+        if (muller?.Mare != null)
+        {
+            target = new DocTargetModel
+                {
+                    Doc = doc.Guid,
+                    Target = muller?.Mare,
+                    TargetCod = DocTargetModel.TargetCods.Person,
+                    Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.MareDeLaNuvia)!.Guid,
+                Difunt = ApiService.Person(muller?.Mare)?.IsDifuntAt(value?.FchLocation?.Fch?.Fch1) ?? false
+                };
+            await ApiService.UpdateAsync(target);
+        }
+
+        isBuildingDoc = false;
+        isShowingDocBuilderContextMenu = false;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+
+    }
+
+}

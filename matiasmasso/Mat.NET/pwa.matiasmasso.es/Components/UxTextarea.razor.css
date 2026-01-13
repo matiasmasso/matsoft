@@ -1,0 +1,22 @@
+﻿.Display {
+    display: block;
+    width: 100%;
+    min-height: 200px;
+    border: 1px solid #DDDDDD;
+    padding: 5px;
+}
+
+    .Display:hover {
+        border: 1px solid black;
+    }
+
+
+textarea {
+    border: 1px solid gray;
+    width: 100%;
+    min-height: 200px;
+}
+
+    textarea:hover {
+        border: 1px solid black;
+    }

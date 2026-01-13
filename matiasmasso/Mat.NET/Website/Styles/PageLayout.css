@@ -1,0 +1,306 @@
+﻿* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    max-width: 1000px;
+    min-width: 320px;
+	margin:auto;
+    padding: 0;
+    font-family: arial;
+}
+a {
+    text-decoration: none;
+}
+a:hover {
+    color:red;
+}
+
+header {
+	/*height:120px;*/
+}
+.BodyGrid {
+	display: table;
+	width:100%;
+	min-height:400px;
+}
+.BodyRow {
+	display: table-row;
+	min-height:400px;
+}
+aside {
+	display: table-cell;
+	height: auto;
+	width:180px;
+    vertical-align:top;
+}
+main {
+	display: table-cell;
+	height: auto;
+	width:auto;
+    margin:auto;
+    min-width:1%;	
+	padding:0 10px 10px;
+    vertical-align:top;
+}
+footer {
+    margin: 10px 0 0 0;
+    padding: 4px 10px;
+            height:44px;
+        font-size:1.2em;
+
+    background: #EAEAEA;
+}
+footer a {
+    color: #666666;
+    }
+
+.ShowOnNarrow {
+        display:none;
+    }
+
+/*-----------------------header-------------------------*/
+.MobNavBand {
+        display:none;
+    }
+
+    
+#nickname {
+    float:left;
+    padding:0px;
+    width:320px;
+}
+#topnavbar {
+    clear: both;
+    float: right;
+    padding: 0px;
+}
+
+#topnavbar:after {
+    clear: both;
+}
+
+/*--------------------------CookiesBanner---------------------------------------*/
+
+    .CookiesBannerHidden {
+        display:none;
+    }
+
+    .CookiesBanner {
+        display:table;
+        width:100%;
+        padding:5px;
+        margin-bottom:10px;
+        text-align:center;
+        background: #666666;
+        color: #cccccc;
+        font-size: 14px;
+        -webkit-transition: height 0.5s ease-in-out;
+        transition: height 0.5s ease-in-out;
+    }
+
+        .CookiesBanner span {
+            text-align:left;
+        }
+
+
+        .CookiesBanner span a {
+            color: #7792fb;
+        }
+
+       .CookiesBanner a:hover {
+            color: #FFFFFF;
+        }
+
+        .CookiesBanner div {
+            display: table-row;
+        }
+
+        .CookiesBanner span {
+            display: table-cell;
+        }
+
+    .CookiesBannerButton {
+        display: table-cell;
+        padding: 8px;
+        height: 30px;
+        margin-left:10px;
+        background-color: #AAAAAA;
+        border-radius: 4px;
+    }
+
+        .CookiesBannerButton a {
+            color: #FFFFFF;
+        }
+
+
+
+.LogoBand {
+    clear: both;
+    background: #EAEAEA;
+    height: 36px;
+    margin: 10px 0;
+}
+
+
+    .LogoBand .GBSearchRow {
+        padding:0;
+        margin:0;
+        border:none;
+    }
+    .MobNavBand .GBSearchRow {
+        padding:0;
+        margin:0;
+        border:none;
+    }
+    .MobNavBand .GBSearchMenu {
+        padding:0;
+        margin:0;
+        width:44px;
+        height:44px;
+        text-align:center;
+        vertical-align:middle;
+        border:none;
+    }
+    .LogoBand .GBSearchMenu{
+        padding:0;
+        margin:0;
+        min-width:320px;
+        height:36px;
+        text-align:left;
+        vertical-align:middle;
+        border:none;
+        background-image:url(/Media/Img/Logos/MMO-Logo-band-320x36.png);
+        background-repeat: no-repeat;
+    }
+    .LogoBand .GBSearchMenu a {
+        display:inline-block;
+        width:310px;
+        height:32px;
+    }
+    .GBSearchMenu img{
+        padding:0;
+        margin:0;
+        border:none;
+    }
+
+    .LogoBand .GBSearchText {
+        padding:0;
+        margin:0;
+        border-top:2px solid #EAEAEA;
+        border-bottom:2px solid #EAEAEA;
+        border-left:2px solid #EAEAEA;
+        text-align:right;
+    }
+    .MobNavBand .GBSearchText {
+        padding:0;
+        margin:0;
+        border-top:1px solid #EAEAEA;
+        border-bottom:1px solid #EAEAEA;
+        border-left:1px solid #EAEAEA;
+    }
+    .LogoBand .GBSearchText input{
+        min-width:100px;
+        width:320px;
+        border:none;
+        height:32px;
+    }
+    .MobNavBand .GBSearchText input{
+        width:100%;
+        font-size:24px;
+        border:none;
+    }
+    .LogoBand .GBSearchButton {
+        margin:0;
+        padding:0 10px;
+        background-color:#FDE95E;
+        border-top:1px solid #EAEAEA;
+        border-bottom:1px solid #EAEAEA;
+        border-right:1px solid #EAEAEA;
+        vertical-align:middle;
+    }
+    .MobNavBand .GBSearchButton {
+        padding:0 10px;
+        margin:0;
+        background-color:#FDE95E;
+        border-top:2px solid #EAEAEA;
+        border-bottom:2px solid #EAEAEA;
+        border-right:2px solid #EAEAEA;
+        vertical-align:middle;
+    }
+    .GBSearchButton a:hover {
+        color:white;
+    }
+
+
+    /*---------------------- main ---------------------------*/
+
+    .pagewrapper {
+        min-width: 320px;
+        /*max-width: 550px;*/
+        margin: 0 auto 20px;
+        text-align: left;
+        min-height: 400px;
+        padding:0 10px 10px;
+    }
+
+    .widepagewrapper {
+        min-width: 320px;
+        max-width: 900px;
+        margin: 0 auto 20px;
+        text-align: left;
+        min-height: 400px;
+        padding:0 10px 10px;
+    }
+
+
+
+@media screen and (max-width:720px) {
+    .RightColumn {
+        display: none;
+    }
+}
+
+
+@media screen and (max-width:540px) {
+    main {
+        padding:0 2px;
+    }
+    .LeftColumn {
+        display: none;
+    }
+    #footer {
+        height:44px;
+        font-size:1em;
+        text-align:center;
+    }    
+    #nickname {
+        display: none;
+    }
+    #topnavbar {
+        display: none;
+    }
+    .LogoBand .GBSearchText {
+        display:none;
+    }
+    .LogoBand .GBSearchButton {
+        display:none;
+    }
+    .MobNavBand {
+        display:block;
+    }
+
+    .HideOnNarrow {
+        display:none;
+    }
+
+    .ShowOnNarrow {
+        display:block;
+    }
+
+}
+
+
+

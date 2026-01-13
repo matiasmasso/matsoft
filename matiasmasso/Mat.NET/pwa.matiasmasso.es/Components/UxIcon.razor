@@ -1,0 +1,44 @@
+﻿<div style="height:100%;">
+    <img src="@Src()" 
+        style="
+            @(Width == null?"":string.Format("width:{0};",Width))
+            @(Height == null?"":string.Format("height:{0}",Height))
+        "/>
+</div>
+
+@code {
+    [Parameter] public Ids Id { get; set; }
+    [Parameter] public string? Width { get; set; }
+    [Parameter] public string? Height { get; set; }
+
+    public enum Ids
+    {
+        EllipsisVertical,
+        Vb,
+        Aspa,
+        Doc
+    }
+
+    private string? Src()
+    {
+        string? retval = null;
+        switch (Id)
+        {
+            case Ids.EllipsisVertical:
+                retval = "/img/Ellipsis-vertical.svg";
+                break;
+            case Ids.Vb:
+                retval = "/img/circle-check-green.svg";
+                break;
+            case Ids.Aspa:
+                retval = "/img/cross.svg";
+                break;
+            case Ids.Doc:
+                retval = "/img/file.svg";
+                break;
+        }
+
+        return retval;
+    }
+
+}

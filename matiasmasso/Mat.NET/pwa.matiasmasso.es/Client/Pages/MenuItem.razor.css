@@ -1,0 +1,9 @@
+﻿.form-group.Ico {
+    position: relative;
+}
+
+.form-group.Ico i {
+    position: absolute;
+    right:15px;
+    top: 34px;
+}

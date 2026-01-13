@@ -1,0 +1,116 @@
+﻿body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+input, a {
+    box-sizing: border-box;
+}
+
+.PageWrapper600 {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+    width: 100%;
+}
+
+.PageWrapper900 {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 900px;
+    width: 100%;
+}
+
+.Truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Number {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+}
+
+.Button {
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    border-color: #198754;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    border: 1px solid gray;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    -webkit-appearance: button;
+}
+
+.ButtonOk {
+    color: #fff;
+    background-color: #198754;
+}
+
+.ButtonLemon {
+    background-color: lemonchiffon;
+}
+
+.Button:disabled {
+    color: gray !important;
+    background-color: #DDDDDD !important;
+}
+
+.Button:not(:disabled):hover {
+    color: #fff;
+    background-color: #5a95f5 !important;
+}
+
+
+.Num {
+    display:flex;
+    justify-content: flex-end;
+    white-space:nowrap;
+}
+
+@media(max-width:599px) {
+    .HideOnMobile {
+        display: none;
+    }
+
+    .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        padding: 10px 0;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid gray;
+        }
+}
+@media(min-width:600px) {
+    .HideOnDesktop {
+        display: none;
+    }
+
+    .Grid {
+        display: grid;
+        grid-row-gap: 5px;
+    }
+
+    .Item {
+        display:contents;
+    }
+}
+

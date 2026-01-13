@@ -1,0 +1,102 @@
+﻿@page "/Zonas_Page"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("Zonas")</h1>
+
+    <PageOptions IsShowingOptions>
+        <CountryLookup HideEllipsis
+                       Value="@country"
+                       ValueChanged="CountryChanged">
+        </CountryLookup>
+        <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+    </PageOptions>
+
+    @if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("Zonas.Found",model.Count(), CountryZonas().Count(), country.Nom.Tradueix(base.Lang()))
+        </div>
+
+        <Zonas_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></Zonas_List>
+
+    }
+    else
+    {
+        <Zona Model="selectedItem" RequestToCancel="@(()=>selectedItem = null)" OnUpdate="OnUpdate" OnDelete="OnDelete"></Zona>
+    }
+
+
+
+</div>
+
+@code {
+    List<ZonaModel> model;
+    CacheDTO cache;
+    string searchTerm;
+    CountryModel country;
+    ZonaModel selectedItem = null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        country = cache.Country(CountryModel.Wellknown(CountryModel.Wellknowns.Spain).Guid);
+        model = cache.Zonas;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Country, CacheDTO.Table.TableIds.Zona);
+        model = cache.Zonas;
+    }
+
+    List<ZonaModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+            return CountryZonas();
+        else
+            return CountryZonas().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<ZonaModel> CountryZonas() => model.Where(x => x.Country == country.Guid).ToList();
+
+    private void ItemClick(ZonaModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new ZonaModel() { 
+            Country = country.Guid,
+            Lang = country.Lang,
+            ExportCod = country.ExportCod
+        };
+    }
+
+    private void OnUpdate(ZonaModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.Nom).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(ZonaModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void CountryChanged(CountryModel args)
+    {
+        country = args;
+    }
+
+}

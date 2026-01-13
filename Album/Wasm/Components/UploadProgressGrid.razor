@@ -1,0 +1,144 @@
+﻿<div class="upload-grid">
+
+    @if (TotalItems > 0)
+    {
+        <div class="upload-summary card fade-in">
+
+            <div class="progress">
+                <div class="progress-bar animated" style="width:@SummaryPercent"></div>
+            </div>
+
+            <div class="summary-header">
+                <span>Uploading @ProcessedItems / @TotalItems</span>
+                <span>@SummaryPercent • @TotalSpeed</span>
+            </div>
+
+
+        </div>
+    }
+
+    @foreach (var item in ActiveUploads)
+    {
+        <div class="upload-item card fade-in">
+
+            <div class="item-header">
+                <div class="item-title">@item.DisplayName</div>
+
+                <div class="item-actions">
+                    @if (item.IsPaused)
+                    {
+                        <button class="icon-btn" @onclick="() => Resume(item.Id)">▶</button>
+                    }
+                    else
+                    {
+                        <button class="icon-btn" @onclick="() => Pause(item.Id)">⏸</button>
+                    }
+
+                    <button class="icon-btn danger" @onclick="() => Cancel(item.Id)">✕</button>
+                </div>
+            </div>
+
+            <div class="progress">
+                <div class="progress-bar animated" style="width:@($"{item.Percent}%")"></div>
+            </div>
+
+            <div class="item-footer">
+                <span>@item.Percent%</span>
+                <span>@item.SpeedFormatted</span>
+                <span>@item.EtaFormatted</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    public class UploadProgressItem
+    {
+        public int Id { get; set; }
+        public string DisplayName { get; set; } = "";
+        public int Percent { get; set; }
+
+        public long BytesUploaded { get; set; }
+        public long TotalBytes { get; set; }
+
+        public DateTimeOffset LastUpdate { get; set; } = DateTimeOffset.UtcNow;
+        public double SpeedBytesPerSec { get; set; }
+        public bool IsPaused { get; set; }
+
+        public string SpeedFormatted
+        {
+            get
+            {
+                if (SpeedBytesPerSec <= 0) return "";
+                if (SpeedBytesPerSec < 1024) return $"{SpeedBytesPerSec:F0} B/s";
+                if (SpeedBytesPerSec < 1024 * 1024) return $"{SpeedBytesPerSec / 1024:F1} KB/s";
+                return $"{SpeedBytesPerSec / 1024 / 1024:F1} MB/s";
+            }
+        }
+
+        public string EtaFormatted
+        {
+            get
+            {
+                if (SpeedBytesPerSec <= 0 || BytesUploaded == 0)
+                    return "";
+
+                var remaining = TotalBytes - BytesUploaded;
+                var seconds = remaining / SpeedBytesPerSec;
+
+                if (seconds < 1) return "1s";
+                if (seconds < 60) return $"{seconds:F0}s";
+                return $"{seconds / 60:F0}m";
+            }
+        }
+    }
+
+    [Parameter] public List<UploadProgressItem> Items { get; set; } = new();
+    [Parameter] public int TotalItems { get; set; }
+
+    [Parameter] public EventCallback<int> OnPause { get; set; }
+    [Parameter] public EventCallback<int> OnResume { get; set; }
+    [Parameter] public EventCallback<int> OnCancel { get; set; }
+
+    private int ProcessedItems =>
+        Items.Count(x => x.Percent >= 100);
+
+    private string SummaryPercent =>
+        TotalItems == 0
+            ? "0%"
+            : $"{(int)(ProcessedItems * 100.0 / TotalItems)}%";
+
+    private IEnumerable<UploadProgressItem> ActiveUploads =>
+        Items.Where(x => x.Percent < 100)
+             .OrderBy(x => x.Id);
+
+    private string TotalSpeed
+    {
+        get
+        {
+            var total = Items.Sum(x => x.SpeedBytesPerSec);
+            if (total <= 0) return "";
+            if (total < 1024) return $"{total:F0} B/s";
+            if (total < 1024 * 1024) return $"{total / 1024:F1} KB/s";
+            return $"{total / 1024 / 1024:F1} MB/s";
+        }
+    }
+
+    private async Task Pause(int id)
+    {
+        if (OnPause.HasDelegate)
+            await OnPause.InvokeAsync(id);
+    }
+
+    private async Task Resume(int id)
+    {
+        if (OnResume.HasDelegate)
+            await OnResume.InvokeAsync(id);
+    }
+
+    private async Task Cancel(int id)
+    {
+        if (OnCancel.HasDelegate)
+            await OnCancel.InvokeAsync(id);
+    }
+}

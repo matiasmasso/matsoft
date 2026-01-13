@@ -1,0 +1,22 @@
+﻿<div class="collapsable @(string.IsNullOrEmpty(Class) ? "" : Class)">
+    <a class="Caption" href="#" @onclick="@(()=>Collapsed = !Collapsed)" @onclick:preventDefault>
+        <Icon Id="@(Collapsed ? Icon.Ids.ChevronDown : Icon.Ids.ChevronUp)"></Icon>
+        <span>@Caption</span>
+    </a>
+
+
+    @if (!Collapsed)
+    {
+        <div>
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public bool Collapsed { get; set; }
+    [Parameter] public string? Caption { get; set; }
+
+}

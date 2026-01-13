@@ -1,0 +1,16 @@
+﻿.CopyToClipboard ::deep .Svg {
+    width: 100%;
+    min-width: 16px;
+}
+
+.Copying1 {
+    display:block;
+    transition: ease-in-out .5s;
+    transform: rotateY(180deg) rotateX(180deg);
+}
+
+.Copying2 {
+    display: block;
+    transition: ease-in-out .5s;
+    transform: rotateX(180deg) rotateY(180deg);
+}

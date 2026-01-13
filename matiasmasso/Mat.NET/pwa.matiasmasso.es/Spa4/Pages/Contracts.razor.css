@@ -1,0 +1,22 @@
+﻿.Wrapper {
+    max-width: 400px;
+}
+
+.Row {
+    display: block;
+    margin-top: 10px;
+    border-top: 1px solid gray;
+    padding-top: 10px;
+}
+
+
+.Codi {
+    display: block;
+    margin-top: 10px;
+    border-top: 1px solid gray;
+    padding-top: 10px;
+}
+
+.Obsoleto {
+    color: gray;
+}

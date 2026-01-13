@@ -1,0 +1,171 @@
+﻿@page "/Zips_Page"
+@inherits _ComponentBase
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("Zips")</h1>
+
+    <PageOptions IsShowingOptions>
+        <CountryLookup HideEllipsis
+                       Value="@country"
+                       ValueChanged="CountryChanged">
+        </CountryLookup>
+        @if (zona != null)
+        {
+            <ZonaLookup HideEllipsis
+                    Value="@zona"
+                    ValueChanged="ZonaChanged">
+            </ZonaLookup>
+            @if (location != null)
+            {
+                <LocationLookup HideEllipsis
+                        Value="@location"
+                        ValueChanged="LocationChanged">
+                </LocationLookup>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+            }
+        }
+    </PageOptions>
+
+    @if (zona == null & requestToAddNewZona)
+    {
+        var zona = new ZonaModel { Country = country.Guid };
+        <Zona Model="zona" RequestToCancel="@(()=>requestToAddNewZona = false)" OnUpdate="OnZonaAdded" ></Zona>
+
+    }
+    else if (zona == null)
+    {
+        <div>@Localizer("NoZonasAvailable",country.Nom.Tradueix(base.Lang())) </div>
+        <a href="#" @onclick="@(()=>requestToAddNewZona = true)" @onclick:preventDefault>@Localizer("AddNew")</a>
+    }
+    else if (location == null & requestToAddNewLocation)
+    {
+        var location = new LocationModel { Zona = zona.Guid };
+        <Location Model="location" RequestToCancel="@(()=>requestToAddNewLocation = false)" OnUpdate="OnLocationAdded" ></Location>
+
+    }
+    else if (location == null)
+    {
+        <div>@Localizer("NoLocationsAvailable",zona.Nom) </div>
+        <a href="#" @onclick="@(()=>requestToAddNewLocation = true)" @onclick:preventDefault>@Localizer("AddNew")</a>
+    }
+    else if (selectedItem == null)
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("Zips.Found",model.Count(), LocationZips().Count(), location.Nom)
+        </div>
+
+        <Zips_List Model="FilteredItems()" SelectedItemChanged="ItemClick"></Zips_List>
+    }
+    else
+    {
+        <Zip Model="selectedItem"
+         RequestToCancel="@(()=>selectedItem = null)"
+         OnUpdate="OnUpdate"
+         OnDelete="OnDelete"></Zip>
+    }
+
+
+
+</div>
+
+@code {
+    List<ZipModel> model;
+    CacheDTO cache;
+    string searchTerm;
+    CountryModel country;
+    LocationModel location;
+    ZonaModel zona;
+    ZipModel selectedItem = null;
+    bool requestToAddNewZona = false;
+    bool requestToAddNewLocation = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+        cache = base.DefaultCache();
+        country = cache.Country(CountryModel.Wellknown(CountryModel.Wellknowns.Spain).Guid);
+        zona = cache.Zonas.FirstOrDefault(x => x.Country == country.Guid);
+        location = cache.Locations.FirstOrDefault(x => x.Zona == zona.Guid);
+        model = cache.Zips;
+
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Country, CacheDTO.Table.TableIds.Zip);
+        model = cache.Zips;
+    }
+
+    List<ZipModel> FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchTerm))
+            return LocationZips();
+        else
+            return LocationZips().Where(x => x.Matches(searchTerm)).ToList();
+    }
+
+    List<ZipModel> LocationZips() => model.Where(x => x.Location == location.Guid).ToList();
+
+    private void ItemClick(ZipModel item)
+    {
+        selectedItem = item;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new ZipModel()
+            {
+                Location = location.Guid
+            };
+    }
+
+    private void OnUpdate(ZipModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item == null)
+            model.Add(args);
+        else
+            model[model.IndexOf(item)] = args;
+        model = model.OrderBy(x => x.ZipCod).ToList();
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void OnDelete(ZipModel args)
+    {
+        var item = model.FirstOrDefault(x => x.Guid == args.Guid);
+        model.Remove(item);
+        selectedItem = null;
+        StateHasChanged();
+    }
+
+    private void CountryChanged(CountryModel args)
+    {
+        country = args;
+        zona = cache.Zonas.FirstOrDefault(x => x.Country == country.Guid);
+        location = zona == null ? null : cache.Locations.FirstOrDefault(x => x.Zona == zona.Guid);
+    }
+    private void ZonaChanged(ZonaModel args)
+    {
+        zona = args;
+        location = cache.Locations.FirstOrDefault(x => x.Zona == zona.Guid);
+    }
+    private void LocationChanged(LocationModel args)
+    {
+        location = args;
+    }
+    private void OnZonaAdded(ZonaModel args)
+    {
+        zona = args;
+        cache.Zonas.Add(zona);
+        cache.Zonas = cache.Zonas.OrderBy(x => x.Nom).ToList();
+        requestToAddNewZona = false;
+    }
+
+    private void OnLocationAdded(LocationModel args)
+    {
+        location = args;
+        cache.Locations.Add(location);
+        cache.Locations = cache.Locations.OrderBy(x => x.Nom).ToList();
+        requestToAddNewLocation = false;
+    }
+
+}

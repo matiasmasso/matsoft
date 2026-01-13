@@ -1,0 +1,14 @@
+﻿
+.Banner img {
+    width: 100%;
+    height:auto;
+}
+
+.NextRaffle {
+    display: flex;
+    gap:10px;
+}
+
+.Ico {
+    font-size:100px;
+}

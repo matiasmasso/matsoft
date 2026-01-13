@@ -1,0 +1,137 @@
+﻿@page "/credencials"
+@page "/{LangSegment}/credencials"
+@implements IDisposable
+@layout ProLayout
+@inject CultureService culture
+@inject SessionStateService session
+@inject CredencialsService credencialsService
+
+<div class="PageWrapper600">
+
+
+    @if (model == null && exception == null)
+    {
+    <h1>@culture.Localize("Credentials")</h1>
+
+        <Loading></Loading>
+    } else if(selectedItem != null)
+    {
+        <Credencial Model="selectedItem" CloseRequest="@(()=>selectedItem=null)"></Credencial>
+    }
+    else
+    {
+        <h1>@culture.Localize("Credentials")</h1>
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                @culture.Localize("Credentials.AddNew")
+            </a>
+        </PageOptions>
+    </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} credencials", model?.Count())
+        </div>
+
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders HideOnMobile">
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.Ref))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("Ref")
+                </a>
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.User))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("UserName")
+                </a>
+            </div>
+
+            <div class="GridRowDivider"></div>
+
+            @foreach (var item in model?.Where(x => x.Matches(searchTerm)).ToList() ?? new())
+            {
+                <a href="#" class="Item"
+                @onclick="@(()=>selectedItem =item)"
+                @onclick:preventDefault="true">
+
+                    <div class="Ref">@item.Referencia</div>
+                    <div class="User">@item.Usuari</div>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private List<CredencialModel>? model;
+    private CredencialModel? selectedItem;
+    private string searchTerm = string.Empty;
+    private Cols? sortedColumn = Cols.Ref;
+    private bool isDescendingOrder = false;
+    private Exception? exception;
+
+    private enum Cols
+    {
+        Ref,
+        User
+    }
+
+    protected override void OnInitialized()
+    {
+        session.OnChange += Refresca;
+        credencialsService.OnChange += Refresca;
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        model = credencialsService.Values;
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<CredencialModel> FilteredItems() => model!.Where(x => x.Matches(searchTerm)).ToList();
+
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            case Cols.Ref:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Referencia ?? "").ToList() : model!.OrderBy(x => x.Referencia ?? "").ToList();
+                break;
+            case Cols.User:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Usuari ?? "").ToList() : model!.OrderBy(x => x.Usuari ?? "").ToList();
+                break;
+        }
+    }
+
+    public void AddNew()
+    {
+        selectedItem = CredencialModel.Factory(session.User!);
+    }
+
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        credencialsService.OnChange -= Refresca;
+    }
+
+}

@@ -1,0 +1,64 @@
+﻿@inherits _Base
+@inject StringsLocalizerService localizer
+@inject CultureService culture
+
+
+@if (selectedItem == null)
+{
+
+    <SearchBox @bind-Value="searchTerm"></SearchBox>
+
+    <div class="Grid">
+        <div>Key</div>
+        <div>@culture.Localize(LangDTO.Esp().StringKey())</div>
+        <div>@culture.Localize(LangDTO.Cat().StringKey())</div>
+        <div>@culture.Localize(LangDTO.Eng().StringKey())</div>
+        <div>@culture.Localize(LangDTO.Por().StringKey())</div>
+
+ 
+            @foreach (var item in FilteredItems())
+            {
+                <a href="#" class="Row" @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                    <div>@item.StringKey</div>
+                    <div>@item.GetValue(LangDTO.Ids.ESP)</div>
+                    <div>@item.GetValue(LangDTO.Ids.CAT)</div>
+                    <div>@item.GetValue(LangDTO.Ids.ENG)</div>
+                    <div>@item.GetValue(LangDTO.Ids.POR)</div>
+                </a>
+            }
+        
+    </div>
+}
+else
+{
+    <StringLocalizerEditor Model="selectedItem"
+             RequestToUpdate="UpdateRequest" 
+                      RequestToClose="@(()=>selectedItem=null)"></StringLocalizerEditor>
+}
+
+@code {
+    string? searchTerm;
+    StringLocalizerModel? selectedItem;
+    [Parameter] public List<StringLocalizerModel>? Items { get; set; }
+    [Parameter] public EventCallback<StringLocalizerModel> RequestToUpdate { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        var a = Items;
+        StateHasChanged();
+    }
+
+    List<StringLocalizerModel> FilteredItems()
+    {
+        return string.IsNullOrEmpty(searchTerm)
+        ? Items ?? new()
+        : Items?.Where(x => x.Matches(searchTerm)).ToList() ?? new();
+    }
+
+    async Task UpdateRequest(StringLocalizerModel value)
+    {
+        await localizer.UpdateAsync(value);
+        selectedItem = null;
+    }
+
+}

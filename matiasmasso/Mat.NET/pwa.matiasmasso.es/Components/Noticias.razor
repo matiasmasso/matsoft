@@ -1,0 +1,31 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@Localizer("News")</h1>
+
+        <div class="Gallery">
+            <NoticiasGallery ></NoticiasGallery>
+        </div>
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+@code {
+    List<NoticiaModel>? model;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        //await RequestCacheAsync(CacheDTO.Table.TableIds.Noticia);
+        model = Cache?.Noticias;
+    }
+
+
+}

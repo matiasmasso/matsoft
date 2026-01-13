@@ -1,0 +1,29 @@
+﻿<SearchBox @bind-Value="searchterm"></SearchBox>
+
+@foreach(var item in FilteredItems() ?? new())
+{
+   <a href="#" 
+   class="Item"
+   @onclick="@(()=>ItemClick(item))"
+   @onclick:preventDefault>
+@item.Nom
+</a>
+}
+@code {
+    [Parameter] public ImmobleModel? Model { get; set; }
+    [Parameter] public EventCallback<ImmobleModel.InventariItem> ItemSelected { get; set; }
+    string? searchterm;
+
+    List<ImmobleModel.InventariItem>? FilteredItems()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return Model?.Inventari;
+        else
+            return Model?.Inventari.Where(x => x.Matches(searchterm)).ToList();
+    }
+
+    async Task ItemClick(ImmobleModel.InventariItem item)
+    {
+        await ItemSelected.InvokeAsync(item);
+    }
+}

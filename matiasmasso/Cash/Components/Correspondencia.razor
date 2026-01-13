@@ -1,0 +1,190 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    <Title Value="@Title()" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (value == null || allContacts == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <PropertyGrid Model="propertyGrid"
+        ItemChanged="HandleItemChanged"
+        UpdateRequest="UpdateRequestHandler"
+        CancelRequest="CloseRequestHandler"
+        DeleteRequest="DeleteRequestHandler"
+        UpdateState="updateState"
+        DeleteState="deleteState">
+        </PropertyGrid>
+    }
+
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public CorrespondenciaModel? Value { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<CorrespondenciaModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<CorrespondenciaModel> AfterDelete { get; set; }
+
+    CorrespondenciaModel? value;
+    List<ContactModel>? allContacts;
+    Guid? contact;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Fch,
+        Subject,
+        Target,
+        Docfile
+    }
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            ApiService.OnChange += Refresca;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+            {
+                try
+                {
+
+                    value = await ApiService.GetAsync<CorrespondenciaModel>("Correspondencia", Value.Guid.ToString());
+                } catch(Exception ex)
+                {
+                    exception = new Exception(ex.Message);
+                }
+            }
+            allContacts = ApiService.GetContacts(value!.Emp);
+            //contact = value!.Targets.FirstOrDefault();
+            propertyGrid = PropertyGrid();
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null){
+        exception = ex;
+        //contact = value!.Targets.FirstOrDefault();
+        propertyGrid = PropertyGrid();
+        InvokeAsync(StateHasChanged);
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var contacts = allContacts?.Where(x => x.Emp == value?.Emp).ToList();
+        var targets = value?.Targets.Select(x => contacts!.FirstOrDefault(y => y.Guid == x)!).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value?.Emp);
+        retval.AddDateOnly("Data", value?.Fch);
+        retval.AddString("Assumpte", value?.Subject);
+        retval.AddContacts("Contactes", contacts, targets, AddNewContactHandler);
+        retval.AddDocfile(value?.Docfile);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            value!.Fch = propertyGrid!.GetDateOnly((int)Fields.Fch);
+            value!.Subject = propertyGrid!.GetString((int)Fields.Subject);
+
+            //TO DO: multiple contacts
+            // var target = propertyGrid!.GetGuid((int)Fields.Target);
+            // if (value.IsNew && target != null)
+            // {
+            //     value!.Targets = new();
+            //     value!.Targets.Add((Guid)target!);
+            // }
+
+            value.Docfile = propertyGrid!.GetDocfile((int)Fields.Docfile);
+            value.Docfile!.Fch = ((DateOnly)value.Fch!).ToDateTime(new TimeOnly());
+            value.Docfile.Nom = value.Subject;
+            value.Targets = propertyGrid!.GetContacts((int)Fields.Target)?.Select(x=>x.Guid).ToList() ?? new List<Guid>();
+            // contact = propertyGrid!.GetGuid((int)Fields.Target);
+            // if (contact != null && !value.Targets.Any(x => x == contact)) value.Targets.Add((Guid)contact);
+
+            await ApiService.PostMultipartAsync<CorrespondenciaModel, bool>(value.Docfile, value, "Correspondencia");
+            value.IsNew = false;
+            await AfterUpdate.InvokeAsync(value);
+            await CloseRequestHandler();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Correspondencia/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+            await CloseRequestHandler();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    string Title() => (Value?.IsNew ?? true) ? "Registrar nova correspondencia" : $"Correspondencia {Value!.Id}/{((DateOnly)Value!.Fch).Year}";
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            value!.Emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            value!.UsrLog = UsrLogModel.Factory(ApiService.CurrentUser());
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+    void AddNewContactHandler()
+    {
+        
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

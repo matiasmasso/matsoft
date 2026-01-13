@@ -1,0 +1,15 @@
+﻿.Grid {
+    display:grid;
+    grid-template-columns:minmax(100px,min-content) repeat(4,1fr);
+    width:100%;
+}
+
+.Row {
+    display:contents;
+}
+
+.Grid div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

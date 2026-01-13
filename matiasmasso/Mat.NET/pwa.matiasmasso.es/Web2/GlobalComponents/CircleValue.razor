@@ -1,0 +1,32 @@
+﻿<div class="CircleValue">
+
+    <svg height="@diameter" width="@diameter" class="Svg">
+
+        <ellipse cx="@radius" cy="@radius" rx="@radius" ry="@radius"
+                 class="Circle" />
+
+        <text x="50%" y="50%" dy="5%" dx="1%"
+              dominant-baseline="middle"
+              text-anchor="middle"
+              font-size="@fontSize"
+              font-weight="600"
+              fill="white"
+        class="Value">@Value</text>
+    </svg>
+</div>
+
+@code {
+    [Parameter] public int Value { get; set; }
+    [Parameter] public int Width { get; set; } = 20;
+
+    string? radius;
+    string? diameter;
+    string? fontSize;
+
+    protected override void OnParametersSet()
+    {
+        diameter = string.Format("{0}px", Width);
+        radius = string.Format("{0}px", Width / 2);
+        fontSize = string.Format("{0}px", Width * 0.7);
+    }
+}

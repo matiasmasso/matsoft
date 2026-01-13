@@ -1,0 +1,200 @@
+﻿@inject ApiService ApiService
+
+@if(selectedModel != null)
+{
+    <Model Value="selectedModel" CloseRequest="@(()=> selectedModel = null)"></Model>
+} else
+{
+<div>
+    <Title Value="Escriptura" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (Model != null)
+    {
+        <div class="Wrapper">
+            <div class="PropertyGrid">
+
+                <PropertyGrid Model="propertyGrid"
+                                  ZoomRequest="ZoomRequestHandler"
+                                  UpdateRequest="UpdateRequestHandler"
+                              CancelRequest="CloseRequestHandler"
+                              DeleteRequest="DeleteRequestHandler"
+                              UpdateState="updateState"
+                              DeleteState="deleteState">
+                </PropertyGrid>
+            </div>
+            <div class="Docfile">
+            </div>
+        </div>
+    }
+
+</div>
+}
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public EscripturaModel? Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<EscripturaModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<EscripturaModel> AfterDelete { get; set; }
+
+    EscripturaModel? value;
+    List<ContactModel>? allContacts;
+    IModel? selectedModel;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Nom,
+        Notari,
+        //RegistreMercantil,
+        FchFrom,
+        FchTo,
+        NumProtocol,
+        Tomo,
+        Folio,
+        Hoja,
+        Inscripcio,
+        Docfile
+    }
+
+    protected override void OnInitialized()
+    {
+        _ = Task.Run(async () => await FetchContactsAsync());
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Model!.IsNew)
+            {
+                value = Model;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+                value = await ApiService.GetAsync<EscripturaModel>("Escriptura", Model.Guid.ToString());
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private void Refresca()
+    {
+        propertyGrid = new PropertyGridModel();
+        propertyGrid.AddEmp( value?.Emp);
+        propertyGrid.AddString("Nom", value?.Nom);
+        //propertyGrid.AddGuidnom("Notari", value?.Notari, Notaris());
+        propertyGrid.AddModel("Notari", value?.Notari, Notaris());
+        propertyGrid.AddDateOnly("FchFrom", value?.FchFrom);
+        propertyGrid.AddDateOnly("FchTo", value?.FchTo);
+        propertyGrid.AddInt("Num.Protocol", value?.NumProtocol);
+        propertyGrid.AddInt("Tomo", value?.Tomo);
+        propertyGrid.AddInt("Folio", value?.Folio);
+        propertyGrid.AddString("Hoja", value?.Hoja);
+        propertyGrid.AddInt("Inscripcio", value?.Inscripcio);
+        propertyGrid.AddDocfile(value?.Docfile);
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    private List<GuidNom>? NotarisOld()
+    {
+        var notariClass = ContactClassModel.Wellknown(ContactClassModel.Wellknowns.Notari)!;
+        var retval = allContacts?.Where(x => x.ContactClass == notariClass.Guid && x.Emp == value!.Emp)
+        .Select(x => new GuidNom(x.Guid, x.FullNom))
+        .ToList();
+        return retval;
+    }
+
+    private List<ContactModel>? Notaris()
+    {
+        var notariClass = ContactClassModel.Wellknown(ContactClassModel.Wellknowns.Notari)!;
+        var retval = allContacts?.Where(x => x.ContactClass == notariClass.Guid && x.Emp == value!.Emp)
+        .ToList();
+        return retval;
+    }
+
+
+
+    public async Task FetchContactsAsync()
+    {
+        try
+        {
+            allContacts = await ApiService.GetAsync<List<ContactModel>>("Contacts/all") ?? new();
+            Refresca();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            value!.Nom = propertyGrid!.GetString((int)Fields.Nom);
+            //value!.Notari = propertyGrid!.GetGuidNom((int)Fields.Notari);
+            value.Notari = propertyGrid!.GetModelGuid((int)Fields.Notari);
+            value!.FchFrom = propertyGrid!.GetDateOnly((int)Fields.FchFrom);
+            value!.FchTo = propertyGrid!.GetDateOnly((int)Fields.FchTo);
+            value!.NumProtocol = propertyGrid!.GetInt((int)Fields.NumProtocol);
+            value!.Tomo = propertyGrid!.GetInt((int)Fields.Tomo);
+            value!.Folio = propertyGrid!.GetInt((int)Fields.Folio);
+            value!.Hoja = propertyGrid!.Value<string>((int)Fields.Hoja);
+            value!.Inscripcio = propertyGrid!.GetInt((int)Fields.Inscripcio);
+            value!.Docfile = propertyGrid.GetDocfile((int)Fields.Docfile);
+
+            if (value.Docfile != null)
+                value.Docfile.Nom = value.Nom;
+
+            await ApiService.PostMultipartAsync<EscripturaModel, bool>(value.Docfile, value, "Escriptura");
+            //await ApiService.PostAsync<EscripturaModel, bool>(value, "Escriptura");
+            value.IsNew = false;
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Escriptura/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+
+    void ZoomRequestHandler(IModel args)
+    {
+        selectedModel = args;
+    }
+
+
+}

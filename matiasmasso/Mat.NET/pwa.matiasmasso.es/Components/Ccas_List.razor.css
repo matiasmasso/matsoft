@@ -1,0 +1,44 @@
+﻿
+.Item {
+    display:flex;
+    font-size:0.8em;
+}
+
+.Item:hover {
+    background-color:#DDDDDD;
+}
+
+.Id {
+    text-align: right;
+    width: 80px;
+    padding-right: 5px;
+}
+
+.Fch {
+    text-align: center;
+    width: 100px;
+    padding-right: 5px;
+    white-space:nowrap;
+    overflow:hidden;
+}
+
+.Concept {
+    width: 100%;
+    padding-right: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Amount {
+    width:min-content;
+    text-align:right;
+    padding-right:5px;
+}
+
+.User {
+    width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

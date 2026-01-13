@@ -1,0 +1,48 @@
+﻿<div class="Wrapper">
+    @if (CanEdit && isEditing)
+    {
+        <textarea @oninput="TextareaChange"
+              @onblur="@(()=>{isEditing = false;})">
+            @((MarkupString)(Value?.ToString() ?? ""))
+                        </textarea>
+
+    }
+    else
+    {
+        <a class="Display" href="#" @onclick="@(()=>{isEditing = true;})" @onclick:preventDefault="true">
+            <p style="white-space: pre-wrap">
+                @Value?.ToString()
+            </p>
+        </a>
+    }
+
+</div>
+
+@code {
+    [Parameter] public Object? Value { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+
+    [Parameter] public int? Cols { get; set; } = 20;
+    [Parameter] public int? Rows { get; set; } = 2;
+
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<Object> ObjChanged { get; set; }
+    [Parameter] public EventCallback SetDirty { get; set; }
+    private bool isEditing = false;
+    //private MarkupString markup;
+
+
+    private void TextareaChange(ChangeEventArgs args)
+    {
+        var value = args?.Value;
+        if (ObjChanged.HasDelegate) // quan Value es Object com a PropertyGrid
+            ObjChanged.InvokeAsync(value);
+        if (ValueChanged.HasDelegate)
+            ValueChanged.InvokeAsync(value?.ToString());
+        if (SetDirty.HasDelegate)
+            SetDirty.InvokeAsync();
+    }
+
+
+
+}

@@ -1,0 +1,19 @@
+﻿@page "/tpv/ko"
+@page "/{LangSegment}/tpv/ko"
+@inherits _PageBase
+@inject CultureService culture
+<div class="Wrapper">
+    <UxWarning>
+        @culture.Localize("FailedPayment")
+    </UxWarning>
+</div>
+
+@code {
+
+
+}
+
+
+
+
+.

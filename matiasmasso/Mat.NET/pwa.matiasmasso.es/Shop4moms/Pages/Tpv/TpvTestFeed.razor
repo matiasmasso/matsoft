@@ -1,0 +1,48 @@
+﻿@page "/tpv/test/feed"
+@inherits _ComponentBase
+@inject HttpClient http
+@inject IStringLocalizer<Translation> Localizer
+
+
+<div class="Wrapper">
+    <h1>Redsys feed emulator</h1>
+    <form action="/tpv/feedasync" method="post">
+        <div class="Label">Ds_MerchantParameters</div>
+        <div><textarea rows="5" name="Ds_MerchantParameters" value="@response.Ds_MerchantParameters" /></div>
+        <div class="Label">Ds_Signature</div>
+        <div><input type="text" name="Ds_Signature" value="@response.Ds_Signature" /></div>
+        <div class="Label">Ds_SignatureVersion</div>
+        <div><input type="text" name="Ds_SignatureVersion" value="@response.Ds_SignatureVersion" /></div>
+
+        <div class="RightAlign">
+            <input type="submit" class="Button" value="@Localizer["Submit"]" />
+        </div>
+    </form>
+</div>
+
+
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    private ShoppingBasketModel? basket;
+    private TpvService.Tpv? tpv;
+    private TpvService.Request? request;
+    private ProblemDetails? problemDetails;
+
+    private TpvService.Request? response;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        response = new TpvService.Request
+            {
+                Ds_MerchantParameters = "eyJEc19EYXRlIjoiMTMlMkYwMSUyRjIwMjMiLCJEc19Ib3VyIjoiMDAlM0EyOCIsIkRzX1NlY3VyZVBheW1lbnQiOiIxIiwiRHNfQ2FyZF9Db3VudHJ5IjoiNzI0IiwiRHNfQW1vdW50IjoiNDUwMCIsIkRzX0N1cnJlbmN5IjoiOTc4IiwiRHNfT3JkZXIiOiJaWkRBV0lSWTFNIiwiRHNfTWVyY2hhbnRDb2RlIjoiMzU3NTkyOTIyIiwiRHNfVGVybWluYWwiOiIwMDEiLCJEc19SZXNwb25zZSI6IjAwMDAiLCJEc19NZXJjaGFudERhdGEiOiIiLCJEc19UcmFuc2FjdGlvblR5cGUiOiIwIiwiRHNfQ29uc3VtZXJMYW5ndWFnZSI6IjIiLCJEc19BdXRob3Jpc2F0aW9uQ29kZSI6IjE2MDI0MiIsIkRzX0NhcmRfQnJhbmQiOiIxIiwiRHNfUHJvY2Vzc2VkUGF5TWV0aG9kIjoiMSIsIkRzX0NvbnRyb2xfMTY3MzU2NjA5MzY1NSI6IjE2NzM1NjYwOTM2NTUifQ==",
+                Ds_Signature = "cvObpouMy-bf0JIdOcUk-YTugZVvacCbMqRIAcuAaeU=",
+                Ds_SignatureVersion = "HMAC_SHA256_V1"
+            };
+        //var session = base.AddSession();
+        //session.Basket = ShoppingBasketModel.FakeBasket(base.Lang());
+        //session.Basket.TpvOrderNum = response.TpvOrderNum();
+    }
+}

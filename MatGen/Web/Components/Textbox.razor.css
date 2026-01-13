@@ -1,0 +1,72 @@
+﻿/*issues found?*/
+
+texarea {
+    width:100%;
+}
+
+.Wrapper {
+    display:flex;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+
+    .Wrapper > a {
+        display: block;
+        width: 100%;
+    }
+
+    .Display {
+        display:block;
+        width:100%;
+    }
+
+        .Display .Multiline {
+            width:100%;
+            min-height: 100px;
+            border: 1px solid #DDDDDD;
+        }
+
+        .Display .Text {
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+input[type="text"], input[type="password"]{
+    width:100%;
+}
+
+.OverLength {
+    background-color:lightsalmon;
+}
+
+.ButtonsBar {
+    display: flex;
+    gap: 10px;
+}
+
+.ButtonsBar > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #DDDDDD;
+    border-radius: 3px 3px;
+}
+
+
+i, ::deep i {
+    opacity: 0.2;
+}
+    .ButtonsBar > *:hover, ::deep .ButtonsBar > *:hover {
+        border: 1px solid black;
+    }
+
+        .ButtonsBar > *:hover i, ::deep .ButtonsBar > *:hover i {
+            opacity: 0.8;
+        }
+
+
+

@@ -1,0 +1,29 @@
+﻿@inherits _ComponentBase;
+
+@if (Values != null)
+{
+    <div class="Grid">
+        @foreach (var item in Values)
+        {
+            <a class="Item" href="#" target="_blank"
+                @onclick="@(()=>ItemClick(item))" 
+                @onclick:preventDefault>
+
+                <div class="Nom Truncate">
+                    @item.Nom
+                </div>
+            </a>
+            <div class="GridRowDivider" />
+        }
+    </div>
+}
+
+
+@code {
+    [Parameter] public List<ImmobleModel.InventariItem> Values { get; set; }
+
+    void ItemClick(ImmobleModel.InventariItem item)
+    {
+        base.NavigateToPage(item.PageUrl());
+    }
+}

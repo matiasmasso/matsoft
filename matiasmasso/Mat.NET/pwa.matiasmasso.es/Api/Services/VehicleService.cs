@@ -1,0 +1,166 @@
+﻿using Api.Entities;
+using DocumentFormat.OpenXml.Bibliography;
+using DTO;
+using System;
+using System.Linq;
+namespace Api.Services
+{
+    public class VehicleService
+    {
+
+        public static DTO.VehicleModel? Find(Guid guid)
+        {
+            using (var db = new Entities.MaxiContext())
+            {
+                return Find(db, guid);
+            }
+        }
+
+
+        public static DTO.VehicleModel? Find(Entities.MaxiContext db, Guid guid)
+        {
+            return db.VwVehicles
+                            .Where(x => x.Guid == guid)
+                            .Select(x => new DTO.VehicleModel(guid)
+                            {
+                                Model = x.Model == null ? null : new GuidNom((Guid)x.ModelGuid!, string.Format("{0} {1}", x.Marca ?? "", x.Model ?? "")),
+                                Conductor = x.ConductorGuid == null ? null : new GuidNom((Guid)x.ConductorGuid, x.ConductorNom ?? ""),
+                                Venedor = x.VenedorGuid == null ? null : new GuidNom((Guid)x.VenedorGuid, x.VenedorNom ?? ""),
+                                Contract = x.Contracte == null ? null : new GuidNom((Guid)x.Contracte, x.ContracteNom ?? ""),
+                                Insurance = x.Insurance == null ? null : new GuidNom((Guid)x.Insurance, x.InsuranceNom ?? ""),
+                                Matricula = x.Matricula ?? "",
+                                Bastidor = x.Bastidor ?? "",
+                                Alta = x.Alta,
+                                Baixa = x.Baixa,
+                                Privat = x.Privat,
+                                Emp = x.Emp
+                            }).FirstOrDefault();
+        }
+
+        public static async Task<bool> UpdateAsync(DTO.VehicleModel value,  IFormFile? file)
+        {
+            using (var db = new Entities.MaxiContext())
+            {
+                var guid = value.Guid;
+                Entities.VehicleFlotum? entity;
+                if (value.IsNew)
+                {
+                    entity = new Entities.VehicleFlotum();
+                    db.VehicleFlota.Add(entity);
+                    entity.Guid = guid;
+                }
+                else
+                    entity = db.VehicleFlota.Find(guid);
+
+                if (entity == null) throw new System.Exception("Vehicle not found");
+
+                entity.ModelGuid = value.Model?.Guid;
+                entity.ConductorGuid = value.Conductor?.Guid;
+                entity.VenedorGuid = value.Venedor?.Guid;
+                entity.Contracte = value.Contract?.Guid;
+                entity.Insurance = value.Insurance?.Guid;
+                entity.Matricula = value.Matricula;
+                entity.Bastidor = value.Bastidor;
+                entity.Alta = value.Alta ?? default(DateTime);
+                entity.Baixa = value.Baixa;
+                entity.Privat = value.Privat;
+                entity.Emp = value.Emp;
+
+                if (file != null)
+                {
+                    entity.ImageMime = (int)value.ImageMime!;
+                    entity.Image = await file.BytesAsync();
+                }
+
+
+                db.SaveChanges();
+                return true;
+            }
+        }
+
+
+        public static bool Delete(Guid guid)
+        {
+            using (var db = new Entities.MaxiContext())
+            {
+                var entity = db.VehicleFlota.Find(guid);
+                if (entity != null)
+                {
+                    db.VehicleFlota.Remove(entity);
+                    db.SaveChanges();
+                }
+            }
+            return true;
+        }
+
+
+        public static DocFileModel? Docfile(Guid guid)
+        {
+            DocFileModel? retval = null;
+            using (var db = new Entities.MaxiContext())
+            {
+                retval = (from item in db.VehicleFlota
+                          where item.Guid.Equals(guid)
+                          select new DocFileModel()
+                          {
+                              Document = item.Image,
+                              StreamMime = (int)MimeHelper.MimeCods.Jpg
+                          }).FirstOrDefault();
+            }
+            return retval;
+        }
+
+
+
+    }
+    public class VehiclesService
+    {
+
+        public static List<DTO.VehicleModel> All(UserModel user)
+        {
+            using (var db = new Entities.MaxiContext())
+            {
+                var retval = db.VwVehicles
+                                .Select(x => new DTO.VehicleModel(x.Guid)
+                                {
+                                    Model = x.Model == null ? null : new GuidNom((Guid)x.ModelGuid!, string.Format("{0} {1}", x.Marca ?? "", x.Model ?? "")),
+                                    Conductor = x.ConductorGuid == null ? null : new GuidNom((Guid)x.ConductorGuid, x.ConductorNom ?? ""),
+                                    Venedor = x.VenedorGuid == null ? null : new GuidNom((Guid)x.VenedorGuid, x.VenedorNom ?? ""),
+                                    Contract = x.Contracte == null ? null : new GuidNom((Guid)x.Contracte, x.ContracteNom ?? ""),
+                                    Insurance = x.Insurance == null ? null : new GuidNom((Guid)x.Insurance, x.InsuranceNom ?? ""),
+                                    Matricula = x.Matricula ?? "",
+                                    Bastidor = x.Bastidor ?? "",
+                                    Alta = x.Alta,
+                                    Baixa = x.Baixa,
+                                    Privat = x.Privat,
+                                    Emp = x.Emp
+                                })
+                                .OrderByDescending(x => x.Alta)
+                                .ToList();
+
+                if (user.isMainboardOrAccounts() == false)
+                {
+                    if (user.isStaff())
+                        retval = retval.Where(x => x.Conductor?.Guid.Equals(user.DefaultContact) ?? false).ToList();
+                    else
+                        retval.Clear();
+                }
+                return retval;
+            }
+        }
+
+        public static List<GuidNom> CarModels()
+        {
+            using (var db = new Entities.MaxiContext()) { 
+                return db.VehicleModels
+                .Where(x => x.MarcaGu != null)
+                .Select(x => new GuidNom
+                {
+                    Guid = x.Guid,
+                    Nom = string.Format("{0} {1}", x.MarcaGu!.Nom ?? "", x.Nom ?? "")
+                })
+                .ToList();
+            }
+        }
+    }
+}

@@ -1,0 +1,278 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+
+    <Title Value="Actiu financer" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (tab == Tabs.Extracte)
+    {
+        if (selectedMov == null)
+        {
+
+            <PageOptions>
+                <a href="#" @onclick:preventDefault @onclick="AddNew">
+                    Afegir
+                </a>
+            </PageOptions>
+
+            <div class="Grid">
+
+                <div class="ColHeaders HideOnMobile">
+                    <div class="Fch">Data</div>
+                    <div class="Qty">Unitats</div>
+                    <div class="Preu">Preu unitari</div>
+                    <div class="Sdo">Saldo</div>
+                    <div class="Avg">Preu mig</div>
+                    <div class="Val">Valor</div>
+                </div>
+
+                @if (Value != null && movs != null)
+                {
+                    sdo = 0;
+                    @foreach (var mov in movs.Where(x => x.Actiu == Value?.Guid).OrderByDescending(x=>x.Fch).ToList())
+                    {
+                        sdo += mov.Qty ?? 0;
+                        <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>MovClick(mov))">
+                            <div class="Fch">@($"{mov.Fch:dd/MM/yy}")</div>
+                            <div class="Qty">@($"{mov.Qty:N6}")</div>
+                            <div class="Preu HideOnMobile">@($"{mov.Eur / Math.Abs((mov.Qty ?? 0) == 0 ? 1 : (mov.Qty ?? 0)):N6}")</div>
+                            <div class="Sdo HideOnMobile">@($"{sdo:N6}")</div>
+                            <div class="Avg HideOnMobile">@($"{mov.Eur / Math.Abs((mov.Qty ?? 0) == 0 ? 1 : (mov.Qty ?? 0)):N6}")</div>
+                            <div class="Val">@($"{mov.Eur:N2} €")</div>
+                        </a>
+                    }
+                }
+            </div>
+        }
+        else
+        {
+            <PropertyGrid Model="movPropertyGrid"
+                          UpdateRequest="UpdateMovRequestHandler"
+                          CancelRequest="CloseRequestHandler"
+                          DeleteRequest="DeleteMovRequestHandler"
+                          UpdateState="updateState"
+                          DeleteState="deleteState">
+            </PropertyGrid>
+        }
+
+    }
+    else
+    {
+        @if (Value != null)
+        {
+            <PageOptions>
+                <div>Detalls</div>
+                <a href="#" @onclick:preventDefault @onclick="@(()=>tab = Tabs.Extracte)">Moviments</a>
+            </PageOptions>
+
+            <PropertyGrid Model="propertyGrid"
+                          UpdateRequest="UpdateRequestHandler"
+                          CancelRequest="CloseRequestHandler"
+                          DeleteRequest="DeleteRequestHandler"
+                          UpdateState="updateState"
+                          DeleteState="deleteState">
+            </PropertyGrid>
+        }
+    }
+
+
+    <Error @bind-Value="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public ActiuModel? Value { get; set; }
+    [Parameter] public EmpModel.EmpIds? Emp { get; set; }
+    [Parameter] public List<ActiuModel>? Actius { get; set; }
+    [Parameter] public List<ActiuModel.Mov>? Movs { get; set; }
+    [Parameter] public List<ContactModel>? Contacts { get; set; }
+    [Parameter] public Tabs? Tab { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<ActiuModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<ActiuModel> AfterDelete { get; set; }
+
+    ActiuModel? value;
+    List<ActiuModel.Mov>? movs;
+    ActiuModel.Mov? selectedMov;
+    List<ActiuModel>? actius;
+    List<ContactModel>? contacts;
+    Tabs? tab;
+    decimal sdo = 0;
+    PropertyGridModel? propertyGrid;
+    PropertyGridModel? movPropertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    public enum Tabs
+    {
+        Detalls,
+        Extracte
+    }
+
+    enum Fields
+    {
+        Nom,
+        Cta
+    }
+
+    enum MovFields
+    {
+        Emp,
+        Actiu,
+        Fch,
+        Contraparte,
+        Qty,
+        Eur
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+                tab = Tabs.Detalls;
+            }
+            else
+                value = await ApiService.GetAsync<ActiuModel>("Actiu", Value.Guid.ToString());
+
+            var allActius = Actius ?? await ApiService.GetAsync<List<ActiuModel>>("Actius");
+            contacts = Contacts ?? await ApiService.GetAsync<List<ContactModel>>("Contacts");
+            var allMovs = Movs ?? await ApiService.GetAsync<List<ActiuModel.Mov>>("ActiuMovs");
+            movs = allMovs.Where(x => x.Emp == Emp).ToList();
+            actius = allActius.Where(x => movs.Any(y => x.Guid == y.Actiu)).ToList();
+
+            tab ??= Tabs.Detalls;
+            var ctasActius = ApiService.GetCurrentPgcCtas()?.Where(x => x.Id!.StartsWith("2")).ToList();
+            propertyGrid = new PropertyGridModel();
+            propertyGrid.AddString("Nom", value?.Nom);
+            propertyGrid.AddGuidnom("Compte", value?.Cta, ctasActius);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    PropertyGridModel MovPropertyGrid(ActiuModel.Mov args)
+    {
+        var retval = new PropertyGridModel();
+        retval.AddEmp(args.Emp);
+        retval.AddGuidnom("Actiu", args.Actiu, Actius);
+        retval.AddDateOnly("Data", args.Fch);
+        retval.AddGuidnom("Comprador/Venedor", args.Contraparte, contacts);
+        retval.AddEur("Unitats", args.Qty);
+        retval.AddEur("Import operació", args.Eur);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Nom = propertyGrid!.GetString((int)Fields.Nom);
+            value.Cta = propertyGrid.GetGuid((int)Fields.Cta);
+
+            await ApiService.PostAsync<ActiuModel, bool>(value, "Actiu");
+            value.IsNew = false;
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task UpdateMovRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            selectedMov!.Emp = movPropertyGrid!.GetEmp((int)MovFields.Emp);
+            selectedMov.Actiu = (Guid)movPropertyGrid.GetGuid((int)MovFields.Actiu)!;
+            selectedMov.Fch = (DateOnly)movPropertyGrid.GetDateOnly((int)MovFields.Fch)!;
+            selectedMov.Contraparte = movPropertyGrid.GetGuid((int)MovFields.Contraparte);
+            selectedMov.Qty = (decimal)movPropertyGrid.GetDecimal((int)MovFields.Qty)!;
+            selectedMov.Eur = (decimal)movPropertyGrid.GetDecimal((int)MovFields.Eur)!;
+
+            await ApiService.PostAsync<ActiuModel.Mov, bool>(selectedMov, "ActiuMov");
+            if (selectedMov.IsNew)
+                movs!.Add(selectedMov);
+            else
+            {
+                var tmp = movs!.FirstOrDefault(x => x.Guid == selectedMov.Guid);
+                if (tmp != null) movs![movs.IndexOf(tmp)] = selectedMov;
+            }
+            movs = movs!.OrderByDescending(x => x.Fch).ToList();
+            selectedMov = null;
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Actiu/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteMovRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("ActiuMov/delete", selectedMov!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void MovClick(ActiuModel.Mov args)
+    {
+
+        selectedMov = args;
+        movPropertyGrid = MovPropertyGrid(selectedMov);
+    }
+
+    void AddNew()
+    {
+        selectedMov = new ActiuModel.Mov
+            {
+                Emp = (EmpModel.EmpIds)Emp!,
+                Actiu = Value!.Guid,
+                Fch = DateOnly.FromDateTime(DateTime.Now)
+            };
+        movPropertyGrid = MovPropertyGrid(selectedMov);
+    }
+
+    void AddShare()
+    {
+
+    }
+}

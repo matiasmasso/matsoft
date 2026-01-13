@@ -1,0 +1,119 @@
+﻿@implements IDisposable
+
+@inject CultureService culture
+@inject CertificatsIrpfService certificatsIrpfService
+@inject StaffsService staffsService
+
+<div class="Wrapper">
+    @if (items == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="SelectedValues">
+            <SelectedValues @bind-Values="selectedValues" Nested></SelectedValues>
+        </div>
+
+        @if (SelectedYear() == null)
+        {
+            <div>@culture.Localize("Select.Year")</div>
+            <div class="Years">
+                @foreach (var year in Years() ?? new())
+                {
+                    <a href="#" @onclick="@(()=>YearClicked(year))" @onclick:preventDefault>
+                        <div>@year</div>
+                    </a>
+                }
+            </div>
+        } else
+        {
+            <div class="Grid">
+                @foreach (var item in FilteredItems() ?? new())
+                {
+                    <a class="Item" href="@item.PdfUrl()" target="_blank">
+                        <div class="Ico">
+                            <Icon Id="Icon.Ids.Doc"></Icon>
+                        </div>
+                        <div class="Nom">@staffsService.GetValue(item.Contact)?.Abr</div>
+                    </a>
+                }
+            </div>
+        }
+
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public EmpModel? Emp { get; set; }
+    SelectedValues.Collection? selectedValues = new();
+
+    List<CertificatIrpfModel>? items;
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        certificatsIrpfService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+
+        if (certificatsIrpfService.Values?.Any() ?? false && selectedValues == null)
+        {
+            var lastYear = certificatsIrpfService.Values?.Max(x => x.Year);
+            selectedValues = new SelectedValues.Collection();
+            selectedValues.Add(lastYear, lastYear.ToString());
+            items = FilteredItems();
+            InvokeAsync(StateHasChanged);
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    List<int>? Years()
+    {
+        var retval = certificatsIrpfService.Values?
+        .GroupBy(x => x.Year)
+        .Select(x => x.First().Year)
+        .OrderByDescending(x=>x)
+        .ToList();
+        return retval;
+    }
+
+    void YearClicked(int year)
+    {
+        selectedValues = new SelectedValues.Collection();
+        selectedValues.Add(year, year.ToString());
+    }
+
+    List<CertificatIrpfModel>? FilteredItems()
+    {
+        List<CertificatIrpfModel>? retval = null;
+        if (staffsService.Values != null)
+        {
+            retval = certificatsIrpfService.Values?.Where(x => x.Year == SelectedYear() && staffsService.Values.Any(y => y.Guid == x.Contact))
+            .OrderBy(x => staffsService.GetValue(x.Contact)?.Abr)
+            .ToList();
+        }
+        return retval;
+    }
+
+    int? SelectedYear() => selectedValues?.Any() ?? false ? (int)selectedValues![0].Value : null;
+
+
+    public void Dispose()
+    {
+        certificatsIrpfService.OnChange -= Refresca;
+    }
+}

@@ -1,0 +1,19 @@
+﻿@inject CultureService culture
+
+<a href="#"
+   class="Wrapper" 
+   title="@culture.Localize("Close")"
+   @onclick="RequestToClose" 
+   @onclick:preventDefault>
+    <Icon Id="Icon.Ids.XmarkCircle" Width="@Width"></Icon>
+</a>
+
+@code {
+    [Parameter] public string Width { get; set; } = "24px";
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    void RequestToClose()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}

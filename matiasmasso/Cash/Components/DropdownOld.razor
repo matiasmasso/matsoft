@@ -1,0 +1,162 @@
+﻿@typeparam T
+@using System.Globalization
+
+<div class="Wrapper">
+
+    @if (IsEditing)
+    {
+
+        <!-- editor -->
+
+        <div @onblur="InputBlur">
+            <input type="text" @bind="caption" @bind:event="oninput" @onkeydown="KeyDownHandler" />
+            <div class="Dropdown">
+                @if (AddNewRequest.HasDelegate)
+                {
+                    <a class="Item" href="#" @onclick="AddNew" @onclick:preventDefault>
+                       (afegir nou)
+                    </a>
+                }
+
+                <Virtualize Items="Items()" Context="item">
+
+                    <a class="Item" href="#" @onclick="@(()=>OptionClick(item))" @onclick:preventDefault>
+                        @item?.ToString()
+                    </a>
+
+                </Virtualize>
+
+            </div>
+
+        </div>
+    }
+    else
+    {
+
+        <!-- display -->
+
+        <div class="Display">
+            <a class="Caption" href="#" @onclick="CaptionClick" @onclick:preventDefault>
+                <span class="@(string.IsNullOrEmpty(caption) ? "" : "Hidden")">&nbsp;</span>
+                <span class="@(string.IsNullOrEmpty(caption) ? "Hidden" : "")">@caption</span>
+            </a>
+        </div>
+    }
+
+</div>
+
+
+
+@code {
+    [Parameter] public IEnumerable<T>? Values { get; set; }
+    [Parameter] public bool DropOnClick { get; set; }
+    [Parameter] public string? DefaultValue { get; set; }
+    [Parameter] public T? Value { get; set; }
+    [Parameter] public EventCallback<T> ValueChanged { get; set; }
+    [Parameter] public EventCallback<T> ItemClick { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public bool IsEditing { get; set; }
+
+    private string? caption;
+    private bool isShowingDropdown = false;
+    private bool isShowingMenu = false;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        // if (!string.IsNullOrEmpty(DefaultValue))
+        // {
+        //     var defaultValue = default(T); // new GuidNom(Guid.Empty, DefaultValue);
+        //     var tmp = new List<T> { defaultValue };
+        //     if(Values != null ) tmp.AddRange(Values);
+        //     Values = tmp;
+        //     if (Value == null) Value = defaultValue;
+        // }
+        caption = Value?.ToString() ?? "";
+    }
+
+    List<T>? Items()
+    {
+        if (Values == null)
+            return null;
+        else
+        {
+            if (caption == Value?.ToString() & Values.Count() < 10)
+                return Values.ToList();
+            else
+                return Values
+                .Where(x => Matches(x.ToString(), caption))
+                .OrderBy(x => x?.ToString())
+                .ToList();
+
+        }
+    }
+
+    private async Task CaptionClick()
+    {
+        IsEditing = true;
+        isShowingDropdown = true;
+        //await ItemClick.InvokeAsync(Value);
+
+        //    if (Value == null || DropOnClick)
+        //    {
+        //        IsEditing = true;
+        //        isShowingDropdown = true;
+        //    }
+        //    else
+        //        await ItemClick.InvokeAsync(Value);
+    }
+
+    private void EllipsisClick()
+    {
+        isShowingMenu = true;
+    }
+
+    private void OptionClick(T item)
+    {
+        Value = item;
+        ValueChanged.InvokeAsync(item);
+        IsEditing = false;
+    }
+
+    private void InputBlur()
+    {
+        IsEditing = false; // it is ignored
+    }
+
+    private void KeyDownHandler(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            caption = Value?.ToString();
+            IsEditing = false;
+        }
+    }
+
+    public void SetEditingMode()
+    {
+        IsEditing = true;
+    }
+
+    public bool Matches(string candidate, string? searchTerm)
+    {
+        bool retval = true;
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var searchTerms = searchTerm.Split("+", StringSplitOptions.RemoveEmptyEntries);
+            var searchTarget = candidate ?? "";
+            var compareInfo = CultureInfo.InvariantCulture.CompareInfo;
+            var options = CompareOptions.IgnoreCase | CompareOptions.IgnoreSymbols | CompareOptions.IgnoreNonSpace;
+            retval = searchTerms.All(x => compareInfo.IndexOf(searchTarget, x, options) >= 0);
+        }
+        return retval;
+    }
+
+    void AddNew()
+    {
+        AddNewRequest.InvokeAsync();
+    }
+
+}
+

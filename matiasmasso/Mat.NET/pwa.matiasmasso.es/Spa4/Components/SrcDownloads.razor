@@ -1,0 +1,23 @@
+﻿@inherits _ComponentBase
+
+@foreach(var item in Items)
+{
+    <a href="@item.DownloadUrl()" target="_blank" class="Item">
+        <div class="Nom">@item.Nom</div>
+        <div class="Features">@item.Features()</div>
+    </a>
+}
+@code {
+    [Parameter] public Guid Src { get; set; }
+    private List<DocfileDTO> Items { get; set; } = new();
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Items = await base.GetAsync<List<DocfileDTO>>("docfiles/fromSrc", Src.ToString());
+            StateHasChanged();
+        }
+
+    }
+}

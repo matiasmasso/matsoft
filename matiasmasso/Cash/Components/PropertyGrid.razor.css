@@ -1,0 +1,100 @@
+﻿.Wrapper {
+    max-width:600px;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.ButtonsBar {
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top: 10px;
+}
+
+@media(max-width:599px) {
+    .Grid {
+        display:flex;
+        flex-direction:column;
+    }
+
+    .Item {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+        .Item:not(:last-child) {
+            border-bottom: 1px solid #555555;
+        }
+
+    .Label {
+        font-size:0.8em;
+        color: #555555;
+    }
+
+    .Value {
+        padding-left:10px;
+    }
+
+
+}
+
+
+@media(min-width:600px) {
+/*    .Grid {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        border: 1px solid black;
+        align-items: baseline;
+        width: 100%;
+    }
+
+    .Item {
+        display: contents;
+    }*/
+
+    .Grid {
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid #555555;
+        border-right: 1px solid #555555;
+        border-top: 1px solid #555555;
+    }
+
+    .Item {
+        display: flex;
+        /*grid-template-columns: 150px 1fr;*/
+        border-bottom: 1px solid black;
+        align-items: baseline;
+        width: 100%;
+        background-color: #EFEFEF;
+    }
+
+    .Label {
+        width:150px;
+        padding: 4px 7px 2px 4px;
+    }
+
+    .Value {
+        width: 100%;
+        background-color: white;
+        padding: 4px 7px 2px 4px;
+    }
+
+/*    
+    
+    .Item:not(:last-child) {
+        border-bottom: 1px solid black;
+    }
+    .Item:not(:last-child) .Label {
+        border-bottom: 1px solid black;
+    }
+
+    .Item:not(:last-child) .Value {
+        border-bottom: 1px solid black;
+        min-height:1em;
+    }*/
+
+
+}
+

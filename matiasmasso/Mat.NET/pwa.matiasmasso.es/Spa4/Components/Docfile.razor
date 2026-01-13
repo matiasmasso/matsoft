@@ -1,0 +1,19 @@
+﻿@if (model != null && !string.IsNullOrEmpty(model.Hash))
+{
+    <div class="DocWrapper">
+
+        @if (!string.IsNullOrEmpty(model.Features()))
+        {
+            <div class="DocLabel">@model.Features()</div>
+        }
+
+        <a class="Thumbnail" href="@model.DownloadUrl()" target="_blank">
+            <img src="@model.ThumbnailUrl()" width="350" height="400" />
+        </a>
+
+    </div>
+}
+
+@code {
+    [Parameter] public DocfileDTO? model { get; set; }
+}

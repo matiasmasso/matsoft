@@ -1,0 +1,57 @@
+﻿/*.Fch {
+    grid-area:fch;
+}
+
+.Qty {
+    grid-area:qty;
+}
+
+.Sdo {
+    grid-area:eur;
+}*/
+
+.Qty, .Preu, .Sdo, .Avg, .Val {
+    display:flex;
+    justify-content:flex-end;
+    white-space:nowrap;
+}
+
+@media(max-width:599px){
+
+    .HideOnMobile{
+        display:none
+    }
+
+    .Grid {
+        display: flex;
+        flex-direction:column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: min-content 1fr min-content;
+        grid-column-gap: 10px;
+        padding:10px 0;
+    }
+
+    .Item:not(:last-child){
+        border-bottom:1px solid gray;
+    }
+
+}
+
+@media(min-width:600px){
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content min-content min-content min-content min-content min-content;
+        grid-column-gap: 10px
+    }
+
+    .ColHeaders, .Item {
+        display:contents;
+    }
+
+    .ColHeaders > * {
+        padding-bottom: 10px;
+    }
+}

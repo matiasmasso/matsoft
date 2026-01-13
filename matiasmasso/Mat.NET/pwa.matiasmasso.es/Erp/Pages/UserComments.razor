@@ -1,0 +1,17 @@
+﻿@if (Values != null)
+{
+    <div class="Grid">
+        @foreach (var item in Values)
+        {
+            <a href="#" class="Item" onclick="@(()=>item.IsExpanded = !item.IsExpanded)">
+                <div class="Fch">@item.Fch</div>
+                <div class="Text @(item.IsExpanded ? "":"Truncate")">@item.Text</div>
+            </a>
+            <div class="GridRowDivider"></div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<ContentModel.Comment> Values { get; set; }
+}

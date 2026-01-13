@@ -1,0 +1,49 @@
+﻿@page "/Category/{Guid:guid}"
+@inherits _ComponentBase
+@inject IStringLocalizer<AppResource> Localizer
+
+<PageTitle>@model?.CamelCase4moms(base.Lang())</PageTitle>
+
+<div class="Wrapper">
+    @if (model != null)
+    {
+        <div class="Title">
+            @model?.CamelCase4moms(base.Lang())
+        </div>
+
+        <div class="Gallery">
+            @foreach (var sku in skus)
+            {
+                <a href="@("/sku/"+sku.Guid.ToString())" class="Item">
+                    <img src="@SessionProvider!.Cache!.ImageUrl(sku)" width="410" height="410" />
+                </a>
+            }
+        </div>
+    }
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+
+    ProblemDetails? problemDetails;
+    ProductCategoryModel? model;
+    List<ProductSkuModel> skus = new();
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = SessionProvider?.Cache?.Categories.FirstOrDefault(x => x.Guid == guid);
+            skus = SessionProvider?.Cache?.Skus.Where(x => x.Category == model!.Guid).ToList() ?? new();
+            StateHasChanged();
+        }
+    }
+
+    private void AddToBasket(ProductSkuModel sku)
+    {
+        SessionProvider?.AddItemToBasket(sku);
+    }
+
+}

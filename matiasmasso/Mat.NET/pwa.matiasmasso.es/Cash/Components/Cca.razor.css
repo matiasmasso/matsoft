@@ -1,0 +1,91 @@
+﻿.Cta, .Contact {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+
+.Deb, .Hab {
+    display:flex;
+    justify-content: flex-end;
+    white-space:nowrap;
+}
+
+.Docfile {
+    display:flex;
+    justify-content:center;
+}
+
+    .Docfile a {
+        display: block;
+        width: 350px;
+    }
+
+.Docfile img {
+    width:100%;
+    height:auto;
+}
+
+@media(max-width:599px) {
+    .HideOnMobile {
+        display: none;
+    }
+
+     .Grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        padding: 10px 0;
+        display: grid;
+        grid-template-columns: 1fr 100px 100px;
+        grid-template-areas: "cta deb hab" "contact contact contact";
+        grid-column-gap: 10px;
+        grid-row-gap: 10px;
+    }
+
+    .Item:not(:last-child){
+        border-bottom: 1px solid gray;
+    }
+
+    .Cta {
+        grid-area: cta;
+    }
+
+    .Contact {
+        grid-area:contact;
+        padding:0 0 0 50px;
+    }
+
+    .Deb {
+        grid-area:deb;
+    }
+
+    .Hab {
+        grid-area:hab;
+    }
+
+
+}
+
+@media(min-width:600px) {
+
+    .HideOnDesktop {
+        display: none;
+    }
+
+    .Grid {
+        display: grid;
+        grid-template-columns: minmax(min-content,100px) 1fr minmax(min-content,100px) minmax(min-content,100px);
+        grid-column-gap: 10px
+    }
+
+    .Item, .ColHeaders {
+        display: contents;
+    }
+
+    .ColHeaders > * {
+        padding-bottom:10px;
+    }
+}

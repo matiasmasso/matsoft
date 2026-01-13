@@ -1,0 +1,263 @@
+﻿@page "/Ccas"
+@using System.Globalization
+@inject ApiService ApiService
+
+<PageTitle>Assentaments comptables</PageTitle>
+
+@if (selectedItem == null)
+{
+    <div class="PageWrapper600">
+        <h3>Assentaments comptables</h3>
+
+        <div class="PageOptions">
+            <PageOptions>
+                <LookupEmp Values="emps" Value="emp" ValueChanged="EmpChangedAsync"></LookupEmp>
+                <LookupYears Values="years" Value="year" ValueChanged="YearChangedAsync"></LookupYears>
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir</a>
+            </PageOptions>
+        </div>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems() ?? new())
+            {
+                <SwipeMenu Model="SwipeMenu(item)" MenuItemClick="SwipeMenuItemClickAsync">
+                    <div class="Item">
+                        @if(item.Docfile == null){
+                            <a class="Icon" href="#" @onclick:preventDefault>
+                                &nbsp;
+                            </a>
+                        } else {
+                            <a class="Icon" href="@item.DownloadUrl()" target="_blank" title="clic aquí per obrir el fitxer">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                                    <path d="M352 448V192H240c-26.5 0-48-21.5-48-48V32H64C46.3 32 32 46.3 32 64V448c0 17.7 14.3 32 32 32H320c17.7 0 32-14.3 32-32zm-.5-288c-.7-2.8-2.1-5.4-4.2-7.4L231.4 36.7c-2.1-2.1-4.6-3.5-7.4-4.2V144c0 8.8 7.2 16 16 16H351.5zM0 64C0 28.7 28.7 0 64 0H220.1c12.7 0 24.9 5.1 33.9 14.1L369.9 129.9c9 9 14.1 21.2 14.1 33.9V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z" />
+                                </svg>
+                            </a>
+                        }
+                        <a href="#" class="Fch" title="clic aquí per obrir la fitxa"
+                           @onclick="@(()=>selectedItem = item)"
+                        @onclick:preventDefault>
+                            <div class="Fch">@($"{item.Fch:dd/MM/yy}")</div>
+                        </a>
+                        <a href="#" class="Nom" title="clic aquí per obrir la fitxa"
+                           @onclick="@(()=>selectedItem = item)"
+                        @onclick:preventDefault>
+                            <div class="Truncate">@item.Concept</div>
+                        </a>
+                    </div>
+                </SwipeMenu>
+            }
+        </div>
+
+    </div>
+}
+else
+{
+    <Cca Value="selectedItem"
+         CloseRequest="@(()=> selectedItem = null)"
+         AfterUpdate="AfterUpdateHandler"
+         AfterDelete="AfterDeleteHandler"></Cca>
+
+}
+<Error @bind-Value="exception"></Error>
+@code {
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    List<EmpModel.EmpIds>? emps;
+    EmpModel.EmpIds? emp;
+    int? year;
+    List<int>? years;
+
+    List<CcaModel>? values;
+    CcaModel? selectedItem;
+    string? searchterm;
+    string? title;
+    bool isShowingObsolets;
+    Exception? exception;
+
+    enum Ids
+    {
+        Delete,
+        Browse,
+        CopyUrl
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+
+        try
+        {
+            emps = values?.Select(x => x.Emp).Distinct().ToList();
+            emp = ApiService.Emp;
+            years = Enumerable.Range(1985, DateTime.Now.Year - 1985 + 1).OrderByDescending(x => x).ToList();
+            year = years.First();
+            await FetchAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            values = await ApiService.GetAsync<List<CcaModel>>("Ccas", $"{emp}", $"{year}");
+            values = values?.OrderByDescending(x => x.UsrLog?.FchLastEdited)
+            .ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    private List<CcaModel>? FilteredItems()
+    {
+        var retval = values;
+        if (!string.IsNullOrEmpty(searchterm))
+        {
+
+            var amount = CcaModel.ParseAmount(searchterm);
+            if (amount==null)
+                retval = retval?.Where(x => x.Matches(searchterm)).ToList();
+            else
+                retval = retval?.Where(x => x.Matches(searchterm) || x.Matches(amount)).ToList();
+        }
+        return retval;
+    }
+
+    private SwipeMenuModel SwipeMenu(CcaModel value)
+    {
+        var retval = new SwipeMenuModel();
+        var url = value.DownloadUrl();
+        retval.AddDeleteButton(value);
+        if (!string.IsNullOrEmpty(url))
+            retval.AddBrowseButton(url);
+        if (!string.IsNullOrEmpty(url))
+            retval.AddCopyToClipboardButton(url);
+        return retval;
+    }
+
+    private async Task EmpChangedAsync(EmpModel.EmpIds args)
+    {
+        emp = args;
+        await FetchAsync();
+    }
+
+    private async Task YearChangedAsync(int? args)
+    {
+        year = args;
+        await FetchAsync();
+    }
+
+    private void ItemClick(CcaModel item)
+    {
+        selectedItem = item;
+    }
+
+    private async Task SwipeMenuItemClickAsync(SwipeMenuModel.Item item)
+    {
+        var value = (CcaModel)item.Tag!;
+        switch ((Ids)item.Id)
+        {
+            case Ids.Delete:
+                try
+                {
+                    await ApiService.GetAsync<bool>("Cca/delete", value.Guid.ToString());
+                    values!.Remove(value);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+                break;
+        }
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new CcaModel
+            {
+                Emp = (EmpModel.EmpIds)emp!,
+                Fch = DateOnly.FromDateTime(DateTime.Today),
+                Concept = "(Nou assentament)",
+                UsrLog = UsrLogModel.Factory(ApiService.CurrentUser())
+            };
+    }
+
+    private void AfterUpdateHandler(CcaModel args)
+    {
+        var idx = values!.IndexOf(values.FirstOrDefault(x => x.Guid == args.Guid));
+        if (idx >= 0)
+            values[idx] = args;
+        else
+            values!.Add(args);
+
+        values = values.OrderByDescending(x => x.UsrLog?.FchLastEdited).ToList();
+        selectedItem = null;
+    }
+
+    private void AfterDeleteHandler(CcaModel args)
+    {
+        values!.Remove(args);
+        selectedItem = null;
+    }
+
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    decimal? Amount(string numberString)
+    {
+        decimal? retval = null;
+        // Replace with your input
+
+        // Regex to extract the number part from the string (supports thousands and decimal separators)
+        // Simple replace of all non numeric and non ',' '.' characters with nothing might suffice as well
+        // Depends on the input you receive
+        var regex = new System.Text.RegularExpressions.Regex("^[^\\d-]*(-?(?:\\d|(?<=\\d)\\.(?=\\d{3}))+(?:,\\d+)?|-?(?:\\d|(?<=\\d),(?=\\d{3}))+(?:\\.\\d+)?)[^\\d]*$");
+
+        char decimalChar;
+        char thousandsChar;
+
+        // Get the numeric part from the string
+
+        if (!string.IsNullOrEmpty(regex.Match(numberString).Value))
+        {
+
+            var numberPart = regex.Match(numberString).Groups[1].Value;
+            // Try to guess which character is used for decimals and which is used for thousands
+            if (numberPart.LastIndexOf(',') > numberPart.LastIndexOf('.'))
+            {
+                decimalChar = ',';
+                thousandsChar = '.';
+            }
+            else
+            {
+                decimalChar = '.';
+                thousandsChar = ',';
+            }
+
+            // Remove thousands separators as they are not needed for parsing
+            numberPart = numberPart.Replace(thousandsChar.ToString(), string.Empty);
+
+            // Replace decimal separator with the one from InvariantCulture
+            // This makes sure the decimal parses successfully using InvariantCulture
+            numberPart = numberPart.Replace(decimalChar.ToString(),
+                CultureInfo.InvariantCulture.NumberFormat.CurrencyDecimalSeparator);
+
+            // Voilá
+            retval = decimal.Parse(numberPart, NumberStyles.AllowDecimalPoint | NumberStyles.Number, CultureInfo.InvariantCulture);
+        }
+
+        return retval;
+    }
+}

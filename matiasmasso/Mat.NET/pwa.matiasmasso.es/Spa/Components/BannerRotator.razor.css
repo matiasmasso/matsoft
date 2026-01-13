@@ -1,0 +1,83 @@
+﻿.BannerRotator {
+    position: relative;
+}
+
+.Banner {
+    max-width:100%;
+    height:auto;
+}
+
+img.Banner {
+    width:100%;
+}
+
+    /* Next & previous buttons */
+
+    .prev, .next {
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        width: auto;
+        padding: 16px;
+        margin-top: -22px;
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        transition: 0.6s ease;
+        border-radius: 0 3px 3px 0;
+        user-select: none;
+    }
+
+   .prev {
+        left: 0;
+        border-radius: 0 5px 5px 0;
+    }
+
+    .next {
+        right: 0;
+        border-radius: 5px 0 0 5px;
+    }
+
+    .BannerRotator:hover .dots {
+        display: block;
+    }
+
+    .BannerRotator:hover .prev, .BannerRotator:hover .next {
+        background-color: rgba(0,0,0,0.6);
+    }
+
+    /* On hover, add a black background color with a little bit see-through */
+    .prev:hover, .next:hover {
+        background-color: rgba(0,0,0,0.9);
+    }
+
+
+    /* The dots/bullets/indicators */
+
+    .dots {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 10px;
+        text-align: center;
+    }
+
+    .dot {
+        cursor: pointer;
+        height: 15px;
+        width: 15px;
+        margin: 0 2px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        transition: background-color 0.6s ease;
+    }
+
+        .active, .dot:hover {
+            background-color: #717171;
+        }
+
+
+@media (max-width:600px) {
+}

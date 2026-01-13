@@ -1,0 +1,145 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+
+    @if (value == null || allContacts == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="UpdateRequestHandler"
+                      CancelRequest="CloseRequestHandler"
+                      DeleteRequest="DeleteRequestHandler"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    }
+
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public ContactDocModel? Value { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback<ContactDocModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<ContactDocModel> AfterDelete { get; set; }
+
+    ContactDocModel? value;
+    List<ContactModel>? allContacts;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Fch,
+        Ref,
+        Docfile
+    }
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            ApiService.OnChange += Refresca;
+            allContacts = ApiService.GetContacts();
+            //propertyGrid = PropertyGrid();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+            {
+                value = await ApiService.GetAsync<ContactDocModel>("ContactDoc", Value.Guid.ToString());
+            }
+
+            Refresca();
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+        InvokeAsync(StateHasChanged);
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddDateOnly("Data", value?.Fch);
+        retval.AddString("Assumpte", value?.Ref);
+        retval.AddDocfile(value?.Docfile);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Fch = propertyGrid!.GetDateOnly((int)Fields.Fch);
+            value!.Ref = propertyGrid!.GetString((int)Fields.Ref);
+            value.Docfile = propertyGrid!.GetDocfile((int)Fields.Docfile);
+            value.Docfile!.Fch = ((DateOnly)value.Fch!).ToDateTime(new TimeOnly());
+            value.Docfile.Nom = value.Ref;
+
+            await ApiService.PostMultipartAsync<ContactDocModel, bool>(value.Docfile, value, "ContactDoc");
+            value.IsNew = false;
+            await AfterUpdate.InvokeAsync(value);
+            await CloseRequestHandler();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("ContactDoc/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+            await CloseRequestHandler();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+}

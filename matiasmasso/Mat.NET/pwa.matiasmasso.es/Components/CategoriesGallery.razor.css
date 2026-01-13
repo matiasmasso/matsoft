@@ -1,0 +1,28 @@
+﻿
+.Grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
+    width: 100%;
+    margin-top:20px;
+}
+
+.Item {
+    display: block;
+    margin: 5px;
+    border: 1px solid #ccc;
+}
+
+    .Item:hover {
+        border: 1px solid #777;
+    }
+
+    .Item img {
+        width: 100%;
+        height: auto;
+    }
+
+    .Item .Label {
+        padding: 10px 0 5px;
+        text-align: center;
+        background-color:#DDDDDD;
+    }

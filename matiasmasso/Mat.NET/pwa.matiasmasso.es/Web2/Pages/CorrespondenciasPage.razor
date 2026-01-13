@@ -1,0 +1,135 @@
+﻿@page "/Correspondencias"
+@page "/{LangSegment}/Correspondencias"
+@layout ProLayout
+@implements IDisposable
+@inject CultureService culture
+@inject SessionStateService session
+@inject CorrespondenciasService CorrespondenciasService
+
+<div class="PageWrapper600">
+
+
+    @if (model == null && exception == null)
+    {
+        <h1>@culture.Localize("Credentials")</h1>
+
+        <Loading></Loading>
+    }
+    else if (selectedItem != null)
+    {
+        <Correspondencia Model="selectedItem" CloseRequest="@(()=>selectedItem=null)"></Correspondencia>
+    }
+    else
+    {
+        <h1>@culture.Localize("Credentials")</h1>
+
+        <div class="PageOptions">
+            <PageOptions IsShowingOptions>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>
+                @culture.Localize("Credentials.AddNew")
+            </a>
+        </PageOptions>
+    </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} documents",model?.Count()).Count())
+        </div>
+
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders HideOnMobile">
+                <a href="#" class="Truncate"
+                @onclick="@(()=>SortColumn(Cols.Fch))"
+                @onclick:preventDefault="true">
+                    @culture.Localize("PurchaseDate")
+                </a>
+            </div>
+
+            <div class="GridRowDivider"></div>
+
+            @foreach (var item in model?.Where(x => x.Matches(searchTerm)).ToList() ?? new())
+            {
+                <a href="#" class='Item'
+                @onclick="@(()=>selectedItem = item)"
+                @onclick:preventDefault="true">
+
+                    <div class="Label HideOnDesktop">@culture.Localize("PurchaseDate")</div>
+                    <div class="Truncate">
+                        @string.Format("{0:dd/MM/yyyy}", item.Fch)
+                    </div>
+
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+
+@code {
+    [Parameter] public string? LangSegment { get; set; }
+    private List<CorrespondenciaModel>? model;
+    private CorrespondenciaModel? selectedItem;
+    private string searchTerm = string.Empty;
+    private Cols? sortedColumn = Cols.Fch;
+    private bool isDescendingOrder = false;
+    private Exception? exception;
+
+    private enum Cols
+    {
+        Fch
+    }
+
+    protected override void OnInitialized()
+    {
+        session.OnChange += Refresca;
+        CorrespondenciasService.OnChange += Refresca;
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        model = CorrespondenciasService.Values;
+        exception = ex;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<CorrespondenciaModel> FilteredItems() => model!.Where(x => x.Matches(searchTerm)).ToList();
+
+
+    private void SortColumn(Cols col)
+    {
+        var lang = culture.Lang();
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            //case Cols.Ref:
+            //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Referencia ?? "").ToList() : model!.OrderBy(x => x.Referencia ?? "").ToList();
+            //    break;
+            //case Cols.User:
+            //    model = isDescendingOrder ? model!.OrderByDescending(x => x.Usuari ?? "").ToList() : model!.OrderBy(x => x.Usuari ?? "").ToList();
+            //    break;
+        }
+    }
+
+    public void AddNew()
+    {
+        selectedItem = new CorrespondenciaModel();
+    }
+
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+        CorrespondenciasService.OnChange -= Refresca;
+    }
+
+}

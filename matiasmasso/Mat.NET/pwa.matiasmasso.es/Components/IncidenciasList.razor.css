@@ -1,0 +1,21 @@
+﻿@media (min-width:600px){
+    .Grid {
+        display:grid;
+        grid-template-columns:min-content min-content 1fr 1fr;
+        grid-column-gap:10px;
+    }
+
+    .Item {
+        display: contents;
+    }
+
+    .Fch {
+        white-space: nowrap;
+    }
+    .Product, .Customer {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+

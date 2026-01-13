@@ -1,0 +1,26 @@
+﻿.Bottom {
+    display:flex;
+    font-size: 0.8em;
+    flex-direction: row;
+    justify-content: space-between;
+    padding:10px;
+    background-color:#F5F5F5;
+}
+.Links {
+    display: flex;
+    flex-direction: row;
+}
+
+.Links div:not(:first-child):before {
+    content:"|";
+    margin:0 7px;
+}
+
+@media screen and (max-width:600px) {
+    .Copyright {
+        display:none;
+    }
+    .Bottom {
+        justify-content: center;
+    }
+}

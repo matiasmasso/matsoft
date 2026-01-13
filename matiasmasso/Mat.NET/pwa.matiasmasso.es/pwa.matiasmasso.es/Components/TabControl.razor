@@ -1,0 +1,59 @@
+﻿
+<CascadingValue Value="this">
+    <div class="TabControlWrapper">
+        <div role="group" class="TabButtons">
+
+            @foreach (TabPage tabPage in Pages)
+            {
+                <a href="#" 
+                        class="TabButton @GetButtonClass(tabPage)" 
+                        @onclick:preventDefault
+                        @onclick=@( () => ActivatePage(tabPage) )>
+
+                    @if (TabTextTemplate != null)
+                        @TabTextTemplate(tabPage)
+                    else
+                        @tabPage.Text
+
+                </a>
+            }
+            <div class="TabButton Spacer"></div>
+        </div>
+
+        <div class="TabPageContent">
+            @ChildContent
+        </div>
+    </div>
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment<TabPage> TabTextTemplate { get; set; }
+
+    public TabPage ActivePage { get; set; }
+    List<TabPage> Pages = new List<TabPage>();
+
+    internal void AddPage(TabPage tabPage)
+    {
+        Pages.Add(tabPage);
+        if (Pages.Count == 1)
+            ActivePage = tabPage;
+
+        StateHasChanged();
+    }
+
+    string GetButtonClass(TabPage page)
+    {
+        return page == ActivePage ? "Active" : "Passive";
+       // return page == ActivePage ? "btn-primary" : "btn-secondary";
+    }
+
+    void ActivatePage(TabPage page)
+    {
+        ActivePage = page;
+    }
+
+}

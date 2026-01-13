@@ -1,0 +1,8 @@
+﻿.Thumbnail {
+    display:block;
+}
+
+.Thumbnail img {
+    width:100%;
+    height:auto;
+}

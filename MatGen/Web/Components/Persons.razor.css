@@ -1,0 +1,46 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.Item {
+    display: flex;
+    gap: 10px;
+}
+
+
+.Title {
+    flex-shrink: 1;
+}
+
+.Ico {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.Year {
+    flex-shrink: 0;
+    width: 2.0em;
+    min-width: 2.0em;
+}
+
+.HasGrau {
+    color:navy;
+}
+
+
+
+@media(max-width:599px){
+
+}
+
+@media(min-width:600px){
+    .Item:hover {
+        background-color: #EEEEEE;
+    }
+}
+

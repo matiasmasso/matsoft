@@ -1,0 +1,21 @@
+﻿.PanelWrapper {
+    width:100%;
+}
+
+.Caption {
+    display:flex;
+    padding:5px 0;
+}
+
+.Chevron {
+    width:1em;
+    margin-right:10px;
+}
+
+.Chevron .fa-secondary {
+    opacity: .4
+}
+
+.Caption:hover .Chevron .fa-secondary {
+    opacity: 1
+}

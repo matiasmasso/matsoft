@@ -1,0 +1,336 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper900">
+
+    @if (selectedCca != null)
+    {
+        <Cca Value="selectedCca"
+             AfterUpdate="HandleAfterUpdateCca"
+             AfterDelete="HandleAfterDeleteCca"
+             CloseRequest="@(()=>selectedCca=null)"></Cca>
+    }
+    else
+    {
+
+        <Title Value="Extracte" CloseRequest="HandleCloseRequest"></Title>
+
+        <PageOptions>
+            <LookupCta Value="value?.Cta"
+                       Values="@(Values?.Select(x=>(Guid)x.Cta!).ToList())"
+                       ValueChanged="HandleCtaChangedAsync"></LookupCta>
+
+            @if (Contacts()?.Count > 1 | value?.Contact != null)
+            {
+                <LookupContact Value="value?.Contact"
+                               Values="Contacts()"
+                               ValueChanged="HandleContactChangedAsync"></LookupContact>
+            }
+
+            <LookupYears Value="value?.Year"
+                         Values="Years()"
+                         ValueChanged="HandleYearChangedAsync"></LookupYears>
+
+            <ButtonExcel LoadRequest="LoadExcel"></ButtonExcel>
+
+            @if (ApiService.CurrentUser()?.Rol == UserModel.Rols.superUser)
+            {
+                @if (isSwitching)
+                {
+                    <Loading></Loading> @switchCount
+                }
+                else if (isRequestingToSwitch)
+                {
+                    <LookupCta @bind-Value="switchToCta"></LookupCta>
+                    <button class="Button ButtonOk" @onclick="MultiEdit">Acceptar</button>
+                }
+                else
+                {
+                    <a href="#" @onclick:preventDefault @onclick="@(()=>isRequestingToSwitch = true)">
+                        MultiEdit
+                    </a>
+                }
+
+            }
+        </PageOptions>
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+            <div class="ColHeaders HideOnMobile">
+                <div class="Fch">data</div>
+                <div class="Ico">&nbsp;</div>
+                <div class="Nom">concepte</div>
+                <div class="Deb">deure</div>
+                <div class="Hab">haver</div>
+                <div class="Sdo">saldo</div>
+            </div>
+
+            @foreach (var ccb in FilteredItems())
+            {
+                <a href="#" class="Item" @onclick:preventDefault @onclick="@(()=>ItemClicked(ccb))">
+                    <div class="Fch">@($"{ccb.Cca?.Fch:dd/MM/yy}")</div>
+                    <div class="Ico">
+                        @if (ccb.Cca?.Docfile == null)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            <Icon Id="Icon.Ids.Doc"></Icon>
+                        }
+                    </div>
+                    <div class="Nom">@ccb.Cca?.Concept</div>
+
+                    <div class="Deb HideOnMobile">@(ccb.Deb == null ? "" : $"{ccb.Deb:N2} €")</div>
+                    <div class="Hab HideOnMobile">@(ccb.Hab == null ? "" : $"{ccb.Hab:N2} €")</div>
+                    <div class="Eur HideOnDesktop">@($"{ccb.Eur:N2} €")</div>
+                    <div class="Sdo">@($"{ccb.Sdo:N2} €")</div>
+                </a>
+
+                <div class="RowDivider HideOnDesktop"></div>
+            }
+        </div>
+
+        <Error @bind-Value="exception"></Error>
+    }
+</div>
+
+@code {
+    [Parameter] public PgcCtaModel.Extracte? Value { get; set; }
+    [Parameter] public List<PgcCtaModel.Extracte>? Values { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+    [Parameter] public EventCallback FetchRequest { get; set; }
+
+    PgcCtaModel.Extracte? value;
+    List<CcaModel>? allCcas;
+    CcaModel? selectedCca;
+    //PgcCtaModel? cta;
+    bool isDeutora;
+    bool isSwitching;
+    bool isRequestingToSwitch;
+    Guid? switchToCta;
+    int switchCount;
+    //EmpModel.EmpIds? emp;
+    //int? year;
+    CcaModel? selectedValue;
+    string? searchterm;
+    Exception? exception;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        value = Value;
+        await FetchAsync();
+    }
+
+    List<Guid?>? Contacts() => Values?
+    .Where(x => x.Cta == value?.Cta)
+    .Select(x => x.Contact)
+    .Distinct()
+    .ToList();
+
+    List<int>? Years() => Values?
+    .Where(x => x.Cta == value?.Cta && x.Contact == value?.Contact)
+    .Select(x => x.Year)
+    .OrderByDescending(x => x)
+    .ToList();
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            value = await ApiService.PostAsync<PgcCtaModel.Extracte, PgcCtaModel.Extracte>(value!, "Ccas/extracte");
+            allCcas = value!.Ccas;
+            // emp = value.Emp;
+            // year = value.Year;
+            isDeutora = ApiService.GetPgcCta(value.Cta)?.IsDeutora() ?? false;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+    }
+
+    List<Ccb> FilteredItems()
+    {
+        List<Ccb> retval = new();
+        decimal sdo = 0;
+
+        List<CcaModel>? ccas;
+        if (string.IsNullOrEmpty(searchterm))
+            ccas = allCcas?
+            .OrderBy(x => x.Fch)
+            .ThenBy(x => x.Ccd)
+            .ThenBy(x => x.Cdn)
+            .ThenBy(x => x.Concept)
+            .ToList();
+        else
+            ccas = allCcas?
+            .Where(x => x.Matches(searchterm))
+            .OrderBy(x => x.Fch)
+            .ThenBy(x => x.Ccd)
+            .ThenBy(x => x.Cdn)
+            .ThenBy(x => x.Concept)
+            .ToList();
+
+        foreach (var cca in ccas ?? new())
+        {
+            foreach (var itm in CcaItems(cca))
+            {
+                decimal eur;
+                if (isDeutora)
+                    eur = itm.Dh == CcaModel.Item.DhEnum.Deb ? itm.Eur : -itm.Eur;
+                else
+                    eur = itm.Dh == CcaModel.Item.DhEnum.Hab ? itm.Eur : -itm.Eur;
+
+                sdo += eur;
+                retval.Add(new Ccb
+                    {
+                        Cca = cca,
+                        Deb = (itm.Dh == CcaModel.Item.DhEnum.Deb ? itm.Eur : null),
+                        Hab = (itm.Dh == CcaModel.Item.DhEnum.Hab ? itm.Eur : null),
+                        Eur = eur,
+                        Sdo = sdo
+                    });
+            }
+        }
+        retval.Reverse();
+        return retval;
+    }
+
+
+    List<CcaModel.Item> CcaItems(CcaModel cca) => cca.Items
+    .Where(y => y.Cta == value!.Cta && y.Contact == value.Contact)
+    .ToList();
+
+
+    void ItemClicked(Ccb args)
+    {
+        selectedCca = args.Cca;
+    }
+
+    async Task HandleCtaChangedAsync(Guid? args)
+    {
+        var ctaCandidates = Values?.Where(x => x.Cta == args).ToList();
+        var contactCandidates = ctaCandidates?.Where(x => x.Contact == value?.Contact).ToList();
+        var yearCandidates = contactCandidates?.Where(x => x.Year == value?.Year).ToList();
+        if (yearCandidates?.Count > 0)
+            value = yearCandidates.First();
+        else if (contactCandidates?.Count > 0)
+            value = contactCandidates.First();
+        else
+            value = ctaCandidates?.First();
+
+        await FetchAsync();
+    }
+
+    async Task HandleContactChangedAsync(ContactModel? args)
+    {
+        var contactCandidates = Values?.Where(x => x.Cta == value?.Cta && x.Contact == args?.Guid).ToList();
+        var yearCandidates = contactCandidates?.Where(x => x.Year == value?.Year).ToList();
+        if (yearCandidates?.Count > 0)
+            value = yearCandidates.First();
+        else
+            value = contactCandidates?.First();
+
+        await FetchAsync();
+    }
+
+    async Task HandleYearChangedAsync(int? args)
+    {
+        value = Values?.Where(x => x.Cta == value?.Cta && x.Contact == value?.Contact && x.Year == args).First();
+        await FetchAsync();
+    }
+
+    void HandleCloseRequest()
+    {
+        CloseRequest.InvokeAsync();
+    }
+
+    async Task MultiEdit()
+    {
+
+        try
+        {
+            isRequestingToSwitch = false;
+            isSwitching = true;
+            var ccbs = FilteredItems();
+            var items = ccbs.SelectMany(x => x.Cca!.Items).Where(x => x.Cta == value?.Cta && x.Contact == value?.Contact).ToList();
+            switchCount = items.Count;
+            foreach (var item in items)
+            {
+                item.Cta = (Guid)switchToCta!;
+                await ApiService.PostAsync<CcaModel.Item, bool>(item, "Ccb");
+                switchCount -= 1;
+            }
+            await FetchRequest.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isSwitching = false;
+    }
+
+    void HandleAfterUpdateCca(CcaModel args)
+    {
+        var previous = allCcas!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous == null)
+            allCcas!.Add(args);
+        else
+        {
+            var idx = allCcas!.IndexOf(previous);
+            allCcas[idx] = args;
+        }
+        selectedCca = null;
+        StateHasChanged();
+    }
+
+    void HandleAfterDeleteCca(CcaModel args)
+    {
+        var previous = allCcas!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous != null)
+            allCcas!.Remove(previous);
+
+        selectedCca = null;
+        StateHasChanged();
+    }
+
+    void LoadExcel(DTO.Excel.Book book)
+    {
+        var ctaNom = ApiService.GetPgcCta(value.Cta)?.Nom;
+        var contactNom = ApiService.GetContact(value.Contact)?.RaoSocial;
+        book.Filename = $"Extracte {value.Emp.ToString()} {ctaNom} {contactNom} {value.Year}.xlsx";
+
+        var sheet = book.AddSheet("Extracte");
+        sheet.AddColumn("Data");
+        sheet.AddColumn("Concepte");
+        sheet.AddColumn("Deure", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("Haver", DTO.Excel.Cell.NumberFormats.Euro);
+        sheet.AddColumn("Saldo", DTO.Excel.Cell.NumberFormats.Euro);
+
+        foreach (var ccb in FilteredItems())
+        {
+            var row = sheet.AddRow();
+            row.AddCell(ccb.Cca?.Fch);
+            row.AddCell(ccb.Cca?.Concept);
+            row.AddEur(ccb.Deb);
+            row.AddEur(ccb.Hab);
+            row.AddEur(ccb.Sdo);
+        }
+    }
+
+    protected class Ccb
+    {
+        public CcaModel? Cca { get; set; }
+        public decimal? Deb { get; set; }
+        public decimal? Hab { get; set; }
+        public decimal? Eur { get; set; }
+        public decimal Sdo { get; set; }
+    }
+
+
+}

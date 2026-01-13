@@ -1,0 +1,35 @@
+﻿<div class="Wrapper">
+
+    <input type="text"
+           @oninput="HandleOnChange"
+           @bind-value="data" />
+
+    <div class="Lupa">
+        <Icon Id="Icon.Ids.MagnifyingGlass"></Icon>
+    </div>
+
+</div>
+
+
+@code {
+    private string? data;
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        data = Value?.ToString() ?? "";
+        base.OnParametersSet();
+    }
+
+    private async Task HandleOnChange(ChangeEventArgs args)
+    {
+        var value = args.Value?.ToString() ?? "";
+
+        if (ValueChanged.HasDelegate)
+            await ValueChanged.InvokeAsync(value);
+    }
+
+
+}

@@ -1,0 +1,67 @@
+﻿@page "/{*Catchall}"
+
+@using Spa.Shared
+@using Spa.ViewModels
+@inject AppState AppState
+@inject HttpClient Http
+
+
+@if (viewModel!.LoadStatus == Globals.LoadStatusEnum.Loading) {
+    <div>Loading...</div>
+} else if (@viewModel!.LoadStatus == Globals.LoadStatusEnum.Failed) {
+    <div>Failed...</div>
+} else {
+    <div class="Wrapper">
+    <Breadcrumbs Items=viewModel.Model!.Breadcrumbs ></Breadcrumbs>
+
+        @if(viewModel.Model.Tab == ProductModel.Tabs.general)
+        {
+            <div>@((MarkupString)(viewModel?.Content ?? ""))</div>
+            @if(viewModel!.Model.Depts.Count > 0)
+            {
+                <ProductDeptsCollection Items=viewModel.Model.Depts></ProductDeptsCollection>   
+            }
+            else if(viewModel!.Model.Categories.Count > 0)
+            {
+                <ProductCategoriesCollection Items=viewModel.Model.Categories></ProductCategoriesCollection>   
+            }
+            else if(viewModel!.Model.Skus.Count > 0)
+            {
+                <ProductSkusCollection Items=viewModel.Model.Skus></ProductSkusCollection>   
+            }
+        }
+        else if(viewModel.Model.Tab == ProductModel.Tabs.coleccion)
+        {
+            @if(viewModel!.Model.Depts.Count > 0)
+            {
+                <ProductDeptsCollection Items=viewModel.Model.Depts></ProductDeptsCollection>   
+            }
+            else if(viewModel!.Model.Categories.Count > 0)
+            {
+                <ProductCategoriesCollection Items=viewModel.Model.Categories></ProductCategoriesCollection>   
+            }
+            else if(viewModel!.Model.Skus.Count > 0)
+            {
+                <ProductSkusCollection Items=viewModel.Model.Skus></ProductSkusCollection>   
+            }
+        }
+
+
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public string? Catchall { get; set; }
+
+    private ProductLandingPageViewModel? viewModel;
+
+    protected override Task OnParametersSetAsync()
+    {
+        viewModel = new ProductLandingPageViewModel(AppState, Catchall ?? "" );
+        viewModel.OnStateChange += StateHasChanged;
+        viewModel.Fetch(Http);
+        return base.OnParametersSetAsync();
+    }
+}

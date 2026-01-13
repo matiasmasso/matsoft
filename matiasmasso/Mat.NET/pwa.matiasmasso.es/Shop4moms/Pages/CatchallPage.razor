@@ -1,0 +1,61 @@
+﻿@page "/{url1}/{url2?}/{url3?}/{url4?}/{url5?}"
+@inject RoutesService routesService
+
+
+@if(model == null){
+    <Loading></Loading>
+} else if(model.Src == RouteModel.Srcs.Category)
+{
+    <Category Guid="@model.Guid"></Category>
+}
+else if (model.Src == RouteModel.Srcs.Sku)
+{
+    <Sku Guid="@model.Guid"></Sku>
+}
+else if (model.Src == RouteModel.Srcs.Content)
+{
+    <Content Guid="@model.Guid"></Content>
+} else
+{
+    <PageNotFound></PageNotFound>
+}
+
+@code {
+    [Parameter] public string? Url1 { get; set; }
+    [Parameter] public string? Url2 { get; set; }
+    [Parameter] public string? Url3 { get; set; }
+    [Parameter] public string? Url4 { get; set; }
+    [Parameter] public string? Url5 { get; set; }
+    private RouteModel? model;
+
+    protected override void OnInitialized()
+    {
+        routesService.OnChange += Refresca;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Refresca();
+    }
+
+    void Refresca()
+    {
+        //var routes = routesService.Values;
+        var path = Url();
+        model = routesService.GetValue(path) ?? new();
+    }
+
+    private string Url()
+    {
+        List<string?> segments = new List<string?> { Url1, Url2, Url3, Url4, Url5 }.ToList() ;
+        if (segments.First() != null && LangDTO.LangUrlSegments().Any(x => x == segments.First()))
+            segments.RemoveAt(0);
+
+        return string.Join("/", segments.Where(x => !string.IsNullOrEmpty(x)));
+    }
+
+    public void Dispose()
+    {
+        routesService.OnChange -= Refresca;
+    }
+}

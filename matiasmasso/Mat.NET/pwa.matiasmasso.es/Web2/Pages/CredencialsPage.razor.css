@@ -1,0 +1,105 @@
+﻿.Wrapper {
+    max-width: 400px;
+}
+
+.ShowObsolets {
+    margin: 20px 0 10px;
+}
+
+.PageOptions {
+    margin-bottom: 15px;
+}
+
+.Summary {
+    margin-top: 10px;
+}
+
+.Item {
+    cursor: pointer;
+}
+
+
+
+/*------------------------ desktop ----------------------*/
+
+@media (min-width:600px) {
+
+    .Grid {
+        display: grid;
+        grid-template-columns: minmax(50%,1fr) minmax(100px,50%);
+        margin-top: 15px;
+        grid-column-gap: 1px;
+    }
+
+    .ColumnHeaders {
+        color: gray;
+    }
+
+    .Item {
+        display: contents;
+    }
+
+        .Item > div {
+            padding: 0 7px;
+        }
+
+    *
+
+    .Obsoleto > div {
+        background-color: #DDDDDD;
+    }
+
+    .Obsoleto .GridRowDivider {
+        border-bottom-color: white;
+    }
+
+    .Nom, .Description {
+        padding-right: 10px;
+    }
+
+    .ContextMenu {
+        position: absolute;
+        box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background-color: #FEFFD5;
+        left: 20px;
+        z-index: 10;
+        width: min-content;
+        max-width: 100%;
+        border: 1px solid black;
+    }
+
+    .GridRowDivider {
+        position: relative;
+    }
+}
+
+/*------------------------ mobiles ----------------------*/
+
+@media (max-width:599px) {
+
+    .Item {
+        display: block;
+        padding: 7px;
+    }
+
+    .Description, .FchFrom {
+        color: gray;
+    }
+
+    .Obsoleto {
+        color: gray;
+    }
+}
+
+
+@media (min-width:600px) {
+
+    .Ref, .User {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

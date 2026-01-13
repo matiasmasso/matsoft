@@ -1,0 +1,70 @@
+﻿<div class="SwipeMenu Wrapper" @ontouchstart="HandleTouchStart" @ontouchend="HandleTouchEnd">
+    @if (isShowingLeftMenu)
+    {
+        @foreach (var item in Model?.LeftItems ?? new())
+        {
+            <SwipeMenuItem Model="item" OnClick="ItemClick"></SwipeMenuItem>
+         }
+    }
+
+    <div class="SwipeMenu Cell @(isShowingLeftMenu ? "LeftMenuOn":"")">
+        @ChildContent
+    </div>
+
+    @if (isShowingRightMenu)
+    {
+        @foreach (var item in Model?.RightItems ?? new())
+        {
+            <SwipeMenuItem Model="item" OnClick="ItemClick"></SwipeMenuItem>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public SwipeMenuModel? Model { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public EventCallback<SwipeMenuModel.Item> MenuItemClick { get; set; }
+
+    bool isShowingLeftMenu;
+    bool isShowingRightMenu;
+    TouchPoint? startPoint;
+
+    void HandleTouchStart(TouchEventArgs args)
+    {
+        startPoint = args.Touches[0];
+    }
+
+    void HandleTouchEnd(TouchEventArgs args)
+    {
+        var degreesThreshold = 20;
+        var lengthThreshold = 50;
+        TouchPoint endPoint = args.ChangedTouches[0];
+        var deltaX = endPoint.ClientX - startPoint!.ClientX;
+        var deltaY = endPoint.ClientY - startPoint!.ClientY;
+        var radians = Math.Atan2(deltaY, deltaX);
+        var degrees = (180 / Math.PI) * radians;
+        if (Math.Abs(deltaX) > lengthThreshold)
+        {
+            isShowingLeftMenu = degrees > -degreesThreshold && degrees < degreesThreshold;
+            isShowingRightMenu = degrees > 180 - degreesThreshold && degrees < 180 + degreesThreshold;
+        }
+    }
+
+    void ItemClick(SwipeMenuModel.Item item)
+    {
+        isShowingLeftMenu = false;
+        isShowingRightMenu = false;
+        MenuItemClick.InvokeAsync(item);
+    }
+
+    double TouchAngle(TouchPoint value)
+    {
+        TouchPoint endPoint = value;
+        var deltaX = endPoint.ClientX - startPoint!.ClientX;
+        var deltaY = endPoint.ClientY - startPoint!.ClientY;
+        var radians = Math.Atan2(deltaY, deltaX);
+        var degrees = (180 / Math.PI) * radians;
+        return degrees;
+    }
+}

@@ -1,0 +1,134 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+
+    <TabControl>
+        <TabPage Text="@Localizer("Details")">
+            @if (gridModel == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          ></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar 
+                              IsDirty="isDirty"
+                              IsUpdating="isUpdating"
+                              CanDelete="@(Model != null && !Model.IsNew)"
+                              RequestToCancel="CancelRequest"
+                              RequestToDelete="DeleteRequest"
+                              RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+        </TabPage>
+
+        <TabPage Text="@Localizer("Offers")">
+            <MarketPlaceOffers Value="Model"></MarketPlaceOffers>
+        </TabPage>
+        <TabPage Text="@Localizer("Tickets")">
+            <MarketPlaceTickets Value="Model"></MarketPlaceTickets>
+        </TabPage>
+    </TabControl>
+
+
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    [Parameter] public MarketPlaceModel Model { get; set; }
+    [Parameter] public EventCallback<MarketPlaceModel> OnUpdate { get; set; }
+    [Parameter] public EventCallback<MarketPlaceModel> OnDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private MarketPlaceModel _value;
+    private PropertyGridModel gridModel;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    new ProblemDetails problemDetails;
+
+    private enum Fields : int
+    {
+        Nom,
+        Web,
+        Commission
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (!Model.IsNew)
+        {
+            var apiResponse = await GetAsync<MarketPlaceModel>( "MarketPlace", Model.Guid.ToString());
+            if (apiResponse.Success())
+                Model = apiResponse.Value;
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+
+
+        var _gridModel = new PropertyGridModel(Model);
+        _gridModel.AddString((int)Fields.Nom, Model.Nom, Localizer("Nom"));
+        _gridModel.AddString((int)Fields.Web, Model.Web, Localizer("Web"));
+        _gridModel.AddPercent((int)Fields.Commission, Model.Commission, Localizer("Commission"));
+        gridModel = _gridModel;
+    }
+
+    private async Task UpdateRequest()
+    {
+        Model.Nom = gridModel.GetString((int)Fields.Nom);
+        Model.Web = gridModel.GetString((int)Fields.Web);
+        Model.Commission = gridModel.GetDecimal((int)Fields.Commission);
+
+        var apiResponse = await PostAsync<MarketPlaceModel, bool>( Model, "MarketPlace");
+        if (apiResponse.Success())
+        {
+            Model.IsNew = false;
+            await OnUpdate.InvokeAsync(Model);
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<bool>( "MarketPlace/delete", Model!.Guid.ToString());
+        if (apiResponse.Success())
+            await OnDelete.InvokeAsync(Model);
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+
+    private async Task LoadOptionsRequest(PropertyGridModel.Item item)
+    {
+        ApiResponse<GuidNom[]> apiResponse = null;
+        switch ((Fields)item.Field)
+        {
+            default:
+                break;
+        }
+
+        if (apiResponse != null)
+        {
+            if (apiResponse.Fail())
+                problemDetails = apiResponse.ProblemDetails;
+            else
+            {
+                List<IModel> values = apiResponse.Value.OrderBy(x => x.Nom).ToList<IModel>();
+                gridModel.Items.First(x => x.Field == item.Field).Values = values;
+                StateHasChanged();
+            }
+        }
+    }
+}

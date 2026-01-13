@@ -1,0 +1,68 @@
+﻿@inherits _ComponentBase
+
+
+<div class="Wrapper">
+
+
+    @if (isDropdownVisible)
+    {
+        <div class="Dropdown">
+            @foreach (var item in (seeMore ? Countries : CountryModel.Favorites(Countries, Value)))
+            {
+                <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Ico">
+                        <i class="fa-solid fa-check @(item.ISO.Equals(Value?.ISO) ? "" : "Hidden")"></i>
+                    </div>
+                    <div class="Truncate">
+                        @item.Nom.Tradueix(base.Lang())
+                    </div>
+                </a>
+            }
+            <a class="Item" href="#" @onclick="@(()=>{seeMore = !seeMore; })" @onclick:preventDefault>
+                <div class="Ico">
+                    &nbsp;
+                </div>
+                <div class="Truncate">
+                    (
+                    @(seeMore ? Localizer("SeeLess") : Localizer("SeeMore"))
+                    )
+                </div>
+            </a>
+
+        </div>
+    }
+    else
+    {
+        <a class="Caption" href="#" @onclick="@(()=>{isDropdownVisible = !isDropdownVisible;})" @onclick:preventDefault>
+            <div class="Ico">
+                <i class="fa-light fa-caret-down @(isDropdownVisible ? "Hidden" : "")"></i>
+                <i class="fa-light fa-caret-up @(isDropdownVisible ? "" : "Hidden")"></i>
+            </div>
+            @if (Value == null)
+            {
+                @Localizer("SelectACountry")
+            }
+            else
+            {
+                @Value.Nom.Tradueix(base.Lang())
+            }
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public List<CountryModel> Countries { get; set; }
+    [Parameter] public CountryModel? Value { get; set; }
+    [Parameter] public EventCallback<CountryModel> ValueChanged { get; set; }
+
+    private bool isDropdownVisible = false;
+    private bool seeMore = false;
+
+    private void ItemClick(CountryModel item)
+    {
+        Value = item;
+        isDropdownVisible = false;
+        if (ValueChanged.HasDelegate) ValueChanged.InvokeAsync(item);
+    }
+
+}

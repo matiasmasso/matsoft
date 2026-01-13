@@ -1,0 +1,22 @@
+﻿<a href="#"
+   @onclick="ToggleClicked"
+@onclick:preventDefault>
+    @label
+</a>
+
+@code {
+    [Parameter] public bool Value { get; set; }
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+    string? label;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        label = Value ? "ocultar obsolets" : "veure obsolets";
+    }
+
+    async Task ToggleClicked()
+    {
+        await ValueChanged.InvokeAsync(!Value);
+    }
+}

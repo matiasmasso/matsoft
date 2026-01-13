@@ -1,0 +1,183 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <h1>@Localizer("RealStates")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <PageOptions>
+            <UxToggle @bind-Value="@IsShowingObsolets"
+                  TrueText="OutdatedIncluded"
+                  FalseText="OutdatedIncluded"></UxToggle>
+            <UxLookupEmp Value="@selectedEmp"
+                     Values="Emps()"
+                     ValueChanged="@OnEmpChanged"></UxLookupEmp>
+
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+        </PageOptions>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} vehicles, {1} en actiu",model.Count(), model.Where(x => x.FchTo == null).Count())
+        </div>
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders HideOnMobile">
+                <a href="#" class="Truncate"
+               @onclick="@(()=>SortColumn(Cols.Nom))"
+               @onclick:preventDefault="true">
+                    @Localizer("Name")
+                </a>
+                <a href="#" class="Truncate"
+               @onclick="@(()=>SortColumn(Cols.Ref))"
+               @onclick:preventDefault="true">
+                    @Localizer("RefCatastral")
+                </a>
+                <a href="#" class="Truncate"
+               @onclick="@(()=>SortColumn(Cols.FchFrom))"
+               @onclick:preventDefault="true">
+                    @Localizer("Entry")
+                </a>
+                <a href="#" class="Truncate"
+               @onclick="@(()=>SortColumn(Cols.FchTo))"
+               @onclick:preventDefault="true">
+                    @Localizer("Exit")
+                </a>
+            </div>
+
+            <div class="GridRowDivider"></div>
+
+            @foreach (var item in FilteredItems())
+            {
+                <div class='Item
+                    @(item == selectedItem ? "Selected" : "" )
+                    @(selectedItem != null && item != selectedItem ? "HideOnMobile" : "")
+                    @(item.FchTo == null ? "" : "Obsoleto" )
+                    '
+             @onclick="@(()=>ItemClick(item))"
+             @onclick:preventDefault="true">
+
+                    <div class="Truncate">
+                        @item.Nom
+                    </div>
+                    <div class="Truncate">
+                        @item.Cadastre
+                    </div>
+                    <div>
+                        @item.FchFrom?.ToString("dd/MM/yyyy")
+                    </div>
+                    <div>
+                        @item.FchTo?.ToString("dd/MM/yyyy")
+                    </div>
+
+                    <div class="GridRowDivider">
+
+                        @if (item == selectedItem)
+                        {
+                            <div class="ContextMenu">
+                                <Nav nav="@selectedItem.ContextMenu()"></Nav>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+@code {
+    private List<ImmobleModel>? model;
+    private ImmobleModel? selectedItem;
+    private int? selectedEmp;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+    private Cols? sortedColumn = Cols.Nom;
+    private bool isDescendingOrder = false;
+    private ProblemDetails? problemDetails;
+
+    private enum Cols
+    {
+        Nom,
+        Ref,
+        FchFrom,
+        FchTo
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var apiResponse = await GetAsync<List<ImmobleModel>>("Immobles");
+        model = apiResponse.Value;
+        problemDetails = apiResponse.ProblemDetails;
+        selectedEmp = ((int)EmpModel.EmpIds.MatiasMasso);
+    }
+
+
+    private List<ImmobleModel> FilteredItems()
+    {
+        var retval = model!.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.FchTo == null).ToList();
+        if (selectedEmp != null)
+            retval = retval.Where(x => (int?)x.Emp == selectedEmp).ToList();
+
+
+        return retval;
+    }
+
+    private void ItemClick(ImmobleModel item)
+    {
+        navigationManager.NavigateTo(Globals.PageUrl("PgImmoble", item.Guid.ToString()));
+        // selectedItem = selectedItem == null ? item : null;
+    }
+
+    private void SortColumn(Cols col)
+    {
+        var lang = base.Lang;
+        if (col == sortedColumn)
+            isDescendingOrder = !isDescendingOrder;
+        else
+            sortedColumn = col;
+
+        switch (col)
+        {
+            case Cols.Nom:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Nom).ToList() : model!.OrderBy(x => x.Nom).ToList();
+                break;
+            case Cols.Ref:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.Cadastre).ToList() : model!.OrderBy(x => x.Cadastre).ToList();
+                break;
+            case Cols.FchFrom:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.FchFrom).ToList() : model!.OrderBy(x => x.FchFrom).ToList();
+                break;
+            case Cols.FchTo:
+                model = isDescendingOrder ? model!.OrderByDescending(x => x.FchTo).ToList() : model!.OrderBy(x => x.FchTo).ToList();
+                break;
+        }
+    }
+
+    private List<int> Emps() => model!.Where(x => x.Emp != null).Select(x => (int)x.Emp).ToList();
+
+    private void OnEmpChanged(int? emp)
+    {
+        selectedEmp = emp;
+        StateHasChanged();
+    }
+
+    private void AddNew()
+    {
+        
+    }
+
+}

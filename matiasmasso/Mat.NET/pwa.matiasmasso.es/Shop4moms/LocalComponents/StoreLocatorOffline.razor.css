@@ -1,0 +1,28 @@
+﻿.Offline {
+    display: flex;
+    flex-direction: column;
+}
+
+.GeoSelectors {
+    padding: 10px 0;
+}
+
+.Offline select {
+    width: 100%;
+    max-width: 280px;
+    font-size: 1em;
+    padding: 4px 7px 2px 4px;
+}
+
+.Distributor {
+    display:block;
+}
+
+.Distributor div {
+    max-width: 100%;
+}
+
+    .Distributor div:first-child {
+        padding-top: 15px;
+        font-weight: 600;
+    }

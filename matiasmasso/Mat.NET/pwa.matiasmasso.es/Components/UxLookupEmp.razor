@@ -1,0 +1,64 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    @if (isShowingSelector)
+    {
+        <div class="Dropdown">
+            <UxSelector Options="@Options()" Value="@Value.ToString()" ValueChanged="OnValueChanged"></UxSelector>
+        </div>
+    }
+    else
+    {
+        <a href="#" @onclick="@(()=>{isShowingSelector = true;})" @onclick:preventDefault="true">
+                @caption
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<int>? Values { get; set; }
+    [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+    [Parameter] public int? Value { get; set; }
+
+    //base.Tradueix("Todas las empresas", "Totes les empreses", "all companies")
+
+    private bool isShowingSelector = false;
+    private string? caption;
+    private string? allEmpsCaption;
+
+    protected override void OnParametersSet()
+    {
+        allEmpsCaption = base.Tradueix("Todas las empresas", "Totes les empreses", "all companies");
+        caption = Value == null ? allEmpsCaption : (((EmpModel.EmpIds)Value).GetDisplayName());
+        base.OnParametersSet();
+    }
+
+    private void OnValueChanged(object item)
+    {
+        isShowingSelector = false;
+        var option = (Option)item;
+        var emp = int.Parse(option.Id);
+        var tag = (EmpModel.EmpIds?)option.Tag;
+        caption = tag == null ? allEmpsCaption : tag.GetDisplayName();
+        ValueChanged.InvokeAsync(emp);
+    }
+
+    private List<Option> Options()
+    {
+        var empIds = new List<EmpModel.EmpIds>();
+        if (Values == null)
+            empIds = Enum.GetValues(typeof(EmpModel.EmpIds)).Cast<EmpModel.EmpIds>().ToList();
+        else
+            empIds = Values.Select(x => (EmpModel.EmpIds)x).GroupBy(x=>x).Select(x=>x.First()).ToList();
+
+        var retval = empIds
+            .Select(x => new Option
+                {
+                    Id = ((int)x).ToString(),
+                    Nom = x.GetDisplayName(),
+                    Tag = x
+                }).ToList();
+
+        return retval;
+    }
+}

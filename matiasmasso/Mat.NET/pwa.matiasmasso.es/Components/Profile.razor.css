@@ -1,0 +1,26 @@
+﻿.Wrapper {
+    max-width:600px;
+}
+
+.Label {
+    margin-top:10px;
+}
+
+input[type="Text"] {
+    width: 100%;
+}
+
+input[type="password"] {
+    max-width: 120px;
+}
+
+.ResetPwdCaret {
+    height:1em;
+}
+
+.ButtonsBar {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+    gap: 10px;
+}

@@ -1,0 +1,244 @@
+﻿@inherits _PageBase
+@inject BasketService basketService
+@inject Blazor.Analytics.IAnalytics Analytics
+@inject AppStateService appState
+@inject CultureService culture
+
+<SourceEditor Value="@model?.Content?.Text(base.Lang())"
+              CanEdit="canEdit"
+              ValueChanged="SourceChangedAsync"></SourceEditor>
+
+<PageTitle>4moms | @culture.Tradueix("Comprar","Comprar","Purchase","Comprar") @title</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="index, follow" />
+    @if (model != null)
+    {
+        <link rel="canonical" href="@base.CanonicalUrl()" />
+        @foreach (var lang in LangDTO.All())
+        {
+            <link rel="alternate" hreflang="@lang.Culture2Digits()" href="@base.CanonicalUrl(lang, routes?.LangText(model?.Guid))" />
+        }
+
+        <meta property="og:title" content="@title" />
+        <meta property="og:description" content="@excerpt" />
+        <meta property="og:image" content="@model?.ImageUrl()" />
+        <meta property="og:image:alt" content="@title" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="@base.CanonicalUrl()" />
+        <meta property="og:site_name" content="4moms" />
+        <meta name="twitter:title" content="@title" />
+        <meta name="twitter:description" content="@excerpt" />
+        <meta name="twitter:image" content="@model?.ImageUrl()" />
+        <meta name="twitter:image:alt" content="@title" />
+
+        @*    <script type="application/ld+json">
+    {
+    "@@context": "https://schema.org/",
+    "@@type": "Recipe",
+    "name": "@model.NomLlarg.Tradueix(base.Lang())"
+    }
+    </script>
+    *@
+    }
+
+</HeadContent>
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h2>
+            @title
+        </h2>
+
+        <div class="Details">
+            <div class="Thumbnail">
+                <img src="@model?.ImageUrl()" width="410" height="410" alt="@model?.NomLlarg?.Tradueix(base.Lang())" />
+            </div>
+            <div class="Features">
+                <label>@culture.Localize("Ref")</label>
+                <div>@model?.Ref</div>
+                <label>@culture.Localize("Price")</label>
+                <div>@string.Format("{0:N2} €",rrpp)</div>
+                <label>@culture.Localize("Availability")</label>
+                <div>@Availability()</div>
+
+                @if (basketItem != null)
+                {
+                    @if (basketItem?.Qty == 0)
+                    {
+                        <button class="Button AddToBasket" @onclick="AddToBasket">
+                            <div>
+                                <div class="ShoppingCart">
+                            <Icon Id="Icon.Ids.ShoppingCart"></Icon>
+                                </div>
+                            @culture.Localize("Shop.AddToBasket")
+                            </div>
+                        </button>
+                    }
+                    else
+                    {
+                        <label>@culture.Localize("Qty")</label>
+                        <div>
+                            <PlusMinusNum Value="@(basketItem?.Qty ?? 0)"
+                              ValueChanged="QtyChanged"></PlusMinusNum>
+                        </div>
+
+                        <button class="Button CloseOrder" @onclick="NavigateHome">
+                            @culture.Localize("Shop.KeepBuying")
+                        </button>
+                        <button class="Button GotoBasket" @onclick="NavigateBasket">
+                            @culture.Localize("Shop.SeeBasket")
+                        </button>
+                        <button class="Button CloseOrder" @onclick="CloseOrder">
+                            @culture.Localize("Shop.CloseOrder")
+                        </button>
+                    }
+
+                }
+                <div class="Excerpt">
+                    @((MarkupString)(excerpt ?? ""))
+                </div>
+
+                <div class="StoreLocator">
+                    <StoreLocator Product="model" Vertical
+                              Caption="@Tradueix("Tambien disponible en:","També disponible a:","Also available at:","Também disponível na:")"></StoreLocator>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+
+    ProductSkuModel? model;
+    ProductCategoryModel? category;
+    RouteModel.Collection routes = new();
+
+    List<ProductSkuModel> skus = new();
+    List<ProductCategoryModel> categories = new();
+    List<GuidDecimal> retailPrices = new();
+    List<GuidInt> stocks = new();
+
+    string? title;
+    string? excerpt;
+    ShoppingBasketModel.Item? basketItem;
+    decimal? rrpp;
+    bool isEditing;
+    bool canEdit;
+    UserModel? user;
+    ProblemDetails? problemDetails;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var user = base.CurrentUser();
+                canEdit = user?.Rol == UserModel.Rols.superUser || user?.Rol == UserModel.Rols.marketing;
+
+                routes = await appState.GetAsync<RouteModel.Collection>("Shop4moms/routes") ?? new();
+                categories = await appState.GetAsync<List<ProductCategoryModel>>("Shop4moms/Categories") ?? new();
+                skus = await appState.GetAsync<List<ProductSkuModel>>("Shop4moms/Skus") ?? new();
+                retailPrices = await appState.GetAsync<List<GuidDecimal>>("Shop4moms/SkuRetails") ?? new();
+                stocks = await appState.GetAsync<List<GuidInt>>("Shop4moms/SkuStocks") ?? new();
+
+                model = skus?.FirstOrDefault(x => x.Guid == Guid);
+                if (model != null)
+                {
+                    category = categories.FirstOrDefault(x => x.Guid == model.Category);
+                    rrpp = retailPrices.FirstOrDefault(x => x.Guid == model.Guid)?.Value;
+                    title = string.Format("{0} {1}", category?.Nom?.Tradueix(base.Lang()), model?.Nom?.Tradueix(base.Lang()));
+                    excerpt = model?.Excerpt?.Tradueix(base.Lang());
+                    if (excerpt == null) excerpt = category?.Excerpt?.Tradueix(base.Lang());
+
+                    //this needs model
+                    basketItem = await basketService.GetItemAsync(model) ?? new ShoppingBasketModel.Item() { Sku = model?.Guid, Qty = 0, Price = rrpp };
+                }
+            }
+            catch (Exception ex)
+            {
+                problemDetails = ProblemDetails.Factory(ex);
+            }
+            StateHasChanged();
+        }
+
+    }
+
+    string Availability()
+    {
+        var value = stocks.FirstOrDefault(x => x.Guid == model?.Guid);
+        var stock = value?.Value ?? 0;
+        var available = stock > 0;
+        var retval = available ? culture.Localize("Sku.Availability.Some") : culture.Localize("Sku.Availability.None");
+        return retval;
+    }
+
+
+    async Task AddToBasket()
+    {
+        basketItem = await basketService.UpdateItemAsync(model!, 1, rrpp);
+        if (base.AllowAnalytics())
+            Analytics?.TrackEvent("add_to_cart", new
+            {
+                currency = "EUR",
+                value = rrpp,
+                items = new[]{
+                new {item_id= model!.Id,
+                  item_name= model.NomLlarg?.Tradueix(base.Lang()) ?? "?",
+                  index= 0,
+                  item_brand = "4moms",
+                  item_category = category?.Nom?.Tradueix(base.Lang()) ?? "?",
+                  price = rrpp,
+                  quantity = 1}
+    }
+            });
+    }
+
+    async Task QtyChanged(DTO.Helpers.MatEventArgs<int, object>
+    args)
+    {
+        basketItem = await basketService.UpdateItemAsync(model!, args.Value, rrpp);
+    }
+
+    void NavigateHome()
+    {
+        base.navigationManager?.NavigateTo(base.RelativeUrl("/"));
+    }
+
+    void NavigateBasket()
+    {
+        base.navigationManager?.NavigateTo(base.RelativeUrl("Basket"));
+    }
+
+    void CloseOrder()
+    {
+        base.navigationManager?.NavigateTo(base.RelativeUrl("Submit"));
+    }
+
+    async Task SourceChangedAsync(string src)
+    {
+        var langItem = model!.Content!.Item(base.Lang());
+        langItem.Text = src;
+        var apiResponse = await base.PostAsync<LangTextModel.LangItem, DateTime>
+            (langItem, "LangText/LangItem");
+        if (apiResponse.Success())
+        {
+            model!.Content!.SetText(base.Lang(), src);
+            StateHasChanged();
+            await Catalog!.LoadCatalogAsync();
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+}

@@ -1,0 +1,66 @@
+﻿@inherits _ComponentBase
+
+<div class="Wrapper @((IsShowing ?? true)==false?"Hidden":"")">
+    @if(_model != null){
+        <div>@base.Tradueix("Español","Espanyol","Spanish")</div>
+        <div>
+            <input type="Text"
+               @bind="_model.Esp"
+               @onblur="@(() => TextEdited("ESP"))" />
+        </div>
+        <div>@base.Tradueix("Catalan","Català","Catalan")</div>
+        <div>
+            <input type="Text"
+               @bind="_model.Cat"
+               @onblur="@(() => TextEdited("CAT"))" />
+        </div>
+        <div>@base.Tradueix("Inglés","Anglès","English")</div>
+        <div>
+            <input type="Text"
+               @bind="_model.Eng"
+               @onblur="@(() => TextEdited("ENG"))" />
+        </div>
+        <div>@base.Tradueix("Portugués","Portuguès","Portuguese")</div>
+        <div>
+            <input type="Text"
+               @bind="_model.Por"
+               @onblur="@(() => TextEdited("POR"))" />
+        </div>
+        <div class="ButtonsBar">
+            <button class="CancelButton" @onclick="CancelClicked" value="@base.Tradueix("Cancelar","Cancel·lar","Cancel")" />
+            <button class="SaveButton" @onclick="Save" value="@base.Tradueix("Aceptar","Acceptar","Submit")" disabled="@IsSaveDisabled" />
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public LangTextModel? Model { get; set; }
+    [Parameter] public bool? IsShowing { get; set; }
+    [Parameter] public EventCallback<LangTextModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback Cancel { get; set; }
+    private LangTextModel? _model { get; set; }
+    private bool IsSaveDisabled = true;
+
+    protected override void OnParametersSet()
+    {
+        if (Model != null && _model == null)
+        {
+            _model = new LangTextModel(Model.Esp ?? "", Model.Cat, Model.Eng, Model.Por);
+        }
+    }
+    private void Save() {
+        Model!.Esp = _model!.Esp;
+        Model.Cat = _model.Cat;
+        Model.Eng = _model.Eng;
+        Model.Por = _model.Por;
+        AfterUpdate.InvokeAsync(Model);
+    }
+
+    private void CancelClicked() {
+        Cancel.InvokeAsync(Model);
+    }
+
+    private void TextEdited(string lang){
+        IsSaveDisabled = false;
+    }
+}

@@ -1,0 +1,34 @@
+﻿    .DocsGridItem {
+        display: inline-block;
+        width: 150px;
+        height: 240px;
+        border: 1px solid gray;
+        background-color: darkgray;
+        margin-bottom: 5px;
+    }
+
+        .DocsGridItem:hover {
+            border: 1px solid red;
+            background-color: red;
+        }
+
+        .DocsGridItem a {
+            text-decoration: none;
+        }
+
+
+        .DocsGridItem img {
+            width: 150px;
+            height:auto;
+            max-width: 100%;
+        }
+
+        .DocsGridItem div {
+            color: white;
+            text-align: center;
+            padding: 2px 4px;
+            margin: 0;
+            width: 100%;
+            height: 30px;
+            font-size: 1em;
+        }

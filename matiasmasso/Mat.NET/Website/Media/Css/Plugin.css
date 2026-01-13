@@ -1,0 +1,68 @@
+﻿.Plugin {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.8px;
+}
+
+    .Plugin .ChevronLeft, .Plugin .ChevronRight {
+        display: none;
+    }
+
+    .Plugin > div {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+        .Plugin > div > a {
+            display: flex;
+            flex-direction: column;
+            align-self: self-end;
+            width: 150px;
+            color: black;
+        }
+            .Plugin > div > a img {
+                margin: 0;
+                height:auto;
+            }
+
+        .Plugin > div a > div:last-child {
+            word-wrap: normal;
+            text-align: center;
+        }
+
+@media screen and (max-width:540px) {
+    .Plugin .ChevronLeft {
+        display: block;
+        font-size: 36px;
+    }
+
+    .Plugin .ChevronRight {
+        display: block;
+        font-size: 36px;
+        margin-left:5px;
+    }
+
+    .Plugin > div {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 100%;
+    }
+
+    .PluginWrapper {
+        width: 100%;
+        display:flex;
+    }
+
+    .Plugin {
+        width: 100%;
+    }
+
+        .Plugin > div::-webkit-scrollbar {
+            display: none;
+        }
+}

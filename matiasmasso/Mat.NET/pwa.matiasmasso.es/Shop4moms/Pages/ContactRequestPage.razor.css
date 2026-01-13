@@ -1,0 +1,17 @@
+﻿.Wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+    padding: 10px;
+}
+
+.SignIn {
+    margin: 50px auto;
+    max-width: 320px;
+    width: 100%;
+}
+
+
+
+

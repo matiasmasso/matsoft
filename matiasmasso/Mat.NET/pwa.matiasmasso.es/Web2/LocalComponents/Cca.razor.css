@@ -1,0 +1,60 @@
+﻿.Flex {
+    display:flex;
+    justify-content: space-between;
+    gap:10px;
+}
+
+.LookuÈmps {
+    position:relative;
+}
+
+.Header {
+    display:grid;
+    grid-template-columns: minmax(50px,min-content) 120px 1fr;
+    grid-column-gap:10px;
+}
+
+    .Header.IsNew {
+        grid-template-columns: 120px 1fr;
+    }
+
+    .Header input {
+        width:100%;
+    }
+
+    .Docfile {
+        width:350px;
+    }
+
+    .Docfile img {
+        width:100%;
+        height:auto;
+    }
+
+.Grid {
+    margin: 15px 0;
+    display: grid;
+    grid-template-columns: minmax(100px,1fr) minmax(100px,1fr) minmax(80px,min-content) minmax(80px,min-content);
+    grid-column-gap: 10px;
+    align-items:baseline;
+}
+
+.Grid .Num input {
+    width:100%;
+    text-align: right;
+}
+.Item, .ColsHeader {
+    position:relative;
+    display:contents;
+}
+
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.Num {
+    white-space: nowrap;
+    display:flex;
+    justify-content:flex-end;
+}

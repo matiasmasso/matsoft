@@ -1,0 +1,55 @@
+﻿@page "/tpv/ok"
+@inject IStringLocalizer<AppResource> Localizer
+@inject PostFormService PostFormService;
+@inject AppState AppState;
+@inherits _ComponentBase
+
+<div class="OuterWrapper">
+    <div class="InnerWrapper">
+    <div class="Message">
+        <div class="Ico">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <!--fontawesome - circle-check-->
+                <path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM369 209L241 337l-17 17-17-17-64-64-17-17L160 222.1l17 17 47 47L335 175l17-17L385.9 192l-17 17z" />
+            </svg>
+        </div>
+        <div class="Text">
+            <p>@Localizer["ThanksForPurchasing","4moms"]</p>
+            <p>@Localizer["OrderCfmEmailSent",basket?.User?.EmailAddress ?? ""]</p>
+        </div>
+    </div>
+
+    <div class="Report">@((MarkupString)(basket?.HtmlReport(SessionProvider!.Cache!) ?? ""))</div>
+    </div>
+</div>
+
+<UxError ProblemDetails="problemDetails"></UxError>
+
+@code {
+    Redsys.Request? request;
+    ShoppingBasketModel? basket;
+    ProblemDetails? problemDetails;
+    string? ds_MerchantParameters;
+    string? ds_SignatureVersion;
+    string? ds_Signature;
+
+
+    protected override void OnParametersSet()
+    {
+        base.OnInitialized();
+        try
+        {
+            ds_MerchantParameters = PostFormService.Form?["Ds_MerchantParameters"];
+            ds_SignatureVersion = PostFormService.Form?["Ds_SignatureVersion"];
+            ds_Signature = PostFormService.Form?["Ds_Signature"];
+            request = Redsys.Request.Factory(ds_MerchantParameters, ds_SignatureVersion, ds_Signature);
+            basket = AppState.Basket(request!.OrderNum());
+        }
+        catch (Exception ex)
+        {
+            problemDetails = ProblemDetails.Factory(ex);
+        }
+    }
+
+
+}

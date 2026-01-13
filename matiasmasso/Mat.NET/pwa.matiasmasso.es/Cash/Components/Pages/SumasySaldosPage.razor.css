@@ -1,0 +1,104 @@
+﻿.EmpSelector {
+    display:flex;
+    align-items: center;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: 1fr min-content;
+}
+
+.Item.Epg {
+    font-weight:700;
+}
+
+.Item.Epg > *, .Item.Result > * {
+    padding:10px 0 5px;
+}
+
+
+.ColHeaders, .Item {
+    display: contents;
+}
+
+
+.ColHeaders > * {
+    padding-bottom: 10px;
+}
+
+.Warn {
+    color:red;
+}
+
+
+.Eur {
+    display: flex;
+    justify-content: flex-end;
+    white-space: nowrap;
+    padding-left:10px;
+}
+
+.Nom {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.Contact.Selected > .Nom {
+    color:black;
+}
+
+.Extracte {
+    grid-column: 1/-1;
+    padding: 10px 0 15px 50px;
+}
+
+.Contact > * {
+    color:gray;
+}
+
+.Contact .Nom {
+    padding-left:50px;
+}
+
+
+
+
+@media(max-width:599px){
+    .ColHeaders {
+        display:none;
+    }
+
+    .Grid, .Ccbs {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-columns: 1fr min-content;
+        grid-column-gap: 10px;
+        padding: 10px 0;
+    }
+
+    .Item:not(:last-child) {
+        border-bottom:1px solid gray;
+    }
+
+        .Item.Selected {
+            padding-top: 15px;
+            border-bottom: 0;
+        }
+
+}
+
+@media(min-width:600px) {
+    .Item > * {
+        border-bottom: 1px solid #DDDDDD;
+    }
+    .Item.Selected > * {
+        padding-top: 15px;
+        border-bottom: 0;
+    }
+}
+

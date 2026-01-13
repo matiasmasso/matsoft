@@ -1,0 +1,40 @@
+﻿/*issues found?*/
+
+.Wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.Parent {
+    display: flex;
+    justify-content: space-between;
+    background-color: azure;
+    border-bottom: 1px solid black;
+    font-weight: 600;
+    max-width:450px;
+}
+.Item {
+    display: flex;
+    gap: 10px;
+}
+
+.Red ::deep a {
+    color:red;
+}
+
+.GridRowDivider {
+    margin: 10px 0;
+}
+
+
+
+@media(min-width:600px){
+    .Grid {
+        display: grid;
+        grid-column-gap:10px;
+        grid-template-columns: min-content;
+        grid-template-rows: 20px 20px 20px 20px 20px 20px 20px 20px 20px;
+        grid-auto-flow: column;
+    }
+}

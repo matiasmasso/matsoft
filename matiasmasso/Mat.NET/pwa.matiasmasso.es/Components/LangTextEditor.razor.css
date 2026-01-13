@@ -1,0 +1,15 @@
+﻿.Wrapper {
+    display:grid;
+    grid-template-columns: minmax(60px,min-content) 1fr;
+    grid-column-gap: 10px;
+}
+input {
+    width:100%;
+}
+
+.ButtonsBar {
+    grid-column:1/-1;
+    display:flex;
+    gap:10px;
+    justify-content: flex-end;
+}

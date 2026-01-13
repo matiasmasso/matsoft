@@ -1,0 +1,29 @@
+﻿@page "/{LangSegment}/backoffice/user/{Guid:guid}"
+@page "/backoffice/user/{Guid:guid}"
+@inherits _PageBase
+
+@if (value == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <User Value="value"></User>
+}
+
+<Error ProblemDetails="problemDetails"></Error>
+
+@code {
+    [Parameter] public Guid guid { get; set; }
+    UserModel? value;
+    ProblemDetails? problemDetails;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var apiResponse = await GetAsync<UserModel>("User", guid.ToString());
+        value = apiResponse.Value;
+        problemDetails = apiResponse.ProblemDetails;
+        StateHasChanged();
+    }
+
+}

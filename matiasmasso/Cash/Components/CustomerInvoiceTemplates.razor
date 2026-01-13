@@ -1,0 +1,28 @@
+﻿<h3>CustomerInvoiceTemplates</h3>
+
+@if(values == null)
+{
+    <Loading></Loading>
+}
+else if(!values.Any())
+{
+    <p><em>No data</em></p>
+}
+else
+{
+    @foreach (var value in values)
+    {
+
+    }
+}
+
+
+@code {
+    List<CustomerInvoiceModel.Template>? values;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+    }
+
+}

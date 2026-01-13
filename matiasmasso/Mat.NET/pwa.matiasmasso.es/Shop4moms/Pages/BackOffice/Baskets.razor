@@ -1,0 +1,150 @@
+﻿@page "/{LangSegment}/BackOffice/baskets"
+@page "/BackOffice/baskets"
+@inherits _PageBase
+@inject IJSRuntime JSRuntime
+@inject AppStateService appState
+@inject CultureService culture
+
+<div class="Wrapper900">
+    <h2>Baskets</h2>
+
+    @if (items == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Grid">
+            <div class="ColHeaders">
+                <div class="Ico">&nbsp;</div>
+                <div class="Fch">@culture.Localize("Fch")</div>
+                <div class="Order">@culture.Localize("Order")</div>
+                <div class="Eur RightAlign">@culture.Localize("Amt")</div>
+                <div class="Nom Truncate">@culture.Localize("Buyer")</div>
+                <div class="Location Truncate">@culture.Localize("Location")</div>
+            </div>
+
+            @foreach (var item in items)
+            {
+                <a class="Item @(item == activeItem ? "Active":"" )" href="@String.Format("/backoffice/basket/{0}",item.Guid.ToString())">
+                    <div class="Ico"></div><div class="GridRowDivider"></div>
+                    <div class="Ico">
+                        @if (item.PurchaseOrder != null)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                <path d="M440.1 103C450.3 112.4 450.3 127.6 440.1 136.1L176.1 400.1C167.6 410.3 152.4 410.3 143 400.1L7.029 264.1C-2.343 255.6-2.343 240.4 7.029 231C16.4 221.7 31.6 221.7 40.97 231L160 350.1L407 103C416.4 93.66 431.6 93.66 440.1 103V103z" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </div>
+                    <ContextMenuTrigger MenuId="myMenu" Data="item">
+                        <div class="Fch">@String.Format("{0:dd/MM/yy HH:mm}",item.Fch)</div>
+                    </ContextMenuTrigger>
+                    <ContextMenuTrigger MenuId="myMenu" Data="item">
+                        <div class="Order">@item.OrderNum</div>
+                    </ContextMenuTrigger>
+                    <ContextMenuTrigger MenuId="myMenu" Data="item">
+                        <div class="Eur RightAlign">@String.Format("{0:N2} €",((item.Amount ?? 0)+(item.Ports ?? 0)))</div>
+                    </ContextMenuTrigger>
+                    <ContextMenuTrigger MenuId="myMenu" Data="item">
+                        <div class="Nom Truncate">@item.Fullnom()</div>
+                    </ContextMenuTrigger>
+                    <ContextMenuTrigger MenuId="myMenu" Data="item">
+                        <div class="Location Truncate">@item.ZipLocation()</div>
+                    </ContextMenuTrigger>
+
+                    <div class="Ico"></div><div class="GridRowDivider Bottom"></div>
+                </a>
+            }
+        </div>
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+<ContextMenu Id="myMenu" OnAppearing="OnContextMenuAppearing">
+    <Item Key="CopyLink" OnClick="@MenuItemClick">Copiar enllaç</Item>
+    <Item Key="LogAsUser" OnClick="@MenuItemClick">Login</Item>
+    <Item Key="Delete" OnClick="@MenuItemClick">Eliminar</Item>
+</ContextMenu>
+
+<PageTitle>
+    @base.Lang().Tradueix(
+    "4moms Backoffice | cestas de la compra",
+    "4moms Backoffice | cistelles de la compra",
+    "4moms Backoffice | cestos de compras",
+    "4moms Backoffice | shopping baskets"
+    )
+</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+@*
+<ContextMenu Id="myMenu">
+    <Item OnClick="@OnClick">Item 1</Item>
+    <Item OnClick="@OnClick">Item 2</Item>
+    <Item OnClick="@OnClick" Enabled="false">Item 3 (disabled)</Item>
+    <Seperator />
+    <Item>Submenu
+        <SubMenu>
+            <Item OnClick="@OnClick">Submenu Item 1</Item>
+            <Item OnClick="@OnClick">Submenu Item 2</Item>
+        </SubMenu>
+    </Item>
+</ContextMenu>
+*@
+@code {
+    private List<ShoppingBasketModel>? items;
+    private ShoppingBasketModel? activeItem;
+    ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresca();
+    }
+
+    void OnContextMenuAppearing(MenuAppearingEventArgs args)
+    {
+        activeItem = (ShoppingBasketModel)args.Data;
+    }
+    async Task MenuItemClick(ItemClickEventArgs e)
+    {
+        var item = (ShoppingBasketModel)e.Data;
+        var key = e.MenuItem.Attributes["Key"].ToString();
+        switch (key)
+        {
+            case "CopyLink":
+                var url = string.Format("https://www.4moms.es/basket/{0}", item.Guid.ToString());
+                await JSRuntime.InvokeVoidAsync("clipboardCopy.copyText", url);
+                break;
+            case "LogAsUser":
+                var user = await appState.GetAsync<UserModel>("User", item.User!.Guid.ToString());
+                await ((CustomAuthenticationStateProvider)authStateProvider!).LoginAsync(user);
+                NavigationManager?.NavigateTo("/", true);
+                break;
+            case "Delete":
+                var apiResponse = await base.GetAsync<bool>("ShoppingBasket/delete", item.Guid.ToString());
+                if (apiResponse.Success())
+                    await Refresca();
+                else
+                    problemDetails = apiResponse.ProblemDetails;
+                break;
+
+        }
+        Console.WriteLine($"Item Clicked => Menu: {e.ContextMenuId}, MenuTarget: {e.ContextMenuTargetId}, IsCanceled: {e.IsCanceled}, MenuItem: {e.MenuItemElement}, MouseEvent: {e.MouseEvent}");
+    }
+
+    async Task Refresca()
+    {
+        var apiResponse = await GetAsync<List<ShoppingBasketModel>>("ShoppingBaskets", ((int)MarketPlaceModel.Wellknowns.Shop4moms).ToString());
+        if (apiResponse.Success())
+            items = apiResponse.Value;
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+}

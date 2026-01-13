@@ -1,0 +1,39 @@
+﻿.LoginForm {
+    width: 100%;
+    margin-bottom: 10px;
+    font-size:0.9rem;
+}
+
+    .LoginForm label {
+        display: block;
+        margin-bottom: 0;
+        padding: 0;
+    }
+
+    .LoginForm input[type=text] {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 10px;
+        border: 1px solid gray;
+        margin: 5px 0 10px 0;
+    }
+
+#submit {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid gray;
+    margin: 0 0 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    text-align: center;
+}
+
+#pwa-auth {
+    width: 100% !important;
+}
+
+#pwa-auth div {
+    width: 100% !important;
+}
+

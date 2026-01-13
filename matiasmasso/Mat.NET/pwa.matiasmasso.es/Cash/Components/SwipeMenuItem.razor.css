@@ -1,0 +1,28 @@
+﻿
+    .MenuItem {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+        .MenuItem.Red {
+            color: white;
+            background-color: red;
+        }
+
+        .MenuItem.Blue {
+            color: white;
+            background-color: cornflowerblue;
+        }
+
+        .MenuItem.Green {
+            color: white;
+            background-color: seagreen;
+        }
+
+        .MenuItem.Gray {
+            color: black;
+            background-color: #DDDDDD;
+        }

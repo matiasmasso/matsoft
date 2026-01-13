@@ -1,0 +1,108 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+
+    <TabControl>
+        <TabPage Text="@Localizer("Details")">
+            @if (gridModel == null)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid model="@gridModel"
+                          SetDirty="@(()=>isDirty=true)"
+                          ></PropertyGrid>
+            }
+        </TabPage>
+
+        <div>
+            <CcaItems Cca="Model"></CcaItems>
+        </div>
+
+    </TabControl>
+
+    <div class="ButtonsBar">
+        <ButtonsBar IsDirty="isDirty"
+                      IsUpdating="isUpdating"
+                      CanDelete="@(Model != null && !Model.IsNew)"
+                      RequestToCancel="CancelRequest"
+                      RequestToDelete="DeleteRequest"
+                      RequestToUpdate="UpdateRequest"></ButtonsBar>
+    </div>
+
+    <Error ProblemDetails="problemDetails"></Error>
+
+</div>
+
+@code {
+    [Parameter] public CcaModel? Model { get; set; }
+    [Parameter] public EventCallback<CcaModel> OnUpdate { get; set; }
+    [Parameter] public EventCallback<CcaModel> OnDelete { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+
+    private CcaModel? _value;
+    private PropertyGridModel? gridModel;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    private ProblemDetails? problemDetails;
+
+    private enum Fields : int
+    {
+        Id,
+        Fch,
+        Concept
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        if (!Model.IsNew)
+        {
+            //if (Cache?.PgcCtas?.Count == 0 || Cache.Contacts.Count == 0)
+            //    Cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.PgcCta, CacheDTO.Table.TableIds.CliGral);
+
+            var apiResponse = await GetAsync<CcaModel>("Cca", Model.Guid.ToString());
+                Model = apiResponse.Value;
+                problemDetails = apiResponse.ProblemDetails;
+        }
+
+
+        var _gridModel = new PropertyGridModel(Model);
+        _gridModel.AddInt((int)Fields.Id, Model.Id, Localizer("Id"));
+        _gridModel.AddFch((int)Fields.Fch, Model.Fch, Localizer("Concept"));
+        _gridModel.AddString((int)Fields.Concept, Model.Concept, Localizer("Concept"));
+        gridModel = _gridModel;
+    }
+
+    private async Task UpdateRequest()
+    {
+        Model!.Id = gridModel?.GetInt((int)Fields.Id) ?? 0;
+        Model.Fch = gridModel.GetValue<DateTime>((int)Fields.Fch);
+        Model.Concept = gridModel.GetString((int)Fields.Concept);
+
+        var apiResponse = await PostAsync<CcaModel, bool>(Model, "Cca");
+        if (apiResponse.Success())
+        {
+            Model.IsNew = false;
+            await OnUpdate.InvokeAsync(Model);
+        }
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private async Task DeleteRequest()
+    {
+        var apiResponse = await GetAsync<bool>( "Cca/delete", Model!.Guid.ToString());
+        if (apiResponse.Success())
+            await OnDelete.InvokeAsync(Model);
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+    private void CancelRequest()
+    {
+        if (RequestToCancel.HasDelegate)
+            RequestToCancel.InvokeAsync();
+    }
+
+}

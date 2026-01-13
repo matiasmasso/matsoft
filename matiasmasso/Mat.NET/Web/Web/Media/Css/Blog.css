@@ -1,0 +1,255 @@
+﻿body {
+    background-color: #F3F3F3;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    min-width:280px;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+a:hover {
+    color:navy;
+}
+
+.size-full {
+    max-width: 100%;
+    height: auto;
+}
+
+.aligncenter {
+    display: block;
+    margin: 5px auto 5px auto;
+}
+
+.PageWrapper {
+    max-width: 1106px;
+    margin: auto;
+    color: #666666;
+}
+
+
+header .Banner {
+    max-width: 100%;
+}
+
+header nav {
+    text-align: right;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+main {
+    display: flex;
+    flex-direction: row;
+    border-top: 2px solid #E0E0E0;
+    border-bottom: 2px solid #E0E0E0;
+    min-height: 300px;
+    padding-top: 5px;
+    padding-bottom: 20px;
+}
+
+.SmallFont {
+    font-size: smaller;
+}
+
+
+aside {
+    flex: 0 0 300px;
+}
+
+
+
+.Widget-title {
+    color: #999;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 2.4em;
+    margin: 0;
+    text-shadow: 0 1px rgba(255, 255, 255, 0.8);
+}
+
+/* =================== Aside =============================*/
+
+
+
+.BlogFrame {
+    margin: 14px 0 14px 14px;
+    background-color: #EAEAEA;
+    border: 1px solid #E0E0E0;
+    padding: 10px 10px 10px 10px;
+}
+
+
+.TextboxButton {
+    display: flex;
+    flex-direction: row;
+}
+
+    .TextboxButton input[type=button] {
+    }
+
+    .TextboxButton input[type=text] {
+        width: 100%;
+    }
+
+
+/* =================== Posts =============================*/
+
+.BlogPostsList {
+    flex: 0 1 100%;
+}
+
+.BlogPost {
+    display: flex;
+    flex-direction: row;
+    border: 10px solid #EAEAEA;
+    margin: 14px 14px 14px 0;
+    background-color: white;
+    padding: 20px 20px 10px 20px;
+}
+
+.BlogPostImg {
+    flex: 1 1 30%;
+    margin: 0 20px 0 0;
+    border: 1px solid #DDDDDD;
+    max-width: 100%;
+    height: auto;
+}
+
+.BlogPostDetails {
+    flex: 1 1 70%;
+    margin: 0 0 0 20px;
+}
+
+    .BlogPostDetails h1 {
+        margin-top: 0;
+    }
+
+.NavButtons {
+    display: flex;
+    flex-direction: row;
+    margin: 10px 14px 10px 0;
+}
+
+    .NavButtons .NextPosts {
+        flex: 0 1 50%;
+        text-align: right;
+    }
+    .NavButtons .PreviousPosts {
+        flex: 0 1 50%;
+        text-align: left;
+    }
+
+
+@media only screen and (max-width: 787px) {
+    main {
+        flex-direction: column;
+    }
+    .SingleBlogPostMeta {
+        max-height:0;
+        order:10;
+    }
+}
+
+@media only screen and (max-width: 500px) {
+    /*
+    .BlogPost {
+        flex-direction: column;
+        margin: 14px 0 14px 0;
+    }
+
+    .SearchButton {
+        order: 0;
+    }
+
+    aside {
+        width: 100%;
+    }
+
+    .BlogFrame {
+        margin: 14px 0 14px 0;
+    }
+        */
+}
+
+
+/* ==================== Single Post ==========================*/
+
+.SingleBlogPostMeta {
+    flex: 0 0 120px;
+    background-color: #EAEAEA;
+    padding: 10px 10px 10px 10px;
+    border: 1px solid #EAEAEA;
+}
+.SingleBlogPostContent {
+    flex: 0 1 100%;
+    border: 10px solid #EAEAEA;
+    background-color: white;
+    padding: 20px 20px 10px 20px;
+}
+
+
+.Post-date {
+    border-bottom: 1px solid #e3e3e3;
+    padding: 10px 0;
+    text-align: center;
+    letter-spacing: 1px;
+    box-shadow: inset 0 8px 30px 8px rgba(255, 255, 255, 0.25);
+    margin-bottom: 20px;
+    font: 15px Arial, Verdana, sans-serif;
+    font-weight: 600;
+    line-height: 1.4em;
+    width: 100%;
+    color: #BBBBBB;
+    background-color: #F3F3F3;
+}
+
+
+.Post-date .Month {
+    font-size: 18px;
+}
+
+.Post-date .Day {
+    font-size: 40px;
+    line-height: 48px;
+}
+
+.Post-date .Year {
+    font-size: 18px;
+}
+
+/*begin Comments -------------------------------------------------------------------------------------------------*/
+
+.CommentsWrapper {
+    margin-top: 20px;
+}
+
+.CommentBox {
+    /*border: solid 1px #d0d0d0;*/
+    padding: 5px 10px;
+    margin-bottom: 0; /* 5px;*/
+}
+
+.CommentArrow {
+    /*background: url('/media/img/misc/CommentReply_Arrow.png') no-repeat left top;*/
+    display: block;
+    width: 25px;
+    height: 45px;
+    float: left;
+    position: relative;
+    left: -25px;
+    top: -5px;
+}
+
+.CommentWrapper .CommentWrapper /*make the wrapper margin only for the reply comments */ {
+    margin-left: 25px;
+}
+
+/*end Comments----------------------------------------------------------------------------------------------*/
+
+
+
+

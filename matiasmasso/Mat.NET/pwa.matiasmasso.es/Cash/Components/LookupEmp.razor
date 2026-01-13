@@ -1,0 +1,84 @@
+﻿@inject ApiService ApiService
+@implements IDisposable
+
+<div class="Wrapper">
+
+    <a href="#" class="Nom" @onclick="@(()=>isShowingDropdown = !isShowingDropdown)" @onclick:preventDefault>
+        @if(value == null)
+        {
+            <Loading></Loading>
+        } else
+        {
+            <span>@ApiService.GetEmp((EmpModel.EmpIds)value)?.Abr</span>
+        }
+    </a>
+
+    @if (isShowingDropdown)
+    {
+        <div class="Dropdown">
+            @foreach (var item in values ?? new())
+            {
+                <a href="#" class="Item" @onclick="@(()=>ItemClick(item.Id))" @onclick:preventDefault>
+                    @item.ToString()
+                </a>
+            }
+        </div>
+    }
+
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public EmpModel.EmpIds? Value { get; set; }
+    [Parameter] public List<EmpModel.EmpIds>? Values { get; set; }
+    [Parameter] public EventCallback<EmpModel.EmpIds> ValueChanged { get; set; }
+
+    List<EmpModel>? values;
+    EmpModel.EmpIds? value;
+    bool isShowingDropdown;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        Refresca();
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        values = ApiService.FilteredEmps(Values);
+        if (values != null)
+        {
+            if (Value != null && values.Any(x => x.Id == (EmpModel.EmpIds)Value))
+                value = Value;
+            else
+            {
+                value = values.FirstOrDefault()?.Id;
+                if(value != null)
+                ValueChanged.InvokeAsync((EmpModel.EmpIds)value);
+            }
+        }
+    }
+
+
+    void ItemClick(EmpModel.EmpIds args)
+    {
+        isShowingDropdown = false;
+        ApiService.Emp = args;
+        ValueChanged.InvokeAsync(args);
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+}

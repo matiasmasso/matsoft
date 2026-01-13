@@ -1,0 +1,91 @@
+﻿@inject ApiService ApiService
+
+<div class="Grid">
+    <a href="#" class="AddNew" @onclick="@AddNewAsync" @onclick:preventDefault>
+        Afegir nou document
+    </a>
+
+    <div class="Epg">Documents propis</div>
+
+    @foreach (var item in DocTargets(true))
+    {
+        <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+            <div class="Ico"> <Icon Id="@(item?.Difunt ?? false ? Icon.Ids.Cross : Icon.Ids.None)" /> </div>
+            <div class="Truncate">@DocRel(item)?.Nom</div>
+            <div class="Ico"> <Icon Id="@(Doc(item)?.DocFile?.Hash == null ? Icon.Ids.None : Icon.Ids.File)" /> </div>
+            <div class="Truncate">@Doc(item)?.FullNom()</div>
+        </a>
+    }
+    <div class="Epg">Documents aliens</div>
+
+    @foreach (var item in DocTargets(false))
+    {
+        <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+            <div class="Ico"> <Icon Id="@(item?.Difunt ?? false ? Icon.Ids.Cross : Icon.Ids.None)" /> </div>
+            <div class="Truncate">@DocRel(item)?.Nom</div>
+            <div class="Ico"> <Icon Id="@(Doc(item)?.DocFile?.Hash == null ? Icon.Ids.None : Icon.Ids.File)" /> </div>
+            <div class="Truncate">@Doc(item)?.FullNom()</div>
+        </a>
+    }
+
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public PersonModel? Person { get; set; }
+    [Parameter] public EventCallback<DocModel> ItemSelected { get; set; }
+
+    List<DocModel>? docs;
+    //List<DocRelModel>? docRels;
+    Exception? exception;
+
+    protected override void OnParametersSet(){
+        docs = ApiService.Docs();
+    }
+
+    List<DocTargetModel> DocTargets(bool subjectePassiu)
+    {
+        return ApiService.DocTargets(Person)?
+        .Where(x => x.Target == Person?.Guid && x.SubjectePassiu == subjectePassiu)
+        .Select(x => new
+        {
+            DocTarget = x,
+            Fch = ApiService.Doc(x.Doc)?.Fch
+        }).OrderBy(x => x.Fch)
+        .Select(x => x.DocTarget)
+        .ToList() ?? new();
+    }
+
+    DocModel? Doc(DocTargetModel? item) => ApiService.Doc(item?.Doc);
+    DocRelModel? DocRel(DocTargetModel? item) => ApiService.DocRel(item?.Rel);
+
+
+    private async Task AddNewAsync()
+    {
+        var doc = DocModel.Factory();
+        // var item = new DocTargetModel { Doc = doc!.Guid };
+        // item.Rel = DocRelModel.Wellknown(DocRelModel.Wellknowns.Cita)!.Guid;
+        // item.SubjectePassiu = true;
+
+        var nom = ApiService.NormalizedPersonNom(Person!.Guid);
+        doc.Tit = $"(Nou document de {nom})";
+
+        doc.Fch = DateTime.Now.Year.ToString();
+        await ApiService.UpdateAsync(doc);
+
+        var rel = DocRelModel.Wellknowns.Cita;
+        var target = DocTargetModel.Factory(doc, rel, true);
+        target.Target = Person.Guid;
+        await ApiService.UpdateAsync(target);
+
+        await ItemSelected.InvokeAsync(doc);
+    }
+
+    async Task ItemClick(DocTargetModel? item)
+    {
+        var doc = ApiService.Doc(item?.Doc);
+        await ItemSelected.InvokeAsync(doc);
+    }
+}

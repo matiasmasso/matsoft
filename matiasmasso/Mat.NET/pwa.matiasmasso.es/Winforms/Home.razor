@@ -1,0 +1,48 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider authStateProvider
+@inject HttpClient http;
+
+<div class="Wrapper">
+    <header User="@User">
+    </header>
+    <aside>
+         <MainNav Nav="@model"></MainNav>
+        <div><button @onclick="LogoutAsync">Logout</button></div>
+    </aside>
+    <main>
+
+    </main>
+    <footer>
+    </footer>
+</div>
+
+@code {
+    [Parameter] public UserModel? User { get; set; }
+    private bool isLoaded;
+    private NavDTO? model;
+    private List<NavDTO.Model>? menuItems;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isLoaded = false;
+            var apiResponse = await HttpService.GetAsync<NavDTO>(http, "navs/custom", ((int)EmpModel.EmpIds.MatiasMasso).ToString());
+            if (apiResponse.Success())
+            {
+                model = apiResponse.Value!;
+                menuItems = model.Items.Where(x => x.Parent == null).OrderBy(y => y.Ord).ToList();
+                isLoaded = true;
+            }
+            else
+                problemDetails = apiResponse.ProblemDetails;
+        }
+    }
+
+    async Task LogoutAsync()
+    {
+        await ((CustomAuthenticationStateProvider)authStateProvider).LogoutAsync();
+        StateHasChanged();
+    }
+}

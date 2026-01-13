@@ -1,0 +1,57 @@
+﻿@implements IDisposable
+@inject SessionStateService session
+@inject CultureService culture
+
+<h3>User</h3>
+
+<div class="EmailAddress">
+    <div>
+        Email:
+        @value?.EmailAddress
+    </div>
+    <div class="ButtonsBar">
+        <CopyButton Value="@value?.EmailAddress"></CopyButton>
+    </div>
+</div>
+
+<a href="mailto:@value?.EmailAddress?
+    subject=MessageTitle&amp;
+    body=Message Content">
+    Email me
+</a>
+
+<a href="#" @onclick="Impersonate" @onclick:preventDefault>
+    Impersonar
+</a>
+
+@code {
+    [Parameter] public UserModel? Model { get; set; }
+    [Parameter] public EventCallback RequestToCancel { get; set; }
+    UserModel? value;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        session.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+
+    }
+
+    async Task Impersonate()
+    {
+        await session.LoginAsync(value!);
+    }
+
+    public void Dispose()
+    {
+        session.OnChange -= Refresca;
+    }
+}

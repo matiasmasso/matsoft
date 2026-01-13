@@ -1,0 +1,58 @@
+﻿@page "/Login"
+@inherits _ComponentBase
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<AppResource> Localizer
+@inject ICookie cookie
+
+
+
+<div class="Wrapper600">
+    <AuthorizeView>
+        <Authorized>
+            <div>
+                Welcome,  @claimsPrincipal?.Identity?.Name
+            </div>
+        </Authorized>
+
+        <NotAuthorized>
+
+            <div class="SignIn">
+                <SignIn Success="SignInSuccess" Fail="SignInFail"></SignIn>
+            </div>
+
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? authenticationState { get; set; }
+    System.Security.Claims.ClaimsPrincipal? claimsPrincipal;
+    UserModel? userAccount;
+
+
+    private ProblemDetails? problemDetails;
+    private bool persist = true; //TODO get from checkbox
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await authenticationState;
+        claimsPrincipal = authState?.User;
+    }
+
+    private void SignInFail(ProblemDetails args)
+    {
+        problemDetails = args;
+    }
+
+    private async Task SignInSuccess(UserModel user)
+    {
+        var persist = true;
+        await cookie.SetValue("hash", persist ? user.Hash : string.Empty);
+        SessionProvider?.AuthenticationStateChanged(user);
+
+        NavigationManager.NavigateTo("/", true);
+    }
+}

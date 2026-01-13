@@ -1,0 +1,193 @@
+﻿@inject CultureService culture
+@inject AtlasService atlasService
+@inject ProductsService productsService
+@inject CustomerDeptsService customerDeptsService
+@inject SessionStateService session
+
+<div class="Wrapper" ondragover="event.preventDefault();" @ondrop="DropHandler">
+    @if (isAddingProduct)
+    {
+        <div class="LookupProduct">
+            <LookupProduct CloseRequest="@(()=>isAddingProduct=false)"></LookupProduct>
+        </div>
+    }
+    <div class="HeaderRow">
+        <h3>@culture.Localize("Dept")</h3>
+
+        <CloseButton CloseRequest="RequestToClose"></CloseButton>
+    </div>
+
+    <div class="Label">@culture.Localize("Customer")</div>
+    <div class="Value">
+        <input type="text" disabled value="@customerNom" />
+    </div>
+
+    <div class="Label">@culture.Localize("Cod")</div>
+    <div class="Value">
+        <input type="text" @bind-value="@deptCod" @oninput="SetDirty" />
+    </div>
+
+    <div class="Label">@culture.Localize("Nom")</div>
+    <div class="Value">
+        <input type="text" @bind-value="@deptNom" @oninput="SetDirty" />
+    </div>
+
+    <div class="Label">@culture.Localize("Products")</div>
+    <div class="Value">
+        <div class="ProductsHeader">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+            <a href="#"
+               class="AddProduct"
+            @onclick="@(()=>isAddingProduct = true)"
+            @onclick:preventDefault>
+                @culture.Localize("AddProduct")
+            </a>
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredProducts())
+            {
+                <a class="Item">
+                    <div class="Thumbnail">
+                        <img src="@productsService.ThumbnailUrl(item)" />
+                    </div>
+                    <div class="Brand">
+                        @productsService.Brand(item)?.Nom?.Tradueix(culture.Lang())
+                    </div>
+                    <div class="Category">
+                        @productsService.Category(item)?.Nom?.Tradueix(culture.Lang())
+                    </div>
+                    <div class="Sku">
+                        @productsService.Sku(item)?.Nom?.Tradueix(culture.Lang())
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="ButtonsBar">
+        <ButtonsBar CanEdit="true"
+                    State="state"
+                    CanDelete="@(!(Model?.IsNew ?? false))"
+                    RequestToDelete="DeleteRequest"
+                    RequestToUpdate="UpdateRequest"></ButtonsBar>
+    </div>
+</div>
+
+@code {
+    [Parameter] public CustomerDeptModel Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    string? customerNom;
+    string? deptCod;
+    string? deptNom;
+    string? searchterm;
+    List<Guid> products = new();
+    bool isAddingProduct;
+    DbState state;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        atlasService.OnChange += Refresca;
+        productsService.OnChange += Refresca;
+        customerDeptsService.OnChange += Refresca;
+        Refresca();
+    }
+
+    protected override void OnParametersSet()
+    {
+        deptCod = Model.Cod;
+        deptNom = Model.Nom;
+        products = Model.Products;
+        Refresca();
+    }
+
+    void SetDirty()
+    {
+        state = DbState.IsDirty;
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        customerNom = atlasService.Contact(Model.Customer)?.FullNom;
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task UpdateRequest()
+    {
+        try
+        {
+            state = DbState.IsUpdating;
+            Model.Cod = deptCod;
+            Model.Nom = deptNom;
+            Model.Products = products;
+            await customerDeptsService.UpdateAsync(Model);
+            state = DbState.StandBy;
+            await CloseRequest.InvokeAsync();
+            InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+            state = DbState.Failed;
+        }
+    }
+
+    async Task DeleteRequest()
+    {
+        try
+        {
+            state = DbState.IsDeleting;
+            await customerDeptsService.DeleteAsync(Model);
+            state = DbState.StandBy;
+            await CloseRequest.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task RequestToClose()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    void DropHandler(DragEventArgs args)
+    {
+        if (session.DraggingData != null && session.DraggingData is ProductModel)
+        {
+            var product = (ProductModel)session.DraggingData;
+            products.Add(product.Guid);
+            session.DraggingData = null;
+            SetDirty();
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    List<Guid> FilteredProducts()
+    {
+        if (string.IsNullOrEmpty(searchterm))
+            return Model.Products;
+        else
+            return Model.Products.Where(x => (
+                (productsService.Sku(x)?.Matches(searchterm) ?? false)
+                || (productsService.Category(x)?.Matches(searchterm) ?? false)
+                || (productsService.Brand(x)?.Matches(searchterm) ?? false)
+            )
+            ).ToList();
+    }
+
+    public void Dispose()
+    {
+        culture.OnChange -= Refresca;
+        atlasService.OnChange -= Refresca;
+        productsService.OnChange -= Refresca;
+        customerDeptsService.OnChange -= Refresca;
+    }
+
+
+}

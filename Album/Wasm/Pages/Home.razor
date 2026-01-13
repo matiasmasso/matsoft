@@ -1,0 +1,16 @@
+﻿@page "/"
+@* @attribute [Authorize]
+
+
+@using Microsoft.AspNetCore.Authorization *@
+@using Microsoft.AspNetCore.Components.Authorization
+
+<AuthorizeView Roles="Admin, Guest">
+    <Authorized>
+        <Albums></Albums>
+    </Authorized>
+    <NotAuthorized>
+        <div class="welcome">Cal loguejar-se per accedir a aquesta aplicació</div>
+    </NotAuthorized>
+</AuthorizeView>
+

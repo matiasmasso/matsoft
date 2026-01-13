@@ -1,0 +1,77 @@
+﻿<div class="Wrapper">
+    <label for="@Id()" style="cursor:pointer;">
+        <img src="@Src" @onerror="onError" class="@(isShowingFallback ? "Hidden" : "")" />
+        <img src="/img/camera-slash.svg" class="Fallback @(isShowingFallback ? "" : "Hidden")" />
+    </label>
+
+    <InputFile id="@Id()" style="opacity:0;z-index=-1; position:absolute;" OnChange="FileDropped" />
+
+    <div class="@(isShowingError ? "" : "Hidden")">
+        <div class="Error" @onclick="@(()=>{isShowingError=false;})">
+            <img src="/img/triangle-exclamation.svg" class="Warning" />
+            <div>
+                @((MarkupString)errMsg.Html())
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public EventCallback<IBrowserFile> OnChange { get; set; }
+    [Parameter] public string Src { get; set; }
+    [Parameter] public int Width { get; set; }
+    [Parameter] public int Height { get; set; }
+    [Parameter] public string Caption { get; set; } = "Select a file";
+
+    bool isShowingFallback;
+    bool isShowingError;
+    string? _id;
+    string? filePath;
+    string? errMsg;
+
+    /// <summary>method <c>Id</c> builds a random Id so they do not conflict when rendering multiple UxInputFile on same page.</summary>
+    string Id()
+    {
+        if (string.IsNullOrEmpty(_id))
+            _id = System.Guid.NewGuid().ToString();
+        return _id;
+    }
+
+    void onError(Microsoft.AspNetCore.Components.Web.ErrorEventArgs args)
+    {
+        isShowingFallback = true;
+    }
+
+    async Task FileDropped(InputFileChangeEventArgs e)
+    {
+        using var stream = e.File.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+
+        Src = "data:" + e.File.ContentType + ";base64," + Convert.ToBase64String(ms.ToArray());
+        isShowingFallback = false;
+        if (OnChange.HasDelegate)
+            await OnChange.InvokeAsync(e.File);
+
+
+        //var img = System.Drawing.Image.FromStream(ms);
+        //if (img.Width == Width && img.Height == Height)
+        //{
+        //    Src = "data:" + e.File.ContentType + ";base64," + Convert.ToBase64String(ms.ToArray());
+        //    isShowingError = false;
+        //    isShowingFallback = false;
+        //    filePath = e.File.Name;
+        //    if (OnChange.HasDelegate)
+        //        await OnChange.InvokeAsync(e.File);
+        //}
+        //else
+        //{
+        //    errMsg = Localizer("WrongImgSize", img.Width, img.Height, Width, Height];
+        //    isShowingError = true;
+        //}
+    }
+
+
+}

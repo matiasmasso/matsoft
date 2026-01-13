@@ -1,0 +1,28 @@
+﻿<div cllass="Wrapper">
+<label for="@Id()" style="cursor:pointer;">
+    @Caption
+</label>
+
+<InputFile id="@Id()" style="opacity:0;z-index=-1; position:absolute;" OnChange="FileDropped" />
+</div>
+@code {
+    [Parameter] public EventCallback<IBrowserFile> OnChange { get; set; }
+    [Parameter] public string Caption { get; set; } = "Select a file";
+
+    string? _id;
+    string? filePath;
+
+    /// <summary>method <c>Id</c> builds a random Id so they do not conflict when rendering multiple UxInputFile on same page.</summary>
+    string Id()
+    {
+        if (string.IsNullOrEmpty(_id))
+            _id = System.Guid.NewGuid().ToString();
+        return _id;
+    }
+
+    async Task FileDropped(InputFileChangeEventArgs e)
+    {
+        filePath = e.File.Name;
+        if (OnChange.HasDelegate) await OnChange.InvokeAsync(e.File);
+    }
+}

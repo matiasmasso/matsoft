@@ -1,0 +1,252 @@
+﻿        .Grid {
+            display: table;
+            table-layout: auto;
+            width: 100%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+
+            .Grid a:hover {
+                color: red;
+            }
+
+
+        .RowHdr {
+            display: table-row;
+            color: gray;
+        }
+
+
+        .Row {
+            display: table-row;
+            width:100%; /*imprescindible per limitar single cell width, si no se surt del grid width*/
+        }
+
+            .Row:nth-child(odd) {
+                /*background: #dddddd;*/
+            }
+
+            .Row:nth-child(even) {
+                background: #eeeeee;
+            }
+
+        .SelectableRow,  .Row[data-url] {
+            cursor:pointer;
+        }
+
+
+        .CellEpigraf {
+            display: table-cell;
+            padding: 4px 7px 2px 4px;
+            width: 100%;
+            max-width: 0;
+            white-space: nowrap;
+            overflow: visible;
+            text-align: left;
+            border: 1px solid #cccccc;
+        }
+
+        .SingleCell {
+            display: table-cell;
+            padding: 4px 7px 2px 4px;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: left;
+            border: 1px solid #cccccc;
+            font-size:1.2em;
+        }
+
+        .CellTxt {
+            display: table-cell;
+            padding: 4px 7px 2px 4px;
+            width: 100%;
+            min-width: 100px;
+            max-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: left;
+            border: 1px solid #cccccc;
+        }
+
+    .CellShortTxt {
+            display: table-cell;
+            text-align: left;
+            padding: 4px 7px 2px 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 20px;
+            max-width: 30%;
+            border: 1px solid #cccccc;
+    }
+
+        .CellFch {
+            display: table-cell;
+            text-align: center;
+            padding: 4px 7px 2px 4px;
+            white-space: nowrap;
+            min-width: 50px;
+            max-width: 90px;
+            border: 1px solid #cccccc;
+        }
+
+
+        .CellNum {
+            display: table-cell;
+            text-align: right;
+            padding: 4px 7px 2px 4px;
+            white-space: nowrap;
+            min-width: 40px;
+            max-width: 100px;
+            border: 1px solid #cccccc;
+        }
+        .CellBigNum {
+            display: table-cell;
+            text-align: right;
+            padding: 4px 7px 2px 4px;
+            white-space: nowrap;
+            min-width: 40px;
+            max-width: 120px;
+            border: 1px solid #cccccc;
+        }
+
+        .CellPrice {
+            display: table-cell;
+            text-align: right;
+            padding: 4px 7px 2px 4px;
+            white-space: nowrap;
+            min-width: 70px;
+            max-width: 100px;
+            border: 1px solid #cccccc;
+        }
+
+        .CellDto {
+            display: table-cell;
+            text-align: right;
+            padding: 4px 7px 2px 4px;
+            min-width: 30px;
+            max-width: 100px;
+            border: 1px solid #cccccc;
+        }
+        
+        .CellAmt {
+            display: table-cell;
+            text-align: right;
+            padding: 4px 7px 2px 4px;
+            white-space: nowrap;
+            min-width: 70px;
+            max-width: 150px;
+            border: 1px solid #cccccc;
+        }
+
+        .CellIco {
+            display: table-cell;
+            min-width: 20px;
+            max-width: 30px;
+            width:30px;
+            text-align: center;
+            border: 1px solid #cccccc;
+            padding-top: 2px 5px;
+        }
+
+        .CellPdf {
+            display: table-cell;
+            min-width: 20px;
+            max-width: 30px;
+            width:30px;
+            text-align: center;
+            border: 1px solid #cccccc;
+            padding-top: 2px 5px;
+            background-image: url('/Media/Img/Ico/pdf.gif');
+            background-repeat: no-repeat;
+            background-position: center; 
+        }
+
+    .CellStar {
+            display: table-cell;
+            min-width: 20px;
+            text-align: center;
+            border: 1px solid #cccccc;
+            padding-top: 2px;
+            background-image: url('/Media/Img/Ico/star.gif');
+            background-repeat: no-repeat;
+            background-position: center; 
+    }
+    .CellCamera {
+            display: table-cell;
+            min-width: 20px;
+            text-align: center;
+            border: 1px solid #cccccc;
+            padding-top: 2px;
+            background-image: url('/Media/Img/Ico/Camera.png');
+            background-repeat: no-repeat;
+            background-position: center; 
+    }
+
+    
+
+    .CellOk {
+            display: table-cell;
+            min-width: 20px;
+            text-align: center;
+            border: 1px solid #cccccc;
+            padding-top: 2px;
+            background-image: url('/Media/Img/Ico/ok.png');
+            background-repeat: no-repeat;
+            background-position: center; 
+    }
+
+    .CellKo {
+            display: table-cell;
+            min-width: 20px;
+            text-align: center;
+            border: 1px solid #cccccc;
+            padding-top: 2px;
+            background-image: url('/Media/Img/Ico/aspa.png');
+            background-repeat: no-repeat;
+            background-position: center; 
+            cursor:pointer;
+        }
+
+    .CellWait {
+            display: table-cell;
+            min-width: 20px;
+            text-align: center;
+            border: 1px solid #cccccc;
+            padding-top: 2px;
+            background-image: url('/Media/Img/Ico/alarmClock.png');
+            background-repeat: no-repeat;
+            background-position: center; 
+            cursor:pointer;
+        }
+
+
+    .CellMobile {
+        display:none;
+    }
+
+        .Red {
+        color:red;
+        }
+    .Green {
+        color:green;
+        }
+
+@media screen and (max-width:540px) {
+    .Row {
+        height:20px;
+        padding-top:10px;
+        padding-bottom:10px;
+    }
+    .CellDesktop {
+        display:none;
+    }
+    .CellMobile {
+        display:table-cell;
+    }
+
+}
+

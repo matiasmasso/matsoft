@@ -1,0 +1,45 @@
+﻿@inject CultureService culture
+@inject ProductsService productsService
+
+@if (Model == null)
+{
+    <Loading></Loading>
+}
+else
+{
+    <div class="Wrapper">
+        <div class="Breadcrumbs">
+            <Breadcrumbs Model="@productsService.Breadcrumbs(Model, culture)"></Breadcrumbs>
+        </div>
+
+        <div class="Content">
+            @((MarkupString)(productsService.ContentBeforeMoreOrDefault(Model, culture.Lang())))
+        </div>
+
+        @if (categories?.Count > 0)
+        {
+            <CategoriesGallery Model="@categories"></CategoriesGallery>
+        }
+
+        <div class="Content">
+            @((MarkupString)(productsService.ContentAfterMoreOrDefault(Model, culture.Lang())))
+        </div>
+
+        <Error @bind-Exception = "exception"></Error>
+    </div>
+}
+
+@code {
+    [Parameter] public ProductDeptModel? Model { get; set; }
+
+    private string? content;
+    private List<ProductCategoryModel>? categories;
+    private List<Box> breadcrumbs = new();
+    private Exception? exception;
+
+    protected override void OnParametersSet()
+    {
+        categories = productsService.Categories(Model, onlyActive: true);
+    }
+
+}

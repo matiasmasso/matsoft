@@ -1,0 +1,161 @@
+﻿@page "/atlas"
+@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    <h3>Atlas</h3>
+
+    @if (countries == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedLocation != null)
+    {
+        <a class="Item Selected" href="#" @onclick="@(()=>selectedLocation = null)" @onclick:preventDefault>
+            @selectedLocation.Nom
+        </a>
+
+    }
+    else if (selectedZona != null)
+    {
+        <a class="Item Selected" href="#" @onclick="@(()=>selectedZona = null)" @onclick:preventDefault>
+            @selectedZona.Nom
+        </a>
+
+        <div class="Grid">
+            @foreach (var location in locations ?? new())
+            {
+                <a class="Item" href="#" @onclick="@(()=>HandleLocationChangeAsync(location))" @onclick:preventDefault>
+                    @location.Nom
+                </a>
+            }
+        </div>
+    }
+    else if (selectedCountry != null)
+    {
+        <a class="Item Selected" href="#" @onclick="@(()=>selectedCountry = null)" @onclick:preventDefault>
+            @selectedCountry.Nom?.Tradueix(LangDTO.Cat())
+        </a>
+
+        <div class="Grid">
+            @foreach (var zona in zonas ?? new())
+            {
+                <a class="Item" href="#" @onclick="@(()=>HandleZonaChangeAsync(zona))" @onclick:preventDefault>
+                    @zona.Nom
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+
+        <div class="Searchbox">
+            <SearchBox @bind-Value="searchterm"></SearchBox>
+        </div>
+
+        <div class="Grid">
+
+            @foreach (var item in FilteredValues() ?? new())
+            {
+                <a class="Item" href="#" @onclick="@(()=>HandleCountryChangeAsync(item))" @onclick:preventDefault>
+                    @item.Nom?.Tradueix(LangDTO.Cat())
+                </a>
+            }
+
+            @if (!isShowingAll)
+            {
+                <a class="Item" href="#" @onclick="@(()=>isShowingAll = true)" @onclick:preventDefault>
+                    [veurel's tots]
+                </a>
+            }
+
+        </div>
+    }
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    List<CountryModel>? countries;
+    List<ZonaModel>? allZonas;
+    List<ZonaModel>? zonas;
+    List<LocationModel>? allLocations;
+    List<LocationModel>? locations;
+    CountryModel? selectedCountry;
+    ZonaModel? selectedZona;
+    LocationModel? selectedLocation;
+    EmpModel.EmpIds emp;
+    string? searchterm;
+    bool isShowingAll;
+    Exception? exception;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        try
+        {
+            countries = await ApiService.GetAsync<List<CountryModel>>("Countries");
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    private List<CountryModel>? FilteredValues()
+    {
+        var retval = countries;
+        if (!string.IsNullOrEmpty(searchterm))
+            retval = countries?.Where(x => x.Nom!.Matches(searchterm)).ToList();
+        if (!isShowingAll)
+            retval = retval?.Where(x => CountryModel.Favorites().Any(y => x.Guid == y.Guid)).ToList();
+        return retval;
+    }
+
+
+    private async Task HandleCountryChangeAsync(CountryModel args)
+    {
+        selectedCountry = args;
+        try
+        {
+            if (allZonas == null)
+                allZonas = await ApiService.GetAsync<List<ZonaModel>>("Zonas");
+            zonas = allZonas?.Where(x => x.Country == selectedCountry.Guid).OrderBy(x => x.Nom).ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private async Task HandleZonaChangeAsync(ZonaModel args)
+    {
+        selectedZona = args;
+        try
+        {
+            if (allLocations == null)
+                allLocations = await ApiService.GetAsync<List<LocationModel>>("Locations");
+            locations = allLocations?.Where(x => x.Zona == selectedZona.Guid).OrderBy(x => x.Nom).ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    private async Task HandleLocationChangeAsync(LocationModel args)
+    {
+        selectedLocation = args;
+        try
+        {
+            // if (allLocations == null)
+            //     allLocations = await ApiService.GetAsync<List<LocationModel>>("Locations");
+            // locations = allLocations?.Where(x => x.Zona == selectedZona.Guid).OrderBy(x => x.Nom).ToList();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+}

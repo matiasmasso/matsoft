@@ -1,0 +1,11 @@
+﻿.wrapper {
+    display: grid;
+    grid-template-columns: minmax(50px,110px) minmax(50px,60px) minmax(50px,110px) minmax(50px,1fr);
+    grid-column-gap: 10px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.total {
+    text-align: right;
+}

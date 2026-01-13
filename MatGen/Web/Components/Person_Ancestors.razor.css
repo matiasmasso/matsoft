@@ -1,0 +1,58 @@
+﻿/*issues found?*/
+
+.Grid {
+    display: grid;
+    grid-template-columns: repeat(9,min-content) 1fr;
+}
+
+
+.Gen {
+    grid-column:1/-1;
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    grid-column-gap: 10px;
+}
+
+.GenDetail, .Ancestor, .ColHeaders {
+    display: contents;
+}
+
+
+
+    .ColHeaders div, .Ancestor div {
+        padding: 0 3px;
+        border-left: 1px solid gray;
+        border-bottom:1px solid gray;
+    }
+
+    .ColHeaders div {
+        border-top: 1px solid gray;
+        background-color: #FAFAFA;
+        color:gray;
+    }
+
+.Spacer {
+    grid-column: 1/-1;
+}
+
+    .Level, .Id {
+        text-align: right;
+    }
+
+    .Nom {
+        border-right:1px solid gray;
+    }
+
+    .RegCivil {
+        background-color:lightgreen;
+    }
+    .RegParroquial{
+        background-color: lightblue;
+    }
+    .RegNotarial {
+        background-color:lightsalmon;
+    }
+
+.LastAncestor {
+    background-color: #fffee0;
+}

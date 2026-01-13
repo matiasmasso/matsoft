@@ -1,0 +1,81 @@
+﻿@page "/sorteos"
+@page "/ca/sortejos"
+@page "/en/raffles"
+@page "/sorteios"
+
+@implements IDisposable
+
+@inject CultureService culture
+@inject RafflesService rafflesService
+
+<div class="PageWrapper900">
+
+    <h3>@culture.Localize("Raffles")</h3>
+
+    @if (items == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        @foreach (var item in items)
+        {
+            <a href="@Url(item)" class="Item @(IsVisible(item) ? "" : "Hidden")">
+                <div class="Thumbnail">
+                    <img src="@item.ThumbnailUrl()" width="@RaffleModel.THUMBNAILWIDTH" height="@RaffleModel.THUMBNAILHEIGHT" alt="@item.Title" />
+                </div>
+                <div class="Caption">@item.Title</div>
+                <div class="FchFromLabel">@culture.Localize("Raffle.FchFrom")</div>
+                <div class="FchFromValue">@item.FchFrom?.ToString("dd/MM/yy")</div>
+                <div class="FchToLabel">@culture.Localize("Raffle.FchTo")</div>
+                <div class="FchToValue">@item.FchTo?.ToString("dd/MM/yy")</div>
+                <div class="WinnerLabel">@culture.Localize("Raffle.Winner")</div>
+                <div class="WinnerValue">
+                    @(item.IsActive() ? culture.Localize("PlayYoureStillOnTime") : item.WinnerFullNom())
+                </div>
+            </a>
+        }
+
+
+        <a class="SeeMore" href="#" @onclick="@(()=>{visibleCount+=visibleInterval;})" @onclick:preventDefault="true">
+            @culture.Localize("SeeMore")
+        </a>
+    }
+</div>
+
+
+@code {
+    List<RaffleModel>? items;
+    RaffleModel? selectedItem;
+    int? visibleCount = 12;
+    int visibleInterval = 12;
+
+
+    protected override void OnInitialized()
+    {
+        culture.OnChange += Refresca;
+        rafflesService.OnChange += Refresca;
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        items = rafflesService.PastFromLang(culture.Lang());
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool IsVisible(RaffleModel item) => items?.IndexOf(item) < visibleCount;
+
+    private string? Url(RaffleModel item)
+    {
+        var segment = culture.Tradueix("sorteo", "sorteig", "raffle", "sorteio");
+        return culture.RelativeUrl(segment, item.Guid.ToString());
+    }
+
+    public void Dispose()
+    {
+        rafflesService.OnChange -= Refresca;
+        culture.OnChange -= Refresca;
+    }
+
+}

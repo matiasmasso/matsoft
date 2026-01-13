@@ -1,0 +1,110 @@
+﻿@page "/purchaseOrders"
+@layout ProLayout
+@inherits _ComponentBase
+
+@if (model == null)
+{
+    <Loading Message="@LoadingMessage()"></Loading>
+}
+else
+{
+    <div class="TitleBar">
+        <span>@base.Tradueix("Pedidos","Comandes","PurchaseOrders")</span>
+        <select value="@year" @onchange="@YearChanged">
+            @foreach (var i in model.Years)
+            {
+                <option>@i.ToString()</option>
+            }
+        </select>
+    </div>
+
+    <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+    <div class="Grid">
+        <div class="DesktopContents">
+            <div class="TH Id">@base.Tradueix("Numero")</div>
+            <div class="TH Fch">@base.Tradueix("Fecha")</div>
+            <div class="TH Doc">@base.Tradueix("")</div>
+            <div class="TH Cli">@base.Tradueix("Cliente/Proveedor")</div>
+            <div class="TH Amt">@base.Tradueix("Importe")</div>
+            <div class="TH Pdd">@base.Tradueix("Concepto")</div>
+            <div class="TH Usr">@base.Tradueix("Usuario")</div>
+
+
+            <!-- to set margin from column captions -->
+            <div class="THSpacer">&nbsp;</div>
+
+
+            <!-- to compensate Virtualize bug, set an empty row of Columns.Count-1 -->
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <Virtualize Items="@FilteredItems()" Context="item">
+            <div class="ItemContents" onclick="@(()=>ItemClicked(item))">
+                <a href="@item.PageUrl()" class="Id">@item.Id</a>
+                <a href="@item.PageUrl()" class="Fch">@item.Fch.ToString("dd/MM/yy")</a>
+                <a href="@item.DownloadUrl()" target="_blank" class="Doc @(item.HasDoc() ? "HasDoc":"NoDoc")"></a>
+                <div class="Cli">@(item.Contact?.Nom ?? "")</div>
+                <div class="Amt">@item.Amt?.CurFormatted()</div>
+                <a href="@item.PageUrl()" class="Pdd">@item.Concept</a>
+                <div class="Usr">@item.User</div>
+            </div>
+        </Virtualize>
+    </div>
+}
+
+@code {
+    private PurchaseOrderListDTO? model;
+    private string? searchTerm;
+    private int year;
+
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Refresca();
+        }
+    }
+
+
+    private List<PurchaseOrderListDTO.Item> FilteredItems()
+    {
+        return model!.Items
+        .Where(x => x.Matches(searchTerm))
+        .ToList();
+    }
+
+    private void ItemClicked(PurchaseOrderListDTO.Item item)
+    {
+        base.NavigateToPage("purchaseOrder", item.Guid.ToString());
+    }
+
+    private async Task YearChanged(ChangeEventArgs e)
+    {
+        year = int.Parse(e.Value!.ToString()!);
+        model = null;
+        await Refresca();
+    }
+    private async Task Refresca()
+    {
+        model = await GetAsync<PurchaseOrderListDTO>("PurchaseOrderList", Globals.DefaultEmp.ToString(), year.ToString());
+        if (year == 0) year = model.Years.First();
+        StateHasChanged();
+    }
+
+
+    private string LoadingMessage()
+    {
+        if (year == 0)
+            return base.Tradueix("Cargando últimos pedidos", "Carregant comandes recents", "Loading last purchase orders");
+        else
+            return string.Format(base.Tradueix("Cargando pedidos del {0}", "Carregant comandes del {0}", "Loading {0} purchase orders"), year);
+    }
+}

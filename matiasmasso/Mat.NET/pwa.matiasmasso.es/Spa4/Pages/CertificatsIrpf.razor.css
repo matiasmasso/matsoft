@@ -1,0 +1,31 @@
+﻿.Wrapper {
+    max-width: 400px;
+}
+
+.Grid {
+    margin-top: 10px;
+}
+
+.Item {
+    display: flex;
+    flex-direction: row;
+    padding: 5px;
+    align-items: center
+}
+
+    .Item:not(:first-child) {
+        border-top: 1px solid gray;
+    }
+
+.Details {
+    width: 100%;
+}
+
+
+.Ico {
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+}
+
+

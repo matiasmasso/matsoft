@@ -1,0 +1,342 @@
+﻿@inject ApiService ApiService
+@implements IDisposable
+
+
+@if (selectedModel != null)
+{
+    <Model Value="selectedModel" CloseRequest="@(()=> selectedModel = null)"></Model>
+}
+else
+{
+    <div class="PageWrapper600">
+        <Title Value="Lloguer" CloseRequest="CloseRequestHandler"></Title>
+
+
+        @if (value == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+
+            <Tabs Value="(int?)selectedTab" ValueChanged="HandleTabChanged" Captions="Detalls, Quotes"></Tabs>
+            @if (selectedTab == Tabs.Detalls)
+            {
+                <PropertyGrid Model="propertyGrid"
+                ZoomRequest="ZoomRequestHandler"
+                UpdateRequest="UpdateRequestHandler"
+                CancelRequest="CloseRequestHandler"
+                DeleteRequest="DeleteRequestHandler"
+                ItemChanged="HandleItemChanged"
+                UpdateState="updateState"
+                DeleteState="deleteState">
+                </PropertyGrid>
+
+            }
+            else if (selectedTab == Tabs.Quotes)
+            {
+                <div class="Quotes">
+                    @if (QuotesAsync() == null)
+                    {
+                        <Loading></Loading>
+                    }
+                    else if (quotes?.Count == 0)
+                    {
+                        <div class="NoQuotes">No hi han quotes registrades</div>
+                    }
+                    else
+                    {
+                        <div class="Item">
+
+                            <div class="Number">Factura num</div>
+                            <div>Data</div>
+                            <div class="Number">Base imponible</div>
+                        </div>
+                        foreach (var item in quotes ?? new())
+                        {
+                            <div class="Item">
+
+                                <div class="Number">@item.Id</div>
+                                <div class="Truncate">@($"{item.Fch:dd/MM/yyyy}")</div>
+                                <div class="Number">@($"{item.Amt?.Eur:0,000.00} €")</div>
+                            </div>
+                        }
+
+                    }
+
+                </div>
+            }
+            else if (selectedTab == Tabs.Quotes)
+            {
+                <PropertyGrid Model="@AddQuotaPropertyGrid()"
+                UpdateRequest="AddQuotaUpdateRequestHandler"
+                CancelRequest="AddQuotaCloseRequestHandler"
+                UpdateState="addQuotaUpdateState"
+                DeleteState="addQuotaDeleteState">
+                </PropertyGrid>
+            }
+
+        }
+        <Error @bind-Value="exception"></Error>
+    </div>
+}
+
+
+@code {
+    [Parameter] public LloguerModel? Value { get; set; }
+    [Parameter] public EventCallback<LloguerModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<LloguerModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    LloguerModel? value;
+    IModel? selectedModel;
+    List<ImmobleModel>? allImmobles;
+    List<ContractModel>? allContracts;
+
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+
+    PropertyGridModel? addQuotaPropertyGrid;
+    CrudButton.States addQuotaUpdateState;
+    CrudButton.States addQuotaDeleteState;
+
+    AddQuotaForm addQuotaForm = new();
+
+    Exception? exception;
+
+    Tabs? selectedTab = Tabs.Detalls;
+    List<InvoiceSentModel>? quotes;
+
+    enum Tabs
+    {
+        Detalls,
+        Quotes,
+        AddQuota
+    }
+
+    enum Fields
+    {
+        Emp,
+        Customer,
+        Immoble,
+        Cod,
+        Contract,
+        Base,
+        Iva,
+        Irpf,
+        FchFrom,
+        FchTo,
+    }
+
+    enum AddQuotaFields
+    {
+        FraNum,
+        Fch
+    }
+
+
+    protected override void OnInitialized()
+    {
+        ApiService.OnChange += Refresca;
+        _ = Task.Run(async () => await FetchAsync());
+    }
+
+    async Task FetchAsync()
+    {
+        try
+        {
+            allImmobles = await ApiService.GetAsync<List<ImmobleModel>>("Immobles");
+            allContracts = await ApiService.GetAsync<List<ContractModel>>("Contracts");
+
+            Refresca();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    async Task<List<InvoiceSentModel>?> QuotesAsync()
+    {
+        if (quotes == null)
+        {
+            quotes = await ApiService.GetAsync<List<InvoiceSentModel>>("Lloguer/Quotes", value!.Guid.ToString());
+            await InvokeAsync(StateHasChanged);
+        }
+        return quotes;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value?.IsNew ?? false)
+            {
+                value = Value;
+                deleteState = CrudButton.States.Hidden;
+            }
+            else
+                value = await ApiService.GetAsync<LloguerModel>("Lloguer", Value.Guid.ToString());
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid();
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+
+        var contacts = ApiService.GetContacts()?.Where(x => x.Emp == value?.EmpId).ToList();
+        var immobles = allImmobles?.Where(x => x.Emp == value?.EmpId).ToList();
+        var contracts = allContracts?.Where(x => x.Emp == value?.EmpId).ToList();
+
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value?.EmpId);
+        retval.AddModel<ContactModel>("Client", value?.Customer?.Guid, contacts);
+        retval.AddModel<ImmobleModel>("Immoble", value?.Immoble?.Guid, immobles);
+        retval.AddEnum<LloguerModel.Cods>("Codi", value?.Cod);
+        retval.AddModel<ContractModel>("Contracte", value?.Contract?.Guid, contracts);
+        retval.AddEur("Base imponible", value?.Base);
+        retval.AddBool("Iva", value?.Iva);
+        retval.AddBool("Irpf", value?.Irpf);
+        retval.AddDateOnly("Des de", value?.FchFrom);
+        retval.AddDateOnly("Caduca", value?.FchTo);
+        return retval;
+    }
+
+    PropertyGridModel AddQuotaPropertyGrid()
+    {
+        addQuotaForm = new AddQuotaForm();
+        addQuotaForm.FraNum = 999;
+        addQuotaForm.Fch = DateTime.Today.ToDateOnly();
+        var retval = new PropertyGridModel();
+        retval.AddInt("Num.Factura", addQuotaForm.FraNum);
+        retval.AddDateOnly("Data", addQuotaForm.Fch);
+        retval.AddDateOnly("Caduca", value?.FchTo);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    void AddQuotaCloseRequestHandler()
+    {
+        addQuotaPropertyGrid = null;
+        selectedTab = Tabs.Detalls;
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.EmpId = propertyGrid!.GetEmp((int)Fields.Emp);
+            value.Customer = (ContactModel?)propertyGrid!.GetModel((int)Fields.Customer);
+            value.Immoble = (ImmobleModel?)propertyGrid!.GetModel((int)Fields.Immoble);
+            value.Cod = (LloguerModel.Cods?)propertyGrid!.GetEnum((int)Fields.Cod);
+            value.Contract = (ContractModel?)propertyGrid!.GetModel((int)Fields.Contract);
+            value.Base = propertyGrid!.GetEur((int)Fields.Base);
+            value.Iva = propertyGrid!.GetBool((int)Fields.Iva);
+            value.Irpf = propertyGrid!.GetBool((int)Fields.Irpf);
+            value.FchFrom = propertyGrid!.GetDateOnly((int)Fields.FchFrom);
+            value.FchTo = propertyGrid!.GetDateOnly((int)Fields.FchTo);
+            await ApiService.PostAsync<LloguerModel, bool>(value, "Lloguer");
+            value.IsNew = false;
+
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task AddQuotaUpdateRequestHandler()
+    {
+        addQuotaUpdateState = CrudButton.States.Loading;
+        try
+        {
+            addQuotaForm = new AddQuotaForm();
+            addQuotaForm.FraNum = (int)propertyGrid!.GetInt((int)AddQuotaFields.FraNum)!;
+            addQuotaForm.Fch = propertyGrid!.GetDateOnly((int)AddQuotaFields.Fch);
+
+            var invoice = new InvoiceSentModel()
+                {
+                    Id = addQuotaForm.FraNum,
+                    Fch = (DateTime)addQuotaForm.Fch.ToDateTime()!,
+                    Concepte = 1,
+                    Contact = value!.Customer!.Guid,
+                    Amt = new Amt((decimal)value!.Base!)
+                };
+
+            await ApiService.PostAsync<InvoiceSentModel, bool>(invoice, "Lloguer/invoice/", value.Guid.ToString());
+            quotes = null;
+            selectedTab = Tabs.Quotes;
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        addQuotaUpdateState = CrudButton.States.StandBy;
+    }
+
+    void ZoomRequestHandler(IModel args)
+    {
+        selectedModel = args;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Contract/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            value!.EmpId = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+    void HandleTabChanged(int args)
+    {
+        selectedTab = (Tabs)args;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+    public class AddQuotaForm
+    {
+        public DateOnly? Fch { get; set; }
+        public int FraNum { get; set; }
+    }
+}

@@ -1,0 +1,294 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper600">
+    @if (selectedTemplateItem != null)
+    {
+        <Model Value="selectedTemplateItem"
+               CloseRequest="@(() => selectedTemplateItem=null)"
+               AfterUpdate="AfterUpdateTemplateItemRequest"></Model>
+    } else
+    {
+        <h3>Customer Invoice Template</h3>
+
+        <PageOptions>
+             <a href="#" @onclick="AddItemRequest" @onclick:preventDefault>afegir linia</a>
+            <a href="#" @onclick="AddNotaRequest" @onclick:preventDefault>afegir nota</a>
+        </PageOptions>
+
+        <CustomerInvoiceItems Value="value" EditRequest="EditItemRequest" OnDelete="HandleOnItemDelete"></CustomerInvoiceItems>
+
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="UpdateAsync"
+                      ItemChanged="HandleItemChanged"
+                      CancelRequest="HandleCancelRequest"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    }
+
+    <Error @bind-Value="exception"></Error>
+</div>
+@code {
+    [Parameter] public CustomerInvoiceModel.Template? Value { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+    // [Parameter] public EventCallback<IModel> ZoomRequest { get; set; }
+    [Parameter] public EventCallback<CustomerInvoiceModel.Template> AfterUpdate { get; set; }
+    // [Parameter] public EventCallback<CustomerInvoiceModel> DeleteRequest { get; set; }
+
+    CustomerInvoiceModel.Template? value;
+    List<PgcCtaModel>? ctas;
+    List<ContactModel>? allContacts;
+    List<ContactModel>? contacts;
+    ContactModel? contactToAdd;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    private CustomerInvoiceModel.Item? selectedTemplateItem;
+    private List<CustomerInvoiceModel.Template> templates;
+
+    Exception? exception;
+
+    enum Fields
+    {
+        Emp,
+        Tag,
+        Contact,
+        CtaDebit,
+        CtaCredit,
+        Lang,
+        IvaPct,
+        IrpfPct,
+        VfConcept,
+        VfTaxScheme,
+        VfTaxType,
+        VfTaxException,
+        Total
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        ctas = ApiService.GetCurrentPgcCtas();
+        allContacts = ApiService.GetContacts();
+        templates = await ApiService.GetAsync<List<CustomerInvoiceModel.Template>>("CustomerInvoiceTemplates") ?? new();
+
+        ApiService.OnChange += Refresca;
+        //Refresca();
+    }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+                value = Value;
+            else
+                value = await ApiService.GetAsync<CustomerInvoiceModel.Template>("CustomerInvoiceTemplate", Value!.Guid.ToString());
+
+            Refresca();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        //value = CurrentValue();
+        propertyGrid = PropertyGrid();
+        InvokeAsync(StateHasChanged);
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        contacts = allContacts?.Where(x => x.Emp == value?.Emp).ToList();
+        var retval = new PropertyGridModel();
+        retval.AddEmp(value?.Emp);
+        retval.AddString("Tag", value?.Tag);
+        retval.AddModel("Client", value?.Customer, contacts, HandleAddContact);
+        retval.AddGuidnom("Compte debit", value?.CtaDebit, ctas);
+        retval.AddGuidnom("Compte credit", value?.CtaCredit, ctas);
+        retval.AddString("Lang", value?.Lang?.ToString());
+        retval.AddDecimal("IVA", value?.IVApct);
+        retval.AddDecimal("IRPF", value?.IRPFpct);
+        retval.AddString("Vf Concepte", value?.VfConcept);
+        retval.AddString("Vf TaxScheme", value?.VfTaxScheme);
+        retval.AddString("Vf TaxType", value?.VfTaxType);
+        retval.AddString("Vf TaxException", value?.VfTaxException);
+        retval.AddEur("Total", value?.Total);
+
+        return retval;
+    }
+
+    CustomerInvoiceModel.Template? CurrentValue()
+    {
+        var retval = value;
+        if (retval != null)
+        {
+            retval.Emp = propertyGrid!.GetEmp((int)Fields.Emp);
+            retval.Tag = propertyGrid!.GetString((int)Fields.Tag);
+            retval.Customer = propertyGrid.GetModelGuid((int)Fields.Contact);
+            retval.CtaDebit = propertyGrid.GetGuidNom((int)Fields.CtaDebit)?.Guid;
+            retval.CtaCredit = propertyGrid.GetGuidNom((int)Fields.CtaCredit)?.Guid;
+            retval.Lang = new LangDTO( propertyGrid!.GetString((int)Fields.Lang));
+            retval.IVApct = propertyGrid.GetDecimal((int)Fields.IvaPct);
+            retval.IRPFpct = propertyGrid!.GetDecimal((int)Fields.IrpfPct);
+            retval.VfConcept = propertyGrid!.GetString((int)Fields.VfConcept);
+            retval.VfTaxScheme = propertyGrid!.GetString((int)Fields.VfTaxScheme);
+            retval.VfTaxType = propertyGrid!.GetString((int)Fields.VfTaxType);
+            retval.VfTaxException = propertyGrid!.GetString((int)Fields.VfTaxException);
+        }
+        return retval;
+    }
+
+    void AddItemRequest()
+    {
+        selectedTemplateItem = new CustomerInvoiceModel.Item( CustomerInvoiceModel.Item.Cods.Linia);
+    }
+
+    void AddNotaRequest()
+    {
+        selectedTemplateItem = new CustomerInvoiceModel.Item( CustomerInvoiceModel.Item.Cods.Nota);
+    }
+
+    void AfterUpdateTemplateItemRequest(IModel args)
+    {
+        var item = (CustomerInvoiceModel.Item)args;
+        
+        var idx = item.Cod == CustomerInvoiceModel.Item.Cods.Linia ? value!.Items.FirstOrDefault(x => x.Guid == args.Guid):value!.Notas.FirstOrDefault(x => x.Guid == args.Guid);
+        if(idx == null)
+        {
+            if (item.Cod == CustomerInvoiceModel.Item.Cods.Nota)
+                value.Notas.Add(item);
+            else
+                value.Items.Add(item);
+        }
+
+        else
+        {
+            if (item.Cod == CustomerInvoiceModel.Item.Cods.Nota)
+            {
+                var index = value.Notas.IndexOf(idx);
+                value.Notas[index] = item;
+            }
+            else
+            {
+                var index = value.Items.IndexOf(idx);
+                value.Items[index] = item;
+            }
+        }
+        RefrescaTotals();
+        selectedTemplateItem = null;
+    }
+
+    void RefrescaTotals()
+    {
+        value = CurrentValue();
+        var itemTotal = (PropertyGridModel.Item<string>)(propertyGrid!.GetItem((int)Fields.Total));
+        itemTotal.Value = ((decimal)value!.Total).ToString("0.00", propertyGrid.Culture);
+        // var idx = propertyGrid.Items.IndexOf(itemTotal);
+        // propertyGrid.Items[idx] = new PropertyGridModel.Item<string>(itemTotal.Caption, ((decimal)value!.Total).ToString("0.00", propertyGrid.Culture), PropertyGridModel.Formats.Eur);
+    }
+
+
+    async Task UpdateAsync()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            var value = CurrentValue();
+            if (value != null)
+            {
+                await ApiService.PostAsync<CustomerInvoiceModel.Template, bool>(value, "customerInvoiceTemplate");
+                updateState = CrudButton.States.StandBy;
+                await AfterUpdate.InvokeAsync(value);
+            }
+        }
+        catch (Exception ex)
+        {
+            updateState = CrudButton.States.StandBy;
+            exception = ex;
+        }
+    }
+
+
+
+    async Task DeleteRequestHandler()
+    {
+        //await DeleteRequest.InvokeAsync(Value);
+    }
+
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.EmpId)
+        {
+            value!.Emp = ((PropertyGridModel.Item<EmpModel.EmpIds>)args).Value;
+            contacts = allContacts?.Where(x => x.Emp == value.Emp).ToList();
+            propertyGrid = PropertyGrid();
+        }
+    }
+
+
+    public void Dispose()
+    {
+        ApiService.OnChange -= Refresca;
+    }
+
+    void HandleAddContact()
+    {
+        contactToAdd = new ContactModel
+        {
+            Emp = (EmpModel.EmpIds)ApiService.Emp!,
+            RaoSocial = "(Nou contacte)"
+        };
+    }
+
+    void HandleOnContactAdded(ContactModel args)
+    {
+        var previous = contacts!.FirstOrDefault(x => x.Guid == args.Guid);
+        if (previous == null)
+            contacts!.Add(args);
+        else
+        {
+            var idx = contacts!.IndexOf(previous);
+            contacts[idx] = args;
+        }
+
+        // var value = Value!;
+        // value.Cta = propertyGrid!.GetGuid((int)Fields.Cta);
+        // value.Contact = args?.Guid;
+        // value.Eur = (decimal?)(propertyGrid!.GetEur((int)Fields.Eur)) ?? 0;
+        // value.Dh = (CcaModel.Item.DhEnum)(propertyGrid!.GetId((int)Fields.Dh)! + 1);
+        // propertyGrid = PropertyGrid(value);
+        // contactToAdd = null;
+    }
+
+    void EditItemRequest(CustomerInvoiceModel.Item args)
+    {
+        selectedTemplateItem = args;
+    }
+
+    async Task HandleOnItemDelete(CustomerInvoiceModel.Item args)
+    {
+        value = CurrentValue();
+        var item = value!.Items.FirstOrDefault(x => x.Guid == args.Guid);
+        if (item != null)
+        {
+            value.Items.Remove(item);
+        }
+        RefrescaTotals();
+        Refresca();
+    }
+
+    void HandleCancelRequest()
+    {
+        CancelRequest.InvokeAsync();
+    }
+}
+

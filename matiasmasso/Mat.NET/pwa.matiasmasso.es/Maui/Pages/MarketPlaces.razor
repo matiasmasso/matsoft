@@ -1,0 +1,55 @@
+﻿@page "/MarketPlaces"
+@inherits _ComponentBase
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Market Places")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems())
+            {
+                <a href="@("/MarketPlaceMenu/"+item.Guid.ToString())" class='Item'>
+                    <div class="Truncate">
+                        @item.Nom
+                    </div>
+                </a>
+            }
+
+        </div>
+    }
+
+</div>
+
+
+
+@code {
+    private List<GuidNom>? model;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            model = await base.GetAsync<List<GuidNom>>("MarketPlaces", ((int)EmpDTO.EmpIds.MatiasMasso).ToString());
+            StateHasChanged();
+        };
+    }
+
+    private List<GuidNom> FilteredItems()
+    {
+        var retval = model.Where(x => x.Matches(searchTerm)).ToList();
+        return retval;
+    }
+
+
+
+
+}

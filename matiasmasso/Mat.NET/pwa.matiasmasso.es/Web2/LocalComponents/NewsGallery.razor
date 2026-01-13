@@ -1,0 +1,45 @@
+﻿@inject CultureService culture
+@inject NavigationManager? navigationManager
+
+@foreach (var item in Items ?? new())
+{
+    <NavLink  href="@culture.RelativeUrl(item.Url(culture.Lang()))"
+       class="Item @(IsVisible(item) ? "" : "Hidden" )">
+
+        <div class="Thumbnail">
+            <img src="@item.ThumbnailUrl()"
+                 width="@NoticiaModel.THUMBNAILWIDTH"
+                 height="@NoticiaModel.THUMBNAILHEIGHT"
+                 alt="@item.Caption.Tradueix(culture.Lang())" />
+        </div>
+        <div class="Caption">
+            @item.Caption.Tradueix(culture.Lang())
+        </div>
+    </NavLink>
+}
+
+        <div class="SeeMore">
+            <a href="#" @onclick="@(()=>{VisibleCount+=VisibleInterval;})" @onclick:preventDefault="true">
+                @culture.Tradueix("ver más","veure mes","see more")
+            </a>
+        </div>
+
+@code {
+    [Parameter] public List<NoticiaModel>? Items { get; set; }
+    [Parameter] public int VisibleCount { get; set; } = 12;
+    [Parameter] public int VisibleInterval { get; set; } = 12;
+    [Parameter] public EventCallback<NoticiaModel> ItemSelected { get; set; }
+
+    private bool IsVisible(NoticiaModel item)
+    {
+        var idx = Items!.IndexOf(item);
+        var retval = idx < VisibleCount;
+        return retval;
+    }
+
+    private async Task ItemClickAsync(NoticiaModel item)
+    {
+        await ItemSelected.InvokeAsync(item);
+    }
+
+}

@@ -1,0 +1,181 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+@inject IJSRuntime JSRuntime
+
+<div class="PageWrapper600">
+    @if (ApiService.Persons() == null && exception == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedItem != null)
+    {
+        <ModelEditor Model="selectedItem"
+                     CancelRequest="@(()=>selectedItem = null)"></ModelEditor>
+    }
+
+    else
+    {
+        <div class="PageOptions">
+            <PageOptions>
+             @if (rootPerson != null)
+                {
+                    <a href="#" @onclick="GotoRoot" @onclick:preventDefault>Root</a>
+                }
+                <a href="#" @onclick="AddNew" @onclick:preventDefault>Afegir nova persona</a>
+                <a href="#" @onclick="@(()=> onlyAncestors = !onlyAncestors)" @onclick:preventDefault>Nomes avantpassats</a>
+                <a href="#" @onclick="@(()=> sortByFchLastEdited = !sortByFchLastEdited)" @onclick:preventDefault>
+                    @(sortByFchLastEdited ? "Ordre alfabetic" : "Ultims registres")
+                </a>
+                @if (isWritingExcel)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <a href="#" @onclick="Excel" @onclick:preventDefault>Excel</a>
+                }
+            </PageOptions>
+        </div>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Grid">
+            <Virtualize Items="@FilteredItems()" Context="item">
+
+                <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                    <div class="Ico">
+                        <Icon Id="@(IsAncestor(item) ? Icon.Ids.Star : Icon.Ids.None)"></Icon>
+                    </div>
+                    <div class="Year">@item.FchLocationFrom?.Year</div>
+                    <div class="Nom Truncate">@item.Nom</div>
+                </a>
+            </Virtualize>
+        </div>
+
+    }
+
+
+</div>
+
+@code {
+    [Parameter] public List<PersonModel>? Model { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+    [Parameter] public EventCallback AddNewRequest { get; set; }
+
+    PersonModel? selectedItem;
+    PersonModel? rootPerson;
+    List<Guid>? rootAncestors;
+    string? searchTerm;
+    bool onlyAncestors;
+    bool sortByFchLastEdited;
+    bool isWritingExcel;
+    Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ApiService.OnChange += Refresca;
+        rootPerson = ApiService.RootPerson();
+        rootAncestors = ApiService.RootAncestorGuids(); //sessionState.RootAncestors()?.Select(x=>x.Person.Guid).ToList();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Model == null)
+        {
+            Model = ApiService.Persons();
+            sortByFchLastEdited = true;
+        }
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    void ItemClick(PersonModel item)
+    {
+        if (ItemSelected.HasDelegate)
+            ItemSelected.InvokeAsync(item);
+        else
+            selectedItem = item;
+    }
+
+    void AddNew()
+    {
+        if (AddNewRequest.HasDelegate)
+            AddNewRequest.InvokeAsync();
+        else
+            ItemClick(PersonModel.Factory());
+    }
+
+    async Task GotoRoot()
+    {
+        //selectedItem = Model?.FirstOrDefault(x => x.Guid == rootPerson?.Guid);
+        await ItemSelected.InvokeAsync(ApiService.Person(rootPerson?.Guid));
+    }
+
+    bool IsAncestor(PersonModel person)
+    {
+        return rootAncestors?.Contains(person.Guid) ?? false;
+    }
+
+
+    ICollection<PersonModel> FilteredItems()
+    {
+        List<PersonModel> retval;
+        if (string.IsNullOrEmpty(searchTerm))
+            retval = Model ?? new();
+        else
+            retval = Model?.Where(x => x.Matches(searchTerm)).ToList() ?? new();
+
+        if (onlyAncestors)
+            retval = retval.Where(x => rootAncestors?.Any(y => x.Guid == y) ?? false).ToList();
+
+        if (sortByFchLastEdited)
+            retval = retval.OrderByDescending(x => x.FchLastEdited).ToList();
+        else
+            retval = retval.OrderBy(x => x.Nom).ToList();
+
+        return retval;
+    }
+
+    private async Task Excel()
+    {
+        isWritingExcel = true;
+        try
+        {
+            var sheet = new DTO.Excel.Sheet("Persons", "Gen.Persons.xlsx");
+            var row = sheet.AddRow();
+            row.AddCell("Nom");
+            row.AddCell("Naixement");
+            row.AddCell("Defunció");
+            row.AddCell("Natural de");
+            foreach (var person in FilteredItems())
+            {
+                row = sheet.AddRow();
+                row.AddCell(person.Nom, $"https://gen.matiasmasso.es/person/{person.Guid.ToString()}");
+                row.AddCell(person.FchLocationFrom?.Fch?.Fch1);
+                row.AddCell(person.FchLocationTo?.Fch?.Fch1);
+                row.AddCell(ApiService.Location(person.FchLocationFrom?.Location?.Guid)?.Nom);
+            }
+
+            var bytes = DTO.Excel.ClosedXml.Bytes(sheet);
+            var fileStream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", sheet.Filename, streamRef);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isWritingExcel = false;
+    }
+
+    public void Dispose()
+    {
+        ApiService.OnChange += Refresca;
+    }
+}

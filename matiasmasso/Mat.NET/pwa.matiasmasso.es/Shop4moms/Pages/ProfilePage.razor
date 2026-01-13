@@ -1,0 +1,58 @@
+﻿@page "/{LangSegment}/Profile"
+@page "/Profile"
+@inherits _PageBase
+@inject CultureService culture
+
+<div class="Wrapper600">
+
+    <h3>@culture.Localize("Profile")</h3>
+
+    @if (user == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Table">
+            <div class="Label">
+                @culture.Localize("EmailAddress")
+            </div>
+            <div class="Value">
+                @user.EmailAddress
+            </div>
+        </div>
+
+        <a class="Button ButtonLemon" href="#"
+           title="@culture.Localize("Logout")"
+            @onclick="Logout" @onclick:preventDefault>
+            @culture.Localize("Logout")
+        </a>
+    }
+
+
+</div>
+
+<PageTitle>4moms | @base.Lang().Tradueix("Perfil de usuario","Perfil d'usuari","User profile","Perfil de usuário")</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+@code {
+    UserModel? user;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        base.OnParametersSet();
+        user = await base.GetUser();
+    }
+
+    private async Task Logout()
+    {
+        var auth = (CustomAuthenticationStateProvider)base.authStateProvider;
+        await auth.LogoutAsync();
+
+        //await SessionProvider!.LogoutAsync();
+        navigationManager?.NavigateTo("/", true);
+    }
+}

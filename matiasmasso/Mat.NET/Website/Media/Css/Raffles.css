@@ -1,0 +1,174 @@
+﻿/*
+.Raffles {
+    display: grid;
+    grid-template-columns: 178px 1fr;
+    grid-gap: 10px;
+}
+
+.Raffles .Item {
+    display: contents;
+}
+*/
+
+.Raffles .Item {
+    display: flex;
+    flex-direction: row;
+    margin-bottom:10px;
+}
+
+
+.Raffles .Image-container {
+    display:block;
+    position: relative; /* per countdown a next raffle */
+}
+
+.Raffles .Img178 {
+    width: 178px;
+    height: auto;
+}
+.Raffles .Img600 {
+    width: 100%;
+    height: auto;
+}
+
+.Raffles .Text-container {
+    margin-left: 20px;
+}
+
+    .Raffles .Text-container .Caption {
+        font-weight: 600;
+    }
+
+    .Properties {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        vertical-align: top;
+    }
+
+
+
+    /*-----------------------Countdown--------------------------------*/
+
+    .Raffles .Countdown {
+        display:flex;
+        flex-direction: row;
+        font: bold 11pt Verdana;
+        font-weight: bold;
+        position: absolute; /* per countdown a next raffle */
+        left:10px;
+        top: 30px;
+        z-index: 1;
+    }
+
+
+.Countdown .Dash {
+    /*dash = grup de 2 digit*/
+    display: flex;
+    flex-direction: row;
+    margin-left: 2px;
+    color: black;
+}
+
+            .Countdown .Dash .Digit {
+                /*
+                text-align: center;
+                    */
+            }
+
+.Faded {
+    color: #999;
+}
+
+/*-----------------------Countdown--------------------------------*/
+
+
+
+
+.Raffles .ActionCall {
+    grid-column: 1 / 3;
+}
+
+    .Raffles .ActionCall .ShareButtons {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+    }
+
+    .Raffles .ActionCall .ShareButtons a {
+        display: inline-block;
+        padding: 10px 5px;
+        color: blue;
+    }
+
+.Raffles .ShareIt {
+    display: flex;
+    flex-direction: row;
+    column-gap: 8px;
+}
+
+.Raffles .ShareItText {
+    margin-top:5px;
+}
+
+
+
+.CountdownTitle {
+    position: relative;
+    top: 50px;
+    left: 30px;
+}
+
+    .countdown {
+        position:relative;
+        top:100px;
+        left:45px;
+    }
+
+    .CountdownTitle:before {
+        clear:both;
+    }
+
+
+    /*------------------------------------------------------*/
+
+.ReadMore {
+    margin-top: 20px;
+    grid-column: 1 / 3;
+}
+
+.Raffles .Error {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    color: red;
+    grid-column: 1 / 3;
+}
+
+@media screen and (max-width:450px) {
+    .Raffles .Item {
+        flex-direction: column;
+        margin-bottom: 0px;
+    }
+
+
+    .Raffles .Image-container img {
+        margin-top: 20px;
+    }
+
+    .Raffles .Text-container {
+        margin: 10px 0px;
+    }
+    .ShareIt span {
+        display:none;
+    }
+
+    .Img178 {
+        display: none;
+    }
+
+    .Img600 {
+        display: block;
+    }
+}

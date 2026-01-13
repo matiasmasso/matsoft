@@ -1,0 +1,27 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Spa4.Entities
+{
+    /// <summary>
+    /// Product features filters
+    /// </summary>
+    public partial class Filter
+    {
+        public Filter()
+        {
+            FilterItems = new HashSet<FilterItem>();
+        }
+
+        /// <summary>
+        /// Primary key
+        /// </summary>
+        public Guid Guid { get; set; }
+        /// <summary>
+        /// Sort order where this filter should be displayed
+        /// </summary>
+        public int Ord { get; set; }
+
+        public virtual ICollection<FilterItem> FilterItems { get; set; }
+    }
+}

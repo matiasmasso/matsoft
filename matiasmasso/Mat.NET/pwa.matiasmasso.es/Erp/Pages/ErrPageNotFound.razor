@@ -1,0 +1,10 @@
+﻿@page "/ErrPageNotFound/{url}"
+@inherits _ComponentBase
+
+
+    <div>Page not found: @Url</div>
+
+@code {
+    [Parameter] public string Url { get; set; }
+
+}

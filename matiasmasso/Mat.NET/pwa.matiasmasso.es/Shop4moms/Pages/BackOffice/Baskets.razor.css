@@ -1,0 +1,69 @@
+﻿.Grid {
+    display: grid;
+    grid-template-columns: 20px min-content min-content min-content minmax(150px,1fr) minmax(150px,1fr);
+    grid-column-gap: 1px;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+.Grid::-webkit-scrollbar {
+    display: none;
+}
+
+
+.Item, .ColHeaders {
+    display: contents;
+}
+
+    .Item div {
+        padding:0 5px;
+    }
+
+
+    .ColHeaders div {
+        font-weight: 600;
+        color: darkgrey;
+        padding: 0 5px 5px 5px;
+    }
+
+
+    .Item .GridRowDivider {
+        height: 1px;
+        grid-column: 2/-1;
+    }
+
+.Fch, .Eur {
+    white-space: nowrap;
+}
+
+.Ico {
+    fill: green;
+    max-width:24px;
+}
+
+@media(min-width:500px) {
+
+    .Item .GridRowDivider {
+        padding: 0.5px 0;
+        border-bottom: 1px solid #FFFFFF;
+    }
+
+    .Item.Active .GridRowDivider {
+        border-bottom: 1px solid #AAAAAA;
+    }
+
+    .Item:hover div:not(.Ico), .Item.Active div:not(.Ico) {
+        color: black;
+        background-color: #F0F8FF;
+    }
+}
+@media(max-width:499px) {
+    .ColHeaders div {
+        padding: 0 5px 10px 5px;
+    }
+
+    .Item .GridRowDivider.Bottom {
+        margin: 5px 0;
+        border-bottom: 1px solid #AAAAAA;
+    }
+}

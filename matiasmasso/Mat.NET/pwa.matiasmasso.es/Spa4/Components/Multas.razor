@@ -1,0 +1,24 @@
+﻿@inherits _ComponentBase
+
+@foreach (var item in Items)
+{
+    <a href="@item.Url()" target="_blank" class="Item">
+        <div class="Fch">@item.Fch.ToString("dd/MM/yy")</div>
+        <div class="Nom">@base.Tradueix("Expediente","Expedient","Dossier"): @item.Expedient</div>
+        <div class="Eur">@base.Tradueix("Importe","Import","Amount"):  @String.Format("{0:n2} €", item.Amt)</div>
+    </a>
+}
+@code {
+    [Parameter] public Guid Target { get; set; }
+    private List<MultaModel> Items { get; set; } = new();
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Items = await base.GetAsync<List<MultaModel>>("multas", Target.ToString());
+            StateHasChanged();
+        }
+
+    }
+}

@@ -1,0 +1,46 @@
+﻿.Wrapper {
+    max-width:600px;
+}
+
+ .SeeMoreCountries {
+    display: block;
+}
+
+
+@media (min-width:599px) {
+
+    .Grid {
+        font-size: 1.2em;
+        display: grid;
+        grid-template-columns: 180px 1fr 1fr min-content;
+        grid-column-gap: 10px;
+    }
+
+    .ColumnHeader {
+        color: gray;
+        padding: 0 0 0 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .SeeMoreCountries {
+        padding: 0 10px;
+    }
+}
+
+@media (max-width:599px) {
+    .HideOnMobile {
+        display: none;
+    }
+
+    .Grid {
+        display:flex;
+        flex-direction: column;
+    }
+
+    .SeeMoreCountries {
+        padding: 10px;
+    }
+
+}

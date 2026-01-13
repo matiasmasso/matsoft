@@ -1,0 +1,136 @@
+﻿.Wrapper {
+    max-width: 600px;
+}
+
+.Destinations .Destination {
+    margin-top: 10px;
+}
+
+.Destination {
+    display: block;
+    border-bottom: 1px solid gray;
+}
+
+    .Destination div {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+.ProductSelection {
+    margin-top: 15px;
+}
+
+.Item.Selected {
+    display: block;
+    background-color: #DDDDDD;
+}
+
+.SkuGallery {
+    margin-top:10px;
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: repeat(auto-fill, 150px);
+}
+
+    .SkuGallery .Item, .Form .Item {
+        width: 150px;
+        min-width: 150px;
+        border: 1px solid gray;
+        border-radius: 5px;
+        font-size: 0.8em;
+        text-align: center;
+    }
+
+.Item img {
+    width: 100%;
+}
+
+.Form {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.Details {
+    width: 100%;
+    max-width: 100%;
+}
+
+.Imports {
+    display: flex;
+    gap: 10px;
+    justify-content: space-evenly;
+}
+
+    .Imports input {
+        width: 100%;
+        max-width: 130px;
+        text-align: right;
+    }
+
+    .Imports div {
+        flex: 1;
+        text-align: right;
+    }
+
+.ButtonAdd {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.Basket {
+    margin-top:15px;
+    display:grid;
+    grid-template-columns:1fr min-content min-content min-content;
+    grid-column-gap:10px;
+}
+
+.BasketRow {
+    display:contents;
+}
+
+.BasketQty, .BasketPrice, .BasketAmt, .BasketSum {
+    justify-self: flex-end;
+    white-space: nowrap;
+}
+
+.BasketSum {
+    grid-column: 1/-1;
+}
+
+/*------------------ mobile --------------------*/
+@media(max-width:499px) {
+    .NomLlarg {
+        display: none;
+    }
+
+    .Imports {
+        flex-direction: column;
+    }
+
+        .Imports .Label {
+            text-align: left !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .Imports input {
+            max-width: 100%;
+        }
+
+    .ButtonAdd button {
+        width: 100%;
+    }
+}
+
+/*------------------ desktop --------------------*/
+
+@media(min-width:500px) {
+
+    .Imports {
+        margin-top: 15px;
+    }
+}

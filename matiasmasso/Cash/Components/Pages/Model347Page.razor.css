@@ -1,0 +1,40 @@
+﻿.Grid {
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+.Item {
+    display: grid;
+    grid-template-columns: 1fr 150px;
+    grid-column-gap: 10px;
+    grid-row-gap: 0;
+}
+
+    .Item > * {
+        padding: 0;
+    }
+
+
+.SubItem {
+    display: grid;
+    grid-template-columns: min-content 1fr 150px;
+    grid-column-gap: 10px;
+    grid-row-gap: 0;
+}
+
+
+.Nom {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.Amt {
+    display:flex;
+    justify-content:flex-end;
+}
+
+
+

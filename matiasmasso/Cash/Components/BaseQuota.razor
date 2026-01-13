@@ -1,0 +1,86 @@
+﻿@inject ApiService ApiService
+
+
+    <PropertyGrid Model="propertyGrid"
+                  UpdateRequest="UpdateRequestHandler"
+                  CancelRequest="HandleCloseRequest"
+                  DeleteRequest="DeleteRequestHandler"
+                  ItemChanged="HandleItemChanged"
+                  UpdateState="updateState"
+                  DeleteState="deleteState">
+    </PropertyGrid>
+
+
+@code {
+    [Parameter] public BaseQuotaModel? Value { get; set; }
+    [Parameter] public EventCallback<BaseQuotaModel> ValueChanged { get; set; }
+    [Parameter] public EventCallback<BaseQuotaModel> DeleteRequest { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Base,
+        Tipus,
+        Quota
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        Refresca();
+    }
+
+    void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        propertyGrid = PropertyGrid(Value!);
+    }
+
+    PropertyGridModel PropertyGrid(BaseQuotaModel value)
+    {
+        var retval = new PropertyGridModel();
+        retval.AddEur("Base", value?.Base);
+        retval.AddPercent("Tipus", value?.Tipo);
+        var quota = retval.AddEur("Quota", value?.Quota);
+        quota.ReadOnly = true;
+        return retval;
+    }
+
+    async Task HandleCloseRequest()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        var value = ReadFromForm();
+        propertyGrid = PropertyGrid(value);
+    }
+
+    BaseQuotaModel ReadFromForm()
+    {
+        var retval = Value!;
+        retval.Base = propertyGrid!.GetEur((int)Fields.Base);
+        retval.Tipo = propertyGrid!.GetDecimal((int)Fields.Tipus);
+        retval.Quota = propertyGrid!.GetEur((int)Fields.Quota);
+        return retval;
+    }
+
+    void UpdateRequestHandler()
+    {
+        var value = ReadFromForm();
+        ValueChanged.InvokeAsync(value);
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        await DeleteRequest.InvokeAsync(Value);
+    }
+
+}
+

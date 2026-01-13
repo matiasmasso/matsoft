@@ -1,0 +1,10 @@
+﻿/*issues found?*/
+
+.Wrapper svg {
+    height: 2em;
+    opacity:0.5;
+}
+
+.Wrapper svg:hover {
+    opacity:1.0;
+}

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Album/Api/Api.csproj" />
+  <Project Path="Album/DTO/DTO.csproj" />
+  <Project Path="Album/Wasm/Wasm.csproj" />
+</Solution>

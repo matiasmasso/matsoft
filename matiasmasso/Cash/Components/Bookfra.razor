@@ -1,0 +1,174 @@
+﻿@inject ApiService ApiService
+
+
+    @if(selectedModel == null)
+    {
+    <div class="PageWrapper600">
+        <Title Value="Registre de factures rebudes" CloseRequest="CloseRequestHandler"></Title>
+
+        @if (value == null)
+        {
+            <Loading></Loading>
+        }
+        else
+        {
+            <PageOptions>
+                <a href="#" @onclick:preventDefault @onclick="CcaRequest">Assentament</a>
+                <a href="@ApiService.ApiUrl("cca/pdf", value.CcaGuid.ToString())" target="_blank">Document</a>
+            </PageOptions>
+
+            <PropertyGrid Model="propertyGrid"
+                          ItemChanged="HandleItemChanged"
+                          UpdateRequest="UpdateRequestHandler"
+                          CancelRequest="CloseRequestHandler"
+                          DeleteRequest="DeleteRequestHandler"
+                          UpdateState="updateState"
+                          DeleteState="deleteState">
+            </PropertyGrid>
+
+        }
+
+    </div>
+} else
+{
+<Model Value="selectedModel" 
+    AfterUpdate="@(()=>selectedModel=null)"
+           AfterDelete="@(()=>selectedModel=null)"
+           CloseRequest="@(()=>selectedModel=null)"></Model>
+}
+
+ 
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public BookfraModel? Value { get; set; }
+    [Parameter] public EventCallback<BookfraModel?> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<BookfraModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    BookfraModel? value;
+    IModel? selectedModel;
+    BaseQuotaModel? selectedItem;
+    EmpModel.EmpIds? emp;
+    List<PgcCtaModel>? ctas;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Contact,
+        Nif,
+        Cta,
+        FraNum,
+        FraFch,
+        Base1,
+        Base2,
+        Base3,
+        Irpf,
+        Total
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            value = Value;
+            ctas = ApiService.GetCurrentPgcCtas();
+            ctas = ctas?.Where(c => c.Id!.StartsWith("2") || c.Id.StartsWith("6")).ToList();
+            propertyGrid = PropertyGrid();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+
+        var retval = new PropertyGridModel();
+        var contact = ApiService.GetContact(value?.ContactGuid);
+        retval.AddString("Client", value?.RaoSocial);
+        retval.AddString("Nif", value?.NIF);
+        retval.AddModel<PgcCtaModel>("Compte càrrec", value?.CtaGuid, ctas);
+        retval.AddString("Numero", value?.FraNum);
+        retval.AddDateOnly("Data", value?.FraFch);
+        retval.AddBaseQuota("Base Iva1", value?.Ivas.Count > 0 ? value.Ivas[0] : null);
+        retval.AddBaseQuota("Base Iva2", value?.Ivas.Count > 1 ? value.Ivas[1] : null);
+        retval.AddBaseQuota("Base Iva3", value?.Ivas.Count > 2 ? value.Ivas[2] : null);
+        retval.AddBaseQuota("Irpf", value?.Irpf);
+        retval.AddEur("Total", value?.TotalLiquid);
+        return retval;
+    }
+
+    void ReadFromForm()
+    {
+        value!.CtaGuid = propertyGrid!.GetModel((int)Fields.Cta)?.Guid;
+        value.FraNum = propertyGrid!.GetString((int)Fields.FraNum);
+        value.FraFch = propertyGrid!.GetDateOnly((int)Fields.FraFch);
+        var base1 = propertyGrid!.GetBaseQuota((int)Fields.Base1);
+        var base2 = propertyGrid!.GetBaseQuota((int)Fields.Base2);
+        var base3 = propertyGrid!.GetBaseQuota((int)Fields.Base3);
+        value.Ivas = new List<BaseQuotaModel>();
+        if (base1 != null) value.Ivas.Add(base1);
+        if (base2 != null) value.Ivas.Add(base2);
+        if (base3 != null) value.Ivas.Add(base3);
+        value.Irpf = propertyGrid!.GetBaseQuota((int)Fields.Irpf);
+    }
+
+    void HandleItemChanged(PropertyGridModel.Item args)
+    {
+        if (args.Format == PropertyGridModel.Formats.BaseTipusQuota)
+        {
+            ReadFromForm();
+            propertyGrid!.Items[(int)Fields.Total] = new PropertyGridModel.Item<string>("Total", ((decimal)value!.TotalLiquid!).ToString("0.00", propertyGrid.Culture), PropertyGridModel.Formats.Eur);
+        }
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            ReadFromForm();
+            await ApiService.PostAsync<BookfraModel, bool>(value!, "Bookfra");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Bookfra/delete", value!.CcaGuid!.ToString());
+            await AfterDelete.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+    void CcaRequest()
+    {
+        var cca = new CcaModel((Guid)value!.CcaGuid!);
+        selectedModel = cca;
+    }
+
+}

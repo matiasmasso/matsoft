@@ -1,0 +1,76 @@
+﻿@inherits _Base
+
+<UxCloseButton CloseRequest="RequestToClose"></UxCloseButton>
+
+<div class="Details">
+    <div>@Localizer("DocNum")</div><div>@Model.DocNum</div>
+    <div>@Localizer("DocFch")</div><div>@string.Format("{0:dd/MM/yy}",Model.FchDoc.Date)</div>
+    <div>@Localizer("FchReceived")</div><div>@string.Format("{0:dd/MM/yy HH:mm}",Model.FchReceived)</div>
+    <div>@Localizer("Center")</div><div>@Center()</div>
+</div>
+
+<div class="Grid">
+    <div class="Item ColumnHeaders">
+        <div class="Truncate Lin">@Localizer("Line")</div>
+        <div class="Truncate Sku">@Localizer("Product")</div>
+        <div class="Truncate Qty">@Localizer("Qty")</div>
+        <div class="Truncate Rrpp">@Localizer("RRPP")</div>
+        <div class="Truncate Amt">@Localizer("Amount")</div>
+    </div>
+
+    <div class="Item">
+        @foreach (var item in Model.Items)
+        {
+            <div class="Lin">@item.Lin</div>
+            <div class="Sku Truncate">@SkuNom(item)</div>
+            <div class="Qty">@string.Format("{0:N0}",item.Qty)</div>
+            <div class="Rrpp">@string.Format("{0:N2} €",RRPP(item))</div>
+            <div class="Amt">@string.Format("{0:N2} €",Amount(item))</div>
+        }
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public EdiversaInvrptModel Model { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+
+
+    private string SkuNom(EdiversaInvrptModel.Item item)
+    {
+        string retval = "";
+        var sku = Cache.Sku(item.Ean);
+        if (sku == null)
+            retval = item.Ean ?? item.SupplierRef ?? item.CustomerRef;
+        else
+            retval = sku.NomLlarg.Tradueix(base.Lang());
+        return retval;
+    }
+
+    private decimal? RRPP(EdiversaInvrptModel.Item item)
+    {
+        decimal? retval = null;
+        var sku = Cache.Sku(item.Ean);
+        if (sku != null)
+            retval = Cache.SkuPrice(sku.Guid);
+        return retval;
+    }
+
+    private decimal? Amount(EdiversaInvrptModel.Item item)
+    {
+        return RRPP(item) * item.Qty;
+    }
+
+
+    private string Center()
+    {
+        var retval = Model.StockHolder?.Nom ?? Model.NadGy;
+        return retval;
+    }
+
+    private void RequestToClose()
+    {
+        CloseRequest.InvokeAsync();
+    }
+}

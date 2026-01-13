@@ -1,0 +1,82 @@
+﻿.Contact {
+    margin-bottom: 15px;
+}
+.Grid {
+    display: grid;
+    grid-template-columns: 20px min-content min-content 1fr min-content min-content min-content;
+    grid-column-gap: 10px;
+}
+
+.Contents.ShowOnDesktop {
+    display: contents;
+}
+.Contents.ShowOnMobile {
+    display: none;
+}
+
+
+.Concept {
+    display:block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.TH {
+    color:gray;
+}
+
+.THSpacer {
+    grid-column: 1/-1;
+}
+
+.Grayed {
+    color: gray;
+}
+
+.Deb, .Hab, .Sdo {
+    text-align: right;
+    white-space: nowrap;
+}
+
+
+@media (min-width:600px) {
+
+    .ShowOnMobile {
+        display: none;
+    }
+
+}
+
+
+
+@media (max-width:599px){
+
+    .Grid {
+        /*ico fch deb hab sdo*/
+        grid-template-columns: 20px 1fr min-content min-content min-content;
+    }
+
+    .Contents.ShowOnDesktop {
+        display: none;
+    }
+
+    .Contents.ShowOnMobile {
+        display: contents;
+    }
+
+    .Concept {
+        grid-column: 2/-1;
+    }
+
+    .ShowOnDesktop {
+        display: none;
+    }
+
+    .Line {
+        grid-column: 1/-1;
+        border-bottom: 1px solid gray;
+    }
+
+}

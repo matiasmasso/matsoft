@@ -1,0 +1,23 @@
+﻿<div class="Wrapper">
+    <div>
+        <img src="/img/Spinner-24.gif" alt="loading..." />
+    </div>
+    <div>
+        <div class="Message">@Message</div>
+        @if (Seconds != null)
+        {
+            <div>
+                (tiempo aproximado: <span>@Seconds</span> segundos)
+            </div>
+        }
+    </div>
+</div>
+@code {
+    [Parameter] public string Message { get; set; } = "Loading...";
+    [Parameter] public int? Seconds { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+}
+
+
+

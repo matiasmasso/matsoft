@@ -1,0 +1,25 @@
+﻿.Wrapper {
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    padding:10px;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: min-content min-content 1fr;
+    grid-column-gap: 10px;
+}
+
+.Item, .ColHeaders {
+    display: contents;
+}
+
+.ColHeaders div {
+    color:gray;
+    font-weight: 600;
+}
+
+.Fch {
+    white-space: nowrap;
+}

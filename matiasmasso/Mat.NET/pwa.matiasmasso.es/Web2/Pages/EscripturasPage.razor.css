@@ -1,0 +1,52 @@
+﻿.Obsoleto {
+    color: gray;
+}
+
+@media(max-width:599px) {
+    .Grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .Item {
+        display: grid;
+        grid-template-areas: "ico fch"
+            "ico nom";
+        grid-auto-columns: 36px 1fr;
+    }
+
+    .Icon {
+        grid-area: ico;
+        padding-right: 10px;
+        align-self: center;
+    }
+
+    .Fch {
+        grid-area: fch;
+    }
+
+    .Nom {
+        grid-area: nom;
+    }
+}
+
+@media(min-width:600px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: 24px min-content 1fr;
+        column-gap:10px;
+    }
+
+    .ColHeaders {
+        margin-bottom:10px;
+    }
+
+    .Item {
+        display: contents;
+    }
+
+    .Icon, .Fch {
+        padding-right: 10px;
+    }
+}

@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RootNamespace>MatHelperStd</RootNamespace>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ExcelHelper.vb" />
+    <Compile Remove="GeonamesHelper.vb" />
+    <Compile Remove="GhostScriptHelper.vb" />
+    <Compile Remove="ImageHelper.vb" />
+    <Compile Remove="iTextPdfHelper.vb" />
+    <Compile Remove="PdfSignatureHelper.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BarCode" Version="2025.3.4" />
+    <PackageReference Include="ClosedXML" Version="0.102.0" />
+    <PackageReference Include="DotNetZip.NetStandard" Version="1.12.0" />
+    <PackageReference Include="Google.Apis" Version="1.68.0" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.68.0.3421" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json.Schema" Version="4.0.1" />
+    <PackageReference Include="OfficeOpenXml.Core.ExcelPackage" Version="1.0.0" />
+    <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="C1.C1Pdf.4">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\ComponentOne\Studio for WinForms\bin\v4\C1.C1Pdf.4.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

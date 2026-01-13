@@ -1,0 +1,1218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.1.15.0\build\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.props" Condition="Exists('..\..\packages\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.1.15.0\build\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.props')" />
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>
+    </SchemaVersion>
+    <ProjectGuid>{1B32848A-F803-483E-84DE-0C31A41D0F04}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Mvc</RootNamespace>
+    <AssemblyName>Mvc</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <MyType>Custom</MyType>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort>44373</IISExpressSSLPort>
+    <IISExpressAnonymousAuthentication>
+    </IISExpressAnonymousAuthentication>
+    <IISExpressWindowsAuthentication>
+    </IISExpressWindowsAuthentication>
+    <IISExpressUseClassicPipelineMode>
+    </IISExpressUseClassicPipelineMode>
+    <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+    <Use64BitIISExpress />
+    <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
+    <DockerLaunchUrl>http://{ServiceIPAddress}</DockerLaunchUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>Mvc.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <PublishDatabases>false</PublishDatabases>
+    <ExcludeGeneratedDebugSymbol>true</ExcludeGeneratedDebugSymbol>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>Mvc.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <PublishDatabases>false</PublishDatabases>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Facebook, Version=6.0.10.0, Culture=neutral, PublicKeyToken=58cb4f2111d1e6de, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Facebook.7.0.6\lib\net45\Facebook.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis, Version=1.56.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Google.Apis.1.56.0\lib\net45\Google.Apis.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis.Core, Version=1.56.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Google.Apis.Core.1.56.0\lib\net45\Google.Apis.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis.PlatformServices, Version=1.56.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Google.Apis.1.56.0\lib\net45\Google.Apis.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="netstandard">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="C1.C1Pdf.4, Version=4.1.20142.269, Culture=neutral, PublicKeyToken=79882d576c6336da, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\ComponentOne\Studio for WinForms\bin\v4\C1.C1Pdf.4.dll</HintPath>
+    </Reference>
+    <Reference Include="DocumentFormat.OpenXml, Version=2.8.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\DocumentFormat.OpenXml.2.8.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetOpenAuth.AspNet, Version=4.3.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\DotNetOpenAuth.AspNet.4.3.4.13329\lib\net45-full\DotNetOpenAuth.AspNet.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetOpenAuth.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\DotNetOpenAuth.Core.4.3.4.13329\lib\net45-full\DotNetOpenAuth.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetOpenAuth.OAuth, Version=4.3.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\DotNetOpenAuth.OAuth.Core.4.3.4.13329\lib\net45-full\DotNetOpenAuth.OAuth.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetOpenAuth.OAuth.Consumer, Version=4.3.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\DotNetOpenAuth.OAuth.Consumer.4.3.4.13329\lib\net45-full\DotNetOpenAuth.OAuth.Consumer.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetOpenAuth.OpenId, Version=4.3.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\DotNetOpenAuth.OpenId.Core.4.3.4.13329\lib\net45-full\DotNetOpenAuth.OpenId.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetOpenAuth.OpenId.RelyingParty, Version=4.3.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\DotNetOpenAuth.OpenId.RelyingParty.4.3.4.13329\lib\net45-full\DotNetOpenAuth.OpenId.RelyingParty.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Owin.4.0.0\lib\net451\Microsoft.Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.Types, Version=14.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.SqlServer.Types.14.0.1016.290\lib\net40\Microsoft.SqlServer.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Win32.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Win32.Primitives.4.3.0\lib\net46\Microsoft.Win32.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="SixLabors.ImageSharp, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SixLabors.ImageSharp.2.1.0\lib\net472\SixLabors.ImageSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.AppContext, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.AppContext.4.3.0\lib\net46\System.AppContext.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Console, Version=4.0.1.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Console.4.3.1\lib\net46\System.Console.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Globalization.Calendars, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Globalization.Calendars.4.3.0\lib\net46\System.Globalization.Calendars.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.IO.Compression.ZipFile, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.IO.Compression.ZipFile.4.3.0\lib\net46\System.IO.Compression.ZipFile.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.IO.FileSystem.4.3.0\lib\net46\System.IO.FileSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.IO.FileSystem.Primitives.4.3.0\lib\net46\System.IO.FileSystem.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Packaging, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.IO.Packaging.6.0.0\lib\net461\System.IO.Packaging.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http, Version=4.1.1.2, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Net.Http.4.3.4\lib\net46\System.Net.Http.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Net.Http.Extensions, Version=2.2.29.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Net.Http.2.2.29\lib\net45\System.Net.Http.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Client.5.2.7\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.Primitives, Version=4.2.29.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Net.Http.2.2.29\lib\net45\System.Net.Http.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest" />
+    <Reference Include="System.Net.Sockets, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Net.Sockets.4.3.0\lib\net46\System.Net.Sockets.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Reflection.4.3.0\lib\net462\System.Reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime, Version=4.1.1.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Runtime.4.3.1\lib\net462\System.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Runtime.InteropServices.4.3.0\lib\net463\System.Runtime.InteropServices.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security.Cryptography.Algorithms, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Security.Cryptography.Algorithms.4.3.1\lib\net463\System.Security.Cryptography.Algorithms.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Security.Cryptography.Encoding.4.3.0\lib\net46\System.Security.Cryptography.Encoding.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Security.Cryptography.Primitives.4.3.0\lib\net46\System.Security.Cryptography.Primitives.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.X509Certificates, Version=4.1.1.2, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Security.Cryptography.X509Certificates.4.3.2\lib\net461\System.Security.Cryptography.X509Certificates.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Text.Encoding.CodePages, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Text.Encoding.CodePages.6.0.0\lib\net461\System.Text.Encoding.CodePages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebApi.Core.5.2.7\lib\net45\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Mvc.5.2.7\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Providers, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Providers.Core.2.0.0\lib\net40\System.Web.Providers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Razor.3.2.7\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.WebPages.3.2.7\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xml.ReaderWriter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Xml.ReaderWriter.4.3.1\lib\net46\System.Xml.ReaderWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="DT2" />
+    <Import Include="DTO" />
+    <Import Include="MatHelperStd" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Linq" />
+    <Import Include="System.web.Mvc" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Collections.Specialized" />
+    <Import Include="System.Configuration" />
+    <Import Include="System.Text" />
+    <Import Include="System.Text.RegularExpressions" />
+    <Import Include="System.Web" />
+    <Import Include="System.Web.Caching" />
+    <Import Include="System.Web.SessionState" />
+    <Import Include="System.Web.Security" />
+    <Import Include="System.Web.Profile" />
+    <Import Include="System.Web.UI" />
+    <Import Include="System.Web.UI.WebControls" />
+    <Import Include="System.Web.UI.WebControls.WebParts" />
+    <Import Include="System.Web.UI.HtmlControls" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="favicon.ico" />
+    <Content Include="favicon.png" />
+    <Content Include="Global.asax" />
+    <Content Include="Media\Css\4moms.css" />
+    <Content Include="Media\Css\4momsHome.css" />
+    <Content Include="Media\Css\Accordion.css" />
+    <Content Include="Media\Css\Aeat.css" />
+    <Content Include="Media\Css\BannerRotator.css" />
+    <Content Include="Media\Css\Basket.css" />
+    <Content Include="Media\Css\BasketClient.css" />
+    <Content Include="Media\Css\Comments.css" />
+    <Content Include="Media\Css\CustomerBasket.css" />
+    <Content Include="Media\Css\Feedback.css" />
+    <Content Include="Media\Css\Flex.css" />
+    <Content Include="Media\Css\Home.css" />
+    <Content Include="Media\Css\Incidencia.css" />
+    <Content Include="Media\Css\Noticias.css" />
+    <Content Include="Media\Css\Pagination.css" />
+    <Content Include="Media\Css\Plugin.css" />
+    <Content Include="Media\Css\PlusMinus.css" />
+    <Content Include="Media\Css\PopSideNav.css" />
+    <Content Include="Media\Css\Product.css" />
+    <Content Include="Media\Css\Raffles - Copy.css" />
+    <Content Include="Media\Css\Raffles.css" />
+    <Content Include="Media\Css\RepBasket.css" />
+    <Content Include="Media\Css\SinglePurchaseOrder.css" />
+    <Content Include="Media\Css\SISU.css" />
+    <Content Include="Media\Css\Speech-input.css" />
+    <Content Include="Media\Css\StoreLocator.css" />
+    <Content Include="Media\Css\VideoGallery.css" />
+    <Content Include="Media\Css\Videos.css" />
+    <Content Include="Media\Css\Wordpress.css" />
+    <Content Include="Media\Img\appstore.svg" />
+    <Content Include="Media\Img\cartadeajuste.png" />
+    <Content Include="Media\Img\Ico\bin-white-20.png" />
+    <Content Include="Media\Img\Ico\ChevronLeft.png" />
+    <Content Include="Media\Img\Ico\ChevronRight.png" />
+    <Content Include="Media\Img\Ico\Chevron_Left.png" />
+    <Content Include="Media\Img\Ico\Chevron_Right.png" />
+    <Content Include="Media\Img\Ico\Clock16.png" />
+    <Content Include="Media\Img\Ico\Cross24.png" />
+    <Content Include="Media\Img\Ico\download-20.png" />
+    <Content Include="Media\Img\Ico\Edit.png" />
+    <Content Include="Media\Img\Ico\Edit_Active.png" />
+    <Content Include="Media\Img\Ico\Edit_Disabled.png" />
+    <Content Include="Media\Img\Ico\email.png" />
+    <Content Include="Media\Img\Ico\email16.png" />
+    <Content Include="Media\Img\Ico\expanded-12.png" />
+    <Content Include="Media\Img\Ico\feedback_negative.png" />
+    <Content Include="Media\Img\Ico\feedback_negative_Active.png" />
+    <Content Include="Media\Img\Ico\feedback_neutral.png" />
+    <Content Include="Media\Img\Ico\feedback_neutral_Active.png" />
+    <Content Include="Media\Img\Ico\feedback_positive.png" />
+    <Content Include="Media\Img\Ico\feedback_positive_Active.png" />
+    <Content Include="Media\Img\Ico\info_16.jpg" />
+    <Content Include="Media\Img\Ico\phone.png" />
+    <Content Include="Media\Img\Ico\Rotating-Triangles-Collapsed.png" />
+    <Content Include="Media\Img\Ico\Rotating-Triangles-Expanded.png" />
+    <Content Include="Media\Img\Ico\share20.png" />
+    <Content Include="Media\Img\Ico\star_blue.gif" />
+    <Content Include="Media\Img\Ico\star_green.gif" />
+    <Content Include="Media\Img\Ico\star_red.gif" />
+    <Content Include="Media\Img\Ico\tel16.png" />
+    <Content Include="Media\Img\Ico\test.ico" />
+    <Content Include="Media\Img\Ico\video20x31.png" />
+    <Content Include="Media\Img\Logos\Logo60.jpg" />
+    <Content Include="Media\Img\Ico\hamburger32.png" />
+    <Content Include="Media\Img\Misc\noAvatar.png" />
+    <Content Include="Media\Img\Misc\NoImage410.jpg" />
+    <Content Include="Media\Img\Misc\parcel.100.closed.jpg" />
+    <Content Include="Media\Img\Misc\parcel.100.open.jpg" />
+    <Content Include="Media\Img\Misc\searchicon.jpg" />
+    <Content Include="Media\Img\Misc\searchicon16.jpg" />
+    <Content Include="Media\Img\Misc\User.png" />
+    <Content Include="Media\Img\Portada\BlogBanner-950.jpg" />
+    <Content Include="Media\Img\Portada\BlogBanner.jpg" />
+    <Content Include="Media\Img\Portada\BrandsH\4moms-home-600.jpg" />
+    <Content Include="Media\Img\Portada\BrandsH\BR-home-600.jpg" />
+    <Content Include="Media\Img\Portada\BrandsH\TT-home-600.jpg" />
+    <Content Include="Media\Img\Portada\BrandsV\4moms-home-200x242.jpg" />
+    <Content Include="Media\Img\Portada\BrandsV\br-home-200x242.jpg" />
+    <Content Include="Media\Img\Portada\BrandsV\tt-home-200x242.jpg" />
+    <Content Include="Media\Img\preloaders\arrowSpinner20x20.gif" />
+    <Content Include="Media\Img\preloaders\Spinner150.gif" />
+    <Content Include="Media\Img\preloaders\Spinner16.png" />
+    <Content Include="Media\Img\preloaders\spinner200.gif" />
+    <Content Include="Media\Img\preloaders\Spinner20px.gif" />
+    <Content Include="Media\Img\preloaders\Spinner24px.gif" />
+    <Content Include="Media\Img\preloaders\Spinner48px.gif" />
+    <Content Include="Media\Img\preloaders\Spinner64px.gif" />
+    <Content Include="Media\Img\SocialMedia\fb.png" />
+    <Content Include="Media\Img\SocialMedia\Instagram.png" />
+    <Content Include="Media\Img\SocialMedia\Twitter.png" />
+    <Content Include="Media\Img\SocialMedia\YouTube.png" />
+    <Content Include="Media\Img\Tutorial\basket 150.gif" />
+    <Content Include="Media\Img\Tutorial\Catalog 150.gif" />
+    <Content Include="Media\js\Basket.js" />
+    <Content Include="Media\js\Comments.js" />
+    <Content Include="Media\js\ContextMenu.js" />
+    <Content Include="Media\js\EciSalesReport.js" />
+    <Content Include="Media\js\Feedback.js" />
+    <Content Include="Media\js\Helper.js" />
+    <Content Include="Media\js\Noticias.js" />
+    <Content Include="Media\js\Product.js" />
+    <Content Include="Media\js\RafflePlay2.js" />
+    <Content Include="Media\js\RepBasket.js" />
+    <Content Include="Media\js\Old_StoreLocator.js" />
+    <Content Include="Media\js\Site.js" />
+    <Content Include="Media\js\StoreLocator.js" />
+    <Content Include="Media\js\CookieConsent.js" />
+    <Content Include="Scripts\GoogleAnalytics.js" />
+    <None Include="My Project\PublishProfiles\CustomProfile.pubxml" />
+    <None Include="My Project\PublishProfiles\CustomProfile1.pubxml" />
+    <None Include="My Project\PublishProfiles\IISProfile.pubxml" />
+    <None Include="My Project\PublishProfiles\www.matiasmaso.es.pubxml" />
+    <None Include="Scripts\jquery-3.6.0.intellisense.js" />
+    <Content Include="Scripts\jquery-3.6.0.js" />
+    <Content Include="Scripts\jquery-3.6.0.min.js" />
+    <Content Include="Scripts\jquery-3.6.0.slim.js" />
+    <Content Include="Scripts\jquery-3.6.0.slim.min.js" />
+    <Content Include="Scripts\jquery.unobtrusive-ajax.js" />
+    <Content Include="Scripts\jquery.unobtrusive-ajax.min.js" />
+    <Content Include="SqlServerTypes\Loader.cs" />
+    <Content Include="SqlServerTypes\readme.htm" />
+    <Content Include="SqlServerTypes\x64\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SqlServerTypes\x64\SqlServerSpatial140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SqlServerTypes\x86\msvcr120.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SqlServerTypes\x86\SqlServerSpatial140.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Media\Css\CategoryGallery.css" />
+    <Content Include="Media\Css\DeptGallery.css" />
+    <Content Include="Styles\CookieConsent2.css" />
+    <Content Include="Styles\CookieConsent.css" />
+    <Content Include="Styles\Site.css" />
+    <Content Include="Styles\StoreLocator.css" />
+    <Content Include="Styles\TopNavBar2.css" />
+    <Content Include="Styles\VideoPlugins.css" />
+    <Content Include="Styles\_Layout.css" />
+    <Content Include="Media\Img\48x48\Csv48.png" />
+    <Content Include="Media\Img\48x48\Excel48.png" />
+    <Content Include="Media\Img\48x48\Pdf48.png" />
+    <Content Include="Media\Img\Blog\Blog_Header_avatar_1106x394.gif" />
+    <Content Include="Media\Img\Defaults\News.jpg" />
+    <Content Include="Media\Img\Defaults\Next-raffle.jpg" />
+    <Content Include="Media\Img\Ico\alarmClock.png" />
+    <Content Include="Media\Img\Ico\aspa.png" />
+    <Content Include="Media\Img\Ico\camera.png" />
+    <Content Include="Media\Img\Ico\collapse-arrow-12.png" />
+    <Content Include="Media\Img\Ico\collapse9.png" />
+    <Content Include="Media\Img\Ico\empty.gif" />
+    <Content Include="Media\Img\Ico\Excel.gif" />
+    <Content Include="Media\Img\Ico\expand-arrow-12.png" />
+    <Content Include="Media\Img\Ico\expand9.png" />
+    <Content Include="Media\Img\Ico\GMapsShadowPin.jpg" />
+    <Content Include="Media\Img\Ico\magnifying-glass.jpg" />
+    <Content Include="Media\Img\Ico\minus.gif" />
+    <Content Include="Media\Img\Ico\ok.png" />
+    <Content Include="Media\Img\Ico\PdcSrc\0.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\1.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\10.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\2.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\3.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\4.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\5.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\6.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\7.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\8.gif" />
+    <Content Include="Media\Img\Ico\PdcSrc\9.gif" />
+    <Content Include="Media\Img\Ico\pdf.gif" />
+    <Content Include="Media\Img\Ico\pdfx96.gif" />
+    <Content Include="Media\Img\Ico\plus.gif" />
+    <Content Include="Media\Img\Ico\preloader.gif" />
+    <Content Include="Media\Img\Ico\RemoveThumbnail.gif" />
+    <Content Include="Media\Img\Ico\removex24.gif" />
+    <Content Include="Media\Img\Ico\removex32.png" />
+    <Content Include="Media\Img\Ico\sandClock.png" />
+    <Content Include="Media\Img\Ico\star.gif" />
+    <Content Include="Media\Img\Ico\warn.gif" />
+    <Content Include="Media\Img\Jumbotron\banner-mamaRoo.jpg" />
+    <Content Include="Media\Img\Jumbotron\banner-rockaroo.jpg" />
+    <Content Include="Media\Img\Logos\logo.mmo.38x33.gif" />
+    <Content Include="Media\Img\Logos\MMO-Logo-band-320x36.png" />
+    <Content Include="Media\Img\Misc\CommentReply_Arrow.png" />
+    <Content Include="Media\Img\Misc\menuMob32.jpg" />
+    <Content Include="Media\Img\Misc\menuMobx18.jpg" />
+    <Content Include="Media\Img\Misc\nextraffle.png" />
+    <Content Include="Media\Img\RaoSocial.png" />
+    <Content Include="Media\Img\ShopNoLogo.gif" />
+    <Content Include="Media\Img\shop\delete.png" />
+    <Content Include="Media\Img\shop\minus.gif" />
+    <Content Include="Media\Img\shop\plus.gif" />
+    <Content Include="Media\Img\social\facebook.png" />
+    <Content Include="Media\Img\social\linkedin.gif" />
+    <Content Include="Media\Img\social\pinterest.png" />
+    <Content Include="Media\Img\social\twitter.png" />
+    <Content Include="Media\Img\social\YouTube.png" />
+    <Content Include="Media\js\Accordion.js" />
+    <Content Include="Media\js\AeatMod347.js" />
+    <Content Include="Media\js\CustomerBasket.js" />
+    <Content Include="Media\js\CustomerSelection.js" />
+    <Content Include="Media\js\GlobalSearchBar.js" />
+    <Content Include="Media\js\Iban.js" />
+    <Content Include="Media\js\iFrameResizer.ContentWindow.min.js" />
+    <Content Include="Media\js\iFrameResizer.min.js" />
+    <Content Include="Media\js\Incidencia.js" />
+    <Content Include="Media\js\jquery.autotab.min.js" />
+    <Content Include="Media\js\PgcExtracte.js" />
+    <Content Include="Media\js\PlusMinus.js" />
+    <Content Include="Media\js\SellOut.js" />
+    <Content Include="Media\js\ProductSalePoints.js" />
+    <Content Include="Media\js\Speech-button.js" />
+    <Content Include="Media\js\Speech-input.js" />
+    <Content Include="Media\js\SumasYSaldos.js" />
+    <Content Include="Media\js\SumasYSaldosSummary.js" />
+    <Content Include="Media\js\UsuariCustomerSelection.js" />
+    <Content Include="FacebookLoginHandler.ashx" />
+    <None Include="My Project\PublishProfiles\Web Deploy.pubxml" />
+    <None Include="My Project\PublishProfiles\www.matiasmasso.es.pubxml" />
+    <None Include="packages.config" />
+    <Content Include="Media\js\BannerRotator.js" />
+    <Content Include="Scripts\CookiesBanner.js" />
+    <Content Include="Scripts\CountDown.js" />
+    <Content Include="Scripts\NoScript.js" />
+    <Content Include="Scripts\Pagination.js" />
+    <Content Include="Scripts\SignInOrSignUp.js" />
+    <Content Include="Media\js\Tables.js" />
+    <Content Include="Media\Css\Blog.css" />
+    <Content Include="Styles\DocsGrid.css" />
+    <Content Include="Styles\Form.css" />
+    <Content Include="Styles\Layout.css" />
+    <Content Include="Styles\MatBox.css" />
+    <Content Include="Styles\PageLayout.css" />
+    <Content Include="Styles\Pagination.css" />
+    <Content Include="Media\Css\Tables.css" />
+    <Content Include="Styles\TopNavBar.css" />
+    <Content Include="Styles\_Layout_Blog.css" />
+    <Content Include="Styles\_Layout_2.css" />
+    <Content Include="touch-icon-ipad-retina.png" />
+    <Content Include="touch-icon-ipad.png" />
+    <Content Include="touch-icon-iphone-retina.png" />
+    <Content Include="touch-icon-iphone.png" />
+    <Content Include="Web.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\AuthConfig.vb" />
+    <Compile Include="App_Start\BundleConfig.vb" />
+    <Compile Include="App_Start\RouteConfig.vb" />
+    <Compile Include="Controllers\AccountController.vb" />
+    <Compile Include="Controllers\AeatMod347Controller.vb" />
+    <Compile Include="Controllers\AeatModelController.vb" />
+    <Compile Include="Controllers\AeatModelsController.vb" />
+    <Compile Include="Controllers\apple-app-site-associationController.vb" />
+    <Compile Include="Controllers\AppsController.vb" />
+    <Compile Include="Controllers\AreaController.vb" />
+    <Compile Include="Controllers\AtlasController.vb" />
+    <Compile Include="Controllers\BalancesController.vb" />
+    <Compile Include="Controllers\BlogPostController.vb" />
+    <Compile Include="Controllers\BlogSearchController.vb" />
+    <Compile Include="Controllers\BritaxController.vb" />
+    <Compile Include="Controllers\EciTransmTemplateController.vb" />
+    <Compile Include="Controllers\FeedController.vb" />
+    <Compile Include="Controllers\JornadaLaboralController.vb" />
+    <Compile Include="Controllers\MediaResourceController.vb" />
+    <Compile Include="Controllers\PostCommentController.vb" />
+    <Compile Include="Controllers\ProAtlasController.vb" />
+    <Compile Include="Controllers\ProCatalogController.vb" />
+    <Compile Include="Controllers\CcaController.vb" />
+    <Compile Include="Controllers\CcdController.vb" />
+    <Compile Include="Controllers\CceController.vb" />
+    <Compile Include="Controllers\CliAperturasController.vb" />
+    <Compile Include="Controllers\CommentsController.vb" />
+    <Compile Include="Controllers\CondicionsController.vb" />
+    <Compile Include="Controllers\ContactController.vb" />
+    <Compile Include="Controllers\ContactMessageController.vb" />
+    <Compile Include="Controllers\ContentController.vb" />
+    <Compile Include="Controllers\CustomerBasketController.vb" />
+    <Compile Include="Controllers\CustomerController.vb" />
+    <Compile Include="Controllers\CustomerRankingController.vb" />
+    <Compile Include="Controllers\CustomerTarifaController.vb" />
+    <Compile Include="Controllers\Cx3Controller.vb" />
+    <Compile Include="Controllers\DeliveriesController.vb" />
+    <Compile Include="Controllers\DeptsController.vb" />
+    <Compile Include="Controllers\DescargasController.vb" />
+    <Compile Include="Controllers\DiariController.vb" />
+    <Compile Include="Controllers\DocController.vb" />
+    <Compile Include="Controllers\DocsFinanciersController.vb" />
+    <Compile Include="Controllers\DoxController.vb" />
+    <Compile Include="Controllers\DocsMercantilsController.vb" />
+    <Compile Include="Controllers\ECIController.vb" />
+    <Compile Include="Controllers\EciSalesReportController.vb" />
+    <Compile Include="Controllers\EdiSalesReportsController.vb" />
+    <Compile Include="Controllers\ErrorController.vb" />
+    <Compile Include="Controllers\EscripturesController.vb" />
+    <Compile Include="Controllers\FacturasController.vb" />
+    <Compile Include="Controllers\FeedbackController.vb" />
+    <Compile Include="Controllers\ForecastController.vb" />
+    <Compile Include="Controllers\fourmomsController.vb" />
+    <Compile Include="Controllers\HomeController.vb" />
+    <Compile Include="Controllers\IbanController.vb" />
+    <Compile Include="Controllers\ImgController.vb" />
+    <Compile Include="Controllers\ImpagatsController.vb" />
+    <Compile Include="Controllers\IncentivosController.vb" />
+    <Compile Include="Controllers\IncidenciaController.vb" />
+    <Compile Include="Controllers\InvoiceController.vb" />
+    <Compile Include="Controllers\JsonController.vb" />
+    <Compile Include="Controllers\LangController.vb" />
+    <Compile Include="Controllers\LangSettingsController.vb" />
+    <Compile Include="Controllers\LLibreMajorController.vb" />
+    <Compile Include="Controllers\LLibreDiariController.vb" />
+    <Compile Include="Controllers\LogosDistribuidorOficialController.vb" />
+    <Compile Include="Controllers\MailController.vb" />
+    <Compile Include="Controllers\MaybornController.vb" />
+    <Compile Include="Controllers\MenuController.vb" />
+    <Compile Include="Controllers\MuellerController.vb" />
+    <Compile Include="Controllers\NewsController.vb" />
+    <Compile Include="Controllers\NewsletterController.vb" />
+    <Compile Include="Controllers\NominasController.vb" />
+    <Compile Include="Controllers\OutletController.vb" />
+    <Compile Include="Controllers\PgcExtracteController.vb" />
+    <Compile Include="Controllers\PluginController.vb" />
+    <Compile Include="Controllers\proController.vb" />
+    <Compile Include="Controllers\ProCredencialController.vb" />
+    <Compile Include="Controllers\ProCredencialsController.vb" />
+    <Compile Include="Controllers\productController.vb" />
+    <Compile Include="Controllers\ProductDistributorsController.vb" />
+    <Compile Include="Controllers\ProductRankController.vb" />
+    <Compile Include="Controllers\ProProductBrandController.vb" />
+    <Compile Include="Controllers\ProProductCategoryController.vb" />
+    <Compile Include="Controllers\ProProductSkuController.vb" />
+    <Compile Include="Controllers\ProRafflesController.vb" />
+    <Compile Include="Controllers\ProWtbolSiteController.vb" />
+    <Compile Include="Controllers\RetencionesController.vb" />
+    <Compile Include="Controllers\RobotsController.vb" />
+    <Compile Include="Controllers\SitemapsController.vb" />
+    <Compile Include="Controllers\SkuStocksController.vb" />
+    <Compile Include="Controllers\PurchaseOrderController.vb" />
+    <Compile Include="Controllers\RaffleController.vb" />
+    <Compile Include="Controllers\RaportsController.vb" />
+    <Compile Include="Controllers\RecallController.vb" />
+    <Compile Include="Controllers\RepBasketController.vb" />
+    <Compile Include="Controllers\RepComFollowUpsController.vb" />
+    <Compile Include="Controllers\RepController.vb" />
+    <Compile Include="Controllers\RepLiqsController.vb" />
+    <Compile Include="Controllers\RepProductsController.vb" />
+    <Compile Include="Controllers\RepRetencionsController.vb" />
+    <Compile Include="Controllers\SabiasQueController.vb" />
+    <Compile Include="Controllers\SearchController.vb" />
+    <Compile Include="Controllers\SelloutController.vb" />
+    <Compile Include="Controllers\SepaCoreMandatoManualController.vb" />
+    <Compile Include="Controllers\SignUpController.vb" />
+    <Compile Include="Controllers\SkuController.vb" />
+    <Compile Include="Controllers\DescatalogadosController.vb" />
+    <Compile Include="Controllers\SoftwareDownloadsController.vb" />
+    <Compile Include="Controllers\StoreLocatorController.vb" />
+    <Compile Include="Controllers\SubscripcionsController.vb" />
+    <Compile Include="Controllers\SumasYSaldosController.vb" />
+    <Compile Include="Controllers\TestController.vb" />
+    <Compile Include="Controllers\TpvController.vb" />
+    <Compile Include="Controllers\TutorialController.vb" />
+    <Compile Include="Controllers\UnsubscribeController.vb" />
+    <Compile Include="Controllers\UtilitiesController.vb" />
+    <Compile Include="Controllers\WebErrsController.vb" />
+    <Compile Include="Controllers\WtbolsController.vb" />
+    <Compile Include="Controllers\_MatController.vb" />
+    <Compile Include="Extensions\DatetimeOffsetExtensions.vb" />
+    <Compile Include="Extensions\ExcelExtensions.vb" />
+    <Compile Include="Extensions\HttpRequestExtensions.vb" />
+    <Compile Include="Extensions\RssFeedResult.vb" />
+    <Compile Include="Global.asax.vb">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Helpers\ContextHelper.vb" />
+    <Compile Include="Helpers\EmptyStringDataAnnotationsModelMetadataProvider.vb" />
+    <Compile Include="Helpers\HttpRequestHelper.vb" />
+    <Compile Include="Helpers\RequestHelper.vb" />
+    <Compile Include="Helpers\WebHelper.vb" />
+    <Compile Include="Models\BankTransferReminderModel.vb" />
+    <Compile Include="Models\BlogConsultaModel.vb" />
+    <Compile Include="Models\CommentViewModel.vb" />
+    <Compile Include="Models\GlobalDistributorsModel.vb" />
+    <Compile Include="Models\GlobalVariables.vb" />
+    <Compile Include="Models\IfemaGuestViewModel.vb" />
+    <Compile Include="Models\LeadViewModel.vb" />
+    <Compile Include="Models\LoginViewModel.vb" />
+    <Compile Include="Models\Pagination.vb" />
+    <Compile Include="Models\PaginatedList.vb" />
+    <Compile Include="Models\ProductDownloadsModel.vb" />
+    <Compile Include="Models\ProductMenuModel.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\MyExtensions\MyWebExtension.vb">
+      <VBMyExtensionTemplateID>Microsoft.VisualBasic.Web.MyExtension</VBMyExtensionTemplateID>
+      <VBMyExtensionTemplateVersion>1.0.0.0</VBMyExtensionTemplateVersion>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="Settings.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\licenses.licx" />
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <Content Include="Views\web.config" />
+    <Content Include="Views\account\Activated.vbhtml" />
+    <Content Include="Views\account\Login.vbhtml" />
+    <Content Include="Views\account\PasswordEdit.vbhtml" />
+    <Content Include="Views\account\Perfil.vbhtml" />
+    <Content Include="Views\account\registro.vbhtml" />
+    <Content Include="Views\account\registroBlog.vbhtml" />
+    <Content Include="Views\account\SignUp.vbhtml" />
+    <Content Include="Views\account\SignUp_Thanks.vbhtml" />
+    <Content Include="Views\Subscripcions\Subscripcions.vbhtml" />
+    <Content Include="Views\AeatMod347\_Mod347.vbhtml" />
+    <Content Include="Views\AeatMod347\Mod347.vbhtml" />
+    <Content Include="Views\AeatMod347\NoMod347.vbhtml" />
+    <Content Include="Views\Area\AreaCustomers.vbhtml" />
+    <Content Include="Views\Cca\Cca.vbhtml" />
+    <Content Include="Views\CliAperturas\Apertura.vbhtml" />
+    <Content Include="Views\CliAperturas\Aperturas.vbhtml" />
+    <Content Include="Views\CliAperturas\Aperturas_.vbhtml" />
+    <Content Include="Views\condicions\Index.vbhtml" />
+    <Content Include="Views\Contact\SingleContact.vbhtml" />
+    <Content Include="Views\customer\Apertura.vbhtml" />
+    <Content Include="Views\CustomerBasket\CustomerBasket.vbhtml" />
+    <Content Include="Views\CustomerBasket\Thanks.vbhtml" />
+    <Content Include="Views\CustomerRanking\_CustomerRanking.vbhtml" />
+    <Content Include="Views\CustomerRanking\CustomerRanking.vbhtml" />
+    <Content Include="Views\CustomerTarifa\Tarifa.vbhtml" />
+    <Content Include="Views\Deliveries\Deliveries.vbhtml" />
+    <Content Include="Views\Deliveries\Deliveries_.vbhtml" />
+    <Content Include="Views\Deliveries\SingleDelivery.vbhtml" />
+    <Content Include="Views\descargas\Brands.vbhtml" />
+    <Content Include="Views\descargas\Files.vbhtml" />
+    <Content Include="Views\Diari\_Years.vbhtml" />
+    <Content Include="Views\Diari\Diari.vbhtml" />
+    <Content Include="Views\Diari\DiariDetail.vbhtml" />
+    <Content Include="Views\Escriptures\Escriptures.vbhtml" />
+    <Content Include="Views\Escriptures\Escriptures_.vbhtml" />
+    <Content Include="Views\facturas\Facturas.vbhtml" />
+    <Content Include="Views\facturas\Facturas_.vbhtml" />
+    <Content Include="Views\facturas\Facturas__.vbhtml" />
+    <Content Include="Views\fourmoms\SalesData.vbhtml" />
+    <Content Include="Views\fourmoms\SalesData_.vbhtml" />
+    <Content Include="Views\ContactMessage\ContactMessage.vbhtml" />
+    <Content Include="Views\homeOld\Index.vbhtml" />
+    <Content Include="Views\Home\Navegador.vbhtml" />
+    <Content Include="Views\Robots\Robots.vbhtml" />
+    <Content Include="Views\Iban\Download.vbhtml" />
+    <Content Include="Views\Incentivos\Incentivos.vbhtml" />
+    <Content Include="Views\incidencia\Incidencia.vbhtml" />
+    <Content Include="Views\incidencia\Incidencias.vbhtml" />
+    <Content Include="Views\incidencia\Incidencias_.vbhtml" />
+    <Content Include="Views\incidencia\NewIncidencia.vbhtml" />
+    <Content Include="Views\Invoice\_RowTitles.vbhtml" />
+    <Content Include="Views\Invoice\Invoice.vbhtml" />
+    <Content Include="Views\LogosDistribuidorOficial\LogoDistribuidorOficial.vbhtml" />
+    <Content Include="Views\LogosDistribuidorOficial\LogosDistribuidorOficial.vbhtml" />
+    <Content Include="Views\mail\_Layout.vbhtml" />
+    <Content Include="Views\mail\_Layout2.vbhtml" />
+    <Content Include="Views\mail\ActivationRequest.vbhtml" />
+    <Content Include="Views\mail\CommentAnswered.vbhtml" />
+    <Content Include="Views\mail\CommentPendingModeration.vbhtml" />
+    <Content Include="Views\mail\Delivery_Confirmation_Cash.vbhtml" />
+    <Content Include="Views\mail\Delivery_Confirmation_Pickup.vbhtml" />
+    <Content Include="Views\mail\Delivery_Confirmation_Shipment.vbhtml" />
+    <Content Include="Views\mail\EmailAddressVerification.vbhtml" />
+    <Content Include="Views\mail\Incidencia.vbhtml" />
+    <Content Include="Views\mail\MailVenciment.vbhtml" />
+    <Content Include="Views\mail\Newsletter.vbhtml" />
+    <Content Include="Views\mail\Noticia.vbhtml" />
+    <Content Include="Views\mail\Password.vbhtml" />
+    <Content Include="Views\mail\RaffleDistributorNotification.vbhtml" />
+    <Content Include="Views\mail\RaffleParticipation.vbhtml" />
+    <Content Include="Views\mail\RaffleReminder.vbhtml" />
+    <Content Include="Views\mail\RaffleWinnerCongrats.vbhtml" />
+    <Content Include="Views\mail\RemittanceAdvice.vbhtml" />
+    <Content Include="Views\Menu\Menus.vbhtml" />
+    <Content Include="Views\news\Index_New.vbhtml" />
+    <Content Include="Views\news\SingleEvento.vbhtml" />
+    <Content Include="Views\news\SingleNoticia.vbhtml" />
+    <Content Include="Views\news\xCategoria.vbhtml" />
+    <Content Include="Views\Nominas\Nominas.vbhtml" />
+    <Content Include="Views\Nominas\Nominas_.vbhtml" />
+    <Content Include="Views\PgcExtracte\_Extracte.vbhtml" />
+    <Content Include="Views\PgcExtracte\Extracte.vbhtml" />
+    <Content Include="Views\pro\_MenuMap.vbhtml" />
+    <Content Include="Views\pro\eBooks.vbhtml" />
+    <Content Include="Views\pro\Guid.vbhtml" />
+    <Content Include="Views\pro\IfemaGuestSignUp.vbhtml" />
+    <Content Include="Views\pro\IfemaGuestSignUpThanks.vbhtml" />
+    <Content Include="Views\pro\Index.vbhtml" />
+    <Content Include="Views\pro\Retenciones.vbhtml" />
+    <Content Include="Views\Sellout\Sellout.vbhtml" />
+    <Content Include="Views\Sellout\Sellout_.vbhtml" />
+    <Content Include="Views\pro\StatQuotaOnline.vbhtml" />
+    <Content Include="Views\product\_Accessories.vbhtml" />
+    <Content Include="Views\product\_Categories.vbhtml" />
+    <Content Include="Views\product\_Category.vbhtml" />
+    <Content Include="Views\product\_Collection.vbhtml" />
+    <Content Include="Views\product\_Downloads.vbhtml" />
+    <Content Include="Views\product\_Pills.vbhtml" />
+    <Content Include="Views\product\_SKU.vbhtml" />
+    <Content Include="Views\product\_Videos_Old.vbhtml" />
+    <Content Include="Views\product\_VideosPaginated.vbhtml" />
+    <Content Include="Views\product\Cnap.vbhtml" />
+    <Content Include="Views\product\Index.vbhtml" />
+    <Content Include="Views\product\SKU_image.vbhtml" />
+    <Content Include="Views\product\AllVideos.vbhtml" />
+    <Content Include="Views\ProductDistributors\RepList.vbhtml" />
+    <Content Include="Views\PurchaseOrder\CustomerPending.vbhtml" />
+    <Content Include="Views\PurchaseOrder\PurchaseOrderItem.vbhtml" />
+    <Content Include="Views\PurchaseOrder\PurchaseOrders.vbhtml" />
+    <Content Include="Views\PurchaseOrder\PurchaseOrders_.vbhtml" />
+    <Content Include="Views\PurchaseOrder\SingleOrder.vbhtml" />
+    <Content Include="Views\Quiz\PromoFisher.vbhtml" />
+    <Content Include="Views\Quiz\PromoFisher1.vbhtml" />
+    <Content Include="Views\Raffle\_Test.vbhtml" />
+    <Content Include="Views\Raffle\bases.vbhtml" />
+    <Content Include="Views\Raffle\err.vbhtml" />
+    <Content Include="Views\Raffle\play.vbhtml" />
+    <Content Include="Views\Raffle\raffle.vbhtml" />
+    <Content Include="Views\Raffles\Raffles.vbhtml" />
+    <Content Include="Views\Raffles\Raffles_.vbhtml" />
+    <Content Include="Views\RepBasket\_LastOrdersEntered.vbhtml" />
+    <Content Include="Views\RepBasket\NewRepBasket.vbhtml" />
+    <Content Include="Views\RepProducts\RepProducts.vbhtml" />
+    <Content Include="Views\sabiasque\Index.vbhtml" />
+    <Content Include="Views\Search\_Search.vbhtml" />
+    <Content Include="Views\Search\Search.vbhtml" />
+    <Content Include="Views\shared\_Alexa.vbhtml" />
+    <Content Include="Views\shared\_AsideLeft.vbhtml" />
+    <Content Include="Views\shared\_AsideRight.vbhtml" />
+    <Content Include="Views\shared\_BloggerPostOfTheDay.vbhtml" />
+    <Content Include="Views\shared\_BreadCrumbs.vbhtml" />
+    <Content Include="Views\shared\_countdown.vbhtml" />
+    <Content Include="Views\shared\_Footer.vbhtml" />
+    <Content Include="Views\shared\_GoogleAnalytics.vbhtml" />
+    <Content Include="Views\shared\_Header.vbhtml" />
+    <Content Include="Views\shared\_LastEvents.vbhtml" />
+    <Content Include="Views\shared\_LastNoticia.vbhtml" />
+    <Content Include="Views\shared\_LastNoticias.vbhtml" />
+    <Content Include="Views\shared\_LastRaffle.vbhtml" />
+    <Content Include="Views\shared\_LastVideo.vbhtml" />
+    <Content Include="Views\shared\_Layout.vbhtml" />
+    <Content Include="Views\shared\_Layout_eCommerce.vbhtml" />
+    <Content Include="Views\shared\_Layout_FullWidth.vbhtml" />
+    <Content Include="Views\shared\_Layout_Minimal.vbhtml" />
+    <Content Include="Views\shared\_Meta.vbhtml" />
+    <Content Include="Views\shared\_NextEvento.vbhtml" />
+    <Content Include="Views\shared\_NextRaffle.vbhtml" />
+    <Content Include="Views\shared\_NoScript.vbhtml" />
+    <Content Include="Views\shared\_Select_Contact.vbhtml" />
+    <Content Include="Views\shared\_Select_Iban.vbhtml" />
+    <Content Include="Views\shared\_SocialFacebook.vbhtml" />
+    <Content Include="Views\shared\_SocialIcons.vbhtml" />
+    <Content Include="Views\shared\_SocialInstagram.vbhtml" />
+    <Content Include="Views\shared\_UsuariCustomerSelection.vbhtml" />
+    <Content Include="Views\shared\_ValidationSummary.vbhtml" />
+    <Content Include="Views\shared\Error.vbhtml" />
+    <Content Include="Views\shared\FreeText.vbhtml" />
+    <Content Include="Views\shared\NotFound.vbhtml" />
+    <Content Include="Views\shared\Outdated.vbhtml" />
+    <Content Include="Views\shared\SISU_backup.vbhtml" />
+    <Content Include="Views\shared\unauthorized.vbhtml" />
+    <Content Include="Views\signup\EditThanks.vbhtml" />
+    <Content Include="Views\signup\existingUsuari.vbhtml" />
+    <Content Include="Views\signup\fillDetails.vbhtml" />
+    <Content Include="Views\signup\fillDetailsThanks.vbhtml" />
+    <Content Include="Views\signup\Index.vbhtml" />
+    <Content Include="Views\SumasYSaldos\_SumasYSaldos.vbhtml" />
+    <Content Include="Views\SumasYSaldos\_Summary.vbhtml" />
+    <Content Include="Views\SumasYSaldos\SubComptes.vbhtml" />
+    <Content Include="Views\SumasYSaldos\SumasYSaldos.vbhtml" />
+    <Content Include="Views\SumasYSaldos\Summary.vbhtml" />
+    <Content Include="Views\Tarifa\Tarifa.vbhtml" />
+    <Content Include="Views\Impagats\Impagats.vbhtml" />
+    <Content Include="Views\mail\Transmisio.vbhtml" />
+    <Content Include="Views\mail\Factura.vbhtml" />
+    <Content Include="Views\CliAperturas\CreateApertura.vbhtml" />
+    <Content Include="Views\mail\CliApertura.vbhtml" />
+    <Content Include="Views\Raports\Raport.vbhtml" />
+    <Content Include="Views\mail\_Layout3.vbhtml" />
+    <Content Include="Views\mail\Test.vbhtml" />
+    <Content Include="Views\shared\_CustomerSelection.vbhtml" />
+    <Content Include="Views\AeatModel\AeatModel.vbhtml" />
+    <Content Include="Views\AeatModels\AeatModels.vbhtml" />
+    <Content Include="Views\Balances\Balances.vbhtml" />
+    <Content Include="Views\Balances\ClassItem_.vbhtml" />
+    <Content Include="Views\Cce\Cce.vbhtml" />
+    <Content Include="Views\Ccd\Ccd.vbhtml" />
+    <Content Include="Views\LlibreDiari\LlibreDiari.vbhtml" />
+    <Content Include="Views\LlibreDiari\LlibreDiari_.vbhtml" />
+    <Content Include="Views\LlibreMajor\LlibreMajor.vbhtml" />
+    <Content Include="Views\LlibreMajor\LlibreMajor_.vbhtml" />
+    <Content Include="Views\mail\QuizConfirmationAdvansafix.vbhtml" />
+    <Content Include="Views\Mayborn\Index.vbhtml" />
+    <Content Include="Views\Tpv\Index.vbhtml" />
+    <Content Include="Views\Tpv\Ko.vbhtml" />
+    <Content Include="Views\Tpv\Ok.vbhtml" />
+    <Content Include="Views\Tpv\Pasarela.vbhtml" />
+    <Content Include="Views\CustomerBasket\Closure_.vbhtml" />
+    <Content Include="Views\AeatModel\LastAeatDocs.vbhtml" />
+    <Content Include="Views\DocsMercantils\DocsMercantils.vbhtml" />
+    <Content Include="Views\mail\CustomerPurchaseOrder.vbhtml" />
+    <Content Include="Views\mail\RemittanceAdvice2.vbhtml" />
+    <Content Include="Views\Raports\_RaportArxive.vbhtml" />
+    <Content Include="Views\Raports\_RaportJobDone.vbhtml" />
+    <Content Include="Views\Raports\_RaportForm.vbhtml" />
+    <Content Include="Views\mail\tmp_ErrorVtos.vbhtml" />
+    <Content Include="Views\RepComFollowUps\RepComFollowUps.vbhtml" />
+    <Content Include="Views\RepRetencions\RepRetencions.vbhtml" />
+    <Content Include="Views\RepRetencions\RepRetencions_.vbhtml" />
+    <Content Include="Views\Outlet\Outlet.vbhtml" />
+    <Content Include="Views\Raports\Raports.vbhtml" />
+    <Content Include="Views\Raports\Raports_.vbhtml" />
+    <Content Include="Views\product\_MediaResources.vbhtml" />
+    <Content Include="Views\DocsFinanciers\DocsFinanciers.vbhtml" />
+    <Content Include="Views\homeOld\testStarRating.vbhtml" />
+    <Content Include="Views\mail\RepPurchaseOrder.vbhtml" />
+    <Content Include="Views\news\iMat.vbhtml" />
+    <Content Include="Views\shared\_MobileHome.vbhtml" />
+    <Content Include="Views\Incentivos\Promo.vbhtml" />
+    <Content Include="Views\SepaCoreMandatoManual\SepaCoreMandatoManual.vbhtml" />
+    <Content Include="Views\Mueller\Index.vbhtml" />
+    <Content Include="Views\Incentivos\SalePoints.vbhtml" />
+    <Content Include="Views\shared\_Facebook_pixel.vbhtml" />
+    <Content Include="Views\shared\_Layout_Blog.vbhtml" />
+    <Content Include="Views\shared\_BlogHeader.vbhtml" />
+    <Content Include="Views\shared\_BlogAsideRight.vbhtml" />
+    <Content Include="Views\shared\_BlogFooter.vbhtml" />
+    <Content Include="Views\Forecast\OrdersPreview.vbhtml" />
+    <Content Include="Views\mail\StoreLocator.vbhtml" />
+    <Content Include="Views\Raports\_RaportDisplay.vbhtml" />
+    <Content Include="Views\Apps\kmarero.vbhtml" />
+    <Content Include="Views\Raports\CustomerRaports.vbhtml" />
+    <Content Include="Views\Recall\Recall.vbhtml" />
+    <Content Include="Views\Wtbol\LandingPages.vbhtml" />
+    <Content Include="Views\product\Index2.vbhtml" />
+    <Content Include="Views\Rep\Neighbours.vbhtml" />
+    <Content Include="Views\Rep\_Neighbours.vbhtml" />
+    <Content Include="Views\product\_BloggerPosts.vbhtml" />
+    <Content Include="Views\product\_Description.vbhtml" />
+    <Content Include="Views\product\_Collection2.vbhtml" />
+    <Content Include="Views\Depts\Depts.vbhtml" />
+    <Content Include="Views\product\Depts.vbhtml" />
+    <Content Include="Views\product\_DeptCategories.vbhtml" />
+    <Content Include="Views\EciSalesReport\Sellout.vbhtml" />
+    <Content Include="Views\EciSalesReport\Sellout_.vbhtml" />
+    <Content Include="Views\shared\Exs.vbhtml" />
+    <Content Include="Views\Raffle\participant.vbhtml" />
+    <Content Include="Views\ProductRank\Index.vbhtml" />
+    <Content Include="Views\shared\_Error.vbhtml" />
+    <Content Include="Views\ProductRank\ProductRank_.vbhtml" />
+    <Content Include="Views\PurchaseOrder\RepSortides.vbhtml" />
+    <Content Include="Views\Plugin\HScrollPlugin.vbhtml" />
+    <Content Include="Views\homeOld\test.vbhtml" />
+    <Content Include="Views\shared\_Layout_Test.vbhtml" />
+    <Content Include="Views\Depts\Depts_Deprecated.vbhtml" />
+    <Content Include="Views\RepBasket\NewRepBasket - Copy.vbhtml" />
+    <Content Include="Views\RepBasket\_error.vbhtml" />
+    <Content Include="Views\cx3\makecall.vbhtml" />
+    <Content Include="Views\Descatalogados\Descatalogados.vbhtml" />
+    <Content Include="Views\Descatalogados\_Grid.vbhtml" />
+    <Content Include="Views\mail\Descatalogados.vbhtml" />
+    <Content Include="Views\Unsubscribe\Unsubscribe.vbhtml" />
+    <Content Include="Views\SkuStocks\CustomerStocks.vbhtml" />
+    <Content Include="Views\SkuStocks\ManufacturerStocks.vbhtml" />
+    <Content Include="Views\LangSettings\LangSettings.vbhtml" />
+    <Content Include="Views\mail\BankTransferReminder.vbhtml" />
+    <Content Include="Views\account\Login_Old.vbhtml" />
+    <Content Include="Views\Home\Index.vbhtml" />
+    <Content Include="Views\shared\_Layout_2.vbhtml" />
+    <Content Include="Views\shared\_SocialMedia.vbhtml" />
+    <Content Include="Views\shared\_NavBar.vbhtml" />
+    <Content Include="Views\ContactMessage\ContactMessageThanks.vbhtml" />
+    <Content Include="Views\product\ProductCategory.vbhtml" />
+    <Content Include="Views\product\ProductBrand.vbhtml" />
+    <Content Include="Views\product\ProductDept.vbhtml" />
+    <Content Include="Views\product\ProductSku.vbhtml" />
+    <Content Include="Views\product\ProductCollection.vbhtml" />
+    <Content Include="Views\Lang\Lang.vbhtml" />
+    <Content Include="Views\product\StoreLocator.vbhtml" />
+    <Content Include="Views\product\Galeria.vbhtml" />
+    <Content Include="Views\product\_Gallery.vbhtml" />
+    <Content Include="Views\product\Accessories.vbhtml" />
+    <Content Include="Views\product\_Downloads_Old.vbhtml" />
+    <Content Include="Views\product\Downloads.vbhtml" />
+    <Content Include="Views\product\Videos.vbhtml" />
+    <Content Include="Views\product\_Videos.vbhtml" />
+    <Content Include="Views\shared\_SideNav.vbhtml" />
+    <Content Include="Views\news\Index.vbhtml" />
+    <Content Include="Views\news\Noticias.vbhtml" />
+    <Content Include="Views\news\_Noticias.vbhtml" />
+    <Content Include="Views\product\_Persianas.vbhtml" />
+    <Content Include="Views\shared\_FeedbackMail.vbhtml" />
+    <Content Include="Views\shared\_Feedback.vbhtml" />
+    <Content Include="Views\shared\_CommentsTree.vbhtml" />
+    <Content Include="Views\shared\_CommentThread.vbhtml" />
+    <Content Include="Views\Error\Error.vbhtml" />
+    <Content Include="Views\shared\_NavBar-Blog.vbhtml" />
+    <Content Include="Views\shared\_SearchBox.vbhtml" />
+    <Content Include="Views\BlogPost\_BlogPosts.vbhtml" />
+    <Content Include="Views\BlogPost\SignUp.vbhtml" />
+    <Content Include="Views\BlogPost\_SignUp_Thanks.vbhtml" />
+    <Content Include="Views\BlogPost\SignedUpAlready.vbhtml" />
+    <Content Include="Views\BlogSearch\Search.vbhtml" />
+    <Content Include="Views\BlogPost\Consultas.vbhtml" />
+    <Content Include="Views\BlogPost\About.vbhtml" />
+    <Content Include="Views\shared\_BlogSidenav.vbhtml" />
+    <Content Include="Views\Content\Content.vbhtml" />
+    <Content Include="Views\ProCatalog\Catalog.vbhtml" />
+    <Content Include="Views\ProProductBrand\Properties.vbhtml" />
+    <Content Include="Views\shared\_Layout_Pro.vbhtml" />
+    <Content Include="Views\ProProductCategory\Properties.vbhtml" />
+    <Content Include="Views\ProProductSku\Properties.vbhtml" />
+    <Content Include="Views\ProCredencials\Credencials.vbhtml" />
+    <Content Include="Views\ProCredencial\Credencial.vbhtml" />
+    <Content Include="Views\BlogPost\_ConsultaResult.vbhtml" />
+    <Content Include="Views\BlogPost\BlogPosts.vbhtml" />
+    <Content Include="Views\shared\_CommentThreads.vbhtml" />
+    <Content Include="Views\shared\_CommentForm.vbhtml" />
+    <Content Include="Views\ProAtlas\Atlas.vbhtml" />
+    <Content Include="Views\ProAtlas\_ContactList.vbhtml" />
+    <Content Include="Views\ProRaffles\Raffles.vbhtml" />
+    <Content Include="Views\ProRaffles\_Raffles.vbhtml" />
+    <Content Include="Views\ProRaffle\Raffle.vbhtml" />
+    <Content Include="Views\ProWtbolSites\Sites.vbhtml" />
+    <Content Include="Views\ProWtbolSite\Site.vbhtml" />
+    <Content Include="Views\ProWtbolSite\LandingPages.vbhtml" />
+    <Content Include="Views\ProWtbolSite\Stocks.vbhtml" />
+    <Content Include="Views\ProWtbolSite\LandingPage.vbhtml" />
+    <Content Include="Views\ProAtlas\Contact.vbhtml" />
+    <Content Include="Views\ProWtbolSite\LandingPagesUpload.vbhtml" />
+    <Content Include="Views\BlogPost\NormasDeUso.vbhtml" />
+    <Content Include="Views\Raffles\Raffles_Next_.vbhtml" />
+    <Content Include="Views\Raffles\Raffles_Active_.vbhtml" />
+    <Content Include="Views\Raffles\Raffles_More_.vbhtml" />
+    <Content Include="Views\ProCatalog\Search.vbhtml" />
+    <Content Include="Views\ProCatalog\Sku.vbhtml" />
+    <Content Include="Views\ProCatalog\ResourceUpload.vbhtml" />
+    <Content Include="Views\Error\PageNotFound.vbhtml" />
+    <Content Include="Views\Error\BlogPageNotFound.vbhtml" />
+    <Content Include="Views\shared\_ProductBreadcrumbs.vbhtml" />
+    <Content Include="Views\product\BloggerPosts.vbhtml" />
+    <Content Include="Views\shared\_SideNav-Blog.vbhtml" />
+    <Content Include="Views\shared\_Layout_SideNav.vbhtml" />
+    <Content Include="Views\Raffle\Raffle_Thanks.vbhtml" />
+    <Content Include="Views\Deliveries\Tracking.vbhtml" />
+    <Content Include="Views\MediaResource\MissingFiles.vbhtml" />
+    <Content Include="Views\shared\_AvailableOnAppstore.vbhtml" />
+    <Content Include="Views\Atlas\Contacts.vbhtml" />
+    <Content Include="Views\Retenciones\Retenciones.vbhtml" />
+    <Content Include="Scripts\jquery-3.6.0.slim.min.map" />
+    <Content Include="Scripts\jquery-3.6.0.min.map" />
+    <Content Include="Views\shared\_CookieConsentBanner.vbhtml" />
+    <Content Include="Views\CookieConsent\CookieConsent.vbhtml" />
+    <Content Include="Views\EciTransmTemplate\Index.vbhtml" />
+    <Content Include="Views\ECI\SellOut.vbhtml" />
+    <Content Include="Views\Sellout\Test.vbhtml" />
+    <Content Include="Views\JornadaLaboral\Logs.vbhtml" />
+    <Content Include="Views\RepLiqs\Repliqs.vbhtml" />
+    <Content Include="Views\ECI\InvRpt.vbhtml" />
+    <None Include="Views\shared\_SocialMediaOld.vbhtml" />
+    <Content Include="Views\shared\_StoreLocator.vbhtml" />
+    <Content Include="Views\StoreLocator\StoreLocator.vbhtml" />
+    <Content Include="Views\Wtbol\Site.vbhtml" />
+    <Content Include="Views\BlogPost\BlogPost.vbhtml" />
+    <Content Include="Views\BlogPost\_SubscribeMe.vbhtml" />
+    <Content Include="Views\ProWtbolSite\Baskets.vbhtml" />
+    <Content Include="Views\WebErrs\Index.vbhtml" />
+    <Content Include="Views\SoftwareDownloads\SoftwareDownloads.vbhtml" />
+    <Content Include="Views\Tutorial\Index.vbhtml" />
+    <Content Include="Views\StoreLocator\StoreLocatorPremium.vbhtml" />
+    <Content Include="Views\Test\Index.vbhtml" />
+    <Content Include="Views\Wtbol\Index2.vbhtml" />
+    <Content Include="Views\Wtbol\Index.vbhtml" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Pdf\" />
+    <Folder Include="Views\Ccds\" />
+    <Folder Include="Views\Correspondencia\" />
+    <Folder Include="Views\Json\" />
+    <Folder Include="Views\Reps\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\DTO\DTO.csproj">
+      <Project>{c2f49505-452b-4856-b8a0-c504df10cdf2}</Project>
+      <Name>DTO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\FEB2\FEB2.vbproj">
+      <Project>{66de3120-f13f-4938-b5ef-28ffd4cd2ea6}</Project>
+      <Name>FEB2</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\LegacyHelper\LegacyHelper.vbproj">
+      <Project>{d0841f63-fe98-4bc0-bf84-7a9a9608b920}</Project>
+      <Name>LegacyHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\MatHelperStd\MatHelperStd.vbproj">
+      <Project>{6feda739-79f5-459f-9967-553095f23816}</Project>
+      <Name>MatHelperStd</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>57923</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>https://localhost:44373/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets'))" />
+    <Error Condition="!Exists('..\..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.1.15.0\build\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.1.15.0\build\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.props'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.1.15.0\build\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.1.15.0\build\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.targets'))" />
+  </Target>
+  <Import Project="..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
+  <Import Project="..\..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
+  <Import Project="..\..\packages\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.1.15.0\build\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.targets" Condition="Exists('..\..\packages\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.1.15.0\build\Microsoft.VisualStudio.Azure.Containers.Tools.Targets.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

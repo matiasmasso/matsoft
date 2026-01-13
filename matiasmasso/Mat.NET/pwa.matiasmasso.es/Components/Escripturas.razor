@@ -1,0 +1,123 @@
+﻿@inherits _Base
+
+
+<div class="PageWrapper600">
+    <h1>@Localizer("Notarial deeds")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedItem == null)
+    {
+        <PageOptions IsShowingOptions="true">
+            <UxToggle @bind-Value="@IsShowingObsolets"
+                  TrueText="OutdatedIncluded"
+                  FalseText="OutdatedNotIncluded"></UxToggle>
+            <a href="#" @onclick="AddNew" @onclick:preventDefault>@Localizer("AddNew")</a>
+        </PageOptions>
+
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="Summary">
+            @Localizer("NotarialDeedsCount",model.Count(), model.Where(x => x.FchTo == null).Count())
+        </div>
+
+        <div class="Grid">
+            @foreach (var item in FilteredItems())
+            {
+                <div class="Item">
+                    <div class="Icon">
+                        @if (item.DocFile == null)
+                        {
+                            <span>&nbsp;</span>
+                        }
+                        else
+                        {
+                            <a href="@item.DocFile.DownloadUrl()" target="_blank" title="@item.DocFile.Features()">
+                                <UxIcon Id="UxIcon.Ids.Doc"></UxIcon>
+                            </a>
+                        }
+
+                    </div>
+
+                    <a href="#" class='Fch @(item.IsOutdated() ? "Obsoleto" : "")' @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                        @string.Format("{0:dd/MM/yy}",item.FchFrom)
+                    </a>
+
+                    <a href="#" class='Nom Truncate @(item.IsOutdated() ? "Obsoleto" : "")' @onclick="@(()=>selectedItem = item)" @onclick:preventDefault>
+                        @item.Nom
+                    </a>
+                </div>
+            }
+
+        </div>
+    }
+    else
+    {
+        <Escriptura Value="selectedItem" 
+        OnUpdate="OnUpdate"
+        OnDelete="OnDelete"
+        RequestToCancel="@(()=>selectedItem = null)"></Escriptura>
+    }
+
+</div>
+
+<Error ProblemDetails="problemDetails"></Error>
+
+
+
+@code {
+    private List<EscripturaModel>? model;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+    private EscripturaModel? selectedItem = null;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var apiResponse = await GetAsync<List<EscripturaModel>>("Escripturas");
+        if (apiResponse.Success())
+            model = apiResponse.Value;
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+
+    private List<EscripturaModel> FilteredItems()
+    {
+        var retval = model!.Where(x => x.Matches(searchTerm)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.FchTo == null).ToList();
+        return retval;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new EscripturaModel();
+        selectedItem.Nom = Localizer("Escriptura.NewNom");
+    }
+
+    private void OnUpdate(EscripturaModel item)
+    {
+        if (item.IsNew)
+            model!.Add(item);
+        else
+        {
+            var existingItem = model!.First(x => x.Guid == item.Guid);
+            var idx = model!.IndexOf(existingItem);
+            model[idx] = item;
+        }
+
+        selectedItem = null;
+        model = model.OrderByDescending(x => x.FchFrom).ToList();
+    }
+
+    private void OnDelete()
+    {
+        model!.Remove(selectedItem);
+        selectedItem = null;
+    }
+
+}
+

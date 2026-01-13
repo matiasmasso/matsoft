@@ -1,0 +1,41 @@
+﻿@inject CultureService culture
+@inject ContactsService contactsService
+
+<div class="Grid">
+    <div class="ColHeaders">
+        <div class="Nom">@culture.Localize("Contact")</div>
+        <div class="Num">@culture.Localize("Debit")</div>
+        <div class="Num">@culture.Localize("Credit")</div>
+        <div class="Num">@culture.Localize("Saldo")</div>
+    </div>
+
+    <div class="Total">
+        <div class="Nom">@culture.Localize("Total")</div>
+        <div class="Num">@(Items?.Sum(x => x.Deb) == 0 ? "" : string.Format("{0:N2} €", Items?.Sum(x => x.Deb)))</div>
+        <div class="Num">@(Items?.Sum(x => x.Hab) == 0 ? "" : string.Format("{0:N2} €", Items?.Sum(x => x.Hab)))</div>
+        <div class="Num">@(Items?.Sum(x => x.Saldo) == 0 ? "" : string.Format("{0:N2} €", Items?.Sum(x => x.Saldo)))</div>
+    </div>
+
+    @foreach (var item in Items ?? new())
+    {
+        <a class="Item" href="#" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+            <div class="Nom">@item.Label</div>
+            <div class="Num">@(item.Deb == 0 ? "" : string.Format("{0:N2} €", item.Deb))</div>
+            <div class="Num">@(item.Hab == 0 ? "" : string.Format("{0:N2} €", item.Hab))</div>
+            <div class="Num">@(item.Saldo == 0 ? "" : string.Format("{0:N2} €", item.Saldo))</div>
+        </a>
+    }
+</div>
+
+@code {
+    [Parameter] public List<PgcCtaSdosService.Item>? Items { get; set; }
+    [Parameter] public EventCallback<ContactModel> ItemSelected { get; set; }
+
+
+    async Task ItemClick(PgcCtaSdosService.Item item)
+    {
+        await ItemSelected.InvokeAsync((ContactModel?)item.Tag);
+    }
+
+
+}

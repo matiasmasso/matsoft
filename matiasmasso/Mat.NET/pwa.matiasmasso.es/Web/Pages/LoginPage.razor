@@ -1,0 +1,57 @@
+﻿@* ------------- M+O ------------- *@
+
+@page "/{LangSegment}/Login"
+@page "/Login"
+
+@inherits _PageBase
+@inject ICookie cookie
+
+<div class="Wrapper600">
+    <AuthorizeView>
+        <Authorized>
+            <div>
+                Welcome, @user?.Nickname
+            </div>
+        </Authorized>
+
+        <NotAuthorized>
+
+            <div class="SignIn">
+                <SignIn Success="@SignInSuccess" Fail="SignInFail"></SignIn>
+            </div>
+
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+<PageTitle>M+O | Login</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+@code {
+
+    UserModel? user;
+
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            user = await base.GetUser(); 
+        base.OnAfterRender(firstRender);
+    }
+
+    private void SignInFail(ProblemDetails args)
+    {
+        problemDetails = args;
+    }
+
+    private void SignInSuccess(UserModel user)
+    {
+        NavigationManager?.NavigateTo("/", true);
+    }
+}

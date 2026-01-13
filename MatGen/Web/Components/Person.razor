@@ -1,0 +1,598 @@
+﻿@implements IDisposable
+@inject ApiService ApiService
+@inject IJSRuntime JSRuntime
+
+@if (selectedItem != null)
+{
+    <ModelEditor Model="selectedItem"
+    AfterUpdate="SelectItemUpdated"
+    CancelRequest="@(()=>selectedItem =null)"></ModelEditor>
+}
+else
+{
+    <div class="PageWrapper900">
+
+        <div class="Header">
+            @if (value?.Guid == ApiService.RootPerson()?.Guid){
+                <h1 style="color:@Colors.Green">@value?.Nom</h1>
+            }
+            else if (ApiService.IsAncestor(value)){
+                <h1 style="color:@Colors.Red">@value?.Nom (@ApiService.RootGrau(value) ª gen)</h1>
+            }
+            else if (ApiService.HasGrau(value)){
+                <h1 style="color:@Colors.Navy">@value?.Nom (@ApiService.RootGrau(value) º)</h1>
+            } else {
+                <h1>@value?.Nom</h1>
+            }
+
+        </div>
+
+        <PageOptions>
+
+
+            <div class="ContextMenuContainer">
+                @if (isBuildingDoc)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <a href="#" @onclick="@(()=>isShowingDocBuilderContextMenu=!isShowingDocBuilderContextMenu)" @onclick:preventDefault>
+                        Genera Documents
+                    </a>
+                }
+                <div class="ContextMenu @(isShowingDocBuilderContextMenu ? "Active":"")">
+                    <a href="#" @onclick="BuildBaptismeAsync" @onclick:preventDefault>
+                        Baptisme
+                    </a>
+                    <a href="#" @onclick="BuildTestamentAsync" @onclick:preventDefault>
+                        Testament
+                    </a>
+                    <a href="#" @onclick="BuildObitAsync" @onclick:preventDefault>
+                        Obit
+                    </a>
+                </div>
+            </div>
+
+            <div class="ContextMenuContainer">
+                @if (isBuildingFile)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <a href="#" @onclick="@(()=>isShowingFileBuilderContextMenu=!isShowingFileBuilderContextMenu)" @onclick:preventDefault>
+                        Exporta fitxers
+                    </a>
+                }
+                <div class="ContextMenu @(isShowingFileBuilderContextMenu ? "Active":"")">
+                    <a href="#" @onclick="Gedcom" @onclick:preventDefault>Gedcom</a>
+                </div>
+            </div>
+        </PageOptions>
+
+        <TabControl SelectedTab="@((int)selectedTab)">
+            <TabPage Text="General">
+                @if (state == DbState.IsLoading)
+                {
+                    <Loading></Loading>
+                }
+                else
+                {
+                    <PropertyGrid Model="@gridModel"
+                    SetDirty="SetDirty"
+                    ItemSelected="SelectPgItem"
+                    RequestToAddNew="AddNewRequest"
+                    CanEdit="true"></PropertyGrid>
+
+                    <div class="ButtonsBar">
+                        <ButtonsBar CanEdit="true"
+                        State="state"
+                        CanDelete="@(!(value?.IsNew ?? false))"
+                        RequestToCancel="CancelRequestHandler"
+                        RequestToDelete="DeleteRequest"
+                        RequestToUpdate="UpdateRequest"></ButtonsBar>
+                    </div>
+                }
+            </TabPage>
+
+
+            <TabPage Text="Observacions">
+                <Textarea CanEdit="true"
+                @bind-Value="obs"
+                SetDirty="@(()=>state= DbState.IsDirty)"></Textarea>
+            </TabPage>
+
+
+            @if (!(value?.IsNew ?? false))
+            {
+
+                <TabPage Text="Documents">
+                    <Person_Docs Person="value"
+                    ItemSelected="ItemSelectedHandler"></Person_Docs>
+                </TabPage>
+
+                <TabPage Text="Descendencia">
+                    <div class="PageWrapper900">
+                        <PageOptions>
+                            <a href="#" @onclick="AddEnlace" @onclick:preventDefault>Afegir enllaç</a>
+                        </PageOptions>
+                        <Child Value="value"
+                        RootAncestorGuids="ApiService.RootAncestorGuids()"
+                        IsRoot="true"
+                        ItemSelected="ItemSelectedHandler"></Child>
+                    </div>
+                </TabPage>
+
+                <TabPage Text="Avantpassats">
+                    <Person_Ancestors Person="value"
+                    ItemSelected="ItemSelectedHandler"></Person_Ancestors>
+                </TabPage>
+
+                <TabPage Text="Tree">
+                    <Tree Value="value" ItemSelected="ItemSelectedHandler"></Tree>
+                </TabPage>
+
+                @if (ApiService.RootGrau(value) > 0)
+                {
+                    <TabPage Text="Afinitat">
+                        <Kinship Value="@(new Tuple<PersonModel?,PersonModel?>(ApiService.RootPerson(), value))"
+                                 ItemSelected="ItemSelectedHandler"></Kinship>
+                    </TabPage>
+                }
+
+                <TabPage Text="Cognoms">
+                    <Cognoms Root="value" ItemSelected="ItemSelectedHandler"></Cognoms>
+                </TabPage>
+
+
+            }
+
+
+        </TabControl>
+
+        <Error @bind-Exception="exception"></Error>
+    </div>
+
+}
+
+@code {
+    [Parameter] public Tabs Tab { get; set; } = Tabs.General;
+    [Parameter] public PersonModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<Object?> CancelRequest { get; set; }
+    [Parameter] public EventCallback<object> ItemSelected { get; set; }
+    [Parameter] public EventCallback<Tabs> TabChanged { get; set; }
+
+
+    Object? selectedItem;
+    Fields? editingField;
+    bool isShowingDocBuilderContextMenu;
+    bool isShowingFileBuilderContextMenu;
+
+    private PersonModel? value;
+    private PropertyGridModel? gridModel;
+    private DbState state;
+    private Tabs selectedTab;
+    private string? obs;
+    private int? grau;
+    bool isBuildingDoc;
+    bool isBuildingFile;
+
+    //private EnlaceModel? selectedEnlace;
+    //private PersonModel? selectedPerson;
+    private Exception? exception;
+
+
+
+    private enum Fields : int
+    {
+        Nom,
+        Sex,
+        FchLocationFrom,
+        FchLocationTo,
+        FchLocationSepultura,
+        Profession,
+        Pare,
+        Mare,
+        Firstnom,
+        Cognom,
+        Obs
+    }
+
+    public enum Tabs
+    {
+        None,
+        General,
+        Transcripcio,
+        Documents,
+        Descendants,
+        Ancestors
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        selectedTab = Tabs.General;
+        ApiService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        selectedTab = Tab;
+        //keeps track of edited value before persisting
+        value = (PersonModel?)ApiService.CurrentModels.FirstOrDefault(x => x.Guid == Model!.Guid); 
+        if(value == null)
+        {
+            value = Model.DeepCopy()!;
+            ApiService.CurrentModels.Add(value);
+        }
+        grau = ApiService.RootGrau(value);
+        Refresca();
+    }
+
+
+    private void Refresca(Exception? ex = null)
+    {
+        if (state != DbState.IsUpdating)
+        { //prevent reloading original values on updating
+            exception = ex;
+            gridModel = new PropertyGridModel(value);
+            gridModel.AddString((int)Fields.Nom, value?.Nom, "Nom", 100);
+            gridModel.AddSex((int)Fields.Sex, value?.Sex, "Sexe");
+            gridModel.AddFchLocation((int)Fields.FchLocationFrom, ApiService.Locations(), value?.FchLocationFrom, "Naixement");
+            gridModel.AddFchLocation((int)Fields.FchLocationTo, ApiService.Locations(), value?.FchLocationTo, "Defunció");
+            gridModel.AddFchLocation((int)Fields.FchLocationSepultura, ApiService.Locations(), value?.FchLocationSepultura, "Sepultura");
+            gridModel.AddDropdown<ProfessionModel>((int)Fields.Profession, ApiService.Professions() ?? new(), value?.Profession, "Professió");
+            gridModel.AddDropdown<PersonModel>((int)Fields.Pare, ApiService.Males(), value?.Pare, "Pare");
+            gridModel.AddDropdown<PersonModel>((int)Fields.Mare, ApiService.Females(), value?.Mare, "Mare");
+            gridModel.AddDropdown<FirstnomModel>((int)Fields.Firstnom, ApiService.Firstnoms(value?.Sex)?.ToList() ?? new(), value?.Firstnom, "Nom de pila");
+            gridModel.AddDropdown<CognomModel>((int)Fields.Cognom, ApiService.Cognoms() ?? new(), value?.Cognom, "Cognom");
+
+            obs = value?.Obs;
+        }
+    }
+
+    private void AddNewRequest(PropertyGridModel.Item item)
+    {
+        editingField = (Fields)item.Field;
+        switch (editingField)
+        {
+            case Fields.Pare:
+                selectedItem = new PersonModel
+                    {
+                        Sex = PersonModel.Sexs.Male,
+                        Nom = ApiService.Cognom(Model?.Cognom)?.Nom?.ToUpper(),
+                        Cognom = value?.Cognom,
+                        FchLocationFrom = value?.FchLocationFrom?.AddYears(-PersonModel.AverageYearsFromParentToChild)
+                    };
+                break;
+            case Fields.Mare:
+                selectedItem = new PersonModel { 
+                    Sex = PersonModel.Sexs.Female,
+                        FchLocationFrom = value?.FchLocationFrom?.AddYears(-PersonModel.AverageYearsFromParentToChild)
+                };
+                break;
+            case Fields.Profession:
+                selectedItem = new ProfessionModel();
+                break;
+            case Fields.Firstnom:
+                selectedItem = new FirstnomModel();
+                break;
+            case Fields.Cognom:
+                selectedItem = new CognomModel();
+                break;
+            case Fields.FchLocationFrom:
+            case Fields.FchLocationTo:
+            case Fields.FchLocationSepultura:
+                selectedItem = new LocationModel();
+                break;
+        }
+    }
+
+    private void ReadFromForm()
+    {
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value.Sex = gridModel.GetValue<PersonModel.Sexs>((int)Fields.Sex);
+        value.FchLocationFrom = gridModel.GetFchLocation((int)Fields.FchLocationFrom);
+        value.FchLocationTo = gridModel.GetFchLocation((int)Fields.FchLocationTo);
+        value.FchLocationSepultura = gridModel.GetFchLocation((int)Fields.FchLocationSepultura);
+        // var fchLocationFrom = gridModel.GetFchLocation((int)Fields.FchLocationFrom);
+        // value.FchFrom = fchLocationFrom?.Fch;
+        // value.LocationFrom = fchLocationFrom?.Location?.Guid;
+        // var fchLocationTo = gridModel.GetFchLocation((int)Fields.FchLocationTo);
+        // value.FchTo = fchLocationTo?.Fch;
+        // value.LocationTo = fchLocationTo?.Location?.Guid;
+        // var fchLocationSepultura = gridModel.GetFchLocation((int)Fields.FchLocationSepultura);
+        // value.FchSepultura = fchLocationSepultura?.Fch;
+        // value.LocationSepultura = fchLocationSepultura?.Location?.Guid;
+        value.Profession = gridModel.GetModelGuid((int)Fields.Profession);
+        value.Pare = gridModel.GetModelGuid((int)Fields.Pare);
+        value.Mare = gridModel.GetModelGuid((int)Fields.Mare);
+        value.Firstnom = gridModel.GetModelGuid((int)Fields.Firstnom);
+        value.Cognom = gridModel.GetModelGuid((int)Fields.Cognom);
+        value.Obs = obs;
+    }
+
+    private async Task UpdateRequest()
+    {
+        ReadFromForm();
+        state = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value!);
+            await AfterUpdate.InvokeAsync(value); // Nullable object must have a value.
+            await CancelRequest.InvokeAsync(value);
+            ApiService.CurrentModels.Remove(value!);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+            ApiService.RemovePerson(value);
+            //ApiService.CurrentModels.Remove(value!);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        ApiService.CurrentModels.Remove(value!);
+        await CancelRequest.InvokeAsync(value);
+    }
+
+    async Task SelectPgItem(PropertyGridModel.Item item)
+    {
+        //await ItemSelected.InvokeAsync((IModel?)item.Value);
+        await ItemSelected.InvokeAsync(item.Value);
+    }
+
+    // void EnlaceSelectedHandler(EnlaceModel? args)
+    // {
+    //     selectedItem = args;
+    //     //selectedEnlace = args;
+    // }
+
+    // void PersonSelectedHandler(PersonModel? args)
+    // {
+    //     selectedPerson = args;
+    // }
+
+    // void AfterUpdateEnlaceHandler(EnlaceModel args)
+    // {
+    //     var enlaces = ApiService.Enlaces()!;
+    //     var enlace = enlaces.FirstOrDefault(x => x.Guid == args.Guid);
+    //     if (enlace == null)
+    //         enlace = enlaces.FirstOrDefault(x => x.Marit == args.Marit && x.Muller == args.Muller);
+    //     if (enlace == null)
+    //         enlaces.Add(args);
+    //     else
+    //     {
+    //         var idx = enlaces.IndexOf(enlace);
+    //         enlaces[idx] = enlace;
+    //     }
+    //     selectedTab = Tabs.Descendants;
+    //     //selectedEnlace = null;
+    //     selectedItem = null;
+    // }
+
+    async Task ItemSelectedHandler(object item)
+    {
+        await ItemSelected.InvokeAsync(item);
+    }
+
+    private void SelectItemUpdated(object args)
+    {
+        if(args is EnlaceModel)
+        {
+            var enlaces = ApiService.Enlaces()!;
+            var enlace = enlaces.FirstOrDefault(x => x.Guid == ((EnlaceModel)args).Guid);
+            if (enlace == null)
+                enlace = enlaces.FirstOrDefault(x => x.Marit == ((EnlaceModel)args).Marit && x.Muller == ((EnlaceModel)args).Muller);
+            if (enlace == null)
+                enlaces.Add(((EnlaceModel)args));
+            else
+            {
+                var idx = enlaces.IndexOf(enlace);
+                enlaces[idx] = enlace;
+            }
+            selectedTab = Tabs.Descendants;
+            selectedItem = null;
+        }
+        else
+        {
+            var item = gridModel!.Items.First(x => x.Field == (int)editingField!);
+            switch (editingField)
+            {
+                case Fields.Pare:
+                    value!.Pare = ((PersonModel)args).Guid;
+                    break;
+                case Fields.Mare:
+                    value!.Mare = ((PersonModel)args).Guid;
+                    break;
+                case Fields.Firstnom:
+                    value!.Firstnom = ((FirstnomModel)args).Guid;
+                    break;
+                case Fields.Cognom:
+                    value!.Cognom = ((CognomModel)args).Guid;
+                    break;
+                case Fields.Profession:
+                    value!.Profession = ((ProfessionModel)args).Guid;
+                    break;
+            }
+            selectedItem = null;
+            editingField = null;
+            state = DbState.IsDirty;
+            Refresca();
+        }
+    }
+
+    void SetDirty(PropertyGridModel.Item pgItem)
+    {
+        if (pgItem.Field == (int)Fields.Sex)
+        {
+            var firstnomItem = gridModel!.Items.First(x => x.Field == (int)Fields.Firstnom);
+            // List<FirstnomModel>? retval = null;
+            switch (pgItem.Value)
+            {
+                case PersonModel.Sexs.Male:
+                    firstnomItem.SetValues(ApiService.MaleFirstnomsOrDefault());
+                    break;
+                case PersonModel.Sexs.Female:
+                    firstnomItem.SetValues(ApiService.FemaleFirstnomsOrDefault());
+                    break;
+                default:
+                    firstnomItem.SetValues(ApiService.Firstnoms());
+                    break;
+            }
+        }
+        state = DbState.IsDirty;
+    }
+
+
+
+    void CancelModelEditor()
+    {
+        selectedItem = null;
+    }
+
+    // bool IsAncestor() => ApiService.RootAncestorGuids()?.Contains(Model!.Guid) ?? false;
+    // bool HasGrau() => grau!=null;
+
+    public void Dispose()
+    {
+        ReadFromForm();
+        ApiService.OnChange -= Refresca;
+    }
+
+    void AddEnlace()
+    {
+        selectedItem = new EnlaceModel
+            {
+                Marit = value!.Sex == PersonModel.Sexs.Male ? value.Guid : null,
+                Muller = value.Sex == PersonModel.Sexs.Female ? value.Guid : null
+            };
+    }
+
+    private async Task BuildBaptismeAsync()
+    {
+        isBuildingDoc = true;
+        isShowingDocBuilderContextMenu = false;
+        await Task.Yield();
+
+        ReadFromForm();
+        var doc = new DocModel();
+        var nom = ApiService.NormalizedPersonNom(value!);
+
+        doc.Tit = $"Baptisme de {nom}, {ApiService.FillOFillaDe(value)}";
+        doc.Cod = DocCodModel.Wellknown(DocCodModel.Wellknowns.Bateig)!.Guid;
+        doc.Fch = value!.FchLocationFrom?.Fch?.Fch1;
+        await ApiService.UpdateAsync(doc);
+
+        var rel = value.Sex == PersonModel.Sexs.Female ? DocRelModel.Wellknowns.Batejada : DocRelModel.Wellknowns.Batejat;
+        var target = DocTargetModel.Factory(doc, rel,true );
+        target.Target = value.Guid;
+        await ApiService.UpdateAsync(target);
+
+        if (value.Pare != null)
+        {
+            target = DocTargetModel.Factory(doc, DocRelModel.Wellknowns.Pare);
+            target.Target = value.Pare;
+            await ApiService.UpdateAsync(target);
+        }
+
+        if (value.Mare != null)
+        {
+            target = DocTargetModel.Factory(doc, DocRelModel.Wellknowns.Mare);
+            target.Target = value.Mare;
+            await ApiService.UpdateAsync(target);
+        }
+
+        isBuildingDoc = false;
+    }
+
+    private async Task BuildTestamentAsync()
+    {
+        isBuildingDoc = true;
+        isShowingDocBuilderContextMenu = false;
+        await Task.Yield();
+
+        ReadFromForm();
+        var doc = new DocModel();
+        var nom = ApiService.NormalizedPersonNom(value!);
+        doc.Tit = $"Testament de {nom}";
+
+        doc.Cod = DocCodModel.Wellknown(DocCodModel.Wellknowns.Testament)!.Guid;
+        doc.Fch = value!.FchLocationTo?.Year;
+        await ApiService.UpdateAsync(doc);
+
+        var rel = value.Sex == PersonModel.Sexs.Female ? DocRelModel.Wellknowns.Testadora : DocRelModel.Wellknowns.Testador;
+        var target = DocTargetModel.Factory(doc, rel, true);
+        target.Target = value.Guid;
+        await ApiService.UpdateAsync(target);
+
+        isBuildingDoc = false;
+    }
+
+    private async Task BuildObitAsync()
+    {
+        isBuildingDoc = true;
+        isShowingDocBuilderContextMenu = false;
+        await Task.Yield();
+
+        ReadFromForm();
+        var doc = new DocModel();
+        var nom = ApiService.NormalizedPersonNom(value!);
+        doc.Tit = $"Obit de {nom}";
+
+        doc.Cod = DocCodModel.Wellknown(DocCodModel.Wellknowns.RegistreParroquialObit)!.Guid;
+        doc.Fch = value!.FchLocationTo?.Fch?.Fch1;
+        await ApiService.UpdateAsync(doc);
+
+        var rel = DocRelModel.Wellknowns.Difunt;
+        var target = DocTargetModel.Factory(doc, rel, true, true);
+        target.Target = value.Guid;
+        await ApiService.UpdateAsync(target);
+
+        isBuildingDoc = false;
+    }
+
+    private async Task Gedcom()
+    {
+        isBuildingFile = true;
+        isShowingFileBuilderContextMenu = false;
+
+        await Task.Yield();
+
+        try
+        {
+            var gedcom = new Helpers.GedcomHelper(ApiService, value!);
+            var bytes = gedcom.Bytes();
+            var filename = "gedcom.ged";
+            var fileStream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream: fileStream);
+            await JSRuntime.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
+
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        isBuildingFile = false;
+    }
+
+}

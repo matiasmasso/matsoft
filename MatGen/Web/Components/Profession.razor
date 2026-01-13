@@ -1,0 +1,109 @@
+﻿@inject ApiService ApiService
+
+<div class="PageWrapper">
+    <h1>@Model?.Nom</h1>
+
+    <TabControl>
+        <TabPage Text="General">
+            @if (state == DbState.IsLoading)
+            {
+                <Loading></Loading>
+            }
+            else
+            {
+                <PropertyGrid Model="@gridModel"
+                              SetDirty="@(()=>state = DbState.IsDirty)"
+                              CanEdit="true"></PropertyGrid>
+
+                <div class="ButtonsBar">
+                    <ButtonsBar CanEdit="true"
+                                State="state"
+                                CanDelete="@(!(Model?.IsNew ?? false))"
+                                RequestToCancel="CancelRequestHandler"
+                                RequestToDelete="DeleteRequest"
+                                RequestToUpdate="UpdateRequest"></ButtonsBar>
+                </div>
+            }
+        </TabPage>
+
+        <TabPage Text="Persones">
+            <Persons Model="persons"></Persons>
+        </TabPage>
+
+    </TabControl>
+
+    <Error @bind-Exception="exception"></Error>
+</div>
+
+@code {
+    [Parameter] public ProfessionModel? Model { get; set; }
+    [Parameter] public EventCallback<Object> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<Object?> CancelRequest { get; set; }
+    [Parameter] public EventCallback<IModel> ItemSelected { get; set; }
+
+    private ProfessionModel? value;
+    private PropertyGridModel? gridModel;
+    private List<PersonModel>? persons;
+    private DbState state;
+    // private int selectedTab = 1;
+    private Exception? exception;
+
+    private enum Fields : int
+    {
+        Nom,
+        Llati,
+        Obs
+    }
+
+    protected override void OnParametersSet()
+    {
+        value = Model;
+        gridModel = new PropertyGridModel(value);
+        gridModel.AddString((int)Fields.Nom, value?.Nom, "Nom");
+        gridModel.AddString((int)Fields.Llati, value?.Llati, "Llati");
+        gridModel.AddString((int)Fields.Obs, value?.Obs, "Obs");
+
+        persons = ApiService.Persons()?.Where(x => x.Profession == Model?.Guid).ToList();
+    }
+
+    private async Task UpdateRequest()
+    {
+        value!.Nom = gridModel!.GetString((int)Fields.Nom);
+        value!.Llati = gridModel!.GetString((int)Fields.Llati);
+        value!.Obs = gridModel!.GetString((int)Fields.Obs);
+
+        state = DbState.IsUpdating;
+        try
+        {
+            await ApiService.UpdateAsync(value);
+            await AfterUpdate.InvokeAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private async Task DeleteRequest()
+    {
+        state = DbState.IsDeleting;
+        try
+        {
+            await ApiService.DeleteAsync(value);
+            await CancelRequest.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        state = DbState.StandBy;
+    }
+
+    private async Task CancelRequestHandler()
+    {
+        await CancelRequest.InvokeAsync(value);
+    }
+
+}

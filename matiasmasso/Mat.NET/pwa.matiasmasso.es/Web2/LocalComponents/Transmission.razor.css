@@ -1,0 +1,31 @@
+﻿.Details{
+    display:grid;
+    grid-template-columns: min-content 1fr;
+    grid-column-gap:10px;
+}
+
+.Downloads a{
+    display:block;
+}
+
+.Grid {
+    display: grid;
+    grid-template-columns: min-content min-content 1fr min-content min-content;
+    grid-column-gap: 10px;
+}
+
+.Item, .ColHeaders {
+    display:contents;
+}
+
+.Num {
+    white-space:nowrap;
+    display:flex;
+    justify-content:right;
+}
+
+.Nom {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}

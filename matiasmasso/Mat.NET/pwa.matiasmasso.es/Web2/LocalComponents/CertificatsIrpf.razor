@@ -1,0 +1,63 @@
+﻿@implements IDisposable
+
+@inject CultureService culture
+@inject CertificatsIrpfService certificatsIrpfService
+
+<div class="Wrapper">
+    @if (items == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <div class="Grid">
+            @foreach (var item in items ?? new())
+            {
+                <a class="Item" href="@item.PdfUrl()" target="_blank">
+                    <div class="Pdf">
+                        <Icon Id="Icon.Ids.Doc" Width="24px"></Icon>
+                    </div>
+                    <div class="Year">@item.Year.ToString()</div>
+                </a>
+                <div class="GridRowDivider"></div>
+            }
+        </div>
+    }
+</div>
+
+<Error @bind-Exception="exception"></Error>
+
+
+@code {
+    [Parameter] public ContactModel? Model { get; set; }
+
+    List<CertificatIrpfModel>? items;
+    private Exception? exception;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        certificatsIrpfService.OnChange += Refresca;
+    }
+
+    protected override void OnParametersSet()
+    {
+        Refresca(null);
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        exception = ex;
+        items = certificatsIrpfService.Values?
+        .Where(x => x.Contact == Model?.Guid)?
+        .OrderByDescending(x=>x.Year )
+        .ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+
+    public void Dispose()
+    {
+        certificatsIrpfService.OnChange -= Refresca;
+    }
+}

@@ -1,0 +1,61 @@
+﻿/* Style the buttons that are used to open and close the accordion panel */
+
+@media screen and (max-width:540px) {
+    .accordion_wrapper {
+        display: block;
+        margin-top:20px;
+    }
+    .pills {
+        display:none;
+    }
+}
+@media screen and (min-width:541px) {
+    .accordion_wrapper {
+        display: none
+    }
+    .pills {
+        display: block;
+    }
+}
+
+.accordion_dropdown {
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    text-align: left;
+    outline: none;
+    transition: 0.2s;
+    padding: 0 18px;
+    width: 100%;
+    height: 48px;
+    transition: max-height 0.8s ease-out;
+    overflow: hidden;
+    border: none;
+    border-top: 1px solid black;
+}
+
+    /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+    .accordion_dropdown.active, .accordion.dropdown:hover {
+        background-color: #ccc;
+    }
+
+    /* Style the accordion panel. Note: hidden by default */
+
+.accordion_content {
+    background-color: #fffcfc;
+    max-height: 0px;
+    border: none;
+}
+    .accordion_content:first-child {
+        padding: 10px 10px;
+    }
+
+.accordion_dropdown.rightIcon:after {
+    content: url('http://localhost:57889/Media/Img/Ico/expand-arrow-12.png'); /* '\02795' Unicode character for "plus" sign (+) */
+    float: right;
+    margin-left: 5px;
+}
+
+.accordion_dropdown.active:after {
+    content: url('http://localhost:57889/Media/Img/Ico/collapse-arrow-12.png'); /* \2796 Unicode character for "minus" sign (-) */
+}

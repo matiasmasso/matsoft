@@ -1,0 +1,17 @@
+﻿@page "/ConsumerBrand/{Guid:guid}"
+@inherits _PageBase
+
+<ConsumerBrand Guid="Guid" Cache="AppState.DefaultCache()"></ConsumerBrand>
+
+<AnchorNavigation ScrollRequest="ScrollToFragment"></AnchorNavigation>
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+
+    async Task ScrollToFragment(string elementId)
+    {
+        //allows Blazor anchor navigation within same page
+        await JSRuntime.InvokeVoidAsync("BlazorScrollToId", elementId);
+    }
+
+}

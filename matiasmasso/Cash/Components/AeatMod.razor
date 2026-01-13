@@ -1,0 +1,111 @@
+﻿@inject ApiService ApiService
+
+
+<div class="PageWrapper600">
+
+    <Title Value="Model de Hisenda" CloseRequest="CloseRequestHandler"></Title>
+
+    @if (value == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+
+        <PropertyGrid Model="propertyGrid"
+                      UpdateRequest="UpdateRequestHandler"
+                      CancelRequest="CloseRequestHandler"
+                      DeleteRequest="DeleteRequestHandler"
+                      UpdateState="updateState"
+                      DeleteState="deleteState">
+        </PropertyGrid>
+    }
+
+</div>
+
+<Error @bind-Value="exception"></Error>
+
+@code {
+    [Parameter] public AeatModel? Value { get; set; }
+    [Parameter] public EventCallback<AeatModel> AfterUpdate { get; set; }
+    [Parameter] public EventCallback<AeatModel> AfterDelete { get; set; }
+    [Parameter] public EventCallback CloseRequest { get; set; }
+
+    AeatModel? value;
+    PropertyGridModel? propertyGrid;
+    CrudButton.States updateState;
+    CrudButton.States deleteState;
+    Exception? exception;
+
+    enum Fields
+    {
+        Id,
+        Dsc
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            if (Value!.IsNew)
+                value = Value;
+            else
+                value = await ApiService.GetAsync<AeatModel>("Aeat", Value.Guid.ToString());
+            propertyGrid = PropertyGrid();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+    }
+
+    PropertyGridModel PropertyGrid()
+    {
+        var retval = new PropertyGridModel();
+        retval.AddString("Model", value?.Id);
+        retval.AddString("Descripció", value?.Dsc);
+        return retval;
+    }
+
+    async Task CloseRequestHandler()
+    {
+        await CloseRequest.InvokeAsync();
+    }
+
+
+    async Task UpdateRequestHandler()
+    {
+        updateState = CrudButton.States.Loading;
+        try
+        {
+            value!.Id = propertyGrid!.GetString((int)Fields.Id);
+            value.Dsc = propertyGrid.GetString((int)Fields.Dsc);
+            await ApiService.PostAsync<AeatModel, bool>(value, "Aeat");
+            await AfterUpdate.InvokeAsync(value);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        updateState = CrudButton.States.StandBy;
+    }
+
+    async Task DeleteRequestHandler()
+    {
+        deleteState = CrudButton.States.Loading;
+        try
+        {
+            await ApiService.GetAsync<bool>("Aeat/delete", value!.Guid.ToString());
+            await AfterDelete.InvokeAsync(value);
+            await CloseRequest.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        deleteState = CrudButton.States.StandBy;
+    }
+
+}
+

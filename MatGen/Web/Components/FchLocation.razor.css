@@ -1,0 +1,40 @@
+﻿.Wrapper {
+    display: flex;
+    gap: 10px;
+    padding: 0 10px;
+    align-items: center; /* vertically center child elements */
+    width:100%;
+}
+
+.Caption {
+    display:block;
+    width:100%;
+}
+
+.Fch {
+    width: 8em;
+    display: flex;
+    align-items: center; /* vertically center text inside */
+}
+
+.Qualifier {
+    width:50px;
+}
+
+.Location {
+    flex: 1; /* take remaining space */
+    width: 100%;
+    display: flex;
+    align-items: center; /* vertically center text inside */
+}
+
+/* Buttons: center content, consistent sizing, no duplicate rules */
+.Button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    max-height: 24px;
+    padding: 0 8px;
+    box-sizing: border-box;
+}

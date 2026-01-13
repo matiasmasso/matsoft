@@ -1,0 +1,140 @@
+﻿@inherits _Base
+
+<div class="Wrapper">
+    <h1>@Localizer("Profile")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+
+        <div class="EmailAddress">
+            <div class="Label">@Localizer("EmailAddress")</div>
+            <input type="text" disabled @bind-value="model.Nom" />
+        </div>
+        <div class="Nom">
+            <div class="Label">@Localizer("FirstName")</div>
+            <input type="text" @bind-value="model.Nom" @oninput="@(()=>{isDirty = true;})" />
+        </div>
+        <div class="Cognoms">
+            <div class="Label">@Localizer("Surnames")</div>
+            <input type="text" @bind-value="model.Cognoms" @oninput="@(()=>{isDirty = true;})" />
+        </div>
+        <div class="BirthYear">
+            <div class="Label">@Localizer("BirthYear")</div>
+            <input type="number" @bind-value="model.BirthYea" @oninput="@(()=>{isDirty = true;})" />
+        </div>
+        <div class="Residence">
+            <div class="Label">@Localizer("ZipCod")</div>
+            <UxLookupZip Value="model.Residence" AfterUpdate="@(()=>{isDirty = true;})"></UxLookupZip>
+        </div>
+
+        <div class="PwdReset">
+            <div class="Label">
+                <a href="#" @onclick="PwdReset" @onclick:preventDefault>
+                    @Localizer("Profile.ResetPwd")
+                    <img class="ResetPwdCaret @((isResettingPwd || isResetPwdSuccess) ? "Hidden" : "")" src="/img/fa/thin/caret-down.svg" />
+                    <img class="ResetPwdCaret @((isResettingPwd || isResetPwdSuccess) ? "" : "Hidden")" src="/img/fa/thin/caret-up.svg" />
+                </a>
+            </div>
+            <div class="@(isResettingPwd ? "":"Hidden")">
+@*                <Sisu @ref="signUp" Mode="Sisu.Modes.PwdReset" AfterUpdate="PwdResetSuccess"></Sisu>*@            </div>
+            <div class="@(isResetPwdSuccess ? "":"Hidden")">
+                <UxInfo Text="@Localizer("Profile.ResetPwdSuccess")" />
+            </div>
+        </div>
+
+
+
+        <div class="ButtonsBar @(isButtonsBarVisible? "Hidden" : "")">
+            <button class="Button ButtonDelete" @onclick="@(()=>{isDeleteRequested = true; })">@Localizer("Delete")</button>
+            <button class="Button ButtonCancel" @onclick="@(()=>base.navigationManager.NavigateTo("/"))">@Localizer("Cancel")</button>
+            <button class="Button ButtonOk" @onclick="Update" disabled="@(isDirty == false)">@Localizer("Update")</button>
+        </div>
+
+        <ModalDialog Visible="isDeleteRequested"
+                 Mode="ModalDialog.Modes.OkCancel"
+                 OnClose="DeleteRequest"
+                 Title="@Localizer("Profile.DeleteTitle")"
+                 Body="@Localizer("Profile.DeleteConfirmationRequest")" />
+
+        <div class="@(isDeleteSuccess ? "":"Hidden")">
+            <UxInfo Text="@Localizer("Profile.UserDeletedSuccess")" />
+        </div>
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+@code {
+    private UserModel model;
+    private bool isDirty;
+    private bool isSubmitting;
+    private bool isResettingPwd;
+    private bool isResetPwdSuccess;
+    private bool isDeleteRequested;
+    private bool isDeleteSuccess;
+    private bool isButtonsBarVisible;
+    private ProblemDetails? problemDetails;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await base.GetUser()!;
+        var apiResponse = await GetAsync<UserModel>("user", user.Guid.ToString());
+        model = apiResponse.Value;
+        problemDetails = apiResponse.ProblemDetails;
+    }
+
+    async Task Update()
+    {
+        isSubmitting = true;
+        var apiResponse = await PostAsync<UserModel, bool>(model, "user");
+        if (apiResponse.Success())
+        {
+            base.navigationManager.NavigateTo("/");
+        }
+        isSubmitting = false;
+    }
+
+    async Task PwdReset()
+    {
+        if (isResettingPwd)
+        {
+            isResettingPwd = false;
+            isButtonsBarVisible = true;
+        }
+        else
+        {
+            isResettingPwd = true;
+            isButtonsBarVisible = false;
+            //await signUp.SendVerificationCode();
+        }
+
+    }
+
+    void PwdResetSuccess()
+    {
+        isResettingPwd = false;
+        isResetPwdSuccess = true;
+        isButtonsBarVisible = true;
+    }
+
+    async void DeleteRequest(ModalDialog.Results result)
+    {
+        if (result == ModalDialog.Results.Ok)
+        {
+            //if (await GetAsync<bool>("user/setAsDeleted", base.UserGuid().ToString()))
+            //{
+            //    isDeleteRequested = false;
+            //    isDeleteSuccess = true;
+            //    isButtonsBarVisible = false;
+            //    DTO.Globals.Token = null;
+            //    AuthStateProvider.Logout();
+            //    AppState.ResetNav();
+            //}
+        }
+    }
+
+}

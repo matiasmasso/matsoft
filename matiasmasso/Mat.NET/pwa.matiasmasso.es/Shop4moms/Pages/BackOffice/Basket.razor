@@ -1,0 +1,210 @@
+﻿@page "/{LangSegment}/BackOffice/basket/{Guid:guid}"
+@page "/BackOffice/basket/{Guid:guid}"
+@inherits _PageBase
+@inject NavigationManager NavigationManager
+@inject AppStateService appState
+@inject CultureService culture
+<div class="Wrapper600">
+
+    @if (value == null)
+    {
+        <Loading></Loading>
+    }
+    else if (isShowingUser)
+    {
+        <User RequestToCancel="@(()=>isShowingUser=false)"
+          RequestToLogin="LoginRequest"
+          Value="value.User"></User>
+    }
+    else
+    {
+        <h1>@culture.Localize("Basket")</h1>
+
+        <PropertyGrid model="@gridModel"
+                  ItemClick="ItemClick"
+                  SetDirty="@(()=>isDirty=true)"
+                  CanEdit="true"></PropertyGrid>
+
+        <div class="Grid">
+            <div class="Item ColumnHeaders">
+                <div>&nbsp;</div>
+                <div class="Nom">&nbsp;</div>
+                <div class="Qty">@culture.Localize("Units")</div>
+                <div class="Price">@culture.Localize("Price")</div>
+                <div class="Amount">@culture.Localize("Amount")</div>
+                <div>&nbsp;</div>
+            </div>
+
+            @if (value.ShouldShowTotals())
+            {
+                <div class="Item Totals">
+                    <div>&nbsp;</div>
+                    <div class="Nom">
+                        @culture.Localize("Total")
+                    </div>
+                    <div class="Amount">@string.Format("{0:N2} €",value.Cash())</div>
+                </div>
+            }
+
+            @foreach (var item in value.Items ?? new())
+            {
+                var sku = skus?.FirstOrDefault(x => x.Guid == item.Sku);
+
+                <div class="Item">
+                    <div class="Thumbnail">
+                        <img alt="@SkuFullNom(sku)" src="@sku?.ThumbnailUrl()" />
+                    </div>
+                    <div class="Nom">
+                        <div class="Truncate">@CategoryNom(sku)</div>
+                        <div class="Truncate">@SkuNom(sku)</div>
+                    </div>
+                    <div class="Qty">@string.Format("{0:N0}",item.Qty)</div>
+                    <div class="Price">@string.Format("{0:N2} €",item.Price)</div>
+                    <div class="Amount">@string.Format("{0:N2} €",item.Amount())</div>
+                </div>
+            }
+
+            @if (value?.HasPorts() ?? false)
+            {
+                <div class="Item">
+                    <div class="Thumbnail">
+                        &nbsp;
+                    </div>
+                    <div class="Nom">
+                        @Tradueix("Gastos de envío","Despeses de enviament","Shipping charges","Custos de expedição")
+                    </div>
+                    <div class="Qty">
+                        <PlusMinusNum Value="1" CanEdit="false"></PlusMinusNum>
+                    </div>
+                    <div class="Price">@string.Format("{0:N2} €",5)</div>
+                    <div class="Amount">@string.Format("{0:N2} €",5)</div>
+                    <div class="Del">
+                        &nbsp;
+                    </div>
+                </div>
+            }
+
+        </div>
+
+    }
+
+    <Error ProblemDetails="problemDetails"></Error>
+</div>
+
+<PageTitle>
+    @base.Lang().Tradueix(
+    "4moms Backoffice | cesta de la compra",
+    "4moms Backoffice | cistella de la compra",
+    "4moms Backoffice | cesto de compras",
+    "4moms Backoffice | shopping basket"
+    )
+</PageTitle>
+
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+
+@code {
+    [Parameter] public Guid Guid { get; set; }
+
+    ShoppingBasketModel? value;
+    List<CountryModel>? countries;
+    List<ProductCategoryModel>? categories;
+    List<ProductSkuModel>? skus;
+    LangDTO? lang = null;
+    private PropertyGridModel? gridModel;
+    private DTO.Integracions.Vivace.Trace? trace;
+    private bool isDirty { get; set; }
+    private bool isUpdating { get; set; }
+    private bool isShowingUser;
+    ProblemDetails? problemDetails;
+
+    enum Fields
+    {
+        Fch,
+        OrderNum,
+        FullName,
+        FullAdr,
+        Email
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            lang = base.Lang();
+            value = await appState.GetAsync<ShoppingBasketModel>("ShoppingBasket", Guid.ToString());
+            categories = await appState.GetAsync<List<ProductCategoryModel>>("Shop4moms/Categories");
+            skus = await appState.GetAsync<List<ProductSkuModel>>("Shop4moms/Skus");
+
+            var model = new PropertyGridModel(value!);
+            model.AddFch((int)Fields.Fch, value?.Fch, "Data");
+            model.AddString((int)Fields.OrderNum, value?.OrderNum, "Comanda");
+            model.AddString((int)Fields.FullName, value?.Fullnom(), "Nom de pila");
+            model.AddString((int)Fields.FullAdr, FullAddress(), "Adreça");
+            model.AddEmail((int)Fields.Email, value?.User, "Email");
+            gridModel = model;
+
+        }
+        catch (Exception ex)
+        {
+            problemDetails = ProblemDetails.Factory(ex);
+        }
+    }
+
+    async Task CancelRequest()
+    {
+    }
+
+    async Task DeleteAsync()
+    {
+        var apiResponse = await HttpService.GetAsync<bool>(http, "ShoppingBasket", value!.Guid.ToString());
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+    }
+
+    async Task UpdateAsync()
+    {
+        var apiResponse = await HttpService.PostAsync<ShoppingBasketModel, bool>(http, value!, "ShoppingBasket");
+        if (apiResponse.Success())
+            CancelRequest();
+        else
+            problemDetails = apiResponse.ProblemDetails;
+
+    }
+
+    private void ItemClick(PropertyGridModel.Item e)
+    {
+        if (e.Field == (int)Fields.Email) isShowingUser = true;
+        //NavigationManager?.NavigateTo($"BackOffice/User/{((UserModel)e.Value).Guid.ToString()}");
+    }
+
+ 
+    public string FullAddress()
+    {
+        var retval = string.Format("{0}-{1}", value.Address, value.Location);
+        if (value.Country != CountryModel.Wellknown(CountryModel.Wellknowns.Spain)!.Guid)
+        {
+            retval = string.Format("{0} ({1})", retval, countries?.FirstOrDefault(x => x.Guid == value.Country)?.Nom?.Tradueix(lang) ?? "");
+        }
+        return retval;
+
+    }
+
+    private string? SkuFullNom(ProductSkuModel? sku) => string.Format("{0} {1}", CategoryNom(sku), SkuNom(sku));
+    private string? CategoryNom(ProductSkuModel? sku) => categories?.First(x => x.Guid == sku?.Category)?.Nom?.Tradueix(lang);
+    private string? SkuNom(ProductSkuModel? sku) => sku?.Nom?.Tradueix(lang);
+
+    async Task LoginRequest(UserModel user)
+    {
+        await ((CustomAuthenticationStateProvider)authStateProvider!).LoginAsync(user);
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+    }
+
+
+
+}

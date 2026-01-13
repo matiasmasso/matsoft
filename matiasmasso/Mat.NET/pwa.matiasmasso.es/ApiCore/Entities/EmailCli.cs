@@ -1,0 +1,29 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Api.Entities;
+
+/// <summary>
+/// Users per contact
+/// </summary>
+public partial class EmailCli
+{
+    /// <summary>
+    /// User. Foreign key for Email table
+    /// </summary>
+    public Guid EmailGuid { get; set; }
+
+    /// <summary>
+    /// Contact. Foreign key for CliGral table
+    /// </summary>
+    public Guid ContactGuid { get; set; }
+
+    /// <summary>
+    /// Sort order in which this user should appear within this contact
+    /// </summary>
+    public int Ord { get; set; }
+
+    public virtual CliGral Contact { get; set; } = null!;
+
+    public virtual Email Email { get; set; } = null!;
+}

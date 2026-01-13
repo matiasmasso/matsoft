@@ -1,0 +1,63 @@
+﻿    .pagewrapper {
+        min-width:320px;
+        max-width:510px;
+        margin:0 auto 20px;
+        text-align:left;
+        min-height:400px;
+    }
+
+    h2 {
+        font-size: 1.1em;
+        margin:0 0 20px 0;
+    }
+
+    .Epigraf {
+        color:gray;
+        font-size: 1.1em;
+        margin:20px 0 7px 0;
+    }
+
+    .Row {
+        margin-bottom:9px;
+            border:1px solid lightGray;
+    }
+
+    .Label {
+        display:inline-block;
+        vertical-align:top;
+        width:150px;
+        border-right:1px solid lightGray;
+        
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+    }
+
+
+    .CellText {
+            display:inline-block;
+            max-width:100%;
+            font-size:1.0em;
+            color:navy;
+            
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+    }
+
+    .CellAmt {
+            display:inline-block;
+            width:140px;
+            font-size:1.0em;
+            color:navy;
+            text-align:right;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+    }
+
+
+

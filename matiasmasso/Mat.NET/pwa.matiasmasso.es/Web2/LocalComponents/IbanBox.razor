@@ -1,0 +1,101 @@
+﻿@using System.Globalization
+@using System
+@implements IDisposable
+@inject IbansService ibansService
+
+@if (CanEdit && (IsEditing || string.IsNullOrEmpty(_value?.Ccc)))
+{
+    <input type="text"
+           value="@Value?.Ccc"
+           class="Ccc"
+           autofocus
+    @onchange="HandleOnChange"
+    @onblur="HandleOnBlur" />
+}
+else
+{
+    <div class="Display">
+        <div class="Ccc">
+            <a class="Ccc" href="#" @onclick="@(()=>{IsEditing = true;})" @onclick:preventDefault="true">
+                @ibansService.FormattedCcc(_value?.Ccc)
+            </a>
+
+            @if (ibansService.IsValidIban(_value?.Ccc))
+            {
+                <Icon Id="Icon.Ids.CheckGreenCircle"></Icon>
+            }
+
+        </div>
+        <div class="ButtonsBar">
+            @if (!string.IsNullOrEmpty(_value?.Ccc))
+            {
+                <CopyButton Value="@_value?.Ccc"></CopyButton>
+            }
+        </div>
+    </div>
+}
+
+
+
+@code {
+    [Parameter] public bool CanEdit { get; set; } = true;
+    [Parameter] public bool IsEditing { get; set; }
+
+    private IbanModel? _value;
+    [Parameter]
+    public IbanModel? Value
+    {
+        get
+        {
+            return _value;
+        }
+        set
+        {
+            if (!EqualityComparer<IbanModel?>.Default.Equals(value, _value))
+            {
+                _value = value;
+                if (ValueChanged.HasDelegate)
+                    ValueChanged.InvokeAsync(_value);
+
+                IsEditing = false;
+            }
+        }
+    }
+
+    [Parameter] public EventCallback<IbanModel?> ValueChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ibansService.OnChange += Refresca;
+    }
+
+    private void Refresca(Exception? ex = null)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleOnChange(ChangeEventArgs args)
+    {
+        try
+        {
+            Value = ibansService.Parse(args.Value?.ToString());
+            IsEditing = false;
+        }
+        catch
+        {
+            Value = default(IbanModel); // not sure you want this
+        }
+    }
+
+    private void HandleOnBlur(FocusEventArgs args)
+    {
+        IsEditing = false;
+    }
+
+    public void Dispose()
+    {
+        ibansService.OnChange -= Refresca;
+    }
+
+}

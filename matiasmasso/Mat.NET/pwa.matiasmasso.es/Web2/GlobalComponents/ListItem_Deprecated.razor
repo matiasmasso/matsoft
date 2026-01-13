@@ -1,0 +1,42 @@
+﻿<div class="Wrapper" @oncontextmenu="@(()=>isShowingMenu = !isShowingMenu)" @oncontextmenu:preventDefault>
+    <a href="#" class="Nom" @onclick="CaptionClick" @onclick:preventDefault>
+        @Caption
+    </a>
+    <a href="#" class="HideOnDesktop" @onclick="@(()=>isShowingMenu = !isShowingMenu)" @onclick:preventDefault>
+        <Icon Id="Icon.Ids.HEllipsis"></Icon>
+    </a>
+
+    @if(isShowingMenu)
+    {
+        if(Value is ProductBrandModel)
+        {
+            <ContextmenuBrand Model="(ProductBrandModel)Value" EditorRequest="EditorRequestHandler"></ContextmenuBrand>
+        } else if(Value is ProductCategoryModel)
+        {
+            <ContextmenuCategory Model="(ProductCategoryModel)Value" EditorRequest="EditorRequestHandler"></ContextmenuCategory>
+        }
+        else if (Value is ProductSkuModel)
+        {
+            <ContextmenuSku Model="(ProductSkuModel)Value" EditorRequest="EditorRequestHandler"></ContextmenuSku>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public object? Value { get; set; }
+    [Parameter] public EventCallback<object> OnClick { get; set; }
+    [Parameter] public EventCallback<ModelEditor.Breadcrumb> EditorRequest { get; set; }
+
+    private bool isShowingMenu;
+
+    async Task CaptionClick()
+    {
+        await OnClick.InvokeAsync(Value);
+    }
+
+    async Task EditorRequestHandler(ModelEditor.Breadcrumb breadcrumb)
+    {
+        await EditorRequest.InvokeAsync(breadcrumb);
+    }
+}

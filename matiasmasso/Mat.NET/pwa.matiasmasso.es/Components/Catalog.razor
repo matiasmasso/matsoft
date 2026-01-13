@@ -1,0 +1,114 @@
+﻿@inherits _Base
+
+<div class="PageWrapper600">
+
+    @if (Cache == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedSku != null)
+    {
+        <ProductSku Guid="selectedSku.Guid" RequestToCancel="@(()=>selectedSku=null)"></ProductSku>
+
+    }
+    else
+    {
+        <h1>@Localizer("Catalog")</h1>
+
+        <SearchBox @bind-Value="searchTerm"></SearchBox>
+
+        @if (!string.IsNullOrEmpty(searchTerm))
+        {
+            <div class="Grid">
+                @foreach (var item in MatchingSkus())
+                {
+                    <a href="#" class="Item Sku" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                        @(item.Nom?.Tradueix(base.Lang()) ?? "?")
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="Grid">
+                @if (selectedBrand == null)
+                {
+                        //show brands
+                    @foreach (var item in Brands())
+                    {
+                        <a href="#" class="Item Brand" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                            @(item.Nom?.Tradueix(base.Lang()) ?? "?")
+                        </a>
+                    }
+                }
+                else
+                {
+                    //show selectedBrand
+                    <a href="#" class="Item Brand Selected" @onclick="@(()=>ItemClick(selectedBrand))" @onclick:preventDefault>
+                        @selectedBrand.Nom
+                    </a>
+
+                    @if (selectedCategory == null)
+                    {
+                        //show categories
+                        foreach (var item in Categories())
+                        {
+                            <a href="#" class="Item Category" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                                @(item.Nom?.Tradueix(base.Lang()) ?? "?")
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        //show selected category
+                        <a href="#" class="Item Category Selected" @onclick="@(()=>ItemClick(selectedCategory))" @onclick:preventDefault>
+                            @(selectedCategory.Nom?.Tradueix(base.Lang()) ?? "?")
+                        </a>
+
+                        //show skus
+                        foreach (var item in Skus())
+                        {
+                            <a href="#" class="Item Sku" @onclick="@(()=>ItemClick(item))" @onclick:preventDefault>
+                                @(item.Nom?.Tradueix(base.Lang()) ?? "?")
+                            </a>
+                        }
+                    }
+
+                }
+
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    ProductBrandModel? selectedBrand;
+    ProductCategoryModel? selectedCategory;
+    ProductSkuModel? selectedSku;
+    string? searchTerm;
+
+    List<ProductBrandModel> Brands() => Cache!.Brands;
+    List<ProductCategoryModel> Categories() => Cache!.Categories.Where(x => x.Brand == selectedBrand!.Guid).ToList();
+    List<ProductSkuModel> Skus() => Cache!.Skus.Where(x => x.Category == selectedCategory!.Guid).ToList();
+    List<ProductSkuModel> MatchingSkus() => Cache!.Skus.Where(x => x.Matches(searchTerm)).ToList();
+
+    void ItemClick(ProductModel item)
+    {
+        switch (item.Src)
+        {
+            case ProductModel.SourceCods.Brand:
+                selectedSku = null;
+                selectedCategory = null;
+                selectedBrand = item == selectedBrand ? null : (ProductBrandModel)item;
+                break;
+            case ProductModel.SourceCods.Category:
+                selectedSku = null;
+                selectedCategory = item == selectedCategory ? null : (ProductCategoryModel)item;
+                break;
+            case ProductModel.SourceCods.Sku:
+                selectedSku = item == selectedSku ? null : (ProductSkuModel)item;
+                break;
+        }
+    }
+}

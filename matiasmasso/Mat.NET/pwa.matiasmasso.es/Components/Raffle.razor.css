@@ -1,0 +1,38 @@
+﻿.Wrapper {
+    max-width:600px;
+}
+
+.Banner {
+    margin-bottom:15px;
+}
+
+.Winner {
+    margin-top:15px;
+}
+
+    .Banner img , .Winner img {
+        width: 100%;
+    }
+
+    .Label {color:gray;}
+
+@media(min-width:600px) {
+    .Grid {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+    }
+
+    .Label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+@media(max-width:599px) {
+    .Label {
+        margin-top:10px;
+    }
+    .Value {
+        margin-bottom:10px;
+    }
+}

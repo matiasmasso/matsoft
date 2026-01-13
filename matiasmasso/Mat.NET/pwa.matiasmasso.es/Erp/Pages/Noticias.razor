@@ -1,0 +1,40 @@
+﻿@page "/News"
+@inherits _PageBase
+@inject HttpClient http
+
+
+<div class="Wrapper">
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <h1>@Localizer("News")</h1>
+
+        <div class="Gallery">
+            <NoticiasGallery Cache="cache"></NoticiasGallery>
+        </div>
+    }
+
+    <UxError ProblemDetails="problemDetails"></UxError>
+</div>
+
+@code {
+    List<NoticiaModel>? model;
+    ProblemDetails? problemDetails;
+    CacheDTO? cache;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        cache = await base.RequestCacheAsync(CacheDTO.Table.TableIds.Noticia);
+
+        var apiResponse = await HttpService.GetAsync<List<NoticiaModel>>(http, "Noticias");
+        if (apiResponse.Success())
+            model = apiResponse.Value;
+        else
+            problemDetails = apiResponse.ProblemDetails;
+    }
+
+
+}

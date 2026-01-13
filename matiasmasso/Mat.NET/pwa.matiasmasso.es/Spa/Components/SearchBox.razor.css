@@ -1,0 +1,11 @@
+﻿.Wrapper {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+input {
+        padding: 3px 0 2px 30px;
+        background-image: url("/img/Lupa-20.png");
+        background-repeat: no-repeat;
+        background-position: 5px center;
+    }

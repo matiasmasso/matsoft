@@ -1,0 +1,110 @@
+﻿@page "/Contracts"
+@inherits _ComponentBase
+
+<div class="Wrapper">
+    <h1>@base.Lang().Tradueix("Contratos","Contractes","Contracts")</h1>
+
+    @if (model == null)
+    {
+        <Loading></Loading>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm"></SearchBox>
+
+        <div class="ShowObsolets">
+@*            <Toggle Label="@base.Tradueix("Incluir vencidos","Inclou vençuts","Include outdated")"
+                @bind-Value="@IsShowingObsolets"></Toggle>*@
+            <UxToggle @bind-Value="@IsShowingObsolets"
+                  TrueText="DueIncluded"
+                  FalseText="DueNotIncluded"></UxToggle>
+        </div>
+
+        <div class="Summary">
+            @string.Format("S'han trobat {0} contractes, {1} vigents",model.Count(), model.Where(x => x.FchTo == null).Count())
+        </div>
+
+        <div class="Grid">
+
+            @if (selectedCodi == null)
+            {
+                foreach (var item in FilteredCodis())
+                {
+                    <a href="#" @onclick="() => CodiSelected(item)"
+                       @onclick:preventDefault="true"
+                       class="Codi Truncate @(CodiObsolet(item) ? "Obsoleto" : "")'">
+                       @item.Nom
+                    </a>
+                }
+            }
+            else
+            {
+                <a href="#" @onclick="() => CodiSelected(selectedCodi)" @onclick:preventDefault="true" class="Codi Truncate">
+                    @selectedCodi.Nom
+                </a>
+                foreach (var item in FilteredContracts())
+                {
+                    <a href="@item.DownloadUrl()" class='Item @(item.FchTo == null ? "Obsoleto" : "")'>
+                        <div class="Truncate">@item.Contact.FullNom</div>
+                        <div class="Truncate">@item.Nom</div>
+                        <div>@item.FchFrom</div>
+                    </a>
+                }
+            }
+        </div>
+    }
+
+
+
+</div>
+
+
+
+
+@code {
+    private List<ContractDTO>? model;
+    private ContractDTO.CodiClass? selectedCodi;
+    private string searchTerm = string.Empty;
+    private bool IsShowingObsolets = false;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+            model = await base.GetAsync<List<ContractDTO>>("Contracts");
+            StateHasChanged();
+        };
+    }
+
+
+    private async Task CodiSelected(ContractDTO.CodiClass codi)
+    {
+        selectedCodi = (codi == selectedCodi) ? null : codi;
+    }
+
+    private bool CodiObsolet(ContractDTO.CodiClass codi)
+    {
+        var items = model.Where(x => x.Codi.Guid.Equals(codi!.Guid)).ToList();
+        var retval = items.All(x => x.FchTo != null);
+        return retval;
+    }
+
+    private List<ContractDTO.CodiClass> FilteredCodis()
+    {
+        var items = model;
+        if (!IsShowingObsolets)
+            items = items.Where(x => x.FchTo == null).ToList();
+        var retval = items.GroupBy(x => x.Codi.Guid).Select(y => y.First().Codi).ToList();
+        return retval;
+    }
+
+    private List<ContractDTO> FilteredContracts()
+    {
+        var retval = model!.Where(x => x.Codi.Guid.Equals(selectedCodi!.Guid)).ToList();
+        if (!IsShowingObsolets)
+            retval = retval.Where(x => x.FchTo == null).ToList();
+        return retval;
+    }
+
+}

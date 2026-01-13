@@ -1,0 +1,47 @@
+﻿.Wrapper {
+    max-width:600px;
+}
+
+.Label{
+    background-color:#DDDDDD;
+}
+
+.Value, .Label {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    padding:4px 7px 2px 4px;
+}
+
+.ButtonsBar {
+    grid-column: 1/-1;
+    text-align: right;
+}
+
+/*---------------- mobile ----------------*/
+@media(max-width:599px) {
+
+    .Grid {
+        display:flex;
+        flex-direction:column;
+    }
+
+    .Label {
+        margin-top: 10px;
+    }
+
+
+}
+
+
+/*---------------- desktop ----------------*/
+@media(min-width:600px) {
+
+    .Grid {
+        display: grid;
+        grid-template-columns: min-content 1fr;
+        grid-column-gap: 10px;
+    }
+
+
+}

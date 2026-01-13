@@ -1,0 +1,59 @@
+﻿
+
+
+    .Item > * {
+        padding: 4px 0 2px;
+    }
+
+
+    @media(max-width:599px){
+        .Grid {
+            display:flex;
+            flex-direction:column;
+            /*overflow-x: scroll;*/
+        }
+        .Item {
+            display:block;
+            min-width: 0;
+        }
+
+            .Item > div {
+                white-space: nowrap;
+                overflow-x: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
+            }
+
+ 
+        .Usr {
+            color:gray;
+        }
+
+    }
+
+    @media(min-width:600px){
+        .Grid {
+            display: flex;
+            flex-direction:column;
+        }
+
+        .Item {
+            display: grid;
+            grid-template-columns: 50% 50%;
+            grid-column-gap: 0;
+        }
+
+        .Item {
+            border-bottom: 1px solid gray;
+        }
+
+        .Ref {
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+
+
+
+    }
+

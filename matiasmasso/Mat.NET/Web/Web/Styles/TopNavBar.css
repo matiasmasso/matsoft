@@ -1,0 +1,90 @@
+﻿nav ul ul {
+    display: none;
+}
+
+nav ul li:hover > ul {
+    display: block;
+}
+
+nav ul {
+    padding: 0px;
+    margin-top:0px;
+    list-style: none;
+    position: relative;
+}
+
+    nav ul:after {
+        content: "";
+        clear: both;
+        display: block;
+    }
+
+nav.horizontal ul li {
+    float: left;
+    border-right: 1px solid black;
+    z-index: 9;
+    white-space: nowrap;
+}
+
+nav.horizontal ul ul li {
+    float: none;
+    border-right: 1px solid lightgray;
+    border-left: 1px solid lightgray;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+
+    nav ul li:last-child {
+        border-right: 0;
+    }
+
+    nav ul ul li:last-child {
+        border-right: 1px solid lightgray;
+        border-bottom: 1px solid lightgray;
+    }
+
+        nav ul li:hover {
+            background: white;
+        }
+
+            nav ul li:hover a {
+                color: blue;
+                text-decoration:none;
+            }
+
+        nav ul li a {
+            display: block;
+            padding: 0px 5px;
+            color: black;
+            text-decoration: none;
+        }
+
+    nav ul ul {
+        background: white;
+        position: absolute;
+        top: 100%;
+    }
+
+        nav ul ul li {
+            float: none;
+            position: relative;
+            background: white;
+        }
+
+            nav ul ul li a {
+                padding: 0px 5px;
+                color: black;
+            }
+
+                nav ul ul li a:hover {
+                    text-decoration:none;
+                }
+
+    nav ul li.selected a, nav ul ul li.selected a {
+        color:red;
+    }
+
+localApi {
+    color: red;
+}

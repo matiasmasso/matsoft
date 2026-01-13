@@ -1,0 +1,143 @@
+﻿@page "/Catalog"
+@inherits _ComponentBase
+
+
+<div class="Wrapper">
+
+    @if (cache == null)
+    {
+        <Loading Message="@LoadingMessage()"></Loading>
+    }
+    else
+    {
+        <SearchBox @bind-Value="@searchTerm" ></SearchBox>
+
+        @if (selectedBrand != null)
+        {
+            <ProductItem Product="@selectedBrand" Selected="true" ItemClicked="@SelectedItemClicked"></ProductItem>
+        }
+        @if (selectedDept != null)
+        {
+            <ProductItem Product="@selectedDept" Selected="true" ItemClicked="@SelectedItemClicked"></ProductItem>
+        }
+        @if (selectedCategory != null)
+        {
+            <ProductItem Product="@selectedCategory" Selected="true" ItemClicked="@SelectedItemClicked"></ProductItem>
+        }
+
+
+        @foreach (var item in FilteredProducts())
+        {
+            <ProductItem Product="@item" ItemClicked="@ItemClicked"></ProductItem>
+        }
+    }
+
+
+
+</div>
+
+@code {
+    private ProductBrandModel? selectedBrand;
+    private ProductDeptModel? selectedDept;
+    private ProductCategoryModel? selectedCategory;
+    private List<ProductModel> products = new();
+    private CacheDTO? cache;
+    private string? searchTerm;
+    private bool IsShowingObsolets = false;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            cache = await base.Cache((int)EmpDTO.EmpIds.MatiasMasso);
+            products = cache.Brands.Select(x => (ProductModel)x).ToList();
+            StateHasChanged();
+        }
+    }
+    private List<ProductModel> FilteredProducts()
+    {
+        var retval = products;
+        if (IsShowingObsolets)
+            retval = products.
+            OrderBy(x => x.Obsoleto).ThenBy(y => y.Nom.Tradueix(base.Lang())).ToList();
+        else
+            retval = products.
+            Where(x => !x.Obsoleto).
+            OrderBy(y => y.Nom.Tradueix(base.Lang())).ToList();
+        return retval;
+    }
+
+    private void SelectedItemClicked(CatalogDTO.Product product)
+    {
+        DeSelectProduct(product);
+        StateHasChanged();
+    }
+
+    private void ItemClicked(CatalogDTO.Product product)
+    {
+        SelectProduct(product);
+        StateHasChanged();
+    }
+
+    private void SelectProduct(CatalogDTO.Product product)
+    {
+        if (product.Cod == CatalogDTO.Product.Cods.Brand)
+        {
+            selectedBrand = (CatalogDTO.Brand)product;
+            selectedDept = null;
+            selectedCategory = null;
+            products = cache.Depts.Where(x => x.Brand == selectedBrand.Guid).Select(x => (ProductModel)x).ToList();
+            if (products.Count == 0)
+            {
+                products = cache.Categories.Where(x => x.Brand == selectedBrand!.Guid).Select(x => (ProductModel)x).ToList();
+            }
+        }
+        else if (product.Cod == CatalogDTO.Product.Cods.Dept)
+        {
+            selectedDept = (CatalogDTO.Dept)product;
+            selectedCategory = null;
+            products = cache.Categories.
+                Where(x => x.Brand == selectedBrand!.Guid && x.Dept == selectedDept.Guid).
+                Select(x => (CatalogDTO.Product)x).ToList();
+        }
+        else if (product.Cod == CatalogDTO.Product.Cods.Category)
+        {
+            selectedCategory = (CatalogDTO.Category)product;
+            products = cache.Skus.
+                Where(x => x.Category == selectedCategory!.Guid).
+                Select(x => (ProductModel)x).ToList();
+        }
+    }
+
+    private void DeSelectProduct(CatalogDTO.Product product)
+    {
+        if (product.Cod == CatalogDTO.Product.Cods.Brand)
+        {
+            selectedBrand = null;
+            selectedDept = null;
+            selectedCategory = null;
+            products = cache.Brands.Select(x => (ProductModel)x).ToList();
+
+        }
+        else if (product.Cod == CatalogDTO.Product.Cods.Dept)
+        {
+            selectedDept = null;
+            selectedCategory = null;
+            products = cache.Depts.Where(x => x.Brand == selectedBrand!.Guid).Select(x => (ProductModel)x).ToList();
+        }
+        else if (product.Cod == CatalogDTO.Product.Cods.Category)
+        {
+            selectedCategory = null;
+            var brandCategories = cache.Categories.Where(x => x.Brand == selectedBrand!.Guid).ToList();
+            if (selectedDept != null)
+                brandCategories = brandCategories.Where(x => x.Dept == selectedDept!.Guid).ToList();
+            products = brandCategories.Select(x => (ProductModel)x).ToList();
+        }
+    }
+
+    private string LoadingMessage()
+    {
+        return base.Tradueix("Cargando catálogo", "carregant catàleg", "loading catalogue");
+    }
+
+}

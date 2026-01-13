@@ -1,0 +1,74 @@
+﻿@page "/test2"
+
+<a href="#" @onclick="@(()=>{isShowingSelector = true;})" @onclick:preventDefault="true" class="Input">
+    @Item.ToString()
+
+    <div class="Selector @(isShowingSelector ? "":"Hidden")">
+        <UxSelector Values="Items" Value="Item" ValueChanged="ValueChanged"></UxSelector>
+    </div>
+</a>
+
+
+
+<style>
+    .Input {
+        display: block;
+        margin: 50px;
+        position: relative;
+        border:1px solid black;
+    }
+
+    .Selector {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+
+</style>
+@code {
+
+    private List<Option> Items;
+    private Option Item;
+    private bool isShowingSelector = false;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Items = GetItems();
+        Item = Items[3];
+    }
+
+
+    private static List<Option> GetItems()
+    {
+        var retval = new List<Option>();
+        for (int i = 1; i < 13; i++)
+        {
+            var item = new Option
+                {
+                    Id = i
+                };
+            retval.Add(item);
+        }
+        return retval;
+    }
+
+    private void ValueChanged(object item)
+    {
+        isShowingSelector = false;
+        Item = (Option)item;
+    }
+
+    public class Option
+    {
+        public int Id { get; set; }
+        public override string ToString()
+        {
+            var lang = new LangDTO(LangDTO.Ids.CAT);
+            return lang.MonthAbr(Id);
+        }
+    }
+
+
+    }

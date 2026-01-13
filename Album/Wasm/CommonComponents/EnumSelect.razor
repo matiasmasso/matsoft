@@ -1,0 +1,19 @@
+﻿@typeparam TEnum
+
+<InputSelect TValue="TEnum"
+             Value="Value"
+             ValueChanged="ValueChanged"
+             ValueExpression="() => Value"
+             class="@Class">
+    @foreach (var option in Enum.GetValues(typeof(TEnum)))
+    {
+        <option value="@option">@option.ToString()</option>
+    }
+</InputSelect>
+
+@code {
+    [Parameter] public TEnum Value { get; set; }
+    [Parameter] public EventCallback<TEnum> ValueChanged { get; set; }
+    [Parameter] public string? Class { get; set; }
+}
+

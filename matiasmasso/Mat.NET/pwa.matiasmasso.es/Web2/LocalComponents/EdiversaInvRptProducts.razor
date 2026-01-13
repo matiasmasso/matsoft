@@ -1,0 +1,195 @@
+﻿@inject CultureService culture
+@inject ProductsService productsService
+
+<div class="Wrapper">
+
+
+    @if (brands == null)
+    {
+        <Loading></Loading>
+    }
+    else if (selectedFile == null)
+    {
+        <div class="Grid">
+            <div class="ColumnHeader Nom Truncate">@culture.Localize("Concept")</div>
+            <div class="ColumnHeader Stock">@(selectedBrand == null ? "" : culture.Localize("Stock"))</div>
+            <div class="ColumnHeader Amt">@culture.Localize("Amt")</div>
+
+            <div class="Brand Nom Truncate">@culture.Localize("Totals")</div>
+            <div class="Brand Stock">&nbsp;</div>
+            <div class="Brand Amt">
+                @string.Format("{0:N2} €",Amount())
+            </div>
+            <div class="GridRowDivider"></div>
+
+            @foreach (var brand in brands)
+            {
+                <a class="Brand Nom Truncate" href="#" @onclick="@(()=>BrandClick(brand))" @onclick:preventDefault>
+                    @brand.Caption
+                </a>
+                <div class="Brand Stock">&nbsp;</div>
+                <div class="Brand Amt">@string.Format("{0:N2} €",brand.Amount)</div>
+                <div class="GridRowDivider"></div>
+
+                @if (selectedBrand != null && brand.Guid == selectedBrand.Guid)
+                {
+                    @foreach (var category in Categories(brand.Guid))
+                    {
+                        <a href="#" class="Category Nom Truncate" @onclick="@(()=>CategoryClick(category))" @onclick:preventDefault>
+                            @category.Caption
+                        </a>
+                        <div class="Category Stock">@string.Format("{0:N0}",category.Stock)</div>
+                        <div class="Category Amt">@string.Format("{0:N2} €",category.Amount)</div>
+
+                        @if (selectedCategory != null && category.Guid == selectedCategory.Guid)
+                        {
+                            @foreach (var sku in Skus(category.Guid))
+                            {
+                                <a href="#" class="Sku Nom Truncate" @onclick="@(()=>SkuClick(sku))" @onclick:preventDefault>
+                                    @sku.Caption
+                                </a>
+                                <div class="Sku Stock">@string.Format("{0:N0}",sku.Stock)</div>
+                                <div class="Sku Amt">@string.Format("{0:N2} €",sku.Amount)</div>
+
+                                @if (selectedSku != null && sku.Guid == selectedSku.Guid)
+                                {
+                                    @foreach (var center in Centers(sku.Guid))
+                                    {
+                                        <a href="#" class="Center Nom Truncate" @onclick="@(()=>CenterClick(center))" @onclick:preventDefault>
+                                            @center.Caption
+                                        </a>
+                                        <div class="Center Stock">@string.Format("{0:N0}",center.Stock)</div>
+                                        <div class="Center Amt">@string.Format("{0:N2} €",center.Amount)</div>
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <EdiversaInvRptFile Model="selectedFile" CloseRequest="@(()=>selectedFile = null)"></EdiversaInvRptFile>
+
+    }
+
+</div>
+
+@code {
+    [Parameter] public List<Pages.EciStocks.XItem> Model { get; set; }
+    List<UxItem> brands;
+    private UxItem selectedBrand = null;
+    private UxItem selectedCategory = null;
+    private UxItem selectedSku = null;
+    private EdiversaInvrptModel selectedFile = null;
+
+
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (Model != null) brands = Brands();
+    }
+
+    private List<UxItem> Brands()
+    {
+        var retval = Model
+        .Where(x => x.Sku != null)
+        .GroupBy(x => productsService.Brand(x.Sku.Guid))
+        .Select(x => new UxItem
+            {
+                Guid = x.Key == null ? System.Guid.Empty : x.Key.Guid,
+                Caption = x.Key == null ? "[sin marca asignada]" : x.Key.Nom.Tradueix(culture.Lang()),
+                Amount = x.Sum(x => ((decimal?)x.Amt ?? (decimal)0)),
+            }).OrderBy(x => x.Caption).ToList();
+
+        return retval;
+    }
+
+    private List<UxItem> Categories(Guid brandGuid)
+    {
+        var retval = Model
+        .Where(x => x.Sku != null && productsService.Brand(x.Sku.Guid)?.Guid == brandGuid)
+        .GroupBy(x => productsService.Category(x.Sku.Category))
+        .Select(x => new UxItem
+            {
+                Guid = x.Key == null ? System.Guid.Empty : x.Key.Guid,
+                Caption = x.Key == null ? "[sin categoria asignada]" : x.Key.Nom.Tradueix(culture.Lang()),
+                Stock = x.Sum(x => ((int?)x.Qty ?? (int)0)),
+                Amount = x.Sum(x => ((decimal?)x.Amt ?? (decimal)0)),
+            }).OrderBy(x => x.Caption).ToList();
+
+        return retval;
+    }
+
+    private List<UxItem> Skus(Guid categoryGuid)
+    {
+        var retval = Model
+        .Where(x => x.Sku != null && x.Sku.Category == categoryGuid)
+        .GroupBy(x => x.Sku)
+        .Select(x => new UxItem
+            {
+                Guid = x.Key == null ? System.Guid.Empty : x.Key.Guid,
+                Caption = x.Key == null ? "[sku desconegut]" : x.Key.Nom.Tradueix(culture.Lang()),
+                Stock = x.Sum(x => ((int?)x.Qty ?? (int)0)),
+                Amount = x.Sum(x => ((decimal?)x.Amt ?? (decimal)0)),
+            }).OrderBy(x => x.Caption).ToList();
+
+        return retval;
+    }
+
+    private List<UxItem> Centers(Guid skuGuid)
+    {
+        var retval = Model
+        .Where(x => x.Sku != null && x.Sku.Guid == skuGuid)
+        .GroupBy(x => x.Center)
+        .Select(x => new UxItem
+            {
+                Guid = x.Key.Guid,
+                Caption = x.Key.Nom,
+                Stock = x.Sum(x => ((int?)x.Qty ?? (int)0)),
+                Amount = x.Sum(x => ((decimal?)x.Amt ?? (decimal)0)),
+                Tag = x.First().Tag
+            }).OrderBy(x => x.Caption).ToList();
+
+        return retval;
+    }
+
+
+    private void BrandClick(UxItem brand)
+    {
+        if (brand == selectedBrand) selectedBrand = null; else selectedBrand = brand;
+        selectedCategory = null;
+        selectedSku = null;
+    }
+
+    private void CategoryClick(UxItem category)
+    {
+        if (category == selectedCategory) selectedCategory = null; else selectedCategory = category;
+        selectedSku = null;
+    }
+
+    private void SkuClick(UxItem sku)
+    {
+        if (sku == selectedSku) selectedSku = null; else selectedSku = sku;
+    }
+
+    private void CenterClick(UxItem center)
+    {
+        selectedFile = (EdiversaInvrptModel)center.Tag;
+    }
+
+    private decimal Amount() => (decimal)Model.Sum(x => x.Amt);
+
+
+    private class UxItem
+    {
+        public string Caption { get; set; }
+        public Guid Guid { get; set; }
+        public int? Stock { get; set; }
+        public decimal? Amount { get; set; }
+        public object Tag { get; set; }
+    }
+}

@@ -1,0 +1,10 @@
+﻿@page "/CustomerDepts/{Customer:guid}"
+@page "/{LangSegment}/CustomerDepts/{Customer:guid}"
+
+<CustomerDepts Customer="@(new ContactModel(Customer))"></CustomerDepts>
+
+@code {
+    [Parameter] public Guid Customer { get; set; }
+    [Parameter] public string? LangSegment { get; set; }
+
+}

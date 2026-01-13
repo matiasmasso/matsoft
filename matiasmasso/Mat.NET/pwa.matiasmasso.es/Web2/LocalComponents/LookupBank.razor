@@ -1,0 +1,19 @@
+﻿<div class="Wrapper">
+    @if (isEditing)
+    {
+        
+    } else
+    {
+        <a href="#" @onclick:preventDefault>
+            @Model.NomComercial
+        </a>
+    }
+
+</div>
+
+@code {
+    [Parameter] public BankModel Model { get; set; }
+    private bool isEditing;
+
+
+}
