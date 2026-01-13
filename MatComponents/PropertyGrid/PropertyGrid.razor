@@ -1,0 +1,163 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using MatComponents.PropertyGrid.Internal
+@using MatComponents.PropertyGrid.Metadata
+
+@namespace MatComponents.PropertyGrid
+@inherits PropertyGridBase
+
+
+<EditForm EditContext="_editContext">
+    <CascadingValue Value="_editContext">
+        <div class="pg-container">
+
+            @if (_categories != null)
+            {
+                @foreach (var cat in _categories)
+                {
+                    <div class="pg-category-header" @onclick="() => Toggle(cat)">
+                        <span class="pg-category-arrow">
+                            @(cat.Expanded ? "▼" : "▶")
+                        </span>
+                        <span class="pg-category-title">@cat.Name</span>
+                    </div>
+
+                    @if (cat.Expanded)
+                    {
+                        @foreach (var meta in cat.Properties)
+                        {
+                            <div class="pg-row">
+                                <div class="pg-label">@meta.Label</div>
+                                <div class="pg-splitter"></div>
+
+                                <div class="pg-editor @(
+                                     _editContext.IsModified(meta.Field) &&
+                                     _editContext.GetValidationMessages(meta.Field).Any()
+                                         ? "invalid"
+                                         : ""
+                                        )">
+                                    @EditorFactory.Render(meta, Model, meta.Field)
+                                    <PgValidationMessage Field="meta.Field" />
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+            }
+
+        </div>
+    </CascadingValue>
+</EditForm>
+
+@code {
+    [Parameter] public object Model { get; set; }
+    [CascadingParameter] public EditContext CascadedEditContext { get; set; }
+
+
+    private EditContext _editContext;
+    private ValidationMessageStore _messages;
+    private List<CategoryModel> _categories;
+
+    protected override void OnParametersSet()
+    {
+        if (Model == null)
+            return;
+
+        if (CascadedEditContext != null)
+        {
+            // Som un PropertyGrid nested → reutilitzem l’EditContext existent
+            if (_editContext != CascadedEditContext)
+            {
+                _editContext = CascadedEditContext;
+                _messages = new ValidationMessageStore(_editContext);
+
+                _editContext.OnFieldChanged -= HandleFieldChanged;
+                _editContext.OnFieldChanged += HandleFieldChanged;
+
+                _editContext.OnValidationStateChanged -= OnValidationStateChanged;
+                _editContext.OnValidationStateChanged += OnValidationStateChanged;
+            }
+        }
+        else
+        {
+            // Som el root → creem l’EditContext
+            if (_editContext == null || _editContext.Model != Model)
+            {
+                _editContext = new EditContext(Model);
+                _messages = new ValidationMessageStore(_editContext);
+
+                _editContext.OnFieldChanged -= HandleFieldChanged;
+                _editContext.OnFieldChanged += HandleFieldChanged;
+
+                _editContext.OnValidationStateChanged -= OnValidationStateChanged;
+                _editContext.OnValidationStateChanged += OnValidationStateChanged;
+            }
+        }
+
+        LoadCategories();
+    }
+
+    private void HandleFieldChanged(object sender, FieldChangedEventArgs e)
+    {
+        var field = e.FieldIdentifier;
+
+        _messages.Clear(field);
+
+        var property = field.Model.GetType().GetProperty(field.FieldName);
+        var value = property?.GetValue(field.Model);
+
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(field.Model)
+        {
+            MemberName = field.FieldName
+        };
+
+        if (!Validator.TryValidateProperty(value, context, results))
+        {
+            foreach (var result in results)
+                _messages.Add(field, result.ErrorMessage);
+        }
+
+        _editContext.NotifyValidationStateChanged();
+    }
+
+    private void OnValidationStateChanged(object sender, ValidationStateChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void LoadCategories()
+    {
+        var props = ReflectionHelpers.GetMetadata(Model);
+
+        foreach (var meta in props)
+            meta.Field = new FieldIdentifier(Model, meta.Property.Name);
+
+        _categories = props
+            .GroupBy(p => p.Category)
+            .Select(g => new CategoryModel
+            {
+                Name = g.Key,
+                Expanded = true,
+                Properties = g.OrderBy(p => p.Order).ToList()
+            })
+            .OrderBy(c => c.Name)
+            .ToList();
+    }
+
+    private void Toggle(CategoryModel cat)
+        => cat.Expanded = !cat.Expanded;
+
+    public partial class PropertyGridBase : ComponentBase
+    {
+        [Parameter] public object? SelectedObject { get; set; }
+
+        protected List<PropertyCategory> Categories = new();
+
+        protected override void OnParametersSet()
+        {
+            Categories = PropertyGridBuilder.Build(SelectedObject);
+        }
+    }
+
+}

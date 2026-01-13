@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+
+<input class="pg-input"
+       type="number"
+       step="any"
+       value="@Value"
+       @oninput="OnInput" />
+
+@code {
+    [CascadingParameter] public EditContext EditContext { get; set; }
+
+    [Parameter] public decimal Value { get; set; }
+    [Parameter] public EventCallback<decimal> ValueChanged { get; set; }
+
+    [Parameter] public FieldIdentifier Field { get; set; }
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        if (decimal.TryParse(e.Value?.ToString(), out var newValue))
+        {
+            await ValueChanged.InvokeAsync(newValue);
+            EditContext?.NotifyFieldChanged(Field);
+        }
+    }
+}
