@@ -1,4 +1,4 @@
-﻿namespace MatComponents.PropertyGrid.Attributes
+﻿namespace MatComponents.PropertyGrid.Internal.Attributes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class PgDisplayAttribute : Attribute

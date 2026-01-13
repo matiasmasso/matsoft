@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="PropertyGrid\Editors\Custom\" />
+    <Folder Include="PropertyGrid\Internal\Editors\Custom\" />
   </ItemGroup>
 
 </Project>

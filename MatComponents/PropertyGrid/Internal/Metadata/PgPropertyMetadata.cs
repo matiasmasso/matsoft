@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
 using System.Reflection;
 
-namespace MatComponents.PropertyGrid.Metadata;
+namespace MatComponents.PropertyGrid.Internal.Metadata;
 
 public class PgPropertyMetadata
 {
