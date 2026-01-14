@@ -1,0 +1,30 @@
+﻿@page "/register"
+@inject AuthApiClient Auth
+@inject NavigationManager Nav
+
+<h3>Register</h3>
+
+<EditForm Model="_model" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText @bind-Value="_model.Email" placeholder="Email" />
+    <InputText @bind-Value="_model.Password" type="password" placeholder="Password" />
+    <button type="submit">Register</button>
+</EditForm>
+
+@code {
+    private RegisterModel _model = new();
+
+    public class RegisterModel
+    {
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
+    private async Task OnSubmit()
+    {
+        await Auth.RegisterAsync(_model.Email, _model.Password);
+        Nav.NavigateTo("/login");
+    }
+}

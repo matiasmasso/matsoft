@@ -298,7 +298,7 @@
         foreach (var item in FilteredItems() ?? new())
         {
             var row = sheet.AddRow();
-            row.AddInt(item.FraNum, item.Cca?.Docfile?.DownloadUrl());
+            row.AddInt(item.FraNum, ApiService.ApiUrl("cca/pdf",item.Cca!.Guid.ToString()));
             row.AddFch(item.Fch);
             row.AddCell(ApiService.GetContact(item.Customer)?.RaoSocial);
             row.AddEur(item.BaseImponible);

@@ -1,15 +1,15 @@
-﻿namespace Identity.Domain.Entities
+﻿namespace Identity.Domain.Entities;
+
+
+public class User
 {
-    public class User
-    {
-        public Guid UserId { get; set; }
-        public string Email { get; set; } = default!;
-        public string PasswordHash { get; set; } = default!;
-        public bool IsActive { get; set; } = true;
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+    public Guid UserId { get; set; }
+    public string Email { get; set; } = "";
+    public string PasswordHash { get; set; } = "";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
 
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-    }
-
+    public ICollection<UserRole> Roles { get; set; } = new List<UserRole>();
+    public ICollection<UserApp> Apps { get; set; } = new List<UserApp>();
 }
+

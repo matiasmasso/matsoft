@@ -13,7 +13,7 @@
             <LookupEmp Values="userEmps" Value="emp" ValueChanged="EmpChangedAsync"></LookupEmp>
             <LookupYears Values="years" Value="year" ValueChanged="YearChangedAsync"></LookupYears>
             <Dropdown Value="periode" Values="@periodes" ValueChanged="HandlePeriodeChanged"></Dropdown>
-            <ButtonExcel LoadRequest="LoadExcel" IsReady="@(ApiService.GetPgcCtas() != null)"></ButtonExcel>
+            <a href="@(ApiService.ApiUrl("bookfras/excel", ((int?)emp)?.ToString(),year?.ToString()))">Excel</a>
         </PageOptions>
 
         @if (missingValues != null)
@@ -261,35 +261,6 @@
             NIF = ApiService.GetContact(carrec.Contact)?.Nifs.FirstOrDefault()?.Value,
             Ivas = ivas
         };
-    }
-
-    void LoadExcel(DTO.Excel.Book book)
-    {
-        book.Filename = $"Llibre factures emeses.xlsx";
-        DTO.Excel.Sheet sheet = book.AddSheet("Llibre factures emeses");
-        sheet.FontSize = 8;
-        sheet.AddColumn("Data", DTO.Excel.Cell.NumberFormats.DDMMYY);
-        sheet.AddColumn("Factura");
-        sheet.AddColumn("Nom");
-        sheet.AddColumn("Nif");
-        sheet.AddColumn("Base", DTO.Excel.Cell.NumberFormats.Euro);
-        sheet.AddColumn("Tipo", DTO.Excel.Cell.NumberFormats.Euro);
-        sheet.AddColumn("Quota", DTO.Excel.Cell.NumberFormats.Euro);
-
-        foreach (var item in FilteredValues())
-        {
-            foreach (var iva in item.Ivas)
-            {
-                var row = sheet.AddRow();
-                row.AddFch(item.FraFch);
-                row.AddCell(item.FraNum);
-                row.AddCell(item.RaoSocial);
-                row.AddCell(item.NIF);
-                row.AddEur(iva.Base);
-                row.AddEur(iva.Tipo);
-                row.AddEur(iva.Quota);
-            }
-        }
     }
 
 }

@@ -1,0 +1,46 @@
+﻿@page "/login"
+@inject AuthApiClient Auth
+@inject CustomAuthStateProvider AuthState
+@inject NavigationManager Nav
+
+<h3>Login</h3>
+
+<EditForm Model="_model" OnValidSubmit="OnSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText @bind-Value="_model.Email" placeholder="Email" />
+    <InputText @bind-Value="_model.Password" type="password" placeholder="Password" />
+    <button type="submit">Login</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <p style="color:red">@_error</p>
+}
+
+@code {
+    private LoginModel _model = new();
+    private string? _error;
+
+    public class LoginModel
+    {
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
+    private async Task OnSubmit()
+    {
+        _error = null;
+        try
+        {
+            await Auth.LoginAsync(_model.Email, _model.Password);
+            await AuthState.MarkUserAsAuthenticated();
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+}

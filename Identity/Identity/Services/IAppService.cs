@@ -1,9 +1,5 @@
-﻿using Identity.Domain.Entities;
-
-namespace Identity.Services
+﻿public interface IAppService
 {
-    public interface IAppService { 
-        Task<IEnumerable<App>> GetAll(); 
-        Task<App?> GetById(Guid appId); 
-    }
+    Task<List<string>> GetAll();
+    Task AssignAppsToUser(Guid userId, List<string> apps);
 }

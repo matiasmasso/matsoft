@@ -1,8 +1,5 @@
-﻿namespace Identity.Services
+﻿public interface IRoleService
 {
-    public interface IRoleService
-    {
-        Task AssignRole(Guid userId, Guid appId, Guid roleId);
-    }
-
+    Task<List<string>> GetAll();
+    Task AssignRolesToUser(Guid userId, List<string> roles);
 }

@@ -1,0 +1,121 @@
+﻿@page "/users/{UserId:guid}"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<h3>Edit User</h3>
+
+@if (_loading)
+{
+    <p>Loading...</p>
+}
+else if (_user is null)
+{
+    <p>User not found.</p>
+}
+else
+{
+    <EditForm Model="_user" OnValidSubmit="SaveUser">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div>
+            <label>Email</label>
+            <InputText @bind-Value="_user.Email" />
+        </div>
+
+        <div>
+            <label>Roles</label>
+            @foreach (var role in _allRoles)
+            {
+                <div>
+                    <input type="checkbox"
+                           checked="@_userRoles.Contains(role)"
+                           @onchange="e => ToggleRole(role, e.Value)" />
+                    @role
+                </div>
+            }
+        </div>
+
+        <div>
+            <label>Apps</label>
+            @foreach (var app in _allApps)
+            {
+                <div>
+                    <input type="checkbox"
+                           checked="@_userApps.Contains(app)"
+                           @onchange="e => ToggleApp(app, e.Value)" />
+                    @app
+                </div>
+            }
+        </div>
+
+        <button type="submit">Save</button>
+        <button @onclick="Back">Back</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public Guid UserId { get; set; }
+
+    private bool _loading = true;
+
+    private UserDto? _user;
+    private List<string> _userRoles = new();
+    private List<string> _userApps = new();
+
+    private List<string> _allRoles = new();
+    private List<string> _allApps = new();
+
+    public class UserDto
+    {
+        public Guid UserId { get; set; }
+        public string Email { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _user = await Http.GetFromJsonAsync<UserDto>($"api/users/{UserId}");
+            _userRoles = await Http.GetFromJsonAsync<List<string>>($"api/users/{UserId}/roles") ?? new();
+            _userApps = await Http.GetFromJsonAsync<List<string>>($"api/users/{UserId}/apps") ?? new();
+
+            _allRoles = await Http.GetFromJsonAsync<List<string>>("api/roles") ?? new();
+            _allApps = await Http.GetFromJsonAsync<List<string>>("api/apps") ?? new();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ToggleRole(string role, object? isChecked)
+    {
+        if (isChecked is bool b && b)
+            _userRoles.Add(role);
+        else
+            _userRoles.Remove(role);
+    }
+
+    private void ToggleApp(string app, object? isChecked)
+    {
+        if (isChecked is bool b && b)
+            _userApps.Add(app);
+        else
+            _userApps.Remove(app);
+    }
+
+    private async Task SaveUser()
+    {
+        await Http.PutAsJsonAsync($"api/users/{UserId}", _user);
+        await Http.PutAsJsonAsync($"api/users/{UserId}/roles", _userRoles);
+        await Http.PutAsJsonAsync($"api/users/{UserId}/apps", _userApps);
+
+        Nav.NavigateTo("/users");
+    }
+
+    private void Back()
+    {
+        Nav.NavigateTo("/users");
+    }
+}

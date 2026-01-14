@@ -5,6 +5,7 @@ using Cash.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,10 @@ builder.Services.AddScoped<ApiService>();
 builder.Services.AddTransient<CookieService>();
 builder.Services.AddSingleton<CatalogService>();
 builder.Services.AddScoped<VerifactuService>();
+
+var culture = new CultureInfo("es-ES"); //to solve dot/comma decimal issues
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
 //----------
 
 builder.Services.AddAuthentication(options =>

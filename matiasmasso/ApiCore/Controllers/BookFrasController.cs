@@ -1,7 +1,9 @@
-﻿using Api.Services;
-using Microsoft.AspNetCore.Mvc;
-using Api.Extensions;
+﻿using Api.Extensions;
+using Api.Services;
+using Api.Services.Interfaces;
 using DTO;
+using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Utilities;
 
 namespace Api.Controllers
 {
@@ -42,6 +44,7 @@ namespace Api.Controllers
             return retval;
         }
 
+
         [HttpGet("delete/{guid}")]
         public IActionResult Delete(Guid guid)
         {
@@ -65,6 +68,13 @@ namespace Api.Controllers
     public class BookFrasController : ControllerBase
     {
 
+        private readonly IExcelBookfrasService _excelBookfrasService;
+
+        public BookFrasController(IExcelBookfrasService excelBookfrasService)
+        {
+            _excelBookfrasService = excelBookfrasService;
+        }
+
         [HttpGet("{emp}/{year}")]
         public IActionResult GetValues(int emp, int year)
         {
@@ -79,6 +89,19 @@ namespace Api.Controllers
                 retval = BadRequest(ex.ProblemDetails());
             }
             return retval;
+        }
+
+        [HttpGet("excel/{emp}/{year}")]
+        public IActionResult GetExcel(EmpModel.EmpIds emp, int year)
+        {
+            var request = HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}{request.PathBase}";
+
+            var bytes = _excelBookfrasService.Excel(emp, year, baseUrl);
+
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "IVA.xlsx");
         }
 
         [HttpGet("missingValues/{emp}/{year}")]

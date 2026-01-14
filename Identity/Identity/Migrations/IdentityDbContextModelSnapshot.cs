@@ -17,7 +17,7 @@ namespace Identity.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -28,71 +28,25 @@ namespace Identity.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("AppId");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.ToTable("Apps");
-                });
 
-            modelBuilder.Entity("Identity.Domain.Entities.AppRole", b =>
-                {
-                    b.Property<Guid>("AppRoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AppId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("AppRoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.HasIndex("AppId", "RoleId")
-                        .IsUnique();
-
-                    b.ToTable("AppRoles");
-                });
-
-            modelBuilder.Entity("Identity.Domain.Entities.RefreshToken", b =>
-                {
-                    b.Property<Guid>("TokenId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("TokenId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RefreshTokens");
+                    b.HasData(
+                        new
+                        {
+                            AppId = new Guid("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+                            Name = "Dashboard"
+                        },
+                        new
+                        {
+                            AppId = new Guid("dddddddd-dddd-dddd-dddd-dddddddddddd"),
+                            Name = "Reports"
+                        });
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.Role", b =>
@@ -101,17 +55,25 @@ namespace Identity.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RoleId");
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            RoleId = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                            Name = "User"
+                        });
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.User", b =>
@@ -125,69 +87,121 @@ namespace Identity.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
-
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Identity.Domain.Entities.UserApp", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AppId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "AppId");
+
+                    b.HasIndex("AppId");
+
+                    b.ToTable("UserApps");
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
                 {
-                    b.Property<Guid>("UserRoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AppRoleId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("UserRoleId");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasIndex("AppRoleId");
+                    b.HasKey("UserId", "RoleId");
 
-                    b.HasIndex("UserId", "AppRoleId")
-                        .IsUnique();
+                    b.HasIndex("RoleId");
 
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("Identity.Domain.Entities.AppRole", b =>
+            modelBuilder.Entity("RefreshToken", b =>
+                {
+                    b.Property<Guid>("RefreshTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Revoked")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RefreshTokenId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("Identity.Domain.Entities.UserApp", b =>
                 {
                     b.HasOne("Identity.Domain.Entities.App", "App")
-                        .WithMany("AppRoles")
+                        .WithMany()
                         .HasForeignKey("AppId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Identity.Domain.Entities.Role", "Role")
-                        .WithMany("AppRoles")
-                        .HasForeignKey("RoleId")
+                    b.HasOne("Identity.Domain.Entities.User", "User")
+                        .WithMany("Apps")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("App");
 
-                    b.Navigation("Role");
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Identity.Domain.Entities.RefreshToken", b =>
+            modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
+                {
+                    b.HasOne("Identity.Domain.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Identity.Domain.Entities.User", "User")
+                        .WithMany("Roles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RefreshToken", b =>
                 {
                     b.HasOne("Identity.Domain.Entities.User", "User")
                         .WithMany()
@@ -198,43 +212,11 @@ namespace Identity.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
-                {
-                    b.HasOne("Identity.Domain.Entities.AppRole", "AppRole")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("AppRoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Identity.Domain.Entities.User", "User")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AppRole");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Identity.Domain.Entities.App", b =>
-                {
-                    b.Navigation("AppRoles");
-                });
-
-            modelBuilder.Entity("Identity.Domain.Entities.AppRole", b =>
-                {
-                    b.Navigation("UserRoles");
-                });
-
-            modelBuilder.Entity("Identity.Domain.Entities.Role", b =>
-                {
-                    b.Navigation("AppRoles");
-                });
-
             modelBuilder.Entity("Identity.Domain.Entities.User", b =>
                 {
-                    b.Navigation("UserRoles");
+                    b.Navigation("Apps");
+
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }

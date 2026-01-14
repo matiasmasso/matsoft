@@ -1,45 +1,46 @@
 ﻿using Identity.Data;
 using Identity.Domain.Entities;
+using Identity.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace Identity.Services.Implementations
+public class RoleService : IRoleService
 {
-    public class RoleService : IRoleService
+    private readonly IdentityDbContext _db;
+
+    public RoleService(IdentityDbContext db)
     {
-        private readonly IdentityDbContext _db;
+        _db = db;
+    }
 
-        public RoleService(IdentityDbContext db)
+    public async Task<List<string>> GetAll()
+        => await _db.Roles.Select(r => r.Name).ToListAsync();
+
+    public async Task AssignRolesToUser(Guid userId, List<string> roles)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null) return;
+
+        // Remove old roles
+        var existing = _db.UserRoles.Where(ur => ur.UserId == userId);
+        _db.UserRoles.RemoveRange(existing);
+
+        // Add new roles
+        foreach (var roleName in roles)
         {
-            _db = db;
-        }
-
-        public async Task AssignRole(Guid userId, Guid appId, Guid roleId)
-        {
-            // Find the AppRole (role scoped to the app)
-            var appRole = await _db.AppRoles
-                .FirstOrDefaultAsync(ar => ar.AppId == appId && ar.RoleId == roleId);
-
-            if (appRole == null)
-                throw new Exception("AppRole not found for this app and role");
-
-            // Check if already assigned
-            var exists = await _db.UserRoles
-                .AnyAsync(ur => ur.UserId == userId && ur.AppRoleId == appRole.AppRoleId);
-
-            if (exists)
-                return;
-
-            // Assign role
-            var userRole = new UserRole
+            var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            if (role == null)
             {
-                UserRoleId = Guid.NewGuid(),
-                UserId = userId,
-                AppRoleId = appRole.AppRoleId
-            };
+                role = new Role { RoleId = Guid.NewGuid(), Name = roleName };
+                _db.Roles.Add(role);
+            }
 
-            _db.UserRoles.Add(userRole);
-            await _db.SaveChangesAsync();
+            _db.UserRoles.Add(new UserRole
+            {
+                UserId = userId,
+                RoleId = role.RoleId
+            });
         }
+
+        await _db.SaveChangesAsync();
     }
 }
-

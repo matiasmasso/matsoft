@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="Identity/Identity.Client/Identity.Client.csproj" />
   <Project Path="Identity/Identity/Identity.csproj" />
+  <Project Path="Identity/Wasm/Wasm.csproj" Id="ed8323e8-8f03-4960-9755-8c18dc7bd5c7" />
 </Solution>

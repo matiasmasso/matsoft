@@ -1,0 +1,128 @@
+﻿@page "/profile"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ITokenStorage TokenStorage
+@inject AuthApiClient Auth
+@inject NavigationManager Nav
+
+<h3>Your Profile</h3>
+
+@if (_loading)
+{
+    <p>Loading...</p>
+}
+else if (!_isAuthenticated)
+{
+    <p>You are not logged in.</p>
+    <button @onclick="LoginClick">Go to Login</button>
+}
+else
+{
+    <div class="profile-card">
+        <h4>Account Info</h4>
+        <p><strong>Email:</strong> @_email</p>
+
+        @if (_roles?.Any() == true)
+        {
+            <p><strong>Roles:</strong> @string.Join(", ", _roles)</p>
+        }
+
+        @if (_apps?.Any() == true)
+        {
+            <p><strong>Apps:</strong> @string.Join(", ", _apps)</p>
+        }
+
+        <hr />
+
+        <h4>Change Password</h4>
+        <EditForm Model="_passwordModel" OnValidSubmit="ChangePassword">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <InputText @bind-Value="_passwordModel.NewPassword" type="password" placeholder="New password" />
+            <button type="submit">Update Password</button>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(_passwordMessage))
+        {
+            <p>@_passwordMessage</p>
+        }
+
+        <hr />
+
+        <button class="logout-btn" @onclick="Logout">Log Out</button>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private bool _isAuthenticated = false;
+    private string? _email;
+    private IEnumerable<string>? _roles;
+    private IEnumerable<string>? _apps;
+
+    private PasswordModel _passwordModel = new();
+    private string? _passwordMessage;
+
+    public class PasswordModel
+    {
+        public string NewPassword { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        _isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+
+        if (_isAuthenticated)
+        {
+            _email = user.FindFirst("email")?.Value;
+            _roles = user.Claims.Where(c => c.Type == "role").Select(c => c.Value);
+            _apps = user.Claims.Where(c => c.Type == "app").Select(c => c.Value);
+        }
+
+        _loading = false;
+    }
+
+    private async Task ChangePassword()
+    {
+        if (string.IsNullOrWhiteSpace(_email))
+        {
+            _passwordMessage = "Unable to update password.";
+            return;
+        }
+
+        try
+        {
+            // Reuse your reset-password endpoint by sending yourself a reset link
+            var (_, refresh) = await TokenStorage.GetTokensAsync();
+
+            if (refresh is null)
+            {
+                _passwordMessage = "Session expired. Please log in again.";
+                return;
+            }
+
+            // This is optional — you can also create a dedicated "change password" endpoint
+            await Auth.ForgotPasswordAsync(_email, Nav.BaseUri.TrimEnd('/'));
+            _passwordMessage = "Password reset email sent.";
+        }
+        catch (Exception ex)
+        {
+            _passwordMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+
+    private void LoginClick()
+    {
+        Nav.NavigateTo("/login");
+    }
+}

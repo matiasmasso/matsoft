@@ -1,0 +1,15 @@
+﻿@page "/logout"
+@inject AuthApiClient Auth
+@inject CustomAuthStateProvider AuthState
+@inject NavigationManager Nav
+
+<h3>Logging out...</h3>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.LogoutAsync();
+        await AuthState.MarkUserAsLoggedOut();
+        Nav.NavigateTo("/");
+    }
+}

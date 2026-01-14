@@ -1,5 +1,4 @@
-﻿using Identity.Data;
-using Identity.Domain.Entities;
+﻿using Identity.Domain.Entities;
 using Identity.Infrastructure.Security;
 using Identity.Models.Auth;
 using Identity.Services;
@@ -59,6 +58,10 @@ namespace Identity.Controllers
             return Ok(new { user.UserId, user.Email });
         }
 
+        [HttpPost("registerTest")] public IActionResult RegisterTest() { 
+            Console.WriteLine("REGISTER HIT"); return Ok("hit"); 
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(Models.Auth.LoginRequest request)
         {
@@ -91,7 +94,7 @@ namespace Identity.Controllers
                 return Unauthorized("User not found");
 
             // Rotate token (invalidate old one)
-            await _refreshTokens.RevokeToken(storedToken.TokenId);
+            await _refreshTokens.RevokeToken(storedToken.RefreshTokenId);
 
             // Issue new refresh token
             var newRefreshToken = await _refreshTokens.CreateRefreshToken(user.UserId);
@@ -114,7 +117,7 @@ namespace Identity.Controllers
         {
             var token = await _refreshTokens.GetValidToken(request.RefreshToken);
             if (token != null)
-                await _refreshTokens.RevokeToken(token.TokenId);
+                await _refreshTokens.RevokeToken(token.RefreshTokenId);
 
             return Ok("Logged out");
         }
@@ -131,7 +134,7 @@ namespace Identity.Controllers
             var token = await _refreshTokens.CreateRefreshToken(user.UserId);
 
             // 3. Override expiration for password reset (1 hour)
-            await _refreshTokens.UpdateExpiration(token.TokenId, DateTime.UtcNow.AddHours(1));
+            await _refreshTokens.UpdateExpiration(token.RefreshTokenId, DateTime.UtcNow.AddHours(1));
 
             // 4. Encode token for URL
             var encodedToken = WebEncoders.Base64UrlEncode(
@@ -185,7 +188,7 @@ namespace Identity.Controllers
             await _users.Update(user);
 
             // 5. Revoke token using the service
-            await _refreshTokens.RevokeToken(token.TokenId);
+            await _refreshTokens.RevokeToken(token.RefreshTokenId);
 
             return Ok("Password has been reset successfully");
         }

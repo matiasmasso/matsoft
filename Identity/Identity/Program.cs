@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
@@ -18,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
-        policy.WithOrigins("https://localhost:7265")
+        policy.WithOrigins("https://localhost:7090","https://id.matiasmasso.es")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
@@ -71,6 +70,8 @@ builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<PasswordHasher>();
+builder.Services.AddScoped<RefreshTokenService>();
+
 
 builder.Services.AddControllers();
 
@@ -112,12 +113,14 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 
+
+
+
 var app = builder.Build();
 
 app.UseCors("AllowClient");
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -125,3 +128,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+

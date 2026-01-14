@@ -1,0 +1,64 @@
+﻿@page "/users"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<h3>Users</h3>
+
+@if (_loading)
+{
+    <p>Loading users...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in _users)
+            {
+                <tr>
+                    <td>@u.Email</td>
+                    <td>@u.CreatedAt.ToLocalTime()</td>
+                    <td>
+                        <button @onclick="() => EditUser(u.UserId)">Edit</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private bool _loading = true;
+    private List<UserDto> _users = new();
+
+    public class UserDto
+    {
+        public Guid UserId { get; set; }
+        public string Email { get; set; } = "";
+        public DateTime CreatedAt { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _users = await Http.GetFromJsonAsync<List<UserDto>>("api/users")
+                     ?? new List<UserDto>();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void EditUser(Guid id)
+    {
+        Nav.NavigateTo($"/users/{id}");
+    }
+}

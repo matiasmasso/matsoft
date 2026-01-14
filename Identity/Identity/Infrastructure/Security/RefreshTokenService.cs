@@ -18,7 +18,7 @@ namespace Identity.Infrastructure.Security
         {
             var token = new RefreshToken
             {
-                TokenId = Guid.NewGuid(),
+                RefreshTokenId = Guid.NewGuid(),
                 UserId = userId,
                 Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
                 CreatedAt = DateTime.UtcNow,

@@ -1,13 +1,15 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
-using Api.Shared;
-using Microsoft.AspNetCore.OutputCaching;
 using Api.Extensions;
+using Api.Services.Implementations;
+using Api.Services.Interfaces;
+using Api.Shared;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +70,9 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.CustomSchemaIds(type => type.ToString());
 });
+
+builder.Services.AddSingleton<IExcelBuilderService, ExcelBuilderService>();
+builder.Services.AddTransient<IExcelBookfrasService, ExcelBookfrasService>();
 
 var app = builder.Build();
 
