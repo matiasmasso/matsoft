@@ -1,5 +1,5 @@
 ﻿using Identity.Domain.Entities;
-using Identity.Models.DTOs;
+using Identity.DTO;
 
 namespace Identity.Services
 {

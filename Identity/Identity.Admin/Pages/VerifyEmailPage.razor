@@ -1,0 +1,87 @@
+﻿@page "/verify-email"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<h3>Email Verification</h3>
+
+@if (isLoading)
+{
+    <p>Verifying your email…</p>
+}
+else if (isSuccess)
+{
+    <div class="alert alert-success">
+        Your email has been successfully verified.
+    </div>
+
+    <button class="btn btn-primary" @onclick="GoToLogin">
+        Continue to Login
+    </button>
+}
+else
+{
+    <div class="alert alert-danger">
+        @errorMessage
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private bool isSuccess = false;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        var userIdString = query["userId"];
+        var token = query["token"];
+
+        if (string.IsNullOrWhiteSpace(userIdString) || string.IsNullOrWhiteSpace(token))
+        {
+            errorMessage = "Invalid verification link.";
+            isLoading = false;
+            return;
+        }
+
+        if (!Guid.TryParse(userIdString, out var userId))
+        {
+            errorMessage = "Invalid user identifier.";
+            isLoading = false;
+            return;
+        }
+
+        var request = new
+        {
+            UserId = userId,
+            Token = token
+        };
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("auth/confirm-email", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                isSuccess = true;
+            }
+            else
+            {
+                var details = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Verification failed: {details}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+
+        isLoading = false;
+    }
+
+    private void GoToLogin()
+    {
+        Nav.NavigateTo("/login");
+    }
+}

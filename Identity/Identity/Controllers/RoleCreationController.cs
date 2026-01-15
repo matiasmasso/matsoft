@@ -2,7 +2,7 @@
 
 using Identity.Data;
 using Identity.Domain.Entities;
-using Identity.Models.DTOs;
+using Identity.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

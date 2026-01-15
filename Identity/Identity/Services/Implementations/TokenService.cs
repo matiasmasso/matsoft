@@ -3,7 +3,7 @@
     using Identity.Configuration;
     using Identity.Data;
     using Identity.Domain.Entities;
-    using Identity.Models.DTOs;
+    using Identity.DTO;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Options;

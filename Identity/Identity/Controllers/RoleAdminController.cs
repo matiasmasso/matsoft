@@ -41,7 +41,7 @@ public class RoleAdminController : ControllerBase
     // PUT /roles/{roleId}
     // ------------------------------------------------------------
     [HttpPut("{roleId:guid}")]
-    public async Task<IActionResult> UpdateRole(Guid roleId, [FromBody] UpdateRoleRequest request)
+    public async Task<IActionResult> UpdateRole(Guid roleId, [FromBody] Identity.DTO.UpdateRoleRequest request)
     {
         var role = await _db.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
         if (role == null)

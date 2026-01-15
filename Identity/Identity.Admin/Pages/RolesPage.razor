@@ -1,0 +1,139 @@
+﻿@page "/roles"
+@inject ApplicationsApi AppsApi
+@inject RolesApi RolesApi
+
+<h3>Roles</h3>
+
+<select @onchange="OnAppChanged">
+    <option value="">-- Select application --</option>
+    @foreach (var app in applications)
+    {
+        <option value="@app.Id">@app.Name</option>
+    }
+</select>
+
+@if (selectedAppId != Guid.Empty)
+{
+    <h4>Roles for @selectedAppName</h4>
+
+    <button @onclick="ShowCreateRole">Create Role</button>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Scope</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var role in roles)
+            {
+                <tr>
+                    <td>@role.Name</td>
+                    <td>@(role.ApplicationId == null ? "Global" : "App")</td>
+                    <td>
+                        <button @onclick="() => EditRole(role)">Edit</button>
+                        <button @onclick="() => DeleteRole(role.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (showRoleEditor)
+{
+    <div class="modal">
+        <h4>@(editingRoleId == null ? "Create Role" : "Edit Role")</h4>
+        <input @bind="roleName" placeholder="Role name" />
+        <label>
+            <input type="checkbox" @bind="isGlobal" />
+            Global role
+        </label>
+        <button @onclick="SaveRole">Save</button>
+        <button @onclick="CancelEdit">Cancel</button>
+    </div>
+}
+
+@code {
+    private List<ApplicationDto> applications = [];
+    private List<RoleDto> roles = [];
+    private Guid selectedAppId;
+    private string? selectedAppName;
+
+    private bool showRoleEditor;
+    private Guid? editingRoleId;
+    private string roleName = string.Empty;
+    private bool isGlobal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        applications = await AppsApi.GetApplicationsAsync();
+    }
+
+    private async Task OnAppChanged(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value?.ToString(), out var appId))
+        {
+            selectedAppId = appId;
+            selectedAppName = applications.First(a => a.Id == appId).Name;
+            roles = await RolesApi.GetRolesForAppAsync(appId);
+        }
+    }
+
+    private void ShowCreateRole()
+    {
+        editingRoleId = null;
+        roleName = string.Empty;
+        isGlobal = false;
+        showRoleEditor = true;
+    }
+
+    private void EditRole(RoleDto role)
+    {
+        editingRoleId = role.Id;
+        roleName = role.Name;
+        isGlobal = role.ApplicationId == null;
+        showRoleEditor = true;
+    }
+
+    private async Task SaveRole()
+    {
+        if (string.IsNullOrWhiteSpace(roleName))
+            return;
+
+        if (editingRoleId == null)
+        {
+            var request = new CreateRoleRequest
+            {
+                Name = roleName,
+                ApplicationId = isGlobal ? null : selectedAppId
+            };
+            await RolesApi.CreateRoleAsync(request);
+        }
+        else
+        {
+            var request = new UpdateRoleRequest
+            {
+                Name = roleName,
+                ApplicationId = isGlobal ? null : selectedAppId
+            };
+            await RolesApi.UpdateRoleAsync(editingRoleId.Value, request);
+        }
+
+        showRoleEditor = false;
+        roles = await RolesApi.GetRolesForAppAsync(selectedAppId);
+    }
+
+    private void CancelEdit()
+    {
+        showRoleEditor = false;
+    }
+
+    private async Task DeleteRole(Guid roleId)
+    {
+        await RolesApi.DeleteRoleAsync(roleId);
+        roles = await RolesApi.GetRolesForAppAsync(selectedAppId);
+    }
+}

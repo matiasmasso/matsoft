@@ -15,6 +15,7 @@ namespace Identity.Data
         ApplicationUserToken>
     {
         public DbSet<Application> Applications { get; set; }
+        public DbSet<UserApplication> UserApplications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 

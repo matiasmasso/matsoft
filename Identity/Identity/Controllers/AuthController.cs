@@ -1,9 +1,9 @@
-﻿using Identity.Attributes;
+﻿using Identity.DTO;
 using Identity.Data;
 using Identity.Domain.Entities;
-using Identity.Models.DTOs;
 using Identity.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,7 +35,7 @@ public class AuthController : ControllerBase
     // POST /auth/login
     // ------------------------------------------------------------
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] Identity.DTO.LoginRequest request)
     {
         var user = await _userManager.Users
             .FirstOrDefaultAsync(u => u.UserName == request.UserName);
@@ -55,7 +55,7 @@ public class AuthController : ControllerBase
     // POST /auth/refresh
     // ------------------------------------------------------------
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+    public async Task<IActionResult> Refresh([FromBody] Identity.DTO.RefreshRequest request)
     {
         try
         {
@@ -77,4 +77,40 @@ public class AuthController : ControllerBase
         await _tokenService.RevokeRefreshTokenAsync(request.RefreshToken);
         return Ok(new { Message = "Refresh token revoked" });
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] Identity.DTO.ForgotPasswordRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null)
+            return Ok(); // Do NOT reveal user existence
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        var encodedToken = Uri.EscapeDataString(token);
+
+        var resetUrl = $"{request.ResetUrl}?userId={user.Id}&token={encodedToken}";
+
+        // TODO: Send email using your email service
+        // await _emailService.SendPasswordResetEmail(user.Email, resetUrl);
+
+        return Ok();
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] Identity.DTO.ResetPasswordRequest request)
+    {
+        var user = await _userManager.FindByIdAsync(request.UserId.ToString());
+        if (user == null)
+            return BadRequest("Invalid user");
+
+        var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+
+        return Ok("Password reset successful");
+    }
+
+
 }

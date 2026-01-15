@@ -1,5 +1,8 @@
 ﻿using Identity.Data;
+using Identity.Domain.Entities;
+using Identity.DTO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Controllers;
 

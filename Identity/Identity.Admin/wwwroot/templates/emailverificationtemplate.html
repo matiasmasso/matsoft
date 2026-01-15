@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+
+<!--var html = template .Replace("{{verification_link}}", verificationUrl) .Replace("{{expiration_minutes}}", "60") .Replace("{{identity_provider_name}}", "Matias Identity Server");-->
+
+<html lang="en" style="margin:0; padding:0;">
+<body style="margin:0; padding:0; background:#f5f6f7; font-family:Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6f7; padding:40px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:#1a73e8; padding:20px; color:#ffffff; font-size:22px; font-weight:bold;">
+                            Verify Your Email Address
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:30px; color:#333333; font-size:15px; line-height:1.6;">
+                            <p>Hello,</p>
+                            <p>This request was initiated from <strong>{{application_name}}</strong>.</p>
+
+                            <p>Thank you for creating an account with <strong>{{identity_provider_name}}</strong>.</p>
+
+                            <p>To complete your registration and secure your account, please verify your email address by clicking the button below:</p>
+
+                            <p style="text-align:center; margin:30px 0;">
+                                <a href="{{verification_link}}"
+                                   style="background:#1a73e8; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:4px; font-size:16px;">
+                                    Verify Email
+                                </a>
+                            </p>
+
+                            <p>If the button doesn’t work, copy and paste this link into your browser:</p>
+
+                            <p style="word-break:break-all; color:#1a73e8;">
+                                {{verification_link}}
+                            </p>
+
+                            <p>This verification link will expire in {{expiration_minutes}} minutes.</p>
+
+                            <p>If you did not create an account, you can safely ignore this message.</p>
+
+                            <p>
+                                Best regards,<br>
+                                <strong>{{identity_provider_name}}</strong>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background:#f0f0f0; padding:15px; text-align:center; font-size:12px; color:#777777;">
+                            This is an automated message. Please do not reply.
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
