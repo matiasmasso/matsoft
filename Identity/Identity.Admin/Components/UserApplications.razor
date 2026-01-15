@@ -1,0 +1,70 @@
+﻿<ul class="list-group">
+    @foreach (var app in Applications)
+    {
+        var enrolled = Values.Contains(app.Id);
+        var isSelected = SelectedAppId == app.Id;
+
+        <li class="list-group-item d-flex justify-content-between align-items-center"
+            style="cursor:pointer"
+            @onclick="() => Select(app.Id)">
+
+            <div>
+                <strong>@app.Name</strong>
+                @if (isSelected)
+                {
+                    <span class="badge bg-primary ms-2">Selected</span>
+                }
+            </div>
+
+            <input type="checkbox"
+                   checked="@enrolled"
+                   disabled="@isBusy"
+                   @onclick:stopPropagation="true"
+                   @onchange="e => Toggle(app.Id, e)" />
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter] public UserDto User { get; set; } = default!;
+    [Parameter] public List<ApplicationDto> Applications { get; set; } = default!;
+    [Parameter] public HashSet<Guid> Values { get; set; } = default!;
+    [Parameter] public Guid SelectedAppId { get; set; }
+
+    [Parameter] public UsersApi UsersApi { get; set; } = default!;
+    [Parameter] public EventCallback<Guid> OnAppSelected { get; set; }
+
+    private bool isBusy = false;
+
+    private async Task Toggle(Guid appId, ChangeEventArgs e)
+    {
+        if (isBusy)
+            return;
+
+        isBusy = true;
+
+        bool enroll = (bool)e.Value!;
+
+        if (enroll)
+        {
+            await UsersApi.EnrollUserAsync(User.Id, appId);
+            Values.Add(appId);
+        }
+        else
+        {
+            await UsersApi.UnenrollUserAsync(User.Id, appId);
+            Values.Remove(appId);
+        }
+
+        // If the toggled app is currently selected, reload roles
+        if (SelectedAppId == appId)
+            await OnAppSelected.InvokeAsync(appId);
+
+        isBusy = false;
+    }
+
+    private async Task Select(Guid appId)
+    {
+        await OnAppSelected.InvokeAsync(appId);
+    }
+}

@@ -19,8 +19,6 @@ public class RolesController : ControllerBase
 
     // ------------------------------------------------------------
     // GET /roles/app/{appId}
-    // Returns roles for a specific application
-    // Guid.Empty → global roles (ApplicationId == null)
     // ------------------------------------------------------------
     [HttpGet("app/{appId:guid}")]
     public async Task<ActionResult<List<RoleDto>>> GetRolesForApp(Guid appId)
@@ -28,13 +26,9 @@ public class RolesController : ControllerBase
         IQueryable<ApplicationRole> query = _db.Roles;
 
         if (appId == Guid.Empty)
-        {
             query = query.Where(r => r.ApplicationId == null);
-        }
         else
-        {
             query = query.Where(r => r.ApplicationId == appId);
-        }
 
         var roles = await query
             .Select(r => new RoleDto
@@ -50,11 +44,21 @@ public class RolesController : ControllerBase
 
     // ------------------------------------------------------------
     // POST /roles
-    // Create a new role
     // ------------------------------------------------------------
     [HttpPost]
-    public async Task<ActionResult> CreateRole(CreateRoleRequest request)
+    public async Task<ActionResult<RoleDto>> CreateRole(CreateRoleRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest("Role name is required");
+
+        bool exists = await _db.Roles.AnyAsync(r =>
+            r.Name == request.Name &&
+            r.ApplicationId == request.ApplicationId
+        );
+
+        if (exists)
+            return BadRequest("Role already exists for this application");
+
         var role = new ApplicationRole
         {
             Id = Guid.NewGuid(),
@@ -66,13 +70,20 @@ public class RolesController : ControllerBase
         _db.Roles.Add(role);
         await _db.SaveChangesAsync();
 
+        var dto = new RoleDto
+        {
+            Id = role.Id,
+            Name = role.Name,
+            ApplicationId = role.ApplicationId
+        };
+
         return CreatedAtAction(nameof(GetRolesForApp),
-            new { appId = request.ApplicationId ?? Guid.Empty }, null);
+            new { appId = request.ApplicationId ?? Guid.Empty },
+            dto);
     }
 
     // ------------------------------------------------------------
     // PUT /roles/{roleId}
-    // Update an existing role
     // ------------------------------------------------------------
     [HttpPut("{roleId:guid}")]
     public async Task<ActionResult> UpdateRole(Guid roleId, UpdateRoleRequest request)
@@ -80,6 +91,18 @@ public class RolesController : ControllerBase
         var role = await _db.Roles.FindAsync(roleId);
         if (role == null)
             return NotFound();
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest("Role name is required");
+
+        bool exists = await _db.Roles.AnyAsync(r =>
+            r.Id != roleId &&
+            r.Name == request.Name &&
+            r.ApplicationId == request.ApplicationId
+        );
+
+        if (exists)
+            return BadRequest("Another role with this name already exists");
 
         role.Name = request.Name;
         role.NormalizedName = request.Name.ToUpperInvariant();
@@ -91,7 +114,6 @@ public class RolesController : ControllerBase
 
     // ------------------------------------------------------------
     // DELETE /roles/{roleId}
-    // Delete a role
     // ------------------------------------------------------------
     [HttpDelete("{roleId:guid}")]
     public async Task<ActionResult> DeleteRole(Guid roleId)

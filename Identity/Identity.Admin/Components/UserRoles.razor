@@ -1,0 +1,56 @@
+﻿@if (Roles == null)
+{
+    <p>Select an application to manage roles.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var role in Roles)
+        {
+            var assigned = Values.Contains(role.Id);
+
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                @role.Name
+
+                <input type="checkbox"
+                       checked="@assigned"
+                       disabled="@isBusy"
+                       @onchange="e => Toggle(role.Id, e)" />
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter] public UserDto User { get; set; } = default!;
+    [Parameter] public Guid AppId { get; set; }
+    [Parameter] public List<RoleDto>? Roles { get; set; }
+    [Parameter] public HashSet<Guid> Values { get; set; } = default!;
+
+    [Parameter] public UsersApi UsersApi { get; set; } = default!;
+
+    private bool isBusy = false;
+
+    private async Task Toggle(Guid roleId, ChangeEventArgs e)
+    {
+        if (isBusy)
+            return;
+
+        isBusy = true;
+
+        bool assign = (bool)e.Value!;
+
+        if (assign)
+        {
+            await UsersApi.AssignRoleAsync(User.Id, roleId, AppId);
+            Values.Add(roleId);
+        }
+        else
+        {
+            await UsersApi.RemoveRoleAsync(User.Id, roleId, AppId);
+            Values.Remove(roleId);
+        }
+
+        isBusy = false;
+    }
+}

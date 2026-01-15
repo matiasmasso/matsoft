@@ -1,0 +1,30 @@
+﻿<EditForm Model="model" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="mb-2">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="model.Email" />
+    </div>
+
+    <div class="mb-2">
+        <label>Username</label>
+        <InputText class="form-control" @bind-Value="model.UserName" />
+    </div>
+
+    <div class="mb-2">
+        <label>Password</label>
+        <InputText type="password" class="form-control" @bind-Value="model.Password" />
+    </div>
+
+    <button class="btn btn-primary">Save</button>
+    <button class="btn btn-secondary ms-2" @onclick="OnCancel">Cancel</button>
+</EditForm>
+
+@code {
+    [Parameter] public EventCallback<CreateUserRequest> OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private CreateUserRequest model = new();
+
+    private async Task HandleSubmit() => await OnSubmit.InvokeAsync(model);
+}

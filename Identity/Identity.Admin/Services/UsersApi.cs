@@ -23,7 +23,6 @@ public class UsersApi
 
     // ------------------------------------------------------------
     // GET /users/{id}
-    // Returns user details including applications + roles
     // ------------------------------------------------------------
     public async Task<UserDetailsDto> GetUserDetailsAsync(Guid userId)
     {
@@ -32,17 +31,50 @@ public class UsersApi
     }
 
     // ------------------------------------------------------------
-    // POST /users/{id}/activate
+    // POST /users/create
     // ------------------------------------------------------------
-    public async Task ActivateUserAsync(Guid userId, bool isActive)
+    public async Task<UserDto> CreateUserAsync(CreateUserRequest request)
     {
-        var request = new { IsActive = isActive };
-        var response = await _http.PostAsJsonAsync($"users/{userId}/activate", request);
+        var response = await _http.PostAsJsonAsync("users/create", request);
+        response.EnsureSuccessStatusCode();
+
+        // Controller returns: { message, id }
+        var result = await response.Content.ReadFromJsonAsync<CreateUserResponse>();
+        return new UserDto
+        {
+            Id = result!.Id,
+            Email = request.Email,
+            UserName = request.UserName,
+            IsActive = true
+        };
+    }
+
+    // ------------------------------------------------------------
+    // DELETE /users/{id}
+    // ------------------------------------------------------------
+    public async Task DeleteUserAsync(Guid userId)
+    {
+        var response = await _http.DeleteAsync($"users/{userId}");
         response.EnsureSuccessStatusCode();
     }
 
     // ------------------------------------------------------------
-    // POST /users/{id}/enroll
+    // POST /users/activate
+    // ------------------------------------------------------------
+    public async Task ActivateUserAsync(Guid userId, bool isActive)
+    {
+        var request = new ActivateUserRequest
+        {
+            UserId = userId,
+            IsActive = isActive
+        };
+
+        var response = await _http.PostAsJsonAsync("users/activate", request);
+        response.EnsureSuccessStatusCode();
+    }
+
+    // ------------------------------------------------------------
+    // POST /users/enroll
     // ------------------------------------------------------------
     public async Task EnrollUserAsync(Guid userId, Guid appId)
     {
@@ -57,7 +89,7 @@ public class UsersApi
     }
 
     // ------------------------------------------------------------
-    // POST /users/{id}/unenroll
+    // POST /users/unenroll
     // ------------------------------------------------------------
     public async Task UnenrollUserAsync(Guid userId, Guid appId)
     {
@@ -73,7 +105,6 @@ public class UsersApi
 
     // ------------------------------------------------------------
     // GET /users/{id}/roles/{appId}
-    // Returns list of role IDs assigned to the user for that app
     // ------------------------------------------------------------
     public async Task<List<Guid>> GetUserRolesAsync(Guid userId, Guid appId)
     {
@@ -83,7 +114,7 @@ public class UsersApi
     }
 
     // ------------------------------------------------------------
-    // POST /users/{id}/roles/assign
+    // POST /users/roles/assign
     // ------------------------------------------------------------
     public async Task AssignRoleAsync(Guid userId, Guid roleId, Guid appId)
     {
@@ -99,7 +130,7 @@ public class UsersApi
     }
 
     // ------------------------------------------------------------
-    // POST /users/{id}/roles/remove
+    // POST /users/roles/remove
     // ------------------------------------------------------------
     public async Task RemoveRoleAsync(Guid userId, Guid roleId, Guid appId)
     {
@@ -115,8 +146,7 @@ public class UsersApi
     }
 
     // ------------------------------------------------------------
-    // POST /users/{id}/reset-password
-    // Admin resets password directly
+    // POST /users/reset-password
     // ------------------------------------------------------------
     public async Task ResetPasswordAsync(Guid userId, string newPassword)
     {
@@ -129,4 +159,10 @@ public class UsersApi
         var response = await _http.PostAsJsonAsync("users/reset-password", request);
         response.EnsureSuccessStatusCode();
     }
+}
+
+public class CreateUserResponse
+{
+    public Guid Id { get; set; }
+    public string Message { get; set; } = "";
 }

@@ -5,201 +5,44 @@
 
 <h3>Users</h3>
 
-@if (users == null)
-{
-    <p>Loading users…</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Username</th>
-                <th>Active</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var u in users)
-            {
-                <tr>
-                    <td>@u.Email</td>
-                    <td>@u.UserName</td>
-                    <td>
-                        <input type="checkbox" checked="@u.IsActive" @onchange="e => ToggleActive(u, e)" />
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" @onclick="() => SelectUser(u)">Manage</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<UsersList Users="users"
+           OnSelect="SelectUser"
+           OnCreate="CreateUser"
+           OnDelete="DeleteUser" />
 
 @if (selectedUser != null)
 {
-    <hr />
-    <h4>Manage @selectedUser.Email</h4>
-
-    <div class="row">
-        <div class="col-4">
-            <h5>Applications</h5>
-
-            @if (applications == null)
-            {
-                <p>Loading apps…</p>
-            }
-            else
-            {
-                <ul class="list-group">
-                    @foreach (var app in applications)
-                    {
-                        var enrolled = userApplications.Contains(app.Id);
-
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            @app.Name
-
-                            <input type="checkbox"
-                                   checked="@enrolled"
-                                   @onchange="e => ToggleEnrollment(app.Id, e)" />
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
-
-        <div class="col-8">
-            <h5>Roles for Selected Application</h5>
-
-            @if (selectedAppId == Guid.Empty)
-            {
-                <p>Select an application to manage roles.</p>
-            }
-            else if (roles == null)
-            {
-                <p>Loading roles…</p>
-            }
-            else
-            {
-                <ul class="list-group">
-                    @foreach (var role in roles)
-                    {
-                        var assigned = userRoles.Contains(role.Id);
-
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            @role.Name
-
-                            <input type="checkbox"
-                                   checked="@assigned"
-                                   @onchange="e => ToggleRole(role.Id, e)" />
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
-    </div>
-
-    <hr />
-
-    <h5>Admin Password Reset</h5>
-    <input type="password" class="form-control mb-2" @bind="newPassword" placeholder="New password" />
-    <button class="btn btn-danger" @onclick="ResetPassword">Reset Password</button>
+    <UserEditor User="selectedUser"
+                Applications="applications"
+                RolesApi="RolesApi"
+                UsersApi="UsersApi" />
 }
 
 @code {
     private List<UserDto>? users;
     private List<ApplicationDto>? applications;
-    private List<RoleDto>? roles;
-
     private UserDto? selectedUser;
-    private Guid selectedAppId = Guid.Empty;
-
-    private HashSet<Guid> userApplications = new();
-    private HashSet<Guid> userRoles = new();
-
-    private string newPassword = "";
 
     protected override async Task OnInitializedAsync()
     {
         users = await UsersApi.GetUsersAsync();
         applications = await AppsApi.GetApplicationsAsync();
+
     }
 
-    private async Task ToggleActive(UserDto user, ChangeEventArgs e)
+    private void SelectUser(UserDto user) => selectedUser = user;
+
+    private async Task CreateUser(CreateUserRequest dto)
     {
-        bool isActive = (bool)e.Value!;
-        await UsersApi.ActivateUserAsync(user.Id, isActive);
-        user.IsActive = isActive;
+        var created = await UsersApi.CreateUserAsync(dto);
+        users!.Add(created);
     }
 
-    private async Task SelectUser(UserDto user)
+    private async Task DeleteUser(Guid id)
     {
-        selectedUser = user;
-
-        var details = await UsersApi.GetUserDetailsAsync(user.Id);
-
-        userApplications = details.Applications
-            .Where(a => a.IsActive)
-            .Select(a => a.ApplicationId)
-            .ToHashSet();
-
-        selectedAppId = Guid.Empty;
-        roles = null;
-        userRoles.Clear();
-    }
-
-    private async Task ToggleEnrollment(Guid appId, ChangeEventArgs e)
-    {
-        bool enroll = (bool)e.Value!;
-
-        if (enroll)
-            await UsersApi.EnrollUserAsync(selectedUser!.Id, appId);
-        else
-            await UsersApi.UnenrollUserAsync(selectedUser!.Id, appId);
-
-        if (enroll)
-            userApplications.Add(appId);
-        else
-            userApplications.Remove(appId);
-
-        if (selectedAppId == appId)
-        {
-            await LoadRolesForApp(appId);
-        }
-    }
-
-    private async Task LoadRolesForApp(Guid appId)
-    {
-        selectedAppId = appId;
-        roles = await RolesApi.GetRolesForAppAsync(appId);
-
-        var assigned = await UsersApi.GetUserRolesAsync(selectedUser!.Id, appId);
-        userRoles = assigned.ToHashSet();
-    }
-
-    private async Task ToggleRole(Guid roleId, ChangeEventArgs e)
-    {
-        bool assign = (bool)e.Value!;
-
-        if (assign)
-            await UsersApi.AssignRoleAsync(selectedUser!.Id, roleId, selectedAppId);
-        else
-            await UsersApi.RemoveRoleAsync(selectedUser!.Id, roleId, selectedAppId);
-
-        if (assign)
-            userRoles.Add(roleId);
-        else
-            userRoles.Remove(roleId);
-    }
-
-    private async Task ResetPassword()
-    {
-        if (string.IsNullOrWhiteSpace(newPassword))
-            return;
-
-        await UsersApi.ResetPasswordAsync(selectedUser!.Id, newPassword);
-        newPassword = "";
+        await UsersApi.DeleteUserAsync(id);
+        users!.RemoveAll(u => u.Id == id);
+        if (selectedUser?.Id == id)
+            selectedUser = null;
     }
 }

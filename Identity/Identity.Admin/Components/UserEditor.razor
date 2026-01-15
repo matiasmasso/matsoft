@@ -1,0 +1,37 @@
+﻿<h4>Manage @User.Email</h4>
+
+<div class="row">
+    <div class="col-4">
+        <UserApplications User="User"
+                          Applications="Applications"
+                          UsersApi="UsersApi"
+                          OnAppSelected="LoadRoles" />
+    </div>
+
+    <div class="col-8">
+        <UserRoles Roles="roles"
+                   User="User"
+                   AppId="selectedAppId"
+                   UsersApi="UsersApi" />
+    </div>
+</div>
+
+<hr />
+
+<UserPasswordReset User="User" UsersApi="UsersApi" />
+
+@code {
+    [Parameter] public UserDto User { get; set; } = default!;
+    [Parameter] public List<ApplicationDto> Applications { get; set; } = default!;
+    [Parameter] public RolesApi RolesApi { get; set; } = default!;
+    [Parameter] public UsersApi UsersApi { get; set; } = default!;
+
+    private Guid selectedAppId;
+    private List<RoleDto>? roles;
+
+    private async Task LoadRoles(Guid appId)
+    {
+        selectedAppId = appId;
+        roles = await RolesApi.GetRolesForAppAsync(appId);
+    }
+}

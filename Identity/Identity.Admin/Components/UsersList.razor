@@ -1,0 +1,79 @@
+﻿@inject UsersApi UsersApi
+@inject IJSRuntime JS
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Username</th>
+            <th>Active</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @if(Users == null )
+        {
+            <tr>
+                <td colspan="4" class="text-center">loading...</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var u in Users)
+            {
+                <tr>
+                    <td>@u.Email</td>
+                    <td>@u.UserName</td>
+                    <td>
+                        <input type="checkbox"
+                               checked="@u.IsActive"
+                               @onchange="e => ToggleActive(u, e)" />
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => OnSelect.InvokeAsync(u)">Manage</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(u)">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+
+    </tbody>
+</table>
+
+<button class="btn btn-success mt-3" @onclick="ShowCreateForm">Add User</button>
+
+@if (showForm)
+{
+    <UserForm OnSubmit="SubmitForm" OnCancel="() => showForm = false" />
+}
+
+@code {
+    [Parameter] public List<UserDto> Users { get; set; } = default!;
+    [Parameter] public EventCallback<UserDto> OnSelect { get; set; }
+    [Parameter] public EventCallback<CreateUserRequest> OnCreate { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+
+    private bool showForm = false;
+
+    private void ShowCreateForm() => showForm = true;
+
+    private async Task SubmitForm(CreateUserRequest dto)
+    {
+        await OnCreate.InvokeAsync(dto);
+        showForm = false;
+    }
+
+    private async Task ConfirmDelete(UserDto user)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", $"Delete {user.Email}?"))
+            await OnDelete.InvokeAsync(user.Id);
+    }
+
+    private async Task ToggleActive(UserDto user, ChangeEventArgs e)
+    {
+        bool active = (bool)e.Value!;
+        await UsersApi.ActivateUserAsync(user.Id, active);
+        user.IsActive = active;
+    }
+}

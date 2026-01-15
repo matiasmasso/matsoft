@@ -197,4 +197,46 @@ public class UsersController : ControllerBase
 
         return Ok("User unenrolled");
     }
+
+    // ------------------------------------------------------------
+    // PUT /users/{id}
+    // Update user basic info
+    // ------------------------------------------------------------
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null)
+            return NotFound("User not found");
+
+        user.UserName = request.UserName;
+        user.Email = request.Email;
+
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+
+        return Ok(new { Message = "User updated", id });
+    }
+
+    // ------------------------------------------------------------
+    // DELETE /users/{id}
+    // Delete a user
+    // ------------------------------------------------------------
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null)
+            return NotFound("User not found");
+
+        var result = await _userManager.DeleteAsync(user);
+
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+
+        return Ok(new { Message = "User deleted", id });
+    }
+
 }

@@ -1,5 +1,5 @@
-﻿using Identity.DTO;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
+using Identity.DTO;
 
 namespace Identity.Admin.Services;
 
@@ -12,24 +12,49 @@ public class RolesApi
         _http = http;
     }
 
+    // ------------------------------------------------------------
+    // GET /roles/app/{appId}
+    // ------------------------------------------------------------
     public async Task<List<RoleDto>> GetRolesForAppAsync(Guid appId)
     {
         return await _http.GetFromJsonAsync<List<RoleDto>>(
-            $"roles/app/{appId}");
+            $"roles/app/{appId}"
+        ) ?? new List<RoleDto>();
     }
 
-    public async Task CreateRoleAsync(CreateRoleRequest request)
+    // ------------------------------------------------------------
+    // POST /roles
+    // ------------------------------------------------------------
+    public async Task<RoleDto> CreateRoleAsync(CreateRoleRequest request)
     {
-        await _http.PostAsJsonAsync("roles", request);
+        var response = await _http.PostAsJsonAsync("roles", request);
+        response.EnsureSuccessStatusCode();
+
+        // Controller returns CreatedAtAction with no body → fetch roles again
+        // or return a minimal DTO
+        return new RoleDto
+        {
+            Id = Guid.NewGuid(), // caller should refresh list anyway
+            Name = request.Name,
+            ApplicationId = request.ApplicationId
+        };
     }
 
+    // ------------------------------------------------------------
+    // PUT /roles/{roleId}
+    // ------------------------------------------------------------
     public async Task UpdateRoleAsync(Guid roleId, UpdateRoleRequest request)
     {
-        await _http.PutAsJsonAsync($"roles/{roleId}", request);
+        var response = await _http.PutAsJsonAsync($"roles/{roleId}", request);
+        response.EnsureSuccessStatusCode();
     }
 
+    // ------------------------------------------------------------
+    // DELETE /roles/{roleId}
+    // ------------------------------------------------------------
     public async Task DeleteRoleAsync(Guid roleId)
     {
-        await _http.DeleteAsync($"roles/{roleId}");
+        var response = await _http.DeleteAsync($"roles/{roleId}");
+        response.EnsureSuccessStatusCode();
     }
 }
