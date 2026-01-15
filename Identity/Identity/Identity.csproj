@@ -7,15 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Infrastructure\Repositories\**" />
-    <Content Remove="Infrastructure\Repositories\**" />
-    <EmbeddedResource Remove="Infrastructure\Repositories\**" />
-    <None Remove="Infrastructure\Repositories\**" />
+    <Compile Remove="Data\Seed\**" />
+    <Content Remove="Data\Seed\**" />
+    <EmbeddedResource Remove="Data\Seed\**" />
+    <None Remove="Data\Seed\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -32,9 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Seed\" />
     <Folder Include="Domain\Enums\" />
-    <Folder Include="Infrastructure\Configuration\" />
   </ItemGroup>
 
 </Project>
