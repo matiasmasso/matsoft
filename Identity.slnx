@@ -1,5 +1,5 @@
 <Solution>
   <Project Path="Identity/Identity.Admin/Identity.Admin.csproj" />
   <Project Path="identity/Identity.DTO/Identity.DTO.csproj" Id="1e549880-7244-4528-b32d-cbe943483404" />
-  <Project Path="Identity/Identity/Identity.csproj" />
+  <Project Path="Identity/Identity/Identity.Api.csproj" />
 </Solution>

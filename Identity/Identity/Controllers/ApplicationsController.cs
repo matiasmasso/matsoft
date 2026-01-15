@@ -4,7 +4,7 @@ using Identity.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Identity.Controllers;
+namespace Identity.Api.Controllers;
 
 [ApiController]
 [Route("applications")]

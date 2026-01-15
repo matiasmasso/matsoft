@@ -1,4 +1,4 @@
-﻿namespace Identity.Controllers;
+﻿namespace Identity.Api.Controllers;
 
 using Identity.Data;
 using Identity.Domain.Entities;

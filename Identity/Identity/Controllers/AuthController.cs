@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+namespace Identity.Api.Controllers;
 
 //Usage:
 //[AuthorizeAppRole("InventoryApp", "Manager")]

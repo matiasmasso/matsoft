@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+namespace Identity.Api.Controllers;
+
 [ApiController]
 [Route("users")]
 public class UsersController : ControllerBase
