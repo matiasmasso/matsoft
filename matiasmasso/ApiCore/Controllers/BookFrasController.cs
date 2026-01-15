@@ -98,10 +98,9 @@ namespace Api.Controllers
             var baseUrl = $"{request.Scheme}://{request.Host}{request.PathBase}";
 
             var bytes = _excelBookfrasService.Excel(emp, year, baseUrl);
-
+            var filename = $"Factures rebudes {emp.ToString()} {year}.xlsx";
             return File(bytes,
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "IVA.xlsx");
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",filename);
         }
 
         [HttpGet("missingValues/{emp}/{year}")]

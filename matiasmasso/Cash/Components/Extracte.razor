@@ -494,7 +494,7 @@
         sheet.AddColumn("Haver", DTO.Excel.Cell.NumberFormats.Euro);
         sheet.AddColumn("Saldo", DTO.Excel.Cell.NumberFormats.Euro);
 
-        foreach (var ccb in FilteredItems())
+        foreach (var ccb in FilteredItems()) //.OrderBy(x=>x.Cca?.Fch)
         {
             var row = sheet.AddRow();
             row.AddFch(ccb.Cca?.Fch);
