@@ -1,0 +1,118 @@
+﻿@page "/"
+@inject UsersApi UsersApi
+@inject ApplicationsApi AppsApi
+@inject RolesApi RolesApi
+@inject NavigationManager Nav
+
+<h3 class="mb-4">Admin Dashboard</h3>
+
+@if (isLoading)
+{
+    <p>Loading dashboard…</p>
+}
+else
+{
+    <div class="row mb-4">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Users</h5>
+                    <p class="display-6">@userCount</p>
+                    <button class="btn btn-primary" @onclick="GoToUsers">
+                        Manage Users
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Applications</h5>
+                    <p class="display-6">@appCount</p>
+                    <button class="btn btn-primary" @onclick="GoToApplications">
+                        Manage Applications
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Roles</h5>
+                    <p class="display-6">@roleCount</p>
+                    <button class="btn btn-primary" @onclick="GoToRoles">
+                        Manage Roles
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <h4>System Overview</h4>
+
+    <ul class="list-group">
+        <li class="list-group-item d-flex justify-content-between">
+            <span>Total Users</span>
+            <strong>@userCount</strong>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+            <span>Total Applications</span>
+            <strong>@appCount</strong>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+            <span>Total Roles</span>
+            <strong>@roleCount</strong>
+        </li>
+    </ul>
+}
+
+@code {
+    private bool isLoading = true;
+
+    private int userCount;
+    private int appCount;
+    private int roleCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var users = await UsersApi.GetUsersAsync();
+        var apps = await AppsApi.GetApplicationsAsync();
+
+        var allRoles = new List<RoleDto>();
+
+        foreach (var app in apps)
+        {
+            var roles = await RolesApi.GetRolesForAppAsync(app.Id);
+            allRoles.AddRange(roles);
+        }
+
+        var globalRoles = await RolesApi.GetRolesForAppAsync(Guid.Empty);
+        allRoles.AddRange(globalRoles);
+
+        userCount = users.Count;
+        appCount = apps.Count;
+        roleCount = allRoles.Count;
+
+        isLoading = false;
+    }
+
+    void GoToUsers()
+    {
+        Nav.NavigateTo("/users");
+    }
+
+    void GoToApplications()
+    {
+        Nav.NavigateTo("/applications");
+    }
+
+    void GoToRoles()
+    {
+        Nav.NavigateTo("/roles");
+    }
+}

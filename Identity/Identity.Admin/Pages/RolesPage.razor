@@ -4,68 +4,109 @@
 
 <h3>Roles</h3>
 
-<select @onchange="OnAppChanged">
-    <option value="">-- Select application --</option>
-    @foreach (var app in applications)
-    {
-        <option value="@app.Id">@app.Name</option>
-    }
-</select>
-
-@if (selectedAppId != Guid.Empty)
+@if (applications == null)
 {
-    <h4>Roles for @selectedAppName</h4>
-
-    <button @onclick="ShowCreateRole">Create Role</button>
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Scope</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var role in roles)
+    <p>Loading applications…</p>
+}
+else
+{
+    <div class="mb-3">
+        <label class="form-label">Select Application</label>
+        <select class="form-select" @onchange="OnAppChanged">
+            <option value="">Global Roles</option>
+            @foreach (var app in applications)
             {
-                <tr>
-                    <td>@role.Name</td>
-                    <td>@(role.ApplicationId == null ? "Global" : "App")</td>
-                    <td>
-                        <button @onclick="() => EditRole(role)">Edit</button>
-                        <button @onclick="() => DeleteRole(role.Id)">Delete</button>
-                    </td>
-                </tr>
+                <option value="@app.Id">@app.Name</option>
             }
-        </tbody>
-    </table>
+        </select>
+    </div>
+
+    <button class="btn btn-primary mb-3" @onclick="NewRole">
+        + New Role
+    </button>
+
+    @if (roles == null)
+    {
+        <p>Select an application to view roles.</p>
+    }
+    else if (roles.Count == 0)
+    {
+        <p>No roles found.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Application</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var role in roles)
+                {
+                    <tr>
+                        <td>@role.Name</td>
+                        <td>@(role.ApplicationId == null ? "Global" : GetAppName(role.ApplicationId.Value))</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary me-2"
+                                    @onclick="() => EditRole(role)">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-sm btn-danger"
+                                    @onclick="() => DeleteRole(role.Id)">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 }
 
-@if (showRoleEditor)
+@if (isEditing)
 {
-    <div class="modal">
-        <h4>@(editingRoleId == null ? "Create Role" : "Edit Role")</h4>
-        <input @bind="roleName" placeholder="Role name" />
-        <label>
-            <input type="checkbox" @bind="isGlobal" />
-            Global role
-        </label>
-        <button @onclick="SaveRole">Save</button>
-        <button @onclick="CancelEdit">Cancel</button>
+    <hr />
+    <h4>@(editingRoleId == Guid.Empty ? "Create Role" : "Edit Role")</h4>
+
+    <div class="mb-3">
+        <label class="form-label">Role Name</label>
+        <input class="form-control" @bind="model.Name" />
     </div>
+
+    <div class="mb-3">
+        <label class="form-label">Application</label>
+        <select class="form-select" @bind="model.ApplicationId">
+            <option value="">Global Role</option>
+            @foreach (var app in applications)
+            {
+                <option value="@app.Id">@app.Name</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-success me-2" @onclick="Save">
+        Save
+    </button>
+
+    <button class="btn btn-secondary" @onclick="Cancel">
+        Cancel
+    </button>
 }
 
 @code {
-    private List<ApplicationDto> applications = [];
-    private List<RoleDto> roles = [];
-    private Guid selectedAppId;
-    private string? selectedAppName;
+    private List<ApplicationDto>? applications;
+    private List<RoleDto>? roles;
 
-    private bool showRoleEditor;
-    private Guid? editingRoleId;
-    private string roleName = string.Empty;
-    private bool isGlobal;
+    private Guid selectedAppId = Guid.Empty;
+
+    private bool isEditing = false;
+    private Guid editingRoleId = Guid.Empty;
+
+    private CreateRoleRequest model = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -74,61 +115,69 @@
 
     private async Task OnAppChanged(ChangeEventArgs e)
     {
-        if (Guid.TryParse(e.Value?.ToString(), out var appId))
+        var value = e.Value?.ToString();
+
+        if (string.IsNullOrWhiteSpace(value))
         {
-            selectedAppId = appId;
-            selectedAppName = applications.First(a => a.Id == appId).Name;
-            roles = await RolesApi.GetRolesForAppAsync(appId);
+            selectedAppId = Guid.Empty;
         }
+        else
+        {
+            selectedAppId = Guid.Parse(value);
+        }
+
+        roles = await RolesApi.GetRolesForAppAsync(selectedAppId);
     }
 
-    private void ShowCreateRole()
+    private string GetAppName(Guid appId)
     {
-        editingRoleId = null;
-        roleName = string.Empty;
-        isGlobal = false;
-        showRoleEditor = true;
+        return applications?.FirstOrDefault(a => a.Id == appId)?.Name ?? "Unknown";
+    }
+
+    private void NewRole()
+    {
+        editingRoleId = Guid.Empty;
+        model = new CreateRoleRequest();
+        isEditing = true;
     }
 
     private void EditRole(RoleDto role)
     {
         editingRoleId = role.Id;
-        roleName = role.Name;
-        isGlobal = role.ApplicationId == null;
-        showRoleEditor = true;
+
+        model = new CreateRoleRequest
+        {
+            Name = role.Name,
+            ApplicationId = role.ApplicationId
+        };
+
+        isEditing = true;
     }
 
-    private async Task SaveRole()
+    private async Task Save()
     {
-        if (string.IsNullOrWhiteSpace(roleName))
-            return;
-
-        if (editingRoleId == null)
+        if (editingRoleId == Guid.Empty)
         {
-            var request = new CreateRoleRequest
-            {
-                Name = roleName,
-                ApplicationId = isGlobal ? null : selectedAppId
-            };
-            await RolesApi.CreateRoleAsync(request);
+            await RolesApi.CreateRoleAsync(model);
         }
         else
         {
-            var request = new UpdateRoleRequest
+            var update = new UpdateRoleRequest
             {
-                Name = roleName,
-                ApplicationId = isGlobal ? null : selectedAppId
+                Name = model.Name,
+                ApplicationId = model.ApplicationId
             };
-            await RolesApi.UpdateRoleAsync(editingRoleId.Value, request);
+
+            await RolesApi.UpdateRoleAsync(editingRoleId, update);
         }
 
-        showRoleEditor = false;
         roles = await RolesApi.GetRolesForAppAsync(selectedAppId);
+        isEditing = false;
     }
 
-    private void CancelEdit()
+    private void Cancel()
     {
-        showRoleEditor = false;
+        isEditing = false;
     }
 
     private async Task DeleteRole(Guid roleId)

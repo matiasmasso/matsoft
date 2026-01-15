@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
-        policy.WithOrigins("https://localhost:7090", "https://id.matiasmasso.es")
+        policy.WithOrigins("https://localhost:7006", "https://identity.admin.matiasmasso.es")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
@@ -76,6 +76,9 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddSingleton<IAuthorizationHandler, AppRoleHandler>();
+
+
+builder.Services.AddAutoMapper(typeof(Program));
 
 
 builder.Services.AddControllers();

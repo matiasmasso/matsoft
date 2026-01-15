@@ -7,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("users")]
-public class UsersManagementController : ControllerBase
+public class UsersController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public UsersManagementController(
+    public UsersController(
         ApplicationDbContext db,
         UserManager<ApplicationUser> userManager)
     {

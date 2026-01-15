@@ -15,6 +15,7 @@ namespace Identity.Data
         ApplicationUserToken>
     {
         public DbSet<Application> Applications { get; set; }
+        public DbSet<ApplicationRole> Roles { get; set; }
         public DbSet<UserApplication> UserApplications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
@@ -94,7 +95,21 @@ namespace Identity.Data
             builder.Entity<PasswordResetToken>()
                 .HasIndex(p => p.Token)
                 .IsUnique();
+
+           builder.Entity<UserApplication>(entity =>
+            {
+                entity.HasKey(ua => new { ua.UserId, ua.ApplicationId });
+
+                entity.HasOne(ua => ua.User)
+                      .WithMany(u => u.Applications)
+                      .HasForeignKey(ua => ua.UserId);
+
+                entity.HasOne(ua => ua.Application)
+                      .WithMany(a => a.Users)
+                      .HasForeignKey(ua => ua.ApplicationId);
+            });
+
         }
     }
-
 }
+
