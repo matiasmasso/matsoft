@@ -1,0 +1,155 @@
+﻿@using Identity.DTO
+@using Identity.Admin.Services
+
+@inject UsersApi UsersApi
+@inject ApplicationsApi ApplicationsApi
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Panell d'Administració</h2>
+
+    <!-- Targetes de resum -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm stat-card">
+                <div class="card-body">
+                    <h5 class="card-title">Usuaris</h5>
+                    <p class="display-6">@Users.Count</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm stat-card">
+                <div class="card-body">
+                    <h5 class="card-title">Aplicacions</h5>
+                    <p class="display-6">@Applications.Count</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm stat-card">
+                <div class="card-body">
+                    <h5 class="card-title">Rols</h5>
+                    <p class="display-6">@TotalRoles</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm stat-card">
+                <div class="card-body">
+                    <h5 class="card-title">Actius</h5>
+                    <p class="display-6">@ActiveUsers / @Users.Count</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribució d'usuaris per aplicació -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    Usuaris per aplicació
+                </div>
+                <div class="card-body">
+                    @if (UsersPerApp.Count == 0)
+                    {
+                        <p class="text-muted">No hi ha dades.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @foreach (var kv in UsersPerApp)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>@kv.Key</span>
+                                    <strong>@kv.Value</strong>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Últims usuaris creats -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    Últims usuaris creats
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach (var u in Users.OrderByDescending(u => u.CreatedAt).Take(5))
+                        {
+                            <li class="list-group-item">
+                                <strong>@u.UserName</strong>
+                                <div class="small text-muted">@u.Email</div>
+                                <div class="small">@u.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<Error Errors="_errors" OnClear="HandleClear" />
+
+@code {
+
+    private List<UserDto> Users = new();
+    private List<ApplicationDto> Applications = new();
+    private int TotalRoles = 0;
+    private int ActiveUsers = 0;
+    private List<string> _errors = new();
+
+    private Dictionary<string, int> UsersPerApp = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Carrega dades
+        // Users = await UsersApi.GetUsersAsync();
+
+        var (users, errors) = await UsersApi.GetUsersAsync();
+        if (errors.Any())
+        {
+            _errors = errors;
+            return;
+        }
+        Users = users ?? new();
+
+        (Applications, _errors) = await ApplicationsApi.GetApplicationsAsync();
+
+        // var (apps, errors2) = await ApplicationsApi.GetApplicationsAsync();
+        // if (errors.Any())
+        // {
+        //     _errors = errors;
+        //     return;
+        // }
+        // Applications = apps ?? new();
+
+        // Comptar rols totals
+        TotalRoles = Users.SelectMany(u => u.Roles).Select(r => r.RoleId).Distinct().Count();
+
+        // Comptar usuaris actius
+        ActiveUsers = Users.Count(u => u.IsActive);
+
+        // Distribució d'usuaris per aplicació
+        UsersPerApp = Applications
+            .ToDictionary(
+                app => app.Name,
+                app => Users.Count(u => u.Applications.Any(a => a.ApplicationId == app.ApplicationId))
+            );
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+}

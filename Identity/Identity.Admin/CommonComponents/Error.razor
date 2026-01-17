@@ -1,0 +1,32 @@
+﻿@if (HasErrors)
+{
+    <div class="alert alert-danger d-flex flex-column gap-1" role="alert">
+        <strong>There were some problems:</strong>
+
+        <ul class="mb-0">
+            @foreach (var error in Errors!)
+            {
+                <li>@error</li>
+            }
+        </ul>
+
+        <button class="btn btn-sm btn-outline-light mt-2 align-self-end"
+                @onclick="Clear">
+            Dismiss
+        </button>
+    </div>
+}
+
+@code {
+    [Parameter] public List<string>? Errors { get; set; }
+    [Parameter] public EventCallback OnClear { get; set; }
+
+    private bool HasErrors =>
+        Errors is { Count: > 0 };
+
+    private async Task Clear()
+    {
+        Errors?.Clear();
+        await OnClear.InvokeAsync();
+    }
+}

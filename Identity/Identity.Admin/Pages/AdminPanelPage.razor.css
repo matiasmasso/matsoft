@@ -1,0 +1,12 @@
+﻿.border-end {
+    border-right: 1px solid #ddd;
+}
+
+h4 {
+    font-weight: 600;
+}
+
+.list-group-item.active {
+    background-color: #0d6efd;
+    color: white;
+}

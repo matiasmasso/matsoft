@@ -24,11 +24,14 @@ else
         @errorMessage
     </div>
 }
+<Error Errors="_errors" OnClear="HandleClear" />
+
 
 @code {
     private bool isLoading = true;
     private bool isSuccess = false;
     private string errorMessage = string.Empty;
+    private List<string> _errors = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,5 +86,11 @@ else
     private void GoToLogin()
     {
         Nav.NavigateTo("/login");
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
     }
 }

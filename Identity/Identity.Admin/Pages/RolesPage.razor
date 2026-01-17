@@ -16,7 +16,7 @@ else
             <option value="">Global Roles</option>
             @foreach (var app in applications)
             {
-                <option value="@app.Id">@app.Name</option>
+                <option value="@app.ApplicationId">@app.Name</option>
             }
         </select>
     </div>
@@ -83,7 +83,7 @@ else
             <option value="">Global Role</option>
             @foreach (var app in applications)
             {
-                <option value="@app.Id">@app.Name</option>
+                <option value="@app.ApplicationId">@app.Name</option>
             }
         </select>
     </div>
@@ -96,6 +96,8 @@ else
         Cancel
     </button>
 }
+<Error Errors="_errors" OnClear="HandleClear" />
+
 
 @code {
     private List<ApplicationDto>? applications;
@@ -107,10 +109,17 @@ else
     private Guid editingRoleId = Guid.Empty;
 
     private CreateRoleRequest model = new();
+    private List<string> _errors = new();
 
     protected override async Task OnInitializedAsync()
     {
-        applications = await AppsApi.GetApplicationsAsync();
+        var (apps, errors) = await AppsApi.GetApplicationsAsync();
+        if (errors.Any())
+        {
+            _errors = errors;
+            return;
+        }
+        applications = apps;
     }
 
     private async Task OnAppChanged(ChangeEventArgs e)
@@ -126,12 +135,12 @@ else
             selectedAppId = Guid.Parse(value);
         }
 
-        roles = await RolesApi.GetRolesForAppAsync(selectedAppId);
+        (roles, _errors) = await RolesApi.GetRolesForAppAsync(selectedAppId);
     }
 
     private string GetAppName(Guid appId)
     {
-        return applications?.FirstOrDefault(a => a.Id == appId)?.Name ?? "Unknown";
+        return applications?.FirstOrDefault(a => a.ApplicationId == appId)?.Name ?? "Unknown";
     }
 
     private void NewRole()
@@ -171,7 +180,7 @@ else
             await RolesApi.UpdateRoleAsync(editingRoleId, update);
         }
 
-        roles = await RolesApi.GetRolesForAppAsync(selectedAppId);
+        (roles, _errors) = await RolesApi.GetRolesForAppAsync(selectedAppId);
         isEditing = false;
     }
 
@@ -183,6 +192,12 @@ else
     private async Task DeleteRole(Guid roleId)
     {
         await RolesApi.DeleteRoleAsync(roleId);
-        roles = await RolesApi.GetRolesForAppAsync(selectedAppId);
+        (roles, _errors) = await RolesApi.GetRolesForAppAsync(selectedAppId);
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
     }
 }

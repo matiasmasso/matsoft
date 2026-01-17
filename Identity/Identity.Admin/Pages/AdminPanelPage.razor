@@ -1,0 +1,111 @@
+﻿@page "/admin/users"
+
+@using Identity.DTO
+@inject ApplicationsApi ApplicationsApi
+
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- Columna 1: Usuaris -->
+        <div class="col-3 border-end">
+            <h4 class="mb-3">Usuaris</h4>
+
+            <UsersList Users="users"
+                      SelectedUserId="SelectedUser?.Id"
+                      OnUserSelected="HandleUserSelected" />
+        </div>
+
+        <!-- Columna 2: Aplicacions -->
+        <div class="col-4 border-end">
+            <h4 class="mb-3">Aplicacions</h4>
+
+            <UserApplications User="SelectedUser"
+                              Applications="applications"
+                              SelectedAppId="SelectedAppId"
+                              UsersApi="UsersApi"
+                              OnAppSelected="HandleAppSelected" />
+        </div>
+
+        <!-- Columna 3: Rols -->
+        <div class="col-5">
+            <h4 class="mb-3">Rols</h4>
+
+            <UserRoles User="SelectedUser"
+                       AppId="SelectedAppId"
+                       Roles="Roles"
+                       Values="AssignedRoles"
+                       UsersApi="UsersApi" />
+        </div>
+
+    </div>
+</div>
+
+<Error Errors="_errors" OnClear="HandleClear" />
+
+@code {
+    // API clients injectats
+    [Parameter] public UsersApi UsersApi { get; set; } = default!;
+    [Parameter] public RolesApi RolesApi { get; set; } = default!;
+
+    // Dades carregades
+    private List<UserDto>? users;
+    private List<ApplicationDto>? applications;
+    private List<RoleDto>? Roles;
+
+    // Estat actual
+    private UserDto? SelectedUser;
+    private Guid SelectedAppId = Guid.Empty;
+    private HashSet<Guid> AssignedRoles = new();
+    private List<string> _errors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Carrega tots els usuaris
+        (users, _errors) = await UsersApi.GetUsersAsync();
+        (applications, _errors) = await ApplicationsApi.GetApplicationsAsync();
+
+        // // Carrega totes les aplicacions del sistema
+        // var (apps, errors) = await ApplicationsApi.GetApplicationsAsync();
+        // if (errors.Any())
+        // {
+        //     _errors = errors;
+        //     return;
+        // }
+        // Applications = apps;
+    }
+
+    private async Task HandleUserSelected(UserDto user)
+    {
+        SelectedUser = user;
+        SelectedAppId = Guid.Empty;
+        Roles = null;
+        AssignedRoles.Clear();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleAppSelected(Guid appId)
+    {
+        if (SelectedUser is null)
+            return;
+
+        SelectedAppId = appId;
+
+        // Carrega rols disponibles per a l'aplicació
+        (Roles, _errors) = await RolesApi.GetRolesForAppAsync(appId);
+
+        // Filtra rols assignats al user per aquesta app
+        AssignedRoles = SelectedUser.Roles
+            .Where(r => r.ApplicationId == appId)
+            .Select(r => r.RoleId)
+            .ToHashSet();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+}

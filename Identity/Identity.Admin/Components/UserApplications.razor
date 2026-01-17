@@ -1,70 +1,81 @@
-﻿<ul class="list-group">
-    @foreach (var app in Applications)
-    {
-        var enrolled = Values.Contains(app.Id);
-        var isSelected = SelectedAppId == app.Id;
+﻿@using Identity.DTO
 
-        <li class="list-group-item d-flex justify-content-between align-items-center"
-            style="cursor:pointer"
-            @onclick="() => Select(app.Id)">
+@if (User is null)
+{
+    <p class="text-muted">Selecciona un usuari per veure les aplicacions.</p>
+}
+else
+{
+    <h5>Aplicacions de @User.Email</h5>
 
-            <div>
-                <strong>@app.Name</strong>
-                @if (isSelected)
-                {
-                    <span class="badge bg-primary ms-2">Selected</span>
-                }
-            </div>
+    <ul class="list-group">
+        @foreach (var app in Applications)
+        {
+            var enrolled = User.Applications.Any(a => a.ApplicationId == app.ApplicationId);
 
-            <input type="checkbox"
-                   checked="@enrolled"
-                   disabled="@isBusy"
-                   @onclick:stopPropagation="true"
-                   @onchange="e => Toggle(app.Id, e)" />
-        </li>
-    }
-</ul>
+            <li class="list-group-item d-flex justify-content-between align-items-center
+                               @(app.ApplicationId == SelectedAppId ? "active" : "")"
+                @onclick="() => SelectApplication(app.ApplicationId)">
+                <span>@app.Name</span>
+
+                <input type="checkbox"
+                       checked="@enrolled"
+                       @onclick:stopPropagation="true"
+                       disabled="@isBusy"
+                       @onchange="e => ToggleApplication(app.ApplicationId, e)" />
+            </li>
+        }
+    </ul>
+}
 
 @code {
-    [Parameter] public UserDto User { get; set; } = default!;
-    [Parameter] public List<ApplicationDto> Applications { get; set; } = default!;
-    [Parameter] public HashSet<Guid> Values { get; set; } = default!;
+    [Parameter] public UserDto? User { get; set; }
+    [Parameter] public List<ApplicationDto> Applications { get; set; } = new();
     [Parameter] public Guid SelectedAppId { get; set; }
-
     [Parameter] public UsersApi UsersApi { get; set; } = default!;
+
     [Parameter] public EventCallback<Guid> OnAppSelected { get; set; }
 
     private bool isBusy = false;
 
-    private async Task Toggle(Guid appId, ChangeEventArgs e)
+    private async Task SelectApplication(Guid appId)
     {
-        if (isBusy)
+        if (OnAppSelected.HasDelegate)
+            await OnAppSelected.InvokeAsync(appId);
+    }
+
+    private async Task ToggleApplication(Guid appId, ChangeEventArgs e)
+    {
+        if (User is null || isBusy)
             return;
 
         isBusy = true;
 
-        bool enroll = (bool)e.Value!;
+        var enroll = (bool)e.Value!;
 
         if (enroll)
-        {
             await UsersApi.EnrollUserAsync(User.Id, appId);
-            Values.Add(appId);
+        else
+            await UsersApi.UnenrollUserAsync(User.Id, appId);
+
+        // Actualitza la llista d’aplicacions del user en memòria
+        if (enroll)
+        {
+            if (!User.Applications.Any(a => a.ApplicationId == appId))
+            {
+                var app = Applications.FirstOrDefault(a => a.ApplicationId == appId);
+                if (app is not null)
+                    User.Applications.Add(app);
+            }
         }
         else
         {
-            await UsersApi.UnenrollUserAsync(User.Id, appId);
-            Values.Remove(appId);
+            var existing = User.Applications.FirstOrDefault(a => a.ApplicationId == appId);
+            if (existing is not null)
+                User.Applications.Remove(existing);
         }
 
-        // If the toggled app is currently selected, reload roles
-        if (SelectedAppId == appId)
-            await OnAppSelected.InvokeAsync(appId);
-
         isBusy = false;
-    }
-
-    private async Task Select(Guid appId)
-    {
-        await OnAppSelected.InvokeAsync(appId);
+        StateHasChanged();
     }
 }

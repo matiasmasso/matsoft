@@ -1,79 +1,40 @@
-﻿@inject UsersApi UsersApi
-@inject IJSRuntime JS
+﻿@using Identity.DTO
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Username</th>
-            <th>Active</th>
-            <th></th>
-        </tr>
-    </thead>
+<div class="user-list">
+    <input class="form-control mb-2"
+           placeholder="Cerca usuari..."
+           @bind="search"
+           @bind:event="oninput" />
 
-    <tbody>
-        @if(Users == null )
+    <ul class="list-group">
+        @foreach (var u in FilteredUsers)
         {
-            <tr>
-                <td colspan="4" class="text-center">loading...</td>
-            </tr>
+            <li class="list-group-item user-item @(u.Id == SelectedUserId ? "active" : "")"
+                @onclick="() => SelectUser(u)">
+                <strong>@u.UserName</strong>
+                <div class="small text-muted">@u.Email</div>
+            </li>
         }
-        else
-        {
-            @foreach (var u in Users)
-            {
-                <tr>
-                    <td>@u.Email</td>
-                    <td>@u.UserName</td>
-                    <td>
-                        <input type="checkbox"
-                               checked="@u.IsActive"
-                               @onchange="e => ToggleActive(u, e)" />
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" @onclick="() => OnSelect.InvokeAsync(u)">Manage</button>
-                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(u)">Delete</button>
-                    </td>
-                </tr>
-            }
-        }
-
-    </tbody>
-</table>
-
-<button class="btn btn-success mt-3" @onclick="ShowCreateForm">Add User</button>
-
-@if (showForm)
-{
-    <UserForm OnSubmit="SubmitForm" OnCancel="() => showForm = false" />
-}
+    </ul>
+</div>
 
 @code {
-    [Parameter] public List<UserDto> Users { get; set; } = default!;
-    [Parameter] public EventCallback<UserDto> OnSelect { get; set; }
-    [Parameter] public EventCallback<CreateUserRequest> OnCreate { get; set; }
-    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+    [Parameter] public List<UserDto>? Users { get; set; } 
+    [Parameter] public Guid? SelectedUserId { get; set; }
+    [Parameter] public EventCallback<UserDto> OnUserSelected { get; set; }
 
-    private bool showForm = false;
+    private string search = string.Empty;
 
-    private void ShowCreateForm() => showForm = true;
+    private IEnumerable<UserDto> FilteredUsers =>
+        string.IsNullOrWhiteSpace(search)
+            ? Users
+            : Users.Where(u =>
+                (u.UserName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (u.Email?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
 
-    private async Task SubmitForm(CreateUserRequest dto)
+    private async Task SelectUser(UserDto user)
     {
-        await OnCreate.InvokeAsync(dto);
-        showForm = false;
-    }
-
-    private async Task ConfirmDelete(UserDto user)
-    {
-        if (await JS.InvokeAsync<bool>("confirm", $"Delete {user.Email}?"))
-            await OnDelete.InvokeAsync(user.Id);
-    }
-
-    private async Task ToggleActive(UserDto user, ChangeEventArgs e)
-    {
-        bool active = (bool)e.Value!;
-        await UsersApi.ActivateUserAsync(user.Id, active);
-        user.IsActive = active;
+        if (OnUserSelected.HasDelegate)
+            await OnUserSelected.InvokeAsync(user);
     }
 }

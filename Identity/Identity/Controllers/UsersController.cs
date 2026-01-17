@@ -1,4 +1,5 @@
-﻿using Identity.Data;
+﻿using Identity.Api.Infrastructure.Errors;
+using Identity.Data;
 using Identity.Domain.Entities;
 using Identity.DTO;
 using Microsoft.AspNetCore.Identity;
@@ -29,19 +30,48 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUsers()
     {
-        var users = await _db.Users
-            .Select(u => new
-            {
-                u.Id,
-                u.UserName,
-                u.Email,
-                u.IsActive,
-                u.CreatedAt
-            })
-            .ToListAsync();
+        try
+        {
+            var users = await _db.Users
+                .Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    IsActive = u.IsActive,
+                    CreatedAt = u.CreatedAt,
 
-        return Ok(users);
+                    Applications = _db.UserApplications
+                        .Where(ua => ua.UserId == u.Id)
+                        .Select(ua => new ApplicationDto
+                        {
+                            ApplicationId = ua.ApplicationId,
+                            Name = ua.Application.Name,
+                            IsActive = ua.IsActive
+                        })
+                        .ToList(),
+
+                    Roles = _db.UserRoles
+                        .Where(ur => ur.UserId == u.Id)
+                        .Select(ur => new UserRoleDto
+                        {
+                            RoleId = ur.RoleId,
+                            Name = ur.Role.Name,
+                            ApplicationId = ur.ApplicationId
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
+
+
 
     // ------------------------------------------------------------
     // GET /users/{userId}
@@ -50,41 +80,48 @@ public class UsersController : ControllerBase
     [HttpGet("{userId:guid}")]
     public async Task<IActionResult> GetUser(Guid userId)
     {
-        var user = await _db.Users
-            .Where(u => u.Id == userId)
-            .Select(u => new
-            {
-                u.Id,
-                u.UserName,
-                u.Email,
-                u.IsActive,
-                Applications = _db.UserApplications
-                    .Where(ua => ua.UserId == userId)
-                    .Select(ua => new
-                    {
-                        ua.ApplicationId,
-                        ua.Application.Name,
-                        ua.IsActive
-                    })
-                    .ToList(),
+        try
+        {
+            var user = await _db.Users
+                .Where(u => u.Id == userId)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.UserName,
+                    u.Email,
+                    u.IsActive,
+                    Applications = _db.UserApplications
+                        .Where(ua => ua.UserId == userId)
+                        .Select(ua => new
+                        {
+                            ua.ApplicationId,
+                            ua.Application.Name,
+                            ua.IsActive
+                        })
+                        .ToList(),
 
-                Roles = _db.UserRoles
-                    .Where(ur => ur.UserId == userId)
-                    .Include(ur => ur.Role)
-                    .Select(ur => new
-                    {
-                        ur.RoleId,
-                        ur.Role.Name,
-                        ur.ApplicationId
-                    })
-                    .ToList()
-            })
-            .FirstOrDefaultAsync();
+                    Roles = _db.UserRoles
+                        .Where(ur => ur.UserId == userId)
+                        .Include(ur => ur.Role)
+                        .Select(ur => new
+                        {
+                            ur.RoleId,
+                            ur.Role.Name,
+                            ur.ApplicationId
+                        })
+                        .ToList()
+                })
+                .FirstOrDefaultAsync();
 
-        if (user == null)
-            return NotFound("User not found");
+            if (user == null)
+                return NotFound("User not found");
 
-        return Ok(user);
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -94,24 +131,32 @@ public class UsersController : ControllerBase
     [HttpPost("create")]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
     {
-        var existing = await _userManager.FindByNameAsync(request.UserName);
-        if (existing != null)
-            return BadRequest("Username already exists");
-
-        var user = new ApplicationUser
+        try
         {
-            Id = Guid.NewGuid(),
-            UserName = request.UserName,
-            Email = request.Email,
-            IsActive = true
-        };
+            var existing = await _userManager.FindByNameAsync(request.UserName);
+            if (existing != null)
+                return BadRequest("Username already exists");
 
-        var result = await _userManager.CreateAsync(user, request.Password);
+            var user = new ApplicationUser
+            {
+                Id = Guid.NewGuid(),
+                UserName = request.UserName,
+                Email = request.Email,
+                IsActive = true
+            };
 
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
+            var result = await _userManager.CreateAsync(user, request.Password);
 
-        return Ok(new { Message = "User created", user.Id });
+            if (!result.Succeeded)
+                return ErrorResult.FromIdentityErrors(result.Errors);
+
+            return Ok(new { Message = "User created", user.Id });
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -121,14 +166,22 @@ public class UsersController : ControllerBase
     [HttpPost("activate")]
     public async Task<IActionResult> ActivateUser([FromBody] ActivateUserRequest request)
     {
-        var user = await _userManager.FindByIdAsync(request.UserId.ToString());
-        if (user == null)
-            return NotFound("User not found");
+        try
+        {
+            var user = await _userManager.FindByIdAsync(request.UserId.ToString());
+            if (user == null)
+                return NotFound("User not found");
 
-        user.IsActive = request.IsActive;
-        await _userManager.UpdateAsync(user);
+            user.IsActive = request.IsActive;
+            await _userManager.UpdateAsync(user);
 
-        return Ok("User updated");
+            return Ok("User updated");
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -138,17 +191,25 @@ public class UsersController : ControllerBase
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
-        var user = await _userManager.FindByIdAsync(request.UserId.ToString());
-        if (user == null)
-            return NotFound("User not found");
+        try
+        {
+            var user = await _userManager.FindByIdAsync(request.UserId.ToString());
+            if (user == null)
+                return NotFound("User not found");
 
-        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-        var result = await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
 
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
 
-        return Ok("Password reset");
+            return Ok("Password reset");
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -158,24 +219,32 @@ public class UsersController : ControllerBase
     [HttpPost("enroll")]
     public async Task<IActionResult> EnrollUser([FromBody] EnrollUserRequest request)
     {
-        var exists = await _db.UserApplications.AnyAsync(ua =>
-            ua.UserId == request.UserId &&
-            ua.ApplicationId == request.ApplicationId);
-
-        if (exists)
-            return BadRequest("User already enrolled");
-
-        var enrollment = new UserApplication
+        try
         {
-            UserId = request.UserId,
-            ApplicationId = request.ApplicationId,
-            IsActive = true
-        };
+            var exists = await _db.UserApplications.AnyAsync(ua =>
+                ua.UserId == request.UserId &&
+                ua.ApplicationId == request.ApplicationId);
 
-        _db.UserApplications.Add(enrollment);
-        await _db.SaveChangesAsync();
+            if (exists)
+                return BadRequest("User already enrolled");
 
-        return Ok("User enrolled");
+            var enrollment = new UserApplication
+            {
+                UserId = request.UserId,
+                ApplicationId = request.ApplicationId,
+                IsActive = true
+            };
+
+            _db.UserApplications.Add(enrollment);
+            await _db.SaveChangesAsync();
+
+            return Ok("User enrolled");
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -185,17 +254,25 @@ public class UsersController : ControllerBase
     [HttpPost("unenroll")]
     public async Task<IActionResult> UnenrollUser([FromBody] EnrollUserRequest request)
     {
-        var enrollment = await _db.UserApplications.FirstOrDefaultAsync(ua =>
-            ua.UserId == request.UserId &&
-            ua.ApplicationId == request.ApplicationId);
+        try
+        {
+            var enrollment = await _db.UserApplications.FirstOrDefaultAsync(ua =>
+                ua.UserId == request.UserId &&
+                ua.ApplicationId == request.ApplicationId);
 
-        if (enrollment == null)
-            return NotFound("User is not enrolled");
+            if (enrollment == null)
+                return NotFound("User is not enrolled");
 
-        _db.UserApplications.Remove(enrollment);
-        await _db.SaveChangesAsync();
+            _db.UserApplications.Remove(enrollment);
+            await _db.SaveChangesAsync();
 
-        return Ok("User unenrolled");
+            return Ok("User unenrolled");
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -205,19 +282,27 @@ public class UsersController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null)
-            return NotFound("User not found");
+        try
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+                return NotFound("User not found");
 
-        user.UserName = request.UserName;
-        user.Email = request.Email;
+            user.UserName = request.UserName;
+            user.Email = request.Email;
 
-        var result = await _userManager.UpdateAsync(user);
+            var result = await _userManager.UpdateAsync(user);
 
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
 
-        return Ok(new { Message = "User updated", id });
+            return Ok(new { Message = "User updated", id });
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -227,16 +312,44 @@ public class UsersController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null)
-            return NotFound("User not found");
+        try
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+                return NotFound("User not found");
 
-        var result = await _userManager.DeleteAsync(user);
+            var result = await _userManager.DeleteAsync(user);
 
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
 
-        return Ok(new { Message = "User deleted", id });
+            return Ok(new { Message = "User deleted", id });
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
+
+    [HttpGet("{userId}/applications")]
+    public async Task<IActionResult> GetUserApplications(Guid userId)
+    {
+        try
+        {
+            var apps = await _db.UserApplications
+                .Where(x => x.UserId == userId)
+                .Select(x => x.ApplicationId)
+                .ToListAsync();
+
+            return Ok(apps);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
+
+    }
+
 
 }

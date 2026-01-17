@@ -1,9 +1,17 @@
-﻿@if (Roles == null)
+﻿@using Identity.DTO
+
+@if (AppId == Guid.Empty)
 {
-    <p>Select an application to manage roles.</p>
+    <p class="text-muted">Selecciona una aplicació per gestionar els rols.</p>
+}
+else if (Roles is null)
+{
+    <p class="text-muted">Carregant rols...</p>
 }
 else
 {
+    <h5>Rols per a @User.Email</h5>
+
     <ul class="list-group">
         @foreach (var role in Roles)
         {
@@ -25,7 +33,7 @@ else
     [Parameter] public UserDto User { get; set; } = default!;
     [Parameter] public Guid AppId { get; set; }
     [Parameter] public List<RoleDto>? Roles { get; set; }
-    [Parameter] public HashSet<Guid> Values { get; set; } = default!;
+    [Parameter] public HashSet<Guid> Values { get; set; } = new();
 
     [Parameter] public UsersApi UsersApi { get; set; } = default!;
 
@@ -33,12 +41,12 @@ else
 
     private async Task Toggle(Guid roleId, ChangeEventArgs e)
     {
-        if (isBusy)
+        if (isBusy || AppId == Guid.Empty)
             return;
 
         isBusy = true;
 
-        bool assign = (bool)e.Value!;
+        var assign = (bool)e.Value!;
 
         if (assign)
         {
@@ -52,5 +60,6 @@ else
         }
 
         isBusy = false;
+        StateHasChanged();
     }
 }

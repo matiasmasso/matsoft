@@ -3,40 +3,79 @@
 @inject ApplicationsApi AppsApi
 @inject RolesApi RolesApi
 
-<h3>Users</h3>
 
-<UsersList Users="users"
-           OnSelect="SelectUser"
-           OnCreate="CreateUser"
-           OnDelete="DeleteUser" />
-
-@if (selectedUser != null)
+@if (selectedUser == null)
 {
+    <UsersList Users="users"
+               OnSelect="SelectUser"
+               OnCreate="CreateUser"
+               OnDelete="DeleteUser" />
+}
+else
+{
+<h3>Users</h3>
     <UserEditor User="selectedUser"
                 Applications="applications"
                 RolesApi="RolesApi"
                 UsersApi="UsersApi" />
 }
+<Error Errors="_errors" OnClear="HandleClear" />
+
 
 @code {
     private List<UserDto>? users;
     private List<ApplicationDto>? applications;
     private UserDto? selectedUser;
+    private List<string> _errors = new();
+
 
     protected override async Task OnInitializedAsync()
     {
-        users = await UsersApi.GetUsersAsync();
-        applications = await AppsApi.GetApplicationsAsync();
+        try
+        {
+            (users, _errors) = await UsersApi.GetUsersAsync();
+
+            var (apps, errors) = await AppsApi.GetApplicationsAsync();
+            if (errors.Any())
+            {
+                _errors = errors;
+                return;
+            }
+            applications = apps;
+
+        }
+        catch (Exception ex)
+        {
+            _errors = new() { $"Unexpected error: {ex.Message}" };
+        }
 
     }
+
+
+
 
     private void SelectUser(UserDto user) => selectedUser = user;
 
     private async Task CreateUser(CreateUserRequest dto)
     {
-        var created = await UsersApi.CreateUserAsync(dto);
-        users!.Add(created);
+
+        try
+        {
+            var (user, errors) = await UsersApi.CreateUserAsync(dto);
+
+            if (errors.Any())
+            {
+                _errors = errors;
+                return;
+            }
+            users!.Add(user!);
+        }
+        catch (Exception ex)
+        {
+            _errors = new() { $"Unexpected error: {ex.Message}" };
+        }
     }
+
 
     private async Task DeleteUser(Guid id)
     {
@@ -44,5 +83,11 @@
         users!.RemoveAll(u => u.Id == id);
         if (selectedUser?.Id == id)
             selectedUser = null;
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
     }
 }

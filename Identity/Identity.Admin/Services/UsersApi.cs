@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using Identity.Api.Infrastructure.Errors;
 using Identity.DTO;
 
 namespace Identity.Admin.Services;
@@ -15,53 +16,98 @@ public class UsersApi
     // ------------------------------------------------------------
     // GET /users
     // ------------------------------------------------------------
-    public async Task<List<UserDto>> GetUsersAsync()
+
+    public async Task<(List<UserDto>? Users, List<string> Errors)> GetUsersAsync()
     {
-        return await _http.GetFromJsonAsync<List<UserDto>>("users")
-               ?? new List<UserDto>();
+        try
+        {
+            var response = await _http.GetAsync("users");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+                return (null, payload?.Errors ?? new List<string> { "Unknown error" });
+            }
+
+            var users = await response.Content.ReadFromJsonAsync<List<UserDto>>();
+            return (users ?? new List<UserDto>(), new List<string>());
+        }
+        catch (Exception ex)
+        {
+            return (null, new List<string> { ex.Message });
+        }
     }
 
     // ------------------------------------------------------------
     // GET /users/{id}
     // ------------------------------------------------------------
-    public async Task<UserDetailsDto> GetUserDetailsAsync(Guid userId)
+
+    public async Task<(UserDto? User, List<string> Errors)> GetUserDetailsAsync(Guid userId)
     {
-        return await _http.GetFromJsonAsync<UserDetailsDto>($"users/{userId}")
-               ?? new UserDetailsDto();
+        try
+        {
+            var response = await _http.GetAsync($"users/{userId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+                return (null, payload?.Errors ?? new List<string> { "Unknown error" });
+            }
+
+            var user = await response.Content.ReadFromJsonAsync<UserDto>();
+            return (user, new List<string>());
+        }
+        catch (Exception ex)
+        {
+            return (null, new List<string> { ex.Message });
+        }
     }
 
     // ------------------------------------------------------------
     // POST /users/create
     // ------------------------------------------------------------
-    public async Task<UserDto> CreateUserAsync(CreateUserRequest request)
+    public async Task<(UserDto? User, List<string> Errors)> CreateUserAsync(CreateUserRequest request)
     {
         var response = await _http.PostAsJsonAsync("users/create", request);
-        response.EnsureSuccessStatusCode();
 
-        // Controller returns: { message, id }
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (null, payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+
         var result = await response.Content.ReadFromJsonAsync<CreateUserResponse>();
-        return new UserDto
+
+        var user = new UserDto
         {
             Id = result!.Id,
             Email = request.Email,
             UserName = request.UserName,
             IsActive = true
         };
+
+        return (user, new());
     }
+
 
     // ------------------------------------------------------------
     // DELETE /users/{id}
     // ------------------------------------------------------------
-    public async Task DeleteUserAsync(Guid userId)
+    public async Task<List<string>> DeleteUserAsync(Guid userId)
     {
         var response = await _http.DeleteAsync($"users/{userId}");
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+        return new();
     }
 
     // ------------------------------------------------------------
     // POST /users/activate
     // ------------------------------------------------------------
-    public async Task ActivateUserAsync(Guid userId, bool isActive)
+    public async Task<List<string>> ActivateUserAsync(Guid userId, bool isActive)
     {
         var request = new ActivateUserRequest
         {
@@ -70,13 +116,18 @@ public class UsersApi
         };
 
         var response = await _http.PostAsJsonAsync("users/activate", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+        return new();
     }
 
     // ------------------------------------------------------------
     // POST /users/enroll
     // ------------------------------------------------------------
-    public async Task EnrollUserAsync(Guid userId, Guid appId)
+    public async Task<List<string>> EnrollUserAsync(Guid userId, Guid appId)
     {
         var request = new EnrollUserRequest
         {
@@ -85,13 +136,18 @@ public class UsersApi
         };
 
         var response = await _http.PostAsJsonAsync("users/enroll", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+        return new();
     }
 
     // ------------------------------------------------------------
     // POST /users/unenroll
     // ------------------------------------------------------------
-    public async Task UnenrollUserAsync(Guid userId, Guid appId)
+    public async Task<List<string>> UnenrollUserAsync(Guid userId, Guid appId)
     {
         var request = new EnrollUserRequest
         {
@@ -100,23 +156,34 @@ public class UsersApi
         };
 
         var response = await _http.PostAsJsonAsync("users/unenroll", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+        return new();
     }
 
     // ------------------------------------------------------------
     // GET /users/{id}/roles/{appId}
     // ------------------------------------------------------------
-    public async Task<List<Guid>> GetUserRolesAsync(Guid userId, Guid appId)
+    public async Task<(List<Guid>?, List<string> Errors)> GetUserRolesAsync(Guid userId, Guid appId)
     {
-        return await _http.GetFromJsonAsync<List<Guid>>(
-                   $"users/{userId}/roles/{appId}"
-               ) ?? new List<Guid>();
+        var response = await _http.GetAsync($"users/{userId}/roles/{appId}");
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (null, payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<List<Guid>>();
+        return (result, new());
     }
 
     // ------------------------------------------------------------
     // POST /users/roles/assign
     // ------------------------------------------------------------
-    public async Task AssignRoleAsync(Guid userId, Guid roleId, Guid appId)
+    public async Task<List<string>> AssignRoleAsync(Guid userId, Guid roleId, Guid appId)
     {
         var request = new AssignRoleRequest
         {
@@ -126,13 +193,18 @@ public class UsersApi
         };
 
         var response = await _http.PostAsJsonAsync("users/roles/assign", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+        return new();
     }
 
     // ------------------------------------------------------------
     // POST /users/roles/remove
     // ------------------------------------------------------------
-    public async Task RemoveRoleAsync(Guid userId, Guid roleId, Guid appId)
+    public async Task<List<string>> RemoveRoleAsync(Guid userId, Guid roleId, Guid appId)
     {
         var request = new AssignRoleRequest
         {
@@ -142,13 +214,18 @@ public class UsersApi
         };
 
         var response = await _http.PostAsJsonAsync("users/roles/remove", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+        return new();
     }
 
     // ------------------------------------------------------------
     // POST /users/reset-password
     // ------------------------------------------------------------
-    public async Task ResetPasswordAsync(Guid userId, string newPassword)
+    public async Task<List<string>> ResetPasswordAsync(Guid userId, string newPassword)
     {
         var request = new AdminResetPasswordRequest
         {
@@ -157,7 +234,27 @@ public class UsersApi
         };
 
         var response = await _http.PostAsJsonAsync("users/reset-password", request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            return (payload?.Errors ?? new List<string> { "Unknown error" });
+        }
+        return new();
+    }
+
+    public async Task<(HashSet<Guid>? Values, List<string> Errors)> GetUserApplicationsAsync(Guid userId)
+    {
+            var response = await _http.GetAsync($"users/{userId}/applications");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+                return (null, payload?.Errors ?? new List<string> { "Unknown error" });
+            }
+
+            var list = await response.Content.ReadFromJsonAsync<List<Guid>>();
+            return (list?.ToHashSet() ?? new HashSet<Guid>(), new List<string>());
+        
     }
 }
 

@@ -3,6 +3,7 @@
 <div class="row">
     <div class="col-4">
         <UserApplications User="User"
+                          Values="enrolledApps"
                           Applications="Applications"
                           UsersApi="UsersApi"
                           OnAppSelected="LoadRoles" />
@@ -12,13 +13,18 @@
         <UserRoles Roles="roles"
                    User="User"
                    AppId="selectedAppId"
+                   Values="assignedRoles"
                    UsersApi="UsersApi" />
+
     </div>
 </div>
 
 <hr />
 
-<UserPasswordReset User="User" UsersApi="UsersApi" />
+@* <UserPasswordReset User="User" UsersApi="UsersApi" /> *@
+
+<Error Errors="_errors" OnClear="HandleClear" />
+
 
 @code {
     [Parameter] public UserDto User { get; set; } = default!;
@@ -29,9 +35,31 @@
     private Guid selectedAppId;
     private List<RoleDto>? roles;
 
+    private HashSet<Guid> enrolledApps = new();
+    private HashSet<Guid> assignedRoles = new();
+    private List<string> _errors = new();
+
+
     private async Task LoadRoles(Guid appId)
     {
         selectedAppId = appId;
-        roles = await RolesApi.GetRolesForAppAsync(appId);
+
+        (roles, _errors) = await RolesApi.GetRolesForAppAsync(appId);
+
+        assignedRoles = User.Roles
+            .Where(r => r.ApplicationId == appId)
+            .Select(r => r.RoleId)
+            .ToHashSet();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
     }
 }

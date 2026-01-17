@@ -1,4 +1,5 @@
-﻿using Identity.Data;
+﻿using Identity.Api.Infrastructure.Errors;
+using Identity.Data;
 using Identity.Domain.Entities;
 using Identity.DTO;
 using Microsoft.AspNetCore.Mvc;
@@ -23,17 +24,25 @@ public class ApplicationsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<ApplicationDto>>> GetAll()
     {
-        var apps = await _db.Applications
-            .Select(a => new ApplicationDto
-            {
-                Id = a.Id,
-                Name = a.Name,
-                ClientId = a.ClientId,
-                IsActive = a.IsActive
-            })
-            .ToListAsync();
+        try
+        {
+            var apps = await _db.Applications
+                .Select(a => new ApplicationDto
+                {
+                    ApplicationId = a.Id,
+                    Name = a.Name,
+                    ClientId = a.ClientId,
+                    IsActive = a.IsActive
+                })
+                .ToListAsync();
 
-        return Ok(apps);
+            return Ok(apps);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
+
     }
 
     // ------------------------------------------------------------
@@ -42,17 +51,25 @@ public class ApplicationsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApplicationDto>> Get(Guid id)
     {
-        var app = await _db.Applications.FindAsync(id);
-        if (app == null)
-            return NotFound();
-
-        return Ok(new ApplicationDto
+        try
         {
-            Id = app.Id,
-            Name = app.Name,
-            ClientId = app.ClientId,
-            IsActive = app.IsActive
-        });
+            var app = await _db.Applications.FindAsync(id);
+            if (app == null)
+                return NotFound();
+
+            return Ok(new ApplicationDto
+            {
+                ApplicationId = app.Id,
+                Name = app.Name,
+                ClientId = app.ClientId,
+                IsActive = app.IsActive
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
+
     }
 
     // ------------------------------------------------------------
@@ -61,18 +78,26 @@ public class ApplicationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> Create(CreateApplicationRequest request)
     {
-        var app = new Application
+        try
         {
-            Id = Guid.NewGuid(),
-            Name = request.Name,
-            ClientId = request.ClientId,
-            IsActive = request.IsActive
-        };
 
-        _db.Applications.Add(app);
-        await _db.SaveChangesAsync();
+            var app = new Application
+            {
+                Id = Guid.NewGuid(),
+                Name = request.Name,
+                ClientId = request.ClientId,
+                IsActive = request.IsActive
+            };
 
-        return CreatedAtAction(nameof(Get), new { id = app.Id }, null);
+            _db.Applications.Add(app);
+            await _db.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(Get), new { id = app.Id }, null);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -81,16 +106,24 @@ public class ApplicationsController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> Update(Guid id, UpdateApplicationRequest request)
     {
-        var app = await _db.Applications.FindAsync(id);
-        if (app == null)
-            return NotFound();
+        try
+        {
+            var app = await _db.Applications.FindAsync(id);
+            if (app == null)
+                return NotFound();
 
-        app.Name = request.Name;
-        app.ClientId = request.ClientId;
-        app.IsActive = request.IsActive;
+            app.Name = request.Name;
+            app.ClientId = request.ClientId;
+            app.IsActive = request.IsActive;
 
-        await _db.SaveChangesAsync();
-        return NoContent();
+            await _db.SaveChangesAsync();
+            return NoContent();
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
     }
 
     // ------------------------------------------------------------
@@ -99,13 +132,21 @@ public class ApplicationsController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> Delete(Guid id)
     {
-        var app = await _db.Applications.FindAsync(id);
-        if (app == null)
-            return NotFound();
+        try
+        {
+            var app = await _db.Applications.FindAsync(id);
+            if (app == null)
+                return NotFound();
 
-        _db.Applications.Remove(app);
-        await _db.SaveChangesAsync();
+            _db.Applications.Remove(app);
+            await _db.SaveChangesAsync();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ErrorResult.FromException(ex));
+        }
+
     }
 }

@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient", policy =>
-        policy.WithOrigins("https://localhost:7006", "https://identity.admin.matiasmasso.es")
+        policy.WithOrigins("https://localhost:7006", "https://identity.matiasmasso.es")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials());
@@ -77,9 +77,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddSingleton<IAuthorizationHandler, AppRoleHandler>();
 
-
-builder.Services.AddAutoMapper(typeof(Program));
-
+//builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -127,6 +125,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseDefaultFiles();   // <-- activa index.html com a pàgina per defecte
+app.UseStaticFiles();    // <-- serveix wwwroot
 
 app.MapControllers();
 

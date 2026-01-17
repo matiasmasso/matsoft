@@ -40,7 +40,7 @@ else
                         </button>
 
                         <button class="btn btn-sm btn-danger"
-                                @onclick="() => DeleteApplication(app.Id)">
+                                @onclick="() => DeleteApplication(app.ApplicationId)">
                             Delete
                         </button>
                     </td>
@@ -79,8 +79,12 @@ else
     </button>
 }
 
+<Error Errors="_errors" OnClear="HandleClear" />
+
+
 @code {
     private List<ApplicationDto>? applications;
+    private List<string> _errors = new();
 
     private bool isEditing = false;
     private Guid editingAppId = Guid.Empty;
@@ -89,7 +93,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        applications = await AppsApi.GetApplicationsAsync();
+        var (apps, errors) = await AppsApi.GetApplicationsAsync();
+        if (errors.Any())
+        {
+            _errors = errors;
+            return;
+        }
+        applications = apps;
     }
 
     private void NewApplication()
@@ -101,7 +111,7 @@ else
 
     private void EditApplication(ApplicationDto app)
     {
-        editingAppId = app.Id;
+        editingAppId = app.ApplicationId;
 
         model = new CreateApplicationRequest
         {
@@ -131,7 +141,13 @@ else
             await AppsApi.UpdateApplicationAsync(editingAppId, update);
         }
 
-        applications = await AppsApi.GetApplicationsAsync();
+        var (apps, errors) = await AppsApi.GetApplicationsAsync();
+        if (errors.Any())
+        {
+            _errors = errors;
+            return;
+        }
+        applications = apps;
         isEditing = false;
     }
 
@@ -151,7 +167,7 @@ else
             IsActive = isActive
         };
 
-        await AppsApi.UpdateApplicationAsync(app.Id, update);
+        await AppsApi.UpdateApplicationAsync(app.ApplicationId, update);
 
         app.IsActive = isActive;
     }
@@ -159,6 +175,18 @@ else
     private async Task DeleteApplication(Guid appId)
     {
         await AppsApi.DeleteApplicationAsync(appId);
-        applications = await AppsApi.GetApplicationsAsync();
+        var (apps, errors) = await AppsApi.GetApplicationsAsync();
+        if (errors.Any())
+        {
+            _errors = errors;
+            return;
+        }
+        applications = apps;
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
     }
 }
