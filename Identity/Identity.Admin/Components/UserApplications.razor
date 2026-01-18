@@ -14,15 +14,16 @@ else
             var enrolled = User.Applications.Any(a => a.ApplicationId == app.ApplicationId);
 
             <li class="list-group-item d-flex justify-content-between align-items-center
-                               @(app.ApplicationId == SelectedAppId ? "active" : "")"
-                @onclick="() => SelectApplication(app.ApplicationId)">
+                                   @(app.ApplicationId == SelectedAppId ? "active" : "")"
+                @onclick="() => SelectApplication(app.ApplicationId!.Value)">
+
                 <span>@app.Name</span>
 
                 <input type="checkbox"
                        checked="@enrolled"
                        @onclick:stopPropagation="true"
                        disabled="@isBusy"
-                       @onchange="e => ToggleApplication(app.ApplicationId, e)" />
+                       @onchange="e => Toggle(app.ApplicationId!.Value, (bool)e.Value!)" />
             </li>
         }
     </ul>
@@ -34,7 +35,11 @@ else
     [Parameter] public Guid SelectedAppId { get; set; }
     [Parameter] public UsersApi UsersApi { get; set; } = default!;
 
+    // Parent handles selection
     [Parameter] public EventCallback<Guid> OnAppSelected { get; set; }
+
+    // Parent handles enrollment changes
+    [Parameter] public EventCallback<(Guid AppId, bool Enroll)> OnToggleApp { get; set; }
 
     private bool isBusy = false;
 
@@ -44,36 +49,22 @@ else
             await OnAppSelected.InvokeAsync(appId);
     }
 
-    private async Task ToggleApplication(Guid appId, ChangeEventArgs e)
+    private async Task Toggle(Guid appId, bool enroll)
     {
         if (User is null || isBusy)
             return;
 
         isBusy = true;
 
-        var enroll = (bool)e.Value!;
-
+        // Call API
         if (enroll)
             await UsersApi.EnrollUserAsync(User.Id, appId);
         else
             await UsersApi.UnenrollUserAsync(User.Id, appId);
 
-        // Actualitza la llista d’aplicacions del user en memòria
-        if (enroll)
-        {
-            if (!User.Applications.Any(a => a.ApplicationId == appId))
-            {
-                var app = Applications.FirstOrDefault(a => a.ApplicationId == appId);
-                if (app is not null)
-                    User.Applications.Add(app);
-            }
-        }
-        else
-        {
-            var existing = User.Applications.FirstOrDefault(a => a.ApplicationId == appId);
-            if (existing is not null)
-                User.Applications.Remove(existing);
-        }
+        // Notify parent to update the cloned model
+        if (OnToggleApp.HasDelegate)
+            await OnToggleApp.InvokeAsync((appId, enroll));
 
         isBusy = false;
         StateHasChanged();

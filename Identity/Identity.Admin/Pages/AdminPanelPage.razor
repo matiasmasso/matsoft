@@ -2,6 +2,8 @@
 
 @using Identity.DTO
 @inject ApplicationsApi ApplicationsApi
+@inject UsersApi UsersApi
+@inject RolesApi RolesApi   
 
 <div class="container-fluid">
     <div class="row">
@@ -43,10 +45,6 @@
 <Error Errors="_errors" OnClear="HandleClear" />
 
 @code {
-    // API clients injectats
-    [Parameter] public UsersApi UsersApi { get; set; } = default!;
-    [Parameter] public RolesApi RolesApi { get; set; } = default!;
-
     // Dades carregades
     private List<UserDto>? users;
     private List<ApplicationDto>? applications;

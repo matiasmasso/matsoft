@@ -125,6 +125,29 @@ public class UsersController : ControllerBase
     }
 
     // ------------------------------------------------------------
+    // GET /users/by-email/{email}
+    // ------------------------------------------------------------
+    [HttpGet("by-email/{email}")]
+    public async Task<IActionResult> GetUserByEmail(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+            return NotFound("User not found");
+
+        // Map to your UserDto
+        var dto = new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            UserName = user.UserName,
+            IsActive = user.IsActive
+        };
+
+        return Ok(dto);
+    }
+
+
+    // ------------------------------------------------------------
     // POST /users/create
     // Create a new user
     // ------------------------------------------------------------
@@ -290,6 +313,10 @@ public class UsersController : ControllerBase
 
             user.UserName = request.UserName;
             user.Email = request.Email;
+            user.IsActive = request.IsActive;
+
+            user.NormalizedUserName = _userManager.NormalizeName(request.UserName);
+            user.NormalizedEmail = _userManager.NormalizeEmail(request.Email);
 
             var result = await _userManager.UpdateAsync(user);
 
@@ -297,7 +324,6 @@ public class UsersController : ControllerBase
                 return BadRequest(result.Errors);
 
             return Ok(new { Message = "User updated", id });
-
         }
         catch (Exception ex)
         {

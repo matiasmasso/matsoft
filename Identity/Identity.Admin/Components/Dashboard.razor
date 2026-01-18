@@ -14,7 +14,16 @@
             <div class="card shadow-sm stat-card">
                 <div class="card-body">
                     <h5 class="card-title">Usuaris</h5>
-                    <p class="display-6">@Users.Count</p>
+                    <p class="display-6">
+                        @if (users == null)
+                        {
+                            <span>...</span>
+                        }
+                        else
+                        {
+                            <span>@users?.Count</span>
+                        }
+                    </p>
                 </div>
             </div>
         </div>
@@ -23,7 +32,7 @@
             <div class="card shadow-sm stat-card">
                 <div class="card-body">
                     <h5 class="card-title">Aplicacions</h5>
-                    <p class="display-6">@Applications.Count</p>
+                    <p class="display-6">@applications?.Count</p>
                 </div>
             </div>
         </div>
@@ -41,7 +50,7 @@
             <div class="card shadow-sm stat-card">
                 <div class="card-body">
                     <h5 class="card-title">Actius</h5>
-                    <p class="display-6">@ActiveUsers / @Users.Count</p>
+                    <p class="display-6">@ActiveUsers / @users?.Count</p>
                 </div>
             </div>
         </div>
@@ -82,16 +91,20 @@
                     Últims usuaris creats
                 </div>
                 <div class="card-body">
-                    <ul class="list-group">
-                        @foreach (var u in Users.OrderByDescending(u => u.CreatedAt).Take(5))
-                        {
-                            <li class="list-group-item">
-                                <strong>@u.UserName</strong>
-                                <div class="small text-muted">@u.Email</div>
-                                <div class="small">@u.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
-                            </li>
-                        }
-                    </ul>
+
+                    @if (users != null)
+                    {
+                        <ul class="list-group">
+                            @foreach (var u in users.OrderByDescending(u => u.CreatedAt).Take(5))
+                            {
+                                <li class="list-group-item">
+                                    <strong>@u.UserName</strong>
+                                    <div class="small text-muted">@u.Email</div>
+                                    <div class="small">@u.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                </li>
+                            }
+                        </ul>
+                    }
                 </div>
             </div>
         </div>
@@ -102,11 +115,11 @@
 
 @code {
 
-    private List<UserDto> Users = new();
-    private List<ApplicationDto> Applications = new();
+    private List<UserDto>? users;
+    private List<ApplicationDto>? applications = new();
     private int TotalRoles = 0;
     private int ActiveUsers = 0;
-    private List<string> _errors = new();
+    private List<string>? _errors = new();
 
     private Dictionary<string, int> UsersPerApp = new();
 
@@ -115,35 +128,20 @@
         // Carrega dades
         // Users = await UsersApi.GetUsersAsync();
 
-        var (users, errors) = await UsersApi.GetUsersAsync();
-        if (errors.Any())
-        {
-            _errors = errors;
-            return;
-        }
-        Users = users ?? new();
-
-        (Applications, _errors) = await ApplicationsApi.GetApplicationsAsync();
-
-        // var (apps, errors2) = await ApplicationsApi.GetApplicationsAsync();
-        // if (errors.Any())
-        // {
-        //     _errors = errors;
-        //     return;
-        // }
-        // Applications = apps ?? new();
+        (users, _errors) = await UsersApi.GetUsersAsync();
+        (applications, _errors) = await ApplicationsApi.GetApplicationsAsync();
 
         // Comptar rols totals
-        TotalRoles = Users.SelectMany(u => u.Roles).Select(r => r.RoleId).Distinct().Count();
+        TotalRoles = users.SelectMany(u => u.Roles).Select(r => r.RoleId).Distinct().Count();
 
         // Comptar usuaris actius
-        ActiveUsers = Users.Count(u => u.IsActive);
+        ActiveUsers = users.Count(u => u.IsActive);
 
         // Distribució d'usuaris per aplicació
-        UsersPerApp = Applications
+        UsersPerApp = applications
             .ToDictionary(
                 app => app.Name,
-                app => Users.Count(u => u.Applications.Any(a => a.ApplicationId == app.ApplicationId))
+                app => users.Count(u => u.Applications.Any(a => a.ApplicationId == app.ApplicationId))
             );
     }
 

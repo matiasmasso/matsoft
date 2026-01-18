@@ -31,13 +31,35 @@ public class UsersApi : _BaseApiClient
         );
     }
 
+    public async Task<UserDto?> GetUserDetailsAsyncByEmail(string email)
+    {
+        var response = await _http.GetAsync($"users/by-email/{email}");
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<UserDto>();
+    }
+
     // ------------------------------------------------------------
     // POST /users/create
     // ------------------------------------------------------------
-    public Task<List<string>?> CreateUserAsync(UserDto value)
+    public Task<List<string>?> CreateUserAsync(CreateUserRequest request)
     {
         return CallAsync(() =>
-            _http.PostAsJsonAsync("users/create", value)
+            _http.PostAsJsonAsync("users/create", request)
+        );
+    }
+
+
+    // ------------------------------------------------------------
+    // PUT /users/{id}
+    // ------------------------------------------------------------
+
+    public Task<List<string>?> UpdateUserAsync(Guid id, UpdateUserRequest request)
+    {
+        return CallAsync(() =>
+            _http.PutAsJsonAsync($"users/{id}", request)
         );
     }
 

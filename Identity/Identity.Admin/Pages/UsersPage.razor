@@ -3,31 +3,33 @@
 @inject ApplicationsApi AppsApi
 @inject RolesApi RolesApi
 
-
 @if (selectedUser == null)
 {
     <UsersList Users="users"
-               OnSelect="SelectUser"
-               OnCreate="CreateUser"
-               OnDelete="DeleteUser" />
+               SelectedUserId="selectedUser?.Id"
+               OnUserSelected="HandleSelectUser"
+               OnCreateUser="HandleCreateUser"
+               OnDeleteUser="HandleDeleteUser" />
 }
 else
 {
     <h3>Users</h3>
+
     <UserEditor User="selectedUser"
                 Applications="applications"
                 RolesApi="RolesApi"
-                UsersApi="UsersApi" />
+                UsersApi="UsersApi"
+                OnClose="HandleCloseEditor"
+                OnSaved="HandleUserSaved" />
 }
-<Error Errors="_errors" OnClear="HandleClear" />
 
+<Error Errors="_errors" OnClear="HandleClear" />
 
 @code {
     private List<UserDto>? users;
     private List<ApplicationDto>? applications;
     private UserDto? selectedUser;
-    private List<string>? _errors = new();
-
+    private List<string>? _errors;
 
     protected override async Task OnInitializedAsync()
     {
@@ -35,25 +37,51 @@ else
         (applications, _errors) = await AppsApi.GetApplicationsAsync();
     }
 
-    private void SelectUser(UserDto user) => selectedUser = user;
-
-    private async Task CreateUser(UserDto user)
+    private void HandleSelectUser(UserDto user)
     {
-        _errors = await UsersApi.CreateUserAsync(user);
-        if (_errors is null || !_errors.Any())
-            users!.Add(user);
+        selectedUser = user;
     }
 
-
-    private async Task DeleteUser(Guid id)
+    private void HandleCreateUser()
     {
-        _errors = await UsersApi.DeleteUserAsync(id);
-        if (_errors is null || !_errors.Any())
+        selectedUser = new UserDto(); // new blank user for editor
+    }
+
+    private async Task HandleDeleteUser(UserDto user)
+    {
+        _errors = await UsersApi.DeleteUserAsync(user.Id);
+
+        if (_errors == null || !_errors.Any())
         {
-            users!.RemoveAll(u => u.Id == id);
-            if (selectedUser?.Id == id)
+            users!.Remove(user);
+
+            if (selectedUser?.Id == user.Id)
                 selectedUser = null;
         }
+    }
+
+    private void HandleCloseEditor()
+    {
+        selectedUser = null;
+    }
+
+    private void HandleUserSaved(UserDto updatedUser)
+    {
+        var existing = users!.FirstOrDefault(u => u.Id == updatedUser.Id);
+
+        if (existing == null)
+        {
+            // new user created
+            users.Add(updatedUser);
+        }
+        else
+        {
+            // update existing user
+            var index = users.IndexOf(existing);
+            users[index] = updatedUser;
+        }
+
+        selectedUser = null;
     }
 
     private async Task HandleClear()

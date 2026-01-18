@@ -1,29 +1,3 @@
 ﻿@page "/"
 
-
-@inject ApplicationsApi ApplicationsApi
-@inject UsersApi UsersApi
-
-<p>apps=@applications?.Count</p>
-<p>users=@users?.Count</p>
-<Error Errors="_errors" OnClear="HandleClear" />
-
-@code {
-
-    private List<ApplicationDto>? applications;
-    private List<UserDto>? users;
-    private List<string>? _errors;
-
-
-    protected override async Task OnInitializedAsync()
-    {
-        ( applications,_errors) = await ApplicationsApi.GetApplicationsAsync();
-        ( users,_errors) = await UsersApi.GetUsersAsync();
-    }
-
-    private async Task HandleClear()
-    {
-        _errors?.Clear();
-        await InvokeAsync(StateHasChanged);
-    }
-}
+<Dashboard></Dashboard>

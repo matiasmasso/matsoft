@@ -1,34 +1,57 @@
 ﻿@using Identity.DTO
 
 <div class="user-list">
+
+    <button class="btn btn-primary mb-2" @onclick="OnCreateUser">
+        + Nou usuari
+    </button>
+
     <input class="form-control mb-2"
            placeholder="Cerca usuari..."
            @bind="search"
            @bind:event="oninput" />
 
-    <ul class="list-group">
-        @foreach (var u in FilteredUsers)
-        {
-            <li class="list-group-item user-item @(u.Id == SelectedUserId ? "active" : "")"
-                @onclick="() => SelectUser(u)">
-                <strong>@u.UserName</strong>
-                <div class="small text-muted">@u.Email</div>
-            </li>
-        }
-    </ul>
+    @if (FilteredUsers != null)
+    {
+        <ul class="list-group">
+            @foreach (var u in FilteredUsers)
+            {
+                <li class="list-group-item user-item @(u.Id == SelectedUserId ? "active" : "")"
+                    @onclick="() => SelectUser(u)">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@u.UserName</strong>
+                            <div class="small text-muted">@u.Email</div>
+                        </div>
+
+                        <button class="btn btn-sm btn-danger"
+                                @onclick="@(e => DeleteUser(u))">
+                            Elimina
+                        </button>
+                    </div>
+
+                </li>
+            }
+        </ul>
+    }
+
 </div>
 
 @code {
-    [Parameter] public List<UserDto>? Users { get; set; } 
+    [Parameter] public List<UserDto>? Users { get; set; }
     [Parameter] public Guid? SelectedUserId { get; set; }
     [Parameter] public EventCallback<UserDto> OnUserSelected { get; set; }
 
+    [Parameter] public EventCallback OnCreateUser { get; set; }
+    [Parameter] public EventCallback<UserDto> OnDeleteUser { get; set; }
+
     private string search = string.Empty;
 
-    private IEnumerable<UserDto> FilteredUsers =>
+    private IEnumerable<UserDto>? FilteredUsers =>
         string.IsNullOrWhiteSpace(search)
             ? Users
-            : Users.Where(u =>
+            : Users?.Where(u =>
                 (u.UserName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (u.Email?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
 
@@ -36,5 +59,11 @@
     {
         if (OnUserSelected.HasDelegate)
             await OnUserSelected.InvokeAsync(user);
+    }
+
+    private async Task DeleteUser(UserDto user)
+    {
+        if (OnDeleteUser.HasDelegate)
+            await OnDeleteUser.InvokeAsync(user);
     }
 }

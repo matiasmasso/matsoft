@@ -109,17 +109,11 @@ else
     private Guid editingRoleId = Guid.Empty;
 
     private CreateRoleRequest model = new();
-    private List<string> _errors = new();
+    private List<string>? _errors = new();
 
     protected override async Task OnInitializedAsync()
     {
-        var (apps, errors) = await AppsApi.GetApplicationsAsync();
-        if (errors.Any())
-        {
-            _errors = errors;
-            return;
-        }
-        applications = apps;
+        (applications, _errors) = await AppsApi.GetApplicationsAsync();
     }
 
     private async Task OnAppChanged(ChangeEventArgs e)
