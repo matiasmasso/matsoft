@@ -11,7 +11,7 @@
             <h4 class="mb-3">Usuaris</h4>
 
             <UsersList Users="users"
-                      SelectedUserId="SelectedUser?.Id"
+                      SelectedUserId="selectedUser?.Id"
                       OnUserSelected="HandleUserSelected" />
         </div>
 
@@ -19,9 +19,9 @@
         <div class="col-4 border-end">
             <h4 class="mb-3">Aplicacions</h4>
 
-            <UserApplications User="SelectedUser"
+            <UserApplications User="selectedUser"
                               Applications="applications"
-                              SelectedAppId="SelectedAppId"
+                              SelectedAppId="selectedAppId"
                               UsersApi="UsersApi"
                               OnAppSelected="HandleAppSelected" />
         </div>
@@ -30,10 +30,10 @@
         <div class="col-5">
             <h4 class="mb-3">Rols</h4>
 
-            <UserRoles User="SelectedUser"
-                       AppId="SelectedAppId"
-                       Roles="Roles"
-                       Values="AssignedRoles"
+            <UserRoles User="selectedUser"
+                       AppId="selectedAppId"
+                       Roles="roles"
+                       Values="assignedRoles"
                        UsersApi="UsersApi" />
         </div>
 
@@ -50,52 +50,42 @@
     // Dades carregades
     private List<UserDto>? users;
     private List<ApplicationDto>? applications;
-    private List<RoleDto>? Roles;
+    private List<RoleDto>? roles;
 
     // Estat actual
-    private UserDto? SelectedUser;
-    private Guid SelectedAppId = Guid.Empty;
-    private HashSet<Guid> AssignedRoles = new();
-    private List<string> _errors = new();
+    private UserDto? selectedUser;
+    private Guid selectedAppId = Guid.Empty;
+    private HashSet<Guid> assignedRoles = new();
+    private List<string>? _errors;
 
     protected override async Task OnInitializedAsync()
     {
-        // Carrega tots els usuaris
         (users, _errors) = await UsersApi.GetUsersAsync();
         (applications, _errors) = await ApplicationsApi.GetApplicationsAsync();
-
-        // // Carrega totes les aplicacions del sistema
-        // var (apps, errors) = await ApplicationsApi.GetApplicationsAsync();
-        // if (errors.Any())
-        // {
-        //     _errors = errors;
-        //     return;
-        // }
-        // Applications = apps;
     }
 
     private async Task HandleUserSelected(UserDto user)
     {
-        SelectedUser = user;
-        SelectedAppId = Guid.Empty;
-        Roles = null;
-        AssignedRoles.Clear();
+        selectedUser = user;
+        selectedAppId = Guid.Empty;
+        roles = null;
+        assignedRoles.Clear();
 
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task HandleAppSelected(Guid appId)
     {
-        if (SelectedUser is null)
+        if (selectedUser is null)
             return;
 
-        SelectedAppId = appId;
+        selectedAppId = appId;
 
         // Carrega rols disponibles per a l'aplicació
-        (Roles, _errors) = await RolesApi.GetRolesForAppAsync(appId);
+        (roles, _errors) = await RolesApi.GetRolesForAppAsync(appId);
 
         // Filtra rols assignats al user per aquesta app
-        AssignedRoles = SelectedUser.Roles
+        assignedRoles = selectedUser.Roles
             .Where(r => r.ApplicationId == appId)
             .Select(r => r.RoleId)
             .ToHashSet();

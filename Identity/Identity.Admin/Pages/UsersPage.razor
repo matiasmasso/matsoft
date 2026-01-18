@@ -13,7 +13,7 @@
 }
 else
 {
-<h3>Users</h3>
+    <h3>Users</h3>
     <UserEditor User="selectedUser"
                 Applications="applications"
                 RolesApi="RolesApi"
@@ -26,63 +26,34 @@ else
     private List<UserDto>? users;
     private List<ApplicationDto>? applications;
     private UserDto? selectedUser;
-    private List<string> _errors = new();
+    private List<string>? _errors = new();
 
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            (users, _errors) = await UsersApi.GetUsersAsync();
-
-            var (apps, errors) = await AppsApi.GetApplicationsAsync();
-            if (errors.Any())
-            {
-                _errors = errors;
-                return;
-            }
-            applications = apps;
-
-        }
-        catch (Exception ex)
-        {
-            _errors = new() { $"Unexpected error: {ex.Message}" };
-        }
-
+        (users, _errors) = await UsersApi.GetUsersAsync();
+        (applications, _errors) = await AppsApi.GetApplicationsAsync();
     }
-
-
-
 
     private void SelectUser(UserDto user) => selectedUser = user;
 
-    private async Task CreateUser(CreateUserRequest dto)
+    private async Task CreateUser(UserDto user)
     {
-
-        try
-        {
-            var (user, errors) = await UsersApi.CreateUserAsync(dto);
-
-            if (errors.Any())
-            {
-                _errors = errors;
-                return;
-            }
-            users!.Add(user!);
-        }
-        catch (Exception ex)
-        {
-            _errors = new() { $"Unexpected error: {ex.Message}" };
-        }
+        _errors = await UsersApi.CreateUserAsync(user);
+        if (_errors is null || !_errors.Any())
+            users!.Add(user);
     }
 
 
     private async Task DeleteUser(Guid id)
     {
-        await UsersApi.DeleteUserAsync(id);
-        users!.RemoveAll(u => u.Id == id);
-        if (selectedUser?.Id == id)
-            selectedUser = null;
+        _errors = await UsersApi.DeleteUserAsync(id);
+        if (_errors is null || !_errors.Any())
+        {
+            users!.RemoveAll(u => u.Id == id);
+            if (selectedUser?.Id == id)
+                selectedUser = null;
+        }
     }
 
     private async Task HandleClear()

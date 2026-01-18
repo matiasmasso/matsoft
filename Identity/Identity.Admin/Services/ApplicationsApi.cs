@@ -4,103 +4,64 @@ using System.Net.Http.Json;
 
 namespace Identity.Admin.Services;
 
-public class ApplicationsApi
+public class ApplicationsApi : _BaseApiClient
 {
-    private readonly HttpClient _http;
+    public ApplicationsApi(HttpClient http) : base(http) { }
 
-    public ApplicationsApi(HttpClient http)
-    {
-        _http = http;
-    }
 
     // ------------------------------------------------------------
     // GET /applications
     // Returns all applications
     // ------------------------------------------------------------
-
-
-    public async Task<(List<ApplicationDto>? Applications, List<string>? Errors)> GetApplicationsAsync()
+    public Task<(List<ApplicationDto>? Applications, List<string>? Errors)> GetApplicationsAsync()
     {
-        try
-        {
-            var response = await _http.GetAsync("applications");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-                return (null, payload?.Errors ?? new List<string> { "Unknown error" });
-            }
-
-            var apps = await response.Content.ReadFromJsonAsync<List<ApplicationDto>>();
-            return (apps ?? new List<ApplicationDto>(), null);
-        }
-        catch (Exception ex)
-        {
-            return (null, new List<string> { ex.Message });
-        }
+        return ReadAsync<List<ApplicationDto>>(() =>
+            _http.GetAsync("applications")
+        );
     }
-
 
     // ------------------------------------------------------------
     // GET /applications/{id}
     // Returns a single application
     // ------------------------------------------------------------
-    public async Task<(ApplicationDto? Applications, List<string>? Errors)> GetApplicationAsync(Guid appId)
+    public Task<(ApplicationDto? Application, List<string>? Errors)> GetApplicationAsync(Guid appId)
     {
-        //return await _http.GetFromJsonAsync<ApplicationDto>($"applications/{appId}");
-        var response = await _http.GetAsync($"applications/{appId}");
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-            return (null, payload?.Errors ?? new List<string> { "Unknown error" });
-        }
-        var app = await response.Content.ReadFromJsonAsync<ApplicationDto>();
-        return (app, null);
+        return ReadAsync<ApplicationDto>(() =>
+            _http.GetAsync($"applications/{appId}")
+        );
     }
 
     // ------------------------------------------------------------
     // POST /applications
     // Creates a new application
     // ------------------------------------------------------------
-    public async Task<List<string>?> CreateApplicationAsync(CreateApplicationRequest request)
+    public Task<List<string>?> CreateApplicationAsync(ApplicationDto value)
     {
-        var response = await _http.PostAsJsonAsync("applications", request);
-        if (!response.IsSuccessStatusCode)
-        {
-            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-            return (payload?.Errors ?? new List<string> { "Unknown error" });
-        }
-        return null;
+        return CallAsync(() =>
+            _http.PostAsJsonAsync("applications", value)
+        );
     }
 
     // ------------------------------------------------------------
     // PUT /applications/{id}
     // Updates an existing application
     // ------------------------------------------------------------
-    public async Task<List<string>?> UpdateApplicationAsync(Guid appId, UpdateApplicationRequest request)
+    public Task<List<string>?> UpdateApplicationAsync(ApplicationDto value)
     {
-        var response = await _http.PutAsJsonAsync($"applications/{appId}", request);
-        if (!response.IsSuccessStatusCode)
-        {
-            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-            return (payload?.Errors ?? new List<string> { "Unknown error" });
-        }
-        return null;
+        return CallAsync(() =>
+            _http.PutAsJsonAsync($"applications", value)
+        );
     }
 
     // ------------------------------------------------------------
     // DELETE /applications/{id}
     // Deletes an application
     // ------------------------------------------------------------
-    public async Task<List<string>?> DeleteApplicationAsync(Guid appId)
+    public Task<List<string>?> DeleteApplicationAsync(Guid appId)
     {
-        var response = await _http.DeleteAsync($"applications/{appId}");
-        if (!response.IsSuccessStatusCode)
-        {
-            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-            return (payload?.Errors ?? new List<string> { "Unknown error" });
-        }
-        return null;
+        return CallAsync(() =>
+            _http.DeleteAsync($"applications/{appId}")
+        );
+
     }
 }

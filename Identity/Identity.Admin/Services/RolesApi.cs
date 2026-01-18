@@ -5,96 +5,49 @@ using System.Net.Http.Json;
 
 namespace Identity.Admin.Services;
 
-public class RolesApi
+public class RolesApi : _BaseApiClient
 {
-    private readonly HttpClient _http;
+    public RolesApi(HttpClient http) : base(http) { }
 
-    public RolesApi(HttpClient http)
-    {
-        _http = http;
-    }
 
     // ------------------------------------------------------------
     // GET /roles/app/{appId}
     // ------------------------------------------------------------
-
-    public async Task<(List<RoleDto>? Roles, List<string>? Errors)> GetRolesForAppAsync(Guid appId)
+    public Task<(List<RoleDto>? Roles, List<string>? Errors)> GetRolesForAppAsync(Guid appId)
     {
-        try
-        {
-            var response = await _http.GetAsync($"roles/app/{appId}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-                return (null, payload?.Errors ?? new List<string> { "Unknown error" });
-            }
-
-            var roles = await response.Content.ReadFromJsonAsync<List<RoleDto>>();
-            return (roles, null);
-        }
-        catch (Exception ex)
-        {
-            return (null, new List<string> { ex.Message });
-        }
+        return ReadAsync<List<RoleDto>>(() =>
+            _http.GetAsync($"roles/app/{appId}")
+        );
     }
+
 
     // ------------------------------------------------------------
     // POST /roles
     // ------------------------------------------------------------
-    public async Task<(RoleDto? Role, List<string>? Errors)> CreateRoleAsync(CreateRoleRequest request)
+    public Task<List<string>?> CreateRoleAsync(CreateRoleRequest request)
     {
-        try
-        {
-            var response = await _http.PostAsJsonAsync("roles", request);
-            if (!response.IsSuccessStatusCode)
-            {
-                var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-                return (null, payload?.Errors ?? new List<string> { "Unknown error" });
-            }
-            // Controller returns CreatedAtAction with no body → fetch roles again
-            // or return a minimal DTO
-            var role = new RoleDto
-            {
-                Id = Guid.NewGuid(), // caller should refresh list anyway
-                Name = request.Name,
-                ApplicationId = request.ApplicationId
-            };
-            return (role, null);
-        }
-        catch (Exception ex)
-        {
-            return (null, new List<string> { ex.Message });
-        }
-
-
+        return CallAsync(() =>
+            _http.PostAsJsonAsync("roles", request)
+        );
     }
 
     // ------------------------------------------------------------
     // PUT /roles/{roleId}
     // ------------------------------------------------------------
-    public async Task<List<string>?> UpdateRoleAsync(Guid roleId, UpdateRoleRequest request)
+    public Task<List<string>?> UpdateRoleAsync(Guid roleId, UpdateRoleRequest request)
     {
-        var response = await _http.PutAsJsonAsync($"roles/{roleId}", request);
-        if (!response.IsSuccessStatusCode)
-        {
-            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-            return (payload?.Errors ?? new List<string> { "Unknown error" });
-        }
-        return null;
+        return CallAsync(() =>
+            _http.PutAsJsonAsync($"roles/{roleId}", request)
+        );
     }
 
     // ------------------------------------------------------------
     // DELETE /roles/{roleId}
     // ------------------------------------------------------------
-    public async Task<List<string>?> DeleteRoleAsync(Guid roleId)
+    public Task<List<string>?> DeleteRoleAsync(Guid roleId)
     {
-        var response = await _http.DeleteAsync($"roles/{roleId}");
-        if (!response.IsSuccessStatusCode)
-        {
-            var payload = await response.Content.ReadFromJsonAsync<ErrorResponse>();
-            return (payload?.Errors ?? new List<string> { "Unknown error" });
-        }
-        return null;
+        return CallAsync(() =>
+            _http.DeleteAsync($"roles/{roleId}")
+        );
     }
 }

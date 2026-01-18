@@ -6,8 +6,8 @@ namespace Identity.DTO
 {
     public class UpdateApplicationRequest
     {
-        public string Name { get; set; } = "";
-        public string ClientId { get; set; } = "";
+        public string? Name { get; set; } = "";
+        public string? ClientId { get; set; } = "";
         public bool IsActive { get; set; }
     }
 }

@@ -39,10 +39,14 @@ else
                             Edit
                         </button>
 
-                        <button class="btn btn-sm btn-danger"
-                                @onclick="() => DeleteApplication(app.ApplicationId)">
-                            Delete
-                        </button>
+                        @if (app.ApplicationId != null)
+                        {
+                            <button class="btn btn-sm btn-danger"
+                                    @onclick="() => DeleteApplication(app)">
+                                Delete
+                            </button>
+                        }
+
                     </td>
                 </tr>
             }
@@ -50,10 +54,10 @@ else
     </table>
 }
 
-@if (isEditing)
+@if (model != null)
 {
     <hr />
-    <h4>@(editingAppId == Guid.Empty ? "Create Application" : "Edit Application")</h4>
+    <h4>@(isNew ? "Create Application" : "Edit Application")</h4>
 
     <div class="mb-3">
         <label class="form-label">Name</label>
@@ -84,104 +88,84 @@ else
 
 @code {
     private List<ApplicationDto>? applications;
-    private List<string> _errors = new();
+    private List<string>? _errors = new();
+    private bool isNew;
 
-    private bool isEditing = false;
-    private Guid editingAppId = Guid.Empty;
-
-    private CreateApplicationRequest model = new();
+    private ApplicationDto? model;
 
     protected override async Task OnInitializedAsync()
     {
-        var (apps, errors) = await AppsApi.GetApplicationsAsync();
-        if (errors.Any())
-        {
-            _errors = errors;
-            return;
-        }
-        applications = apps;
+        (applications, _errors) = await AppsApi.GetApplicationsAsync();
     }
 
     private void NewApplication()
     {
-        editingAppId = Guid.Empty;
-        model = new CreateApplicationRequest();
-        isEditing = true;
+        _errors?.Clear();
+        model = new ApplicationDto(){};
+        isNew = true;
     }
 
     private void EditApplication(ApplicationDto app)
     {
-        editingAppId = app.ApplicationId;
-
-        model = new CreateApplicationRequest
+        _errors?.Clear();
+        //clone the option to prevent persisting it if the user cancels the operation
+        model = new ApplicationDto
         {
+            ApplicationId = app.ApplicationId,
             Name = app.Name,
             ClientId = app.ClientId,
             IsActive = app.IsActive
         };
-
-        isEditing = true;
+        isNew = false;
     }
+
 
     private async Task Save()
     {
-        if (editingAppId == Guid.Empty)
-        {
-            await AppsApi.CreateApplicationAsync(model);
-        }
+        if (isNew)
+            _errors = await AppsApi.CreateApplicationAsync(model);
         else
+            _errors = await AppsApi.UpdateApplicationAsync(model);
+
+        if (_errors == null || !_errors.Any())
         {
-            var update = new UpdateApplicationRequest
+            if(isNew)
+                applications!.Add(model);
+            else
             {
-                Name = model.Name,
-                ClientId = model.ClientId,
-                IsActive = model.IsActive
-            };
-
-            await AppsApi.UpdateApplicationAsync(editingAppId, update);
+                var index = applications!.FindIndex(a => a.ApplicationId == model.ApplicationId);
+                applications[index].Name = model.Name;
+                applications[index].ClientId = model.ClientId;
+                applications[index].IsActive = model.IsActive;
+            }
+            model = null;
         }
-
-        var (apps, errors) = await AppsApi.GetApplicationsAsync();
-        if (errors.Any())
-        {
-            _errors = errors;
-            return;
-        }
-        applications = apps;
-        isEditing = false;
     }
 
     private void Cancel()
     {
-        isEditing = false;
+        model = null;
     }
 
     private async Task ToggleActive(ApplicationDto app, ChangeEventArgs e)
     {
-        bool isActive = (bool)e.Value!;
+        var oldValue = app.IsActive;
+        app.IsActive = (bool)e.Value!;
 
-        var update = new UpdateApplicationRequest
+        _errors = await AppsApi.UpdateApplicationAsync(app);
+
+        if (_errors != null && _errors.Any())
         {
-            Name = app.Name,
-            ClientId = app.ClientId,
-            IsActive = isActive
-        };
-
-        await AppsApi.UpdateApplicationAsync(app.ApplicationId, update);
-
-        app.IsActive = isActive;
+            // revert on error
+            app.IsActive = oldValue;
+        }
     }
 
-    private async Task DeleteApplication(Guid appId)
+    private async Task DeleteApplication(ApplicationDto app)
     {
-        await AppsApi.DeleteApplicationAsync(appId);
-        var (apps, errors) = await AppsApi.GetApplicationsAsync();
-        if (errors.Any())
-        {
-            _errors = errors;
-            return;
-        }
-        applications = apps;
+        _errors = await AppsApi.DeleteApplicationAsync(app.ApplicationId!.Value);
+        if(_errors == null || !_errors.Any())
+            applications!.RemoveAll(a => a.ApplicationId == app.ApplicationId!.Value);
     }
 
     private async Task HandleClear()
