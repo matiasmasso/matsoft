@@ -1,0 +1,233 @@
+﻿<h4>Manage @model.Email</h4>
+
+<div class="card p-3 mb-3">
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input class="form-control" @bind="model.Email" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input class="form-control" @bind="model.UserName" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">New Password</label>
+        <input type="password" class="form-control" @bind="newPassword" />
+        <small class="text-muted">Leave empty to keep current password</small>
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="col-4">
+        <UserApplications User="model"
+                          Applications="Applications"
+                          SelectedAppId="selectedAppId"
+                          UsersApi="UsersApi"
+                          OnAppSelected="LoadRoles"
+                          OnToggleApp="HandleToggleApp" />
+    </div>
+
+    <div class="col-8">
+        <UserRoles Roles="roles"
+                   User="model"
+                   AppId="selectedAppId"
+                   Values="assignedRoles"
+                   UsersApi="UsersApi" />
+    </div>
+</div>
+
+<hr />
+
+<div class="mt-3">
+    <button class="btn btn-success me-2" @onclick="Save">Save</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</div>
+
+<Error Errors="_errors" OnClear="HandleClear" />
+
+@code {
+    [Parameter] public UserDto User { get; set; } = default!;
+    [Parameter] public List<ApplicationDto> Applications { get; set; } = default!;
+    [Parameter] public RolesApi RolesApi { get; set; } = default!;
+    [Parameter] public UsersApi UsersApi { get; set; } = default!;
+
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<UserDto> OnSaved { get; set; }
+
+    private UserDto model = new();
+    private string newPassword = string.Empty;
+
+    private Guid selectedAppId;
+    private List<RoleDto>? roles;
+
+    private HashSet<Guid> assignedRoles = new();
+    private List<string> _errors = new();
+
+    protected override void OnParametersSet()
+    {
+        // Deep clone to avoid mutating parent state
+        model = new UserDto
+        {
+            Id = User.Id,
+            Email = User.Email,
+            UserName = User.UserName,
+            IsActive = User.IsActive,
+
+            Applications = User.Applications
+                .Select(a => new ApplicationDto
+                {
+                    ApplicationId = a.ApplicationId,
+                    Name = a.Name
+                })
+                .ToList(),
+
+            Roles = User.Roles
+                .Select(r => new UserRoleDto
+                {
+                    ApplicationId = r.ApplicationId,
+                    RoleId = r.RoleId
+                })
+                .ToList()
+        };
+    }
+
+    private async Task LoadRoles(Guid appId)
+    {
+        selectedAppId = appId;
+
+        (roles, _errors) = await RolesApi.GetRolesForAppAsync(appId);
+
+        assignedRoles = model.Roles
+            .Where(r => r.ApplicationId == appId)
+            .Select(r => r.RoleId)
+            .ToHashSet();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleToggleApp((Guid AppId, bool Enroll) args)
+    {
+        var (appId, enroll) = args;
+
+        if (enroll)
+        {
+            if (!model.Applications.Any(a => a.ApplicationId == appId))
+            {
+                var app = Applications.First(a => a.ApplicationId == appId);
+                model.Applications.Add(new ApplicationDto
+                {
+                    ApplicationId = app.ApplicationId,
+                    Name = app.Name
+                });
+            }
+        }
+        else
+        {
+            model.Applications.RemoveAll(a => a.ApplicationId == appId);
+            model.Roles.RemoveAll(r => r.ApplicationId == appId);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task Save()
+    {
+        List<string>? errors;
+
+        // 1. CREATE or UPDATE profile
+        if (model.Id == Guid.Empty)
+        {
+            var createRequest = new CreateUserRequest
+            {
+                Email = model.Email,
+                UserName = model.UserName,
+                Password = newPassword
+            };
+
+            // var errors2 = await UsersApi.CreateUserAsync(createRequest);
+
+            // if (errors2 != null && errors2.Any())
+            // {
+            //     _errors = errors2;
+            //     return;
+            // }
+
+            // Retrieve the newly created user
+            var created = await UsersApi.GetUserDetailsAsyncByEmail(model.Email);
+
+            if (created == null)
+            {
+                _errors = new() { "User created but could not be retrieved." };
+                return;
+            }
+
+            model.Id = created.Id;
+        }
+        else
+        {
+            // UPDATE
+            var updateRequest = new UpdateUserRequest
+            {
+                Email = model.Email,
+                UserName = model.UserName,
+                IsActive = model.IsActive
+            };
+
+            // errors = await UsersApi.UpdateUserAsync(model.Id, updateRequest);
+
+            // if (errors != null && errors.Any())
+            // {
+            //     _errors = errors;
+            //     return;
+            // }
+        }
+
+        // 2. UPDATE APPLICATIONS (already handled by UserApplications via Enroll/Unenroll)
+        // Nothing to do here — your component already calls the API directly.
+
+        // 3. UPDATE ROLES for the selected application
+        model.Roles.RemoveAll(r => r.ApplicationId == selectedAppId);
+
+        model.Roles.AddRange(
+            assignedRoles.Select(roleId => new UserRoleDto
+            {
+                ApplicationId = selectedAppId,
+                RoleId = roleId
+            })
+        );
+
+        foreach (var roleId in assignedRoles)
+            await UsersApi.AssignRoleAsync(model.Id, roleId, selectedAppId);
+
+        var removed = roles
+            .Where(r => !assignedRoles.Contains(r.Id))
+            .Select(r => r.Id);
+
+        foreach (var roleId in removed)
+            await UsersApi.RemoveRoleAsync(model.Id, roleId, selectedAppId);
+
+        // 4. OPTIONAL PASSWORD RESET (only for existing users)
+        if (model.Id != Guid.Empty && !string.IsNullOrWhiteSpace(newPassword))
+        {
+            var pwErrors = await UsersApi.ResetPasswordAsync(model.Id, newPassword);
+            if (pwErrors != null && pwErrors.Any())
+            {
+                _errors = pwErrors;
+                return;
+            }
+        }
+
+        await OnSaved.InvokeAsync(model);
+    }
+
+    private Task Cancel() => OnClose.InvokeAsync();
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+}

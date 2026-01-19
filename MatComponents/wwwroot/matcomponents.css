@@ -63,11 +63,39 @@
     }
 }
 
+/* ============================================================
+   PAGE OPTIONS
+   ============================================================ */
+
+.mat-pageoptions-wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    /*gap:10px;*/
+}
+
+    .mat-pageoptions-wrapper ::deep > * {
+        padding: 0 10px;
+        white-space: nowrap;
+    }
+
+        .mat-pageoptions-wrapper ::deep > *:hover {
+            background-color: #f0f0f0;
+        }
+
+
+        .mat-pageoptions-wrapper ::deep > *:first-child {
+            padding: 0 10px 0 0;
+            text-align: left;
+        }
+
+        .mat-pageoptions-wrapper ::deep > *:not(:first-child) {
+            border-left: 1px solid black;
+        }
 
 /* ============================================================
    PROPERTY GRID
    ============================================================ */
-
 /* Contenidor principal */
 .mat-propertygrid-container {
     --mat-propertygrid-label-width: 160px;

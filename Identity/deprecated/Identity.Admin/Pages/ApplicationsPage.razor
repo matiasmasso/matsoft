@@ -1,0 +1,87 @@
+﻿@page "/applications"
+@inject ApplicationsApi ApplicationsApi
+
+<div class="page-wrapper-600">
+    @if (values == null)
+    {
+        <h3>Apps</h3>
+        <p><Loading></Loading></p>
+    }
+    else if (selectedItem == null)
+    {
+        <h3>Apps</h3>
+
+        <PageOptions>
+            <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir app</a>
+        </PageOptions>
+
+
+        <div class="grid">
+            @foreach (var item in values)
+            {
+                <div class="item" @onclick="@(() => selectedItem = item)">@item.Name</div>
+            }
+        </div>
+    }
+    else
+    {
+        <ApplicationForm Value="selectedItem"
+                         UpdateRequest="UpdateAsync"
+                         DeleteRequest="DeleteAsync"
+                         CancelRequest="@(()=>selectedItem=null)"></ApplicationForm>
+    }
+
+    <Error Errors="_errors" OnClear="HandleClear"></Error>
+</div>
+
+@code {
+    private List<ApplicationDto>? values;
+    private ApplicationDto? selectedItem;
+    private List<string>? _errors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        (values, _errors) = await ApplicationsApi.GetApplicationsAsync();
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateAsync(ApplicationDto args)
+    {
+        _errors = await ApplicationsApi.UpdateApplicationAsync(args);
+        if (_errors == null || _errors.Count == 0)
+        {
+            if (values?.Any(x => x.ApplicationId == args.ApplicationId) ?? false)
+            {
+                var idx = values.FindIndex(x => x.ApplicationId == args.ApplicationId);
+                values[idx] = args;
+            }
+            else
+            {
+                values?.Add(args);
+            }
+            values = values?.OrderBy(x => x.Name).ToList();
+        }
+            selectedItem = null;
+
+    }
+
+    private async Task DeleteAsync(ApplicationDto args)
+    {
+        _errors = await ApplicationsApi.DeleteApplicationAsync(args);
+        if (_errors == null || _errors.Count == 0)
+        {
+            values?.RemoveAll(x => x.ApplicationId == args.ApplicationId);
+        }
+            selectedItem = null;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new ApplicationDto() { ApplicationId = Guid.NewGuid() };
+    }
+}

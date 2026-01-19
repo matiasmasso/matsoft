@@ -1,0 +1,89 @@
+﻿@page "/Users"
+@inject UsersApi UsersApi
+
+<div class="page-wrapper-600">
+    @if (values == null)
+    {
+        <h3>Users</h3>
+        <p><Loading></Loading></p>
+    }
+    else if (selectedItem == null)
+    {
+        <h3>Users</h3>
+
+        <PageOptions>
+            <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir rol</a>
+        </PageOptions>
+
+
+        <div class="grid">
+            @foreach (var item in values)
+            {
+                <div class="item" @onclick="@(() => selectedItem = item)">
+                    @item.UserName (@item.Email)
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <UserForm Value="selectedItem"
+                  UpdateRequest="UpdateAsync"
+                  DeleteRequest="DeleteAsync"
+                  CancelRequest="@(()=>selectedItem=null)"></UserForm>
+    }
+
+    <Error Errors="_errors" OnClear="HandleClear"></Error>
+</div>
+
+@code {
+    private List<UserDto>? values;
+    private UserDto? selectedItem;
+    private List<string>? _errors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        (values, _errors) = await UsersApi.GetUsersAsync();
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateAsync(UserDto args)
+    {
+        _errors = await UsersApi.UpdateUserAsync(args);
+        if (_errors == null || _errors.Count == 0)
+        {
+            if (values?.Any(x => x.Id == args.Id) ?? false)
+            {
+                var idx = values.FindIndex(x => x.Id == args.Id);
+                values[idx] = args;
+            }
+            else
+            {
+                values?.Add(args);
+            }
+            values = values?.OrderBy(x => x.UserName).ToList();
+        }
+        selectedItem = null;
+
+    }
+
+    private async Task DeleteAsync(UserDto args)
+    {
+        _errors = await UsersApi.DeleteUserAsync(args);
+        if (_errors == null || _errors.Count == 0)
+        {
+            values?.RemoveAll(x => x.Id == args.Id);
+        }
+        selectedItem = null;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new UserDto() { Id = Guid.NewGuid() };
+    }
+}

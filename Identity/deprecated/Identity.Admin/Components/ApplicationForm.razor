@@ -1,0 +1,88 @@
+﻿<h3>ApplicationForm</h3>
+
+<div>
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input class="form-control" @bind="model?.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Client ID</label>
+        <input class="form-control" @bind="model.ClientId" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Active</label>
+        <input type="checkbox" @bind="model.IsActive" />
+    </div>
+
+
+    <div class="buttons-bar">
+        <button class="btn btn-secondary" @onclick="Cancel">
+            Cancel
+        </button>
+        <button class="btn btn-sm btn-danger" @onclick="Delete">
+            Elimina
+        </button>
+        <button class="btn btn-success me-2" @onclick="Save">
+            Desa
+        </button>
+    </div>
+</div>
+<Error Errors="_errors" OnClear="HandleClear" />
+
+@code {
+    [Parameter] public ApplicationDto? Value { get; set; }
+    [Parameter] public EventCallback<ApplicationDto> UpdateRequest { get; set; }
+    [Parameter] public EventCallback<ApplicationDto> DeleteRequest { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+
+    private ApplicationDto? model;
+    private List<string>? _errors;
+
+    protected override void OnParametersSet()
+    {
+        if (Value != null)
+        {
+            // Create a copy to avoid modifying the parent component's data until saved
+            model = new ApplicationDto
+            {
+                ApplicationId = Value.ApplicationId,
+                Name = Value.Name,
+                ClientId = Value.ClientId,
+                IsActive = Value.IsActive
+            };
+        }
+        else
+        {
+            model = null;
+        }
+    }
+    private async Task Save()
+    {
+        if (model != null)
+        {
+            await UpdateRequest.InvokeAsync(model);
+        }
+    }
+
+    private async Task Delete()
+    {
+        if (model != null)
+        {
+            await DeleteRequest.InvokeAsync(model);
+        }
+    }
+
+    private async Task Cancel()
+    {
+
+        await CancelRequest.InvokeAsync();
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+}

@@ -1,0 +1,105 @@
+﻿<h3>UserForm</h3>
+
+<div>
+    <div class="mb-3">
+        <label class="form-label">Nom d'usuari'</label>
+        <input class="form-control" @bind="model?.UserName" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input class="form-control" @bind="model.Email" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Active</label>
+        <input type="checkbox" @bind="model.IsActive" />
+    </div>
+
+    <div class="apps-grid">
+        @foreach(var app in model?.Applications ?? new())
+        {
+            <div class="app-item">
+                <div>@app.Name</div>
+            </div>
+            @foreach(var role in model.Roles.Where(x=>x.ApplicationId==app.ApplicationId))
+            {
+                <div class="role-item">
+                    @role.Name
+                </div>
+            }
+        }
+    </div>
+
+
+    <div class="buttons-bar">
+        <button class="btn btn-secondary" @onclick="Cancel">
+            Cancel
+        </button>
+        <button class="btn btn-sm btn-danger" @onclick="Delete">
+            Elimina
+        </button>
+        <button class="btn btn-success me-2" @onclick="Save">
+            Desa
+        </button>
+    </div>
+
+
+</div>
+<Error Errors="_errors" OnClear="HandleClear" />
+
+@code {
+    [Parameter] public UserDto? Value { get; set; }
+    [Parameter] public EventCallback<UserDto> UpdateRequest { get; set; }
+    [Parameter] public EventCallback<UserDto> DeleteRequest { get; set; }
+    [Parameter] public EventCallback CancelRequest { get; set; }
+
+    private UserDto? model;
+    private List<string>? _errors;
+
+    protected override void OnParametersSet()
+    {
+        if (Value != null)
+        {
+            // Create a copy to avoid modifying the parent component's data until saved
+            model = new UserDto
+            {
+                Id = Value.Id,
+                UserName = Value.UserName,
+                Email = Value.Email,
+                IsActive = Value.IsActive
+            };
+        }
+        else
+        {
+            model = null;
+        }
+    }
+    private async Task Save()
+    {
+        if (model != null)
+        {
+            await UpdateRequest.InvokeAsync(model);
+        }
+    }
+
+    private async Task Delete()
+    {
+        if (model != null)
+        {
+            await DeleteRequest.InvokeAsync(model);
+        }
+    }
+
+    private async Task Cancel()
+    {
+
+        await CancelRequest.InvokeAsync();
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+}

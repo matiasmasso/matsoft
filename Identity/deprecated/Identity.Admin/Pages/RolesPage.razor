@@ -1,0 +1,87 @@
+﻿@page "/roles"
+@inject RolesApi RolesApi
+
+<div class="page-wrapper-600">
+    @if (values == null)
+    {
+        <h3>Roles</h3>
+        <p><Loading></Loading></p>
+    }
+    else if (selectedItem == null)
+    {
+        <h3>Roles</h3>
+
+        <PageOptions>
+            <a href="#" @onclick:preventDefault @onclick="AddNew">Afegir rol</a>
+        </PageOptions>
+
+
+        <div class="grid">
+            @foreach (var item in values.Where(x=>x.ApplicationId == null).ToList())
+            {
+                <div class="item" @onclick="@(() => selectedItem = item)">@item.Name</div>
+            }
+        </div>
+    }
+    else
+    {
+        <RoleForm Value="selectedItem"
+                         UpdateRequest="UpdateAsync"
+                         DeleteRequest="DeleteAsync"
+                         CancelRequest="@(()=>selectedItem=null)"></RoleForm>
+    }
+
+    <Error Errors="_errors" OnClear="HandleClear"></Error>
+</div>
+
+@code {
+    private List<RoleDto>? values;
+    private RoleDto? selectedItem;
+    private List<string>? _errors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        (values, _errors) = await RolesApi.GetGlobalRolesAsync();
+    }
+
+    private async Task HandleClear()
+    {
+        _errors?.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateAsync(RoleDto args)
+    {
+        _errors = await RolesApi.UpdateRoleAsync(args);
+        if (_errors == null || _errors.Count == 0)
+        {
+            if (values?.Any(x => x.Id == args.Id) ?? false)
+            {
+                var idx = values.FindIndex(x => x.Id == args.Id);
+                values[idx] = args;
+            }
+            else
+            {
+                values?.Add(args);
+            }
+            values = values?.OrderBy(x => x.Name).ToList();
+        }
+        selectedItem = null;
+
+    }
+
+    private async Task DeleteAsync(RoleDto args)
+    {
+        _errors = await RolesApi.DeleteRoleAsync(args);
+        if (_errors == null || _errors.Count == 0)
+        {
+            values?.RemoveAll(x => x.ApplicationId == args.ApplicationId);
+        }
+        selectedItem = null;
+    }
+
+    private void AddNew()
+    {
+        selectedItem = new RoleDto() { Id = Guid.NewGuid() };
+    }
+}

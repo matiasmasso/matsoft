@@ -1,0 +1,14 @@
+﻿@page "/login"
+@using Identity.Manager.Services
+@inject PKCEAuthService AuthService
+
+<h3>Login</h3>
+
+<button @onclick="LoginAsync">Login with Identity Server</button>
+
+@code {
+    private async Task LoginAsync()
+    {
+        await AuthService.StartLoginAsync();
+    }
+}
