@@ -1,7 +1,20 @@
 ﻿@page "/"
+@using Identity.Manager.Services
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+<button @onclick="Login">Login</button>
+
+@code {
+    [Inject] PKCEAuthService Auth { get; set; } = default!;
+
+    private async Task Login()
+    {
+        await Auth.StartLoginAsync();
+    }
+}
+ 

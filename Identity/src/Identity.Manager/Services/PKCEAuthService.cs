@@ -1,8 +1,9 @@
-﻿using System.Net.Http.Headers;
+﻿using Identity.Manager.Config;
+using Microsoft.AspNetCore.Components;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Microsoft.AspNetCore.Components;
 
 namespace Identity.Manager.Services;
 
@@ -14,8 +15,10 @@ public class PKCEAuthService
     private readonly CustomAuthStateProvider _authState;
 
     private const string ClientId = "identity-manager";
-    private const string IdentityServerBaseUrl = "https://localhost:5000";
-    private const string RedirectUri = "https://localhost:5001/auth/callback";
+    private const string IdentityServerBaseUrl = "https://localhost:7105";
+    //private const string IdentityServerBaseUrl = "https://localhost:5000";
+    private const string RedirectUri = "https://localhost:7273/auth/callback";
+    //private const string RedirectUri = "https://localhost:5001/auth/callback";
     private const string Scope = "openid profile email roles";
 
     private const string VerifierKey = "pkce_verifier";

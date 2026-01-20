@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IdentittyServer.Domain\IdentityServer.Domain.csproj" />
-    <ProjectReference Include="..\IdentytyServer.Shared\IdentityServer.Shared.csproj" />
+    <ProjectReference Include="..\IdentityServer.Domain\IdentityServer.Domain.csproj" />
+    <ProjectReference Include="..\IdentityServer.Shared\IdentityServer.Shared.csproj" />
   </ItemGroup>
 
 </Project>

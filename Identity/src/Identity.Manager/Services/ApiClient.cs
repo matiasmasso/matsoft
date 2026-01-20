@@ -20,7 +20,7 @@ namespace Identity.Manager.Services
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", token);
 
-            return await _httpClient.GetAsync("https://localhost:5000/api/secure-endpoint");
+            return await _httpClient.GetAsync("https://localhost:7105/api/secure-endpoint");
         }
     }
 }

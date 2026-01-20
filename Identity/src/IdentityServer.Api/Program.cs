@@ -1,6 +1,8 @@
+using IdentityServer.Application.Interfaces;
 using IdentityServer.Infrastructure.Identity;
 using IdentityServer.Infrastructure.Persistence;
 using IdentityServer.Infrastructure.Seeding;
+using IdentityServer.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,45 +11,27 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Register DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// 2. Register Identity (this was missing)
-builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
+builder.Services
+    .AddIdentity<ApplicationUser, ApplicationRole>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+    })
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddDefaultUI();
 
-builder.Services.AddOpenIddict()
-    .AddCore(options =>
-    {
-        options.UseEntityFrameworkCore()
-               .UseDbContext<ApplicationDbContext>();
-    })
-    .AddServer(options =>
-    {
-        options.SetAuthorizationEndpointUris("/connect/authorize");
-        options.SetTokenEndpointUris("/connect/token");
+builder.Services.AddRazorPages(); // REQUIRED for login UI
 
-        options.AllowAuthorizationCodeFlow();
-        options.AllowRefreshTokenFlow();
-
-        options.RequireProofKeyForCodeExchange();
-
-        options.RegisterScopes("openid", "profile", "email", "roles");
-
-        options.AddDevelopmentEncryptionCertificate()
-               .AddDevelopmentSigningCertificate();
-
-        options.UseAspNetCore()
-               .EnableAuthorizationEndpointPassthrough()
-               .EnableTokenEndpointPassthrough();
-    })
-    .AddValidation(options =>
-    {
-        options.UseLocalServer();
-        options.UseAspNetCore();
-    });
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 // 3. Controllers + OpenAPI
 builder.Services.AddControllers();
@@ -62,11 +46,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapRazorPages(); // REQUIRED for /Identity/Account/Login
+
 
 // 5. Database seeding (now DI can resolve everything)
 using (var scope = app.Services.CreateScope())
@@ -74,7 +63,6 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-
     await DatabaseSeeder.SeedAsync(db, userManager, roleManager);
 }
 

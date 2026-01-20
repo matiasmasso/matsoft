@@ -7,10 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IdentittyServer.Domain\IdentityServer.Domain.csproj" />
     <ProjectReference Include="..\IdentityServer.Application\IdentityServer.Application.csproj" />
     <ProjectReference Include="..\IdentityServer.Domain\IdentityServer.Domain.csproj" />
-    <ProjectReference Include="..\IdentytyServer.Shared\IdentityServer.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

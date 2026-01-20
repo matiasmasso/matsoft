@@ -19,6 +19,7 @@ public class ApplicationDbContext
     public DbSet<OdbcClient> OdbcClients => Set<OdbcClient>();
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<AuthorizationCode> AuthorizationCodes => Set<AuthorizationCode>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

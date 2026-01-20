@@ -24,11 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\IdentittyServer.Domain\IdentityServer.Domain.csproj" />
     <ProjectReference Include="..\..\src\IdentityServer.Api\IdentityServer.Api.csproj" />
     <ProjectReference Include="..\..\src\IdentityServer.Application\IdentityServer.Application.csproj" />
     <ProjectReference Include="..\..\src\IdentityServer.Infrastructure\IdentityServer.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\src\IdentytyServer.Shared\IdentityServer.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
