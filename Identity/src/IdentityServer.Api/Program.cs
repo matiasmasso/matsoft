@@ -27,10 +27,12 @@ builder.Services.AddRazorPages(); // REQUIRED for login UI
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Identity/Account/Login";
-    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.None; // CRITICAL
+    options.LoginPath = "/Identity/Account/Login";
 });
+
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 // 3. Controllers + OpenAPI
