@@ -5,7 +5,8 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "https://localhost:7273",
+      //"applicationUrl": "https://localhost:7273",
+      "applicationUrl": "https://local.identitymanager.test:7273",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

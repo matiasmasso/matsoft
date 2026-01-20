@@ -51,9 +51,14 @@ public static class DatabaseSeeder
                 ClientSecret = null, // PKCE
                 RequirePkce = true,
                 RequireClientSecret = false,
-                RedirectUrisJson = "[\"https://localhost:7273/auth/callback\"]",
-                PostLogoutRedirectUrisJson = "[\"https://localhost:7273/logout/callback\"]",
-                AllowedCorsOriginsJson = "[\"https://localhost:7273\"]",
+
+                RedirectUrisJson = "[\"https://local.identitymanager.test:7273/auth/callback\"]",
+                PostLogoutRedirectUrisJson = "[\"https://local.identitymanager.test:7273/\"]",
+                AllowedCorsOriginsJson = "[\"https://local.identitymanager.test:7273\"]",
+
+                //RedirectUrisJson = "[\"https://localhost:7273/auth/callback\"]",
+                //PostLogoutRedirectUrisJson = "[\"https://localhost:7273/logout/callback\"]",
+                //AllowedCorsOriginsJson = "[\"https://localhost:7273\"]",
                 AllowedScopesJson = "[\"openid\",\"profile\",\"email\",\"roles\"]",
                 CreatedAt = DateTime.UtcNow
             };

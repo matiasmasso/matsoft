@@ -3,6 +3,7 @@ using IdentityServer.Infrastructure.Identity;
 using IdentityServer.Infrastructure.Persistence;
 using IdentityServer.Infrastructure.Seeding;
 using IdentityServer.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,17 +24,26 @@ builder.Services
     .AddDefaultTokenProviders()
     .AddDefaultUI();
 
+builder.Services.AddIdentityServer()
+    .AddAspNetIdentity<ApplicationUser>()
+    .AddInMemoryIdentityResources(IdentityServerConfig.IdentityResources)
+    .AddInMemoryApiScopes(IdentityServerConfig.ApiScopes)
+    .AddInMemoryClients(IdentityServerConfig.Clients);
+
 builder.Services.AddRazorPages(); // REQUIRED for login UI
 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.None; // CRITICAL
-    options.LoginPath = "/Identity/Account/Login";
-});
 
-builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.Configure<CookieAuthenticationOptions>(
+    IdentityConstants.ApplicationScheme,
+    options =>
+    {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.None;
+        options.LoginPath = "/Identity/Account/Login";
+    });
+
+//builder.Services.AddScoped<ITokenService, TokenService>();
 
 // 3. Controllers + OpenAPI
 builder.Services.AddControllers();
@@ -51,8 +61,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
 app.UseAuthentication();
+app.UseIdentityServer();   // <-- REQUIRED
 app.UseAuthorization();
 
 app.MapControllers();

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="AspNet.Security.OAuth.Apple" Version="10.0.0" />
+    <PackageReference Include="Duende.IdentityServer" Version="7.4.4" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.2" />
@@ -34,7 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Identity\Data\" />
     <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\js\" />
     <Folder Include="wwwroot\images\" />

@@ -15,9 +15,12 @@ public class PKCEAuthService
     private readonly CustomAuthStateProvider _authState;
 
     private const string ClientId = "identity-manager";
-    private const string IdentityServerBaseUrl = "https://localhost:7105";
+    private const string IdentityServerBaseUrl = "https://local.identityserver.test:7105";
+    //private const string IdentityServerBaseUrl = "https://localhost:7105";
     //private const string IdentityServerBaseUrl = "https://localhost:5000";
-    private const string RedirectUri = "https://localhost:7273/auth/callback";
+
+    private const string RedirectUri = "https://local.identitymanager.test:7273/auth/callback";
+    //private const string RedirectUri = "https://localhost:7273/auth/callback";
     //private const string RedirectUri = "https://localhost:5001/auth/callback";
     private const string Scope = "openid profile email roles";
 
