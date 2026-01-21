@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Templates/">
+    <Project Path="IdentityPlatform/Templates/AppTemplate.Api/AppTemplate.Api.csproj" />
+    <Project Path="IdentityPlatform/Templates/AppTemplate.Client/AppTemplate.Client.csproj" />
+  </Folder>
+  <Project Path="IdentityPlatform/Identity.Admin.Client/Identity.Admin.Client.csproj" />
+  <Project Path="IdentityPlatform/Identity.Api/Identity.Api.csproj" />
+</Solution>

@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Identity.Admin.Client": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:5099",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "hotReloadProfile": "blazorwasm"
+    }
+  }
+}

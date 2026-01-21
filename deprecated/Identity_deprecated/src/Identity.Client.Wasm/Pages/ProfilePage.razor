@@ -1,0 +1,60 @@
+﻿@page "/profile"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+
+<h3>Your Profile</h3>
+
+@if (Loading)
+{
+    <p>Loading...</p>
+}
+else if (Error != null)
+{
+    <div class="alert alert-danger">@Error</div>
+}
+else if (Profile != null)
+{
+    <div class="card p-3">
+        <p><strong>Name:</strong> @Profile.Name</p>
+        <p><strong>Email:</strong> @Profile.Email</p>
+        <p>
+            <strong>Roles:</strong>
+            @foreach (var role in Profile.Roles)
+            {
+                <span class="badge bg-primary me-1">@role</span>
+            }
+        </p>
+    </div>
+}
+
+@code {
+    private bool Loading = true;
+    private string? Error;
+    private UserProfileDto? Profile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Profile = await Http.GetFromJsonAsync<UserProfileDto>("auth/me");
+        }
+        catch (Exception ex)
+        {
+            Error = "Unable to load profile.";
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    public class UserProfileDto
+    {
+        public string Id { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Name { get; set; } = "";
+        public List<string> Roles { get; set; } = new();
+    }
+}

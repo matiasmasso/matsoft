@@ -1,0 +1,121 @@
+﻿@page "/admin/dashboard"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpClient Http
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<h3>Admin Dashboard</h3>
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        @if (Loading)
+        {
+            <p>Loading users...</p>
+        }
+        else if (Error != null)
+        {
+            <div class="alert alert-danger">@Error</div>
+        }
+        else
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Confirmed</th>
+                        <th>Actions</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Users)
+                    {
+                        <tr>
+                            <td>@u.Email</td>
+                            <td>@u.EmailConfirmed</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" @onclick="() => Impersonate(u.Id)">Impersonate</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </Authorized>
+
+    <NotAuthorized>
+        <p>You do not have permission to view this page.</p>
+    </NotAuthorized>
+</AuthorizeView>
+<AuthorizeView>
+    <Authorized>
+        @if (context.User.HasClaim(c => c.Type == "impersonator"))
+        {
+            <button class="btn btn-sm btn-secondary" @onclick="StopImpersonation">
+                Stop impersonation
+            </button>
+        }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private bool Loading = true;
+    private string? Error;
+    private List<UserDto> Users = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Users = await Http.GetFromJsonAsync<List<UserDto>>("admin/users")
+                    ?? new List<UserDto>();
+        }
+        catch
+        {
+            Error = "Unable to load users.";
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    public class UserDto
+    {
+        public string Id { get; set; } = "";
+        public string Email { get; set; } = "";
+        public bool EmailConfirmed { get; set; }
+    }
+
+
+    private async Task Impersonate(string userId)
+    {
+        var response = await Http.PostAsync($"admin/impersonate/{userId}", null);
+        if (!response.IsSuccessStatusCode) return;
+
+        var json = await response.Content.ReadFromJsonAsync<ImpersonateResult>();
+        if (json is null) return;
+
+        await Auth.SetTokenDirectAsync(json.AccessToken, isImpersonation: true);
+    }
+
+    public record ImpersonateResult(string AccessToken);
+
+
+
+@code {
+    private async Task StopImpersonation()
+    {
+        var restored = await Auth.RestoreOriginalTokenAsync();
+        if (!restored)
+        {
+            // Fallback: logout
+            await Auth.LogoutAsync();
+        }
+
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+}
+
+}

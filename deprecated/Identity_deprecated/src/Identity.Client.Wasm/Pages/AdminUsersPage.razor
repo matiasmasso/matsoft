@@ -1,0 +1,12 @@
+﻿@page "/admin/users"
+@using Microsoft.AspNetCore.Components.Authorization
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <h3>User Management</h3>
+        <p>(We can wire this to an API endpoint later.)</p>
+    </Authorized>
+
+    <NotAuthorized>
+        <p>Access denied.</p>
+    </NotAuthorized>
+</AuthorizeView>

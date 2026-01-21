@@ -1,0 +1,39 @@
+﻿@page "/change-email"
+@inject HttpClient Http
+
+<h3>Change Email</h3>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-info">@Message</div>
+}
+
+<EditForm Model="Model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>New email</label>
+        <InputText class="form-control" @bind-Value="Model.NewEmail" />
+    </div>
+
+    <button class="btn btn-primary" type="submit">Change</button>
+</EditForm>
+
+@code {
+    private ModelDto Model { get; set; } = new();
+    private string? Message;
+
+    public class ModelDto
+    {
+        [Required]
+        [EmailAddress]
+        public string NewEmail { get; set; } = "";
+    }
+
+    private async Task Submit()
+    {
+        var response = await Http.PostAsJsonAsync("auth/change-email", Model);
+        Message = response.IsSuccessStatusCode ? "Email changed." : "Error changing email.";
+    }
+}

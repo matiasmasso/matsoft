@@ -1,0 +1,75 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="/">My App</a>
+
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="/">Home</a>
+            </li>
+        </ul>
+
+        <AuthorizeView>
+            <Authorized>
+                <span class="navbar-text me-3">
+                    @context.User.Identity?.Name
+                </span>
+                @if (IsAdmin(context.User))
+                {
+                    <nav class="nav flex-column mb-3">
+                        <h5>Admin</h5>
+                        <a class="nav-link" href="/admin/dashboard">Dashboard</a>
+                        <a class="nav-link" href="/admin/users">Manage Users</a>
+                    </nav>
+                }
+                <a class="btn btn-outline-danger" href="/logout">Logout</a>
+            </Authorized>
+
+            <NotAuthorized>
+                <a class="btn btn-outline-primary" href="/login">Login</a>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        @using System.Security.Claims
+        @inject AuthenticationStateProvider AuthStateProvider
+
+        <AuthorizeView>
+            <Authorized>
+                @if (IsImpersonating(context.User))
+                {
+                    <div class="badge bg-warning text-dark p-3 d-flex align-items-center gap-2">
+                        <span class="fw-bold">Impersonating:</span>
+                        <span>@GetImpersonatedEmail(context.User)</span>
+                        <span class="text-muted">(as Admin @GetImpersonatorId(context.User))</span>
+                        <button class="btn btn-sm btn-light ms-2" @onclick="StopImpersonation">Stop</button>
+                    </div>
+                }
+            </Authorized>
+        </AuthorizeView>
+
+    </div>
+</nav>
+
+@code {
+    private bool IsAdmin(ClaimsPrincipal user)
+        => user.IsInRole("Admin");
+
+    private bool IsImpersonating(ClaimsPrincipal user)
+=> user.HasClaim(c => c.Type == "impersonator");
+
+    private string GetImpersonatedEmail(ClaimsPrincipal user)
+    => user.FindFirst("email")?.Value ?? "unknown";
+
+    private string GetImpersonatorId(ClaimsPrincipal user)
+    => user.FindFirst("impersonator")?.Value ?? "unknown";
+
+    private async Task StopImpersonation()
+    {
+        // This calls your AuthService logic to restore the original admin token
+        await Auth.RestoreOriginalTokenAsync();
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+}
