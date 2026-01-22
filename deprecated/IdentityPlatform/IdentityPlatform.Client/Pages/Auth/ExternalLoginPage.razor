@@ -1,0 +1,42 @@
+﻿@page "/external-login"
+
+
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
+
+<h3>External login</h3>
+
+<button @onclick="LoginWithGoogle">Login with Google</button>
+<button @onclick="LoginWithApple">Login with Apple</button>
+
+@code {
+    async Task LoginWithGoogle()
+    {
+        // TODO: integrate with JS SDK to get real id_token
+        var fakeIdToken = "google-id-token-from-js";
+
+        var result = await Auth.GoogleLoginAsync(fakeIdToken,
+            Guid.Parse("00000000-0000-0000-0000-000000000001"));
+
+        if (result is not null)
+        {
+            (AuthState as ApiAuthStateProvider)?.NotifyAuthStateChanged();
+            Nav.NavigateTo("/");
+        }
+    }
+
+    async Task LoginWithApple()
+    {
+        var fakeIdToken = "apple-id-token-from-js";
+
+        var result = await Auth.AppleLoginAsync(fakeIdToken,
+            Guid.Parse("00000000-0000-0000-0000-000000000001"));
+
+        if (result is not null)
+        {
+            (AuthState as ApiAuthStateProvider)?.NotifyAuthStateChanged();
+            Nav.NavigateTo("/");
+        }
+    }
+}

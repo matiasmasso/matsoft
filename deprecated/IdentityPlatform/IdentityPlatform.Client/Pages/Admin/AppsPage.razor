@@ -1,0 +1,39 @@
+﻿@page "/apps"
+
+@inject HttpClient Http
+@inject IAppContext AppContext
+
+<h3>Your apps</h3>
+
+@if (apps is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var app in apps)
+        {
+            <li>
+                @app.Name
+                <button @onclick="() => SelectApp(app.Id)">Use</button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    record AppDto(Guid Id, string Name);
+
+    List<AppDto>? apps;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apps = await Http.GetFromJsonAsync<List<AppDto>>("apps");
+    }
+
+    async Task SelectApp(Guid id)
+    {
+        await AppContext.SetCurrentAppAsync(id);
+    }
+}

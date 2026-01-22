@@ -1,0 +1,65 @@
+﻿@page "/enrollments"
+@inject HttpClient Http
+@inject IAppContext AppContext
+
+<h3>Enrollments</h3>
+
+@if (currentAppId is null)
+{
+    <p>Select an app first.</p>
+}
+else if (items is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in items)
+            {
+                <tr>
+                    <td>@e.Email</td>
+                    <td>@e.Role</td>
+                    <td>@e.IsActive</td>
+                    <td>
+                        <button @onclick="() => Toggle(e.UserId)">Toggle</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    record EnrollmentDto(Guid UserId, string Email, string Role, bool IsActive);
+
+    Guid? currentAppId;
+    List<EnrollmentDto>? items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentAppId = AppContext.CurrentAppId;
+        if (currentAppId is null) return;
+
+        items = await Http.GetFromJsonAsync<List<EnrollmentDto>>(
+            $"apps/{currentAppId}/enrollments");
+    }
+
+    async Task Toggle(Guid userId)
+    {
+        if (currentAppId is null) return;
+
+        await Http.PostAsync($"apps/{currentAppId}/enrollments/{userId}/toggle", null);
+        items = await Http.GetFromJsonAsync<List<EnrollmentDto>>(
+            $"apps/{currentAppId}/enrollments");
+    }
+}

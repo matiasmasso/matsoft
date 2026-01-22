@@ -1,0 +1,27 @@
+﻿@page "/login"
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
+
+<h3>Login</h3>
+
+<input @bind="Email" placeholder="Email" />
+<input @bind="Password" placeholder="Password" type="password" />
+<button @onclick="DoLogin">Login</button>
+
+@code {
+    string Email = "";
+    string Password = "";
+
+    async Task DoLogin()
+    {
+        var result = await Auth.LoginAsync(new UserLoginRequest(Email, Password,
+            Guid.Parse("00000000-0000-0000-0000-000000000001")));
+
+        if (result is not null)
+        {
+            (AuthState as ApiAuthStateProvider)?.NotifyAuthStateChanged();
+            Nav.NavigateTo("/");
+        }
+    }
+}

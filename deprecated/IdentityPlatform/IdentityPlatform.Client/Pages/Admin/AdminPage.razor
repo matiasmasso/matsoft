@@ -1,0 +1,29 @@
+﻿@page "/admin"
+@inject HttpClient Http
+
+<h3>Admin dashboard</h3>
+
+@if (data is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+        <li>Total users: @data.Users</li>
+        <li>Total apps: @data.Apps</li>
+        <li>Total enrollments: @data.Enrollments</li>
+        <li>Active enrollments: @data.ActiveEnrollments</li>
+    </ul>
+}
+
+@code {
+    record DashboardDto(int Users, int Apps, int Enrollments, int ActiveEnrollments);
+
+    DashboardDto? data;
+
+    protected override async Task OnInitializedAsync()
+    {
+        data = await Http.GetFromJsonAsync<DashboardDto>("admin/dashboard");
+    }
+}

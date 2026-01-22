@@ -1,0 +1,14 @@
+Identity Blazor Web App
+
+# Create solution folder
+mkdir IdentityPlatform
+cd IdentityPlatform
+
+# Create solution
+dotnet new sln -n IdentityPlatform
+
+# Create the main Blazor Web App (server-side)
+dotnet new blazor -n IdentityPlatform.Server
+
+# Add project to solution
+dotnet sln add IdentityPlatform.Server

@@ -1,0 +1,31 @@
+﻿@using System.Security.Claims
+@inject AuthenticationStateProvider AuthState
+
+<AuthorizeView>
+    <Authorized>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/apps">Apps</a>
+            <a href="/enrollments">Enrollments</a>
+            <a href="/admin" class="@AdminClass">Admin</a>
+        </nav>
+    </Authorized>
+    <NotAuthorized>
+        <nav>
+            <a href="/login">Login</a>
+        </nav>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    string AdminClass => IsAdmin ? "" : "disabled";
+
+    bool IsAdmin
+    {
+        get
+        {
+            var state = AuthState.GetAuthenticationStateAsync().Result;
+            return state.User.IsInRole("Admin");
+        }
+    }
+}
