@@ -16,6 +16,7 @@ public class IdentityDbContext : DbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -42,5 +43,7 @@ public class IdentityDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.Token).IsUnique();
         });
+
+
     }
 }

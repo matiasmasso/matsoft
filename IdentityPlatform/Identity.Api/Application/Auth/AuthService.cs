@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Authentication;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -29,12 +30,12 @@ public class AuthService
         var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == email);
 
         if (user == null)
-            throw new Exception("Invalid credentials");
+            throw new AuthenticationException("Invalid credentials");
 
         var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, password);
 
         if (result == PasswordVerificationResult.Failed)
-            throw new Exception("Invalid credentials");
+            throw new AuthenticationException("Invalid credentials");
 
         var accessToken = GenerateAccessToken(user);
         var refreshToken = await GenerateRefreshToken(user.Id);
@@ -44,15 +45,18 @@ public class AuthService
 
     public async Task RegisterAsync(string email, string password)
     {
+        // Check if email already exists
         if (await _db.Users.AnyAsync(x => x.Email == email))
             throw new Exception("Email already registered");
 
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = email
+            Email = email,
+            IsActive = true
         };
 
+        // Hash password using built-in ASP.NET Core hasher
         user.PasswordHash = _hasher.HashPassword(user, password);
 
         _db.Users.Add(user);
@@ -91,12 +95,58 @@ public class AuthService
             UserId = userId,
             Token = token,
             ExpiresAt = DateTime.UtcNow.AddDays(_jwt.RefreshTokenDays),
-            Revoked = false
+            Revoked = false,
+            CreatedAt = DateTime.UtcNow
         };
 
         _db.RefreshTokens.Add(refresh);
         await _db.SaveChangesAsync();
 
         return token;
+    }
+
+    public async Task<(string access, string refresh)> RefreshAsync(string refreshToken)
+    {
+        var stored = await _db.RefreshTokens
+            .FirstOrDefaultAsync(x => x.Token == refreshToken);
+
+        if (stored == null)
+            throw new Exception("Invalid refresh token");
+
+        if (stored.Revoked)
+            throw new Exception("Refresh token has been revoked");
+
+        if (stored.ExpiresAt < DateTime.UtcNow)
+            throw new Exception("Refresh token has expired");
+
+        var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == stored.UserId);
+
+        if (user == null)
+            throw new Exception("User not found");
+
+        // Revoke old token
+        stored.Revoked = true;
+
+        // Issue new tokens
+        var newAccess = GenerateAccessToken(user);
+        var newRefresh = await GenerateRefreshToken(user.Id);
+
+        await _db.SaveChangesAsync();
+
+        return (newAccess, newRefresh);
+    }
+
+    public async Task<UserProfile> GetProfileAsync(Guid userId)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
+
+        if (user == null)
+            throw new Exception("User not found");
+
+        return new UserProfile
+        {
+            Id = user.Id,
+            Email = user.Email
+        };
     }
 }
