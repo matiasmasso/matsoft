@@ -36,7 +36,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddControllers();
-builder.Services.AddRazorComponents();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
 var app = builder.Build();
 
@@ -49,6 +50,7 @@ app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapControllers();
-app.MapRazorComponents<App>();
+app.MapRazorComponents<App>()
+   .AddInteractiveServerRenderMode();
 
 app.Run();
