@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="Identity/src/Identity.AuthApi/Identity.AuthApi.csproj" Id="5f2f3e14-4d31-410b-a9e2-8c13bbffdff4" />
-  <Project Path="Identity/src/Identity.Client.Wasm/Identity.Client.Wasm.csproj" Id="412568ef-212b-4f55-b63c-2e21e0088d90" />
-  <Project Path="Identity/src/Identity.Domain/Identity.Domain.csproj" Id="ef3bcfcd-0a52-4fa1-9211-ff65dd243436" />
-  <Project Path="Identity/src/Identity.Infrastructure/Identity.Infrastructure.csproj" Id="d1d39e74-df2f-4d59-a91d-6ac3bc98bf7f" />
-  <Project Path="Identity/src/Identity.Shared/Identity.Shared.csproj" Id="5bb8f952-b401-4333-bad4-e6aec9750af0" />
-</Solution>
