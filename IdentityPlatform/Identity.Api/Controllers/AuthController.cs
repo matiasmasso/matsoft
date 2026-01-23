@@ -70,7 +70,7 @@ public class AuthController : ControllerBase
 
         var userId = Guid.Parse(userIdClaim);
 
-        var profile = await _auth.GetProfileAsync(userId);
+        var profile = await _auth.GetFullProfileAsync(userId);
 
         return Ok(profile);
     }

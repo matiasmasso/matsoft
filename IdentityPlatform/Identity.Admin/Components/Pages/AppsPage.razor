@@ -1,0 +1,33 @@
+﻿@page "/apps"
+@inject IdentityApiClient Api
+
+<h3>Applications</h3>
+
+@if (apps == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var app in apps)
+        {
+            <li>
+                <a href="/apps/@app.Id">@app.Name (@app.Key)</a>
+            </li>
+        }
+    </ul>
+}
+
+<button @onclick="ShowCreate">Create App</button>
+
+@code {
+    List<AppDto>? apps;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apps = await Api.GetAppsAsync();
+    }
+
+    void ShowCreate() { /* open modal */ }
+}

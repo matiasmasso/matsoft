@@ -1,3 +1,4 @@
+using Identity.Api.Application.Apps;
 using Identity.Api.Application.Auth;
 using Identity.Api.Domain.Users;
 using Identity.Api.Infrastructure.Persistence;
@@ -59,6 +60,10 @@ builder.Services.AddCors(options =>
             .SetIsOriginAllowed(_ => true); // temporary during development
     });
 });
+
+builder.Services.AddScoped<AppService>();
+builder.Services.AddScoped<RoleService>();
+builder.Services.AddScoped<EnrollmentService>();
 
 var app = builder.Build();
 

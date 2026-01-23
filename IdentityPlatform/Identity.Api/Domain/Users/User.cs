@@ -7,5 +7,5 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
 
-    public ICollection<UserAppEnrollment> Enrollments { get; set; } = new List<UserAppEnrollment>();
+    public ICollection<UserAppEnrollment> AppEnrollments { get; set; } = new List<UserAppEnrollment>();
 }

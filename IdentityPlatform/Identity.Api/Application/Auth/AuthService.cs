@@ -149,4 +149,37 @@ public class AuthService
             Email = user.Email
         };
     }
+
+    public async Task<UserProfile> GetFullProfileAsync(Guid userId)
+    {
+        var user = await _db.Users
+            .Include(u => u.AppEnrollments)
+                .ThenInclude(e => e.App)
+            .Include(u => u.AppEnrollments)
+                .ThenInclude(e => e.Roles)
+                    .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            throw new Exception("User not found");
+
+        var profile = new UserProfile
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Apps = user.AppEnrollments
+                .Select(e => new AppProfile
+                {
+                    Key = e.App.Key,
+                    Roles = e.Roles
+                        .Select(r => r.Role.Name)
+                        .OrderBy(n => n)
+                        .ToList()
+                })
+                .OrderBy(a => a.Key)
+                .ToList()
+        };
+
+        return profile;
+    }
 }

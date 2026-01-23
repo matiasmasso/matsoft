@@ -1,0 +1,45 @@
+﻿@page "/apps/{AppId:guid}"
+
+@inject IdentityApiClient Api
+
+<h3>App Details</h3>
+
+@if (app == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <h4>@app.Name (@app.Key)</h4>
+
+    <h5>Roles</h5>
+    <ul>
+        @foreach (var role in roles)
+        {
+            <li>@role.Name</li>
+        }
+    </ul>
+
+    <h5>Users</h5>
+    <ul>
+        @foreach (var u in users)
+        {
+            <li>@u.Email — @string.Join(", ", u.Roles)</li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter] public Guid AppId { get; set; }
+
+    AppDto? app;
+    List<RoleDto>? roles;
+    List<UserEnrollmentDto>? users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        app = (await Api.GetAppsAsync())?.FirstOrDefault(a => a.Id == AppId);
+        roles = await Api.GetRolesAsync(AppId);
+        users = await Api.GetUsersInAppAsync(AppId);
+    }
+}
