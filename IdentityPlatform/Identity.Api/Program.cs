@@ -2,6 +2,7 @@ using Identity.Api.Application.Apps;
 using Identity.Api.Application.Auth;
 using Identity.Api.Domain.Users;
 using Identity.Api.Infrastructure.Persistence;
+using Identity.Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,7 @@ builder.Services.AddScoped<AppService>();
 builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<EnrollmentService>();
 
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -74,6 +76,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 app.UseHttpsRedirection();
+app.UseMiddleware<JsonExceptionMiddleware>(); // before UseRouting
 
 app.UseRouting();
 app.UseAuthentication();

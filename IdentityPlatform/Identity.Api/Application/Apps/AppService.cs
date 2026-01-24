@@ -45,8 +45,8 @@ public class AppService
 
     public async Task<List<App>> ListAppsAsync()
     {
-        return await _db.Apps
-            .OrderBy(a => a.Name)
-            .ToListAsync();
+            return await _db.Apps
+                .OrderBy(a => a.Name)
+                .ToListAsync();
     }
 }

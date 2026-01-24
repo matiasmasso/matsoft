@@ -4,6 +4,7 @@ using Identity.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Identity.Api.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    partial class IdentityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260123214423_CascadeCleanup")]
+    partial class CascadeCleanup
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -148,7 +151,7 @@ namespace Identity.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("EnrollmentId")
+                    b.Property<Guid>("EnrollmentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("RoleId")
@@ -159,8 +162,7 @@ namespace Identity.Api.Migrations
                     b.HasIndex("RoleId");
 
                     b.HasIndex("EnrollmentId", "RoleId")
-                        .IsUnique()
-                        .HasFilter("[EnrollmentId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("UserRoles");
                 });
@@ -200,7 +202,8 @@ namespace Identity.Api.Migrations
                     b.HasOne("Identity.Api.Domain.Users.UserAppEnrollment", "Enrollment")
                         .WithMany("Roles")
                         .HasForeignKey("EnrollmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Identity.Api.Domain.Apps.AppRole", "Role")
                         .WithMany("UserRoles")

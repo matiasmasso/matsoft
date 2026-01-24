@@ -5,7 +5,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents()
+    .AddInteractiveWebAssemblyComponents();
+
+// Custom services
+builder.Services.AddScoped<ToastService>();
 
 builder.Services.AddHttpClient<IdentityApiClient>(client =>
 {

@@ -1,10 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWeb">
 
-  <PropertyGroup>
+
+	<PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+
   </PropertyGroup>
+
+	<ItemGroup>
+		<RazorComponent Include="Components\Toast.razor" />
+	</ItemGroup>
 
 </Project>

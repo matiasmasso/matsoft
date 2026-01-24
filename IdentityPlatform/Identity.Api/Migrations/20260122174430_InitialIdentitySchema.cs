@@ -41,7 +41,7 @@ namespace Identity.Api.Migrations
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -60,7 +60,7 @@ namespace Identity.Api.Migrations
                         column: x => x.UserAppEnrollmentId,
                         principalTable: "UserAppEnrollments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateIndex(

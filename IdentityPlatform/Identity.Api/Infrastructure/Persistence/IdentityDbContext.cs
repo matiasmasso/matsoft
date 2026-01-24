@@ -1,4 +1,4 @@
-using Identity.Api.Application.Auth;
+﻿using Identity.Api.Application.Auth;
 using Identity.Api.Domain.Apps;
 using Identity.Api.Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +39,11 @@ public class IdentityDbContext : DbContext
         {
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.AppId, x.Name }).IsUnique();
+
+            entity.HasOne(x => x.App)
+                .WithMany(a => a.Roles)
+                .HasForeignKey(x => x.AppId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<UserAppEnrollment>(entity =>
@@ -49,11 +54,13 @@ public class IdentityDbContext : DbContext
 
             entity.HasOne(x => x.User)
                 .WithMany(u => u.AppEnrollments)
-                .HasForeignKey(x => x.UserId);
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(x => x.App)
                 .WithMany(a => a.Enrollments)
-                .HasForeignKey(x => x.AppId);
+                .HasForeignKey(x => x.AppId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<UserRole>(entity =>
@@ -64,11 +71,13 @@ public class IdentityDbContext : DbContext
 
             entity.HasOne(x => x.Enrollment)
                 .WithMany(e => e.Roles)
-                .HasForeignKey(x => x.EnrollmentId);
+                .HasForeignKey(x => x.EnrollmentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(x => x.Role)
                 .WithMany(r => r.UserRoles)
-                .HasForeignKey(x => x.RoleId);
+                .HasForeignKey(x => x.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>
@@ -76,7 +85,5 @@ public class IdentityDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.Token).IsUnique();
         });
-
-
     }
 }

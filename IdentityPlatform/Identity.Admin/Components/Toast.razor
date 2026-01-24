@@ -1,0 +1,53 @@
+﻿@inject ToastService ToastService
+@namespace Identity.Admin.Components
+
+<p style="color:red">TOAST COMPONENT LOADED</p>
+
+<div class="admin-toast-container" style="@_displayStyle">
+    <div class="admin-toast @ToastCss">
+        @_message
+        <a href="#" class="admin-toast-close" @onclick="HandleHide" @onclick:preventDefault>×</a>
+    </div>
+</div>
+
+@code {
+    private string _message = "";
+    private string ToastCss = "";
+    private string _displayStyle = "display:none";
+
+
+
+    protected override void OnInitialized()
+    {
+        ToastService.OnShow += HandleShow;
+        ToastService.OnHide += HandleHide;
+    }
+
+    private async void HandleShow(string message, string level)
+    {
+        _message = message;
+        ToastCss = level switch
+        {
+            "success" => "admin-toast-success",
+            "error" => "admin-toast-error",
+            _ => "admin-toast-info"
+        };
+
+        _displayStyle = "display:block";
+        await InvokeAsync(StateHasChanged);
+
+        if (level == "success")
+        {
+            await Task.Delay(3000);
+            _displayStyle = "display:none";
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private void HandleHide()
+    {
+        _displayStyle = "display:none";
+        StateHasChanged();
+    }
+}

@@ -26,8 +26,16 @@ public class AppsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var apps = await _apps.ListAppsAsync();
-        return Ok(apps);
+        try
+        {
+            var apps = await _apps.ListAppsAsync();
+            return Ok(apps);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+
     }
 
     [HttpGet("{key}")]
