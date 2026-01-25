@@ -1,0 +1,6 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal.Editors.Custom
+@inherits EditorBase<string>
+
+<input type="text"
+       value="@Value"
+       @oninput="e => NotifyValueChangedAsync(e.Value?.ToString())" />

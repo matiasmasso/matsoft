@@ -1,0 +1,25 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal.Editors.Custom
+@using Microsoft.AspNetCore.Components.Forms
+@inherits EditorBase<decimal>
+
+<input class="mat-propertygrid-input"
+       type="number"
+       step="any"
+       value="@Value"
+       @oninput="OnInput" />
+
+@code {
+    [Parameter] public double Value { get; set; }
+    [Parameter] public EventCallback<double> ValueChanged { get; set; }
+
+    [Parameter] public FieldIdentifier Field { get; set; }
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), out var newValue))
+        {
+            await ValueChanged.InvokeAsync(newValue);
+            EditContext?.NotifyFieldChanged(Field);
+        }
+    }
+}

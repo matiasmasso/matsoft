@@ -1,0 +1,23 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal.Editors.Custom
+@inherits EditorBase<decimal>
+
+<select class="mat-propertygrid-input"
+        value="@Value"
+        @onchange="OnChange">
+
+    @foreach (var item in Enum.GetValues(EnumType))
+    {
+        <option value="@item">@item</option>
+    }
+</select>
+
+@code {
+    [Parameter] public Type EnumType { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        var parsed = Enum.Parse(EnumType, e.Value.ToString());
+        await ValueChanged.InvokeAsync((decimal)parsed);
+        EditContext.NotifyFieldChanged(Field);
+    }
+}

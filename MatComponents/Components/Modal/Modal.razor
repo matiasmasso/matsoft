@@ -1,0 +1,55 @@
+﻿@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+@if (_open)
+{
+    <div class="mat-modal-backdrop" @onclick="Close"></div>
+
+    <div class="mat-modal">
+        <div class="mat-modal-header">
+            <h5 class="mat-modal-title">@Title</h5>
+            <button class="mat-modal-close" @onclick="Close" aria-label="Close">×</button>
+        </div>
+
+        <div class="mat-modal-body">
+            @ChildContent
+        </div>
+
+        <div class="mat-modal-footer">
+            @Footer
+        </div>
+    </div>
+}
+
+@code {
+    private bool _open;
+
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? Footer { get; set; }
+
+    public void Open()
+    {
+        _open = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Close()
+    {
+        _open = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _ = JS.InvokeVoidAsync("addModalEscHandler", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public void CloseFromEsc() => Close();
+
+
+}

@@ -1,10 +1,11 @@
 ﻿using Identity.Api.Application.Apps;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace Identity.Api.Controllers;
 
 [ApiController]
-[Route("api/apps")]
+[Route("apps")]
 public class AppsController : ControllerBase
 {
     private readonly AppService _apps;
@@ -43,5 +44,19 @@ public class AppsController : ControllerBase
     {
         var app = await _apps.GetByKeyAsync(key);
         return app == null ? NotFound() : Ok(app);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteApp(Guid id)
+    {
+        try
+        {
+            await _apps.DeleteAppAsync(id);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

@@ -1,0 +1,175 @@
+﻿@page "/apps/{AppId:guid}"
+@using MatComponents.Components.ClientOnlyBlazor
+@rendermode InteractiveAuto
+
+@inject IdentityApiClient Api
+@inject ToastService Toasts
+
+<PageOptions>
+    <a href="#" @onclick:preventDefault @onclick="DeleteAsync">Delete app</a>
+</PageOptions>
+
+@if (isLoading)
+{
+    <Loading></Loading>
+}
+else
+{
+    <h4>@app.Name (@app.Key)</h4>
+
+    <h5>Roles</h5>
+    <ul>
+        @foreach (var role in roles ?? new())
+        {
+            <li>@role.Name</li>
+        }
+    </ul>
+
+    <h5>Users</h5>
+
+    <input @bind="search" placeholder="Search users..." />
+
+    <ul>
+        @foreach (var u in users?.Where(u =>
+            string.IsNullOrWhiteSpace(search) ||
+            u.Email.Contains(search, StringComparison.OrdinalIgnoreCase))?.ToList() ?? new())
+        {
+            <li>
+                @u.Email —
+                @string.Join(", ", u.Roles)
+
+                <select @onchange="e => AssignRole(u.UserId, e.Value?.ToString())">
+                    <option value="">Assign role...</option>
+                    @foreach (var r in roles ?? new())
+                    {
+                        <option value="@r.Id">@r.Name</option>
+                    }
+                </select>
+            </li>
+
+        }
+    </ul>
+
+
+        <Modal @ref="createRoleModal" Title="Create Role">
+            <input @bind="newRoleName" placeholder="Role name" />
+            <button @onclick="CreateRole">Create</button>
+        </Modal>
+
+    <button @onclick="() => createRoleModal.Open()">Add Role</button>
+
+}
+
+@code {
+    [Parameter] public Guid AppId { get; set; }
+
+    AppDto? app;
+    List<RoleDto>? roles;
+    List<UserEnrollmentDto>? users;
+
+    Modal? createRoleModal;
+    string newRoleName = "";
+    string search = "";
+
+    Modal? enrollModal;
+    string emailToEnroll = "";
+    bool isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            app = (await Api.GetAppsAsync())?.FirstOrDefault(a => a.Id == AppId);
+            roles = await Api.GetRolesAsync(AppId);
+            users = await Api.GetUsersInAppAsync(AppId);
+        }
+        catch (ApiException ex)
+        {
+            Toasts.ShowError(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+
+
+    }
+
+
+    private async Task CreateRole()
+    {
+        try
+        {
+            await Api.CreateRoleAsync(AppId, new CreateRoleRequest(newRoleName));
+            roles = await Api.GetRolesAsync(AppId);
+            createRoleModal?.Close();
+
+            Toasts.ShowSuccess("Role created");
+        }
+        catch (ApiException ex)
+        {
+            Toasts.ShowError(ex.Message);
+        }
+
+    }
+
+    async Task AssignRole(Guid userId, string? roleId)
+    {
+        try
+        {
+            if (Guid.TryParse(roleId, out var rid))
+            {
+                await Api.AssignRoleAsync(AppId, userId, new AssignRoleRequest(rid));
+                users = await Api.GetUsersInAppAsync(AppId);
+
+                Toasts.ShowSuccess("Role assigned");
+            }
+        }
+        catch
+        {
+            Toasts.ShowError("Failed to assign a role");
+        }
+
+    }
+
+
+    async Task EnrollUser()
+    {
+        try
+        {
+            var user = await Api.FindUserByEmailAsync(emailToEnroll);
+            if (user != null)
+            {
+                await Api.EnrollUserAsync(AppId, user.Id);
+                users = await Api.GetUsersInAppAsync(AppId);
+            }
+            enrollModal?.Close();
+            Toasts.ShowSuccess("user enrolled");
+        }
+        catch
+        {
+            Toasts.ShowError("Failed to enroll user");
+
+        }
+
+    }
+
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            await Api.DeleteAppAsync(AppId);
+            Toasts.ShowSuccess("App deleted");
+        }
+        catch (ApiException ex)
+        {
+            Toasts.ShowError(ex.Message);
+        }
+
+    }
+
+
+
+}

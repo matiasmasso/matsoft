@@ -1,0 +1,95 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal.Models
+@typeparam T
+@inherits EditorBase<T>
+
+<div class="mat-pg-searchlookup-editor">
+    <input type="text"
+           class="mat-pg-searchlookup-input"
+           placeholder="@Placeholder"
+           @bind="SearchTerm"
+           @bind:event="oninput" />
+
+    @if (IsSearching)
+    {
+        <div class="mat-pg-searchlookup-status">Searching…</div>
+    }
+
+    @if (Results?.Any() == true)
+    {
+        <div class="mat-pg-searchlookup-results">
+            @foreach (var obj in Results)
+            {
+                var item = (LookupItem<T>)obj;
+                <div class="mat-pg-searchlookup-item"
+                     @onclick="() => Select(item)">
+                    @item.Label
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Placeholder { get; set; } = "Type to search…";
+
+    private string _searchTerm = string.Empty;
+    private string SearchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            if (_searchTerm == value) return;
+            _searchTerm = value;
+            _ = TriggerSearchAsync();
+        }
+    }
+
+    private IEnumerable<object>? Results { get; set; }
+    private bool IsSearching { get; set; }
+
+    private CancellationTokenSource? _cts;
+
+    private async Task TriggerSearchAsync()
+    {
+        if (Metadata.SearchFunc == null)
+        {
+            Results = null;
+            return;
+        }
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        try
+        {
+            IsSearching = true;
+            StateHasChanged();
+
+            await Task.Delay(250, token);
+
+            Results = string.IsNullOrWhiteSpace(SearchTerm)
+                ? Array.Empty<object>()
+                : await Metadata.SearchFunc(SearchTerm);
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                IsSearching = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task Select(LookupItem<T> item)
+    {
+        SearchTerm = item.Label;
+        Results = null;
+
+        await NotifyValueChangedAsync(item.Value);
+    }
+}

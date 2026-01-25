@@ -1,0 +1,40 @@
+﻿.admin-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.admin-toast {
+    padding: 12px 18px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.admin-toast-success {
+    background-color: #28a745;
+}
+
+.admin-toast-error {
+    background-color: #dc3545;
+}
+
+.admin-toast-info {
+    background-color: #17a2b8;
+}
+
+.admin-toast-warning {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.admin-toast-close {
+    margin-left: 12px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.admin-toast {
+    white-space: pre-line; /* preserves multiline formatting */
+}

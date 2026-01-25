@@ -1,0 +1,14 @@
+﻿@page "/test"
+@rendermode InteractiveServer
+
+<h1>TEST 2</h1>
+
+@code {
+    [Inject] IdentityApiClient Api { get; set; }
+    [Inject] ToastService Toasts { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine(">>> Apps page initialized");
+    }
+}

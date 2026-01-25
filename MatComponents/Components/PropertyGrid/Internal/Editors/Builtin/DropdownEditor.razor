@@ -1,0 +1,21 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal.Editors.Custom
+@inherits EditorBase<string>
+
+<select class="mat-propertygrid-input"
+        value="@Value"
+        @onchange="OnChange">
+
+    @foreach (var item in Items)
+    {
+        <option value="@item">@item</option>
+    }
+</select>
+
+@code {
+    [Parameter] public IEnumerable<string> Items { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        await NotifyValueChangedAsync(e.Value?.ToString());
+    }
+}

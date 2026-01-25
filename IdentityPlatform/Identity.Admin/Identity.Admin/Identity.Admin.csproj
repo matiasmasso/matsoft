@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+		<WasmEnable>true</WasmEnable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\ApiCore\ApiCore.csproj" />
+		<ProjectReference Include="..\..\..\MatComponents\MatComponents.csproj" />
+		<ProjectReference Include="..\..\Identity.Shared\Identity.Shared.csproj" />
+		<ProjectReference Include="..\Identity.Admin.Client\Identity.Admin.Client.csproj" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.2" />
+	</ItemGroup>
+
+</Project>

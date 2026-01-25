@@ -93,6 +93,83 @@
             border-left: 1px solid black;
         }
 
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+.mat-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.mat-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+}
+
+.mat-modal-header,
+.mat-modal-footer {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.mat-modal-header {
+    position: relative;
+}
+
+.mat-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.mat-modal-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #333;
+    margin-left: auto;
+}
+
+.mat-modal-footer {
+    border-top: 1px solid #eee;
+    border-bottom: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.mat-modal-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+
+
+
 /* ============================================================
    PROPERTY GRID
    ============================================================ */

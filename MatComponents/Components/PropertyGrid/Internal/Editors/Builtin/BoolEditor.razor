@@ -1,0 +1,21 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal.Editors.Custom
+@using Microsoft.AspNetCore.Components.Forms
+@inherits EditorBase<decimal>
+
+<input type="checkbox"
+       checked="@Value"
+       @onchange="OnChange" />
+
+@code {
+    [Parameter] public bool Value { get; set; }
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+
+    [Parameter] public FieldIdentifier Field { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        var newValue = (bool)e.Value;
+        await ValueChanged.InvokeAsync(newValue);
+        EditContext?.NotifyFieldChanged(Field);
+    }
+}

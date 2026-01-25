@@ -1,0 +1,16 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal.Editors.Custom
+@inherits EditorBase<decimal>
+
+<input type="number"
+       step="0.01"
+       value="@Value"
+       @onchange="OnChange" />
+
+@code {
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        if (decimal.TryParse(e.Value?.ToString(), out var d))
+            await NotifyValueChangedAsync(d);
+    }
+}
+

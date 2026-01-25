@@ -1,0 +1,25 @@
+﻿@namespace MatComponents.Components.PropertyGrid
+@using MatComponents.Components.PropertyGrid
+@using MatComponents.Components.PropertyGrid.Internal.Models
+
+<PropertyGridInternal SelectedObject="SelectedObject"
+                      OnObjectChanged="OnObjectChanged"
+                      OnUpdate="OnUpdate"
+                      OnDelete="OnDelete"
+                      OnCancel="OnCancel"
+                      Options="Options" />
+
+
+@code {
+    [Parameter] public object? SelectedObject { get; set; }
+    [Parameter] public EventCallback<object?> OnObjectChanged { get; set; }
+
+    [Parameter] public EventCallback<object?> OnUpdate { get; set; }
+    [Parameter] public EventCallback<object?> OnDelete { get; set; }
+    [Parameter] public EventCallback<object?> OnCancel { get; set; }
+
+    [Parameter] public PropertyGridOptions? Options { get; set; }
+    
+    [Parameter] public Dictionary<string, IEnumerable<object>>? Lookups { get; set; }
+    [Parameter] public Dictionary<string, Func<string, Task<IEnumerable<object>>>>? SearchLookups { get; set; }
+}

@@ -1,0 +1,19 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal.Editors.Custom
+@inherits EditorBase<decimal>
+
+
+<input class="mat-propertygrid-input"
+       type="number"
+       value="@Value"
+       @oninput="OnInput" />
+
+@code {
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var newValue))
+        {
+            await ValueChanged.InvokeAsync(newValue);
+            EditContext?.NotifyFieldChanged(Field);
+        }
+    }
+}

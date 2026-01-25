@@ -1,0 +1,14 @@
+﻿@using MatComponents.Components.PropertyGrid.Internal
+@using MatComponents.Components.PropertyGrid.Internal.Editors.Custom
+@inherits EditorBase<decimal>
+
+<div class="mat-propertygrid-object-editor">
+    @if (Node?.Instance != null)
+    {
+        <PropertyGrid SelectedObject="Node.Instance" />
+    }
+</div>
+
+@code {
+    [Parameter] public ObjectNode Node { get; set; }
+}
