@@ -1,0 +1,122 @@
+﻿@page "/apps"
+@inject AppsService Apps
+
+<h3>Applications</h3>
+
+<button class="btn btn-primary mb-3" @onclick="ShowCreate">New App</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Key</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th style="width: 150px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (apps is null)
+        {
+            <tr><td colspan="4">Loading...</td></tr>
+        }
+        else
+        {
+            @foreach (var app in apps)
+            {
+                <tr>
+                    <td>@app.Key</td>
+                    <td>@app.Name</td>
+                    <td>@app.Description</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary me-1" @onclick="() => ShowEdit(app)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ShowDelete(app)">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<!-- Dialogs -->
+@if (showCreate)
+{
+    <CreateAppDialog Visible="true"
+                     OnCreated="HandleCreated"
+                     OnCancel="CloseCreate" />
+}
+
+@if (showEdit)
+{
+    <EditAppDialog Visible="true"
+                   App="selectedApp"
+                   OnUpdated="HandleUpdated"
+                   OnCancel="CloseEdit" />
+}
+
+@if (showDelete)
+{
+    <DeleteAppDialog Visible="true"
+                     App="selectedApp"
+                     OnDeleted="HandleDeleted"
+                     OnCancel="CloseDelete" />
+}
+
+@code {
+    private List<AppDto>? apps;
+
+    private bool showCreate;
+    private bool showEdit;
+    private bool showDelete;
+
+    private AppDto? selectedApp;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadApps();
+    }
+
+    private async Task LoadApps()
+    {
+        apps = await Apps.GetAllAsync();
+    }
+
+    // CREATE
+    private void ShowCreate() => showCreate = true;
+    private void CloseCreate() => showCreate = false;
+
+    private async Task HandleCreated(AppDto app)
+    {
+        showCreate = false;
+        await LoadApps();
+    }
+
+    // EDIT
+    private void ShowEdit(AppDto app)
+    {
+        selectedApp = app;
+        showEdit = true;
+    }
+
+    private void CloseEdit() => showEdit = false;
+
+    private async Task HandleUpdated(AppDto app)
+    {
+        showEdit = false;
+        await LoadApps();
+    }
+
+    // DELETE
+    private void ShowDelete(AppDto app)
+    {
+        selectedApp = app;
+        showDelete = true;
+    }
+
+    private void CloseDelete() => showDelete = false;
+
+    private async Task HandleDeleted(Guid id)
+    {
+        showDelete = false;
+        await LoadApps();
+    }
+}

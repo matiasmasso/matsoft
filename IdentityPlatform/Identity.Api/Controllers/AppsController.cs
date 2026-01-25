@@ -24,6 +24,22 @@ public class AppsController : ControllerBase
         return Ok(app);
     }
 
+    public record UpdateAppRequest(string Name);
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateApp(Guid id, UpdateAppRequest request)
+    {
+        try
+        {
+            var updated = await _apps.UpdateAppAsync(id, request.Name);
+            return Ok(updated);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpGet]
     public async Task<IActionResult> List()
     {

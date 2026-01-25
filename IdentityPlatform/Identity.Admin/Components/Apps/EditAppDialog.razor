@@ -1,0 +1,71 @@
+﻿@inject AppsService Apps
+
+<SharedModal Visible="Visible"
+            Title="Edit App"
+            DialogSize="modal-md"
+            OnClose="HandleClose"
+            Body="@BodyContent"
+            Footer="@FooterContent" />
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public AppDto App { get; set; } = default!;
+    [Parameter] public EventCallback<AppDto> OnUpdated { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool isSubmitting = false;
+
+    private UpdateAppRequest model = new();
+
+    protected override void OnParametersSet()
+    {
+        if (App is not null)
+        {
+            model = new UpdateAppRequest
+            {
+                Name = App.Name,
+                Description = App.Description,
+                ClientSecret = App.ClientSecret
+            };
+        }
+    }
+
+    private RenderFragment BodyContent => @<div>
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input class="form-control" @bind="model.Name" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" rows="3" @bind="model.Description"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Client Secret</label>
+            <input class="form-control" @bind="model.ClientSecret" required />
+        </div>
+    </div>;
+
+    private RenderFragment FooterContent => @<div>
+        <button class="btn btn-secondary" disabled="@isSubmitting" @onclick="Cancel">Cancel</button>
+        <button class="btn btn-primary" disabled="@isSubmitting" @onclick="Submit">
+            @(isSubmitting ? "Saving..." : "Save")
+        </button>
+    </div>;
+
+    private async Task Submit()
+    {
+        isSubmitting = true;
+
+        var result = await Apps.UpdateAsync(App.Id, model);
+
+        isSubmitting = false;
+
+        if (result is not null)
+            await OnUpdated.InvokeAsync(result);
+    }
+
+    private async Task Cancel() => await OnCancel.InvokeAsync();
+    private async Task HandleClose(bool _) => await OnCancel.InvokeAsync();
+}

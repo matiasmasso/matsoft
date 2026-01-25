@@ -1,8 +1,0 @@
-<Solution>
-  <Project Path="ApiCore/ApiCore.csproj" />
-  <Project Path="IdentityPlatform/Identity.Admin/Identity.Admin.Client/Identity.Admin.Client.csproj" Id="49d6978a-598b-4cba-a92f-6d5c685ef323" />
-  <Project Path="IdentityPlatform/Identity.Admin/Identity.Admin/Identity.Admin.csproj" Id="a9e4ba14-94ba-4579-9715-3c8f8b1d7c44" />
-  <Project Path="IdentityPlatform/Identity.Api/Identity.Api.csproj" />
-  <Project Path="IdentityPlatform/Identity.Shared/Identity.Shared.csproj" Id="f5060a5b-a4e5-4d0d-9f68-6e5f3f72dd28" />
-  <Project Path="MatComponents/MatComponents.csproj" />
-</Solution>

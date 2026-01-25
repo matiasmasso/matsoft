@@ -1,0 +1,99 @@
+﻿@inject AppsService Apps
+
+<SharedModal Visible="Visible"
+            Title="Create App"
+            DialogSize="modal-md"
+            OnClose="HandleClose"
+            Body="@BodyContent"
+            Footer="@FooterContent" />
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<AppDto> OnCreated { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool isSubmitting = false;
+    private CreateAppRequest model = new();
+
+    // -------------------------
+    // BODY (markup-based)
+    // -------------------------
+    private RenderFragment BodyContent => @<div>
+        <div class="mb-3">
+            <label class="form-label">Key</label>
+            <input class="form-control"
+                   @bind="model.Key"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input class="form-control"
+                   @bind="model.Name"
+                   required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control"
+                      rows="3"
+                      @bind="model.Description"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Client Secret</label>
+            <input class="form-control"
+                   @bind="model.ClientSecret"
+                   required />
+        </div>
+    </div>;
+
+    // -------------------------
+    // FOOTER (markup-based)
+    // -------------------------
+    private RenderFragment FooterContent => @<div>
+        <button class="btn btn-secondary"
+                disabled="@isSubmitting"
+                @onclick="Cancel">
+            Cancel
+        </button>
+
+        <button class="btn btn-primary"
+                disabled="@isSubmitting"
+                @onclick="Submit">
+            @(isSubmitting ? "Creating..." : "Create")
+        </button>
+    </div>;
+
+    // -------------------------
+    // ACTIONS
+    // -------------------------
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(model.Key) ||
+            string.IsNullOrWhiteSpace(model.Name) ||
+            string.IsNullOrWhiteSpace(model.ClientSecret))
+        {
+            return;
+        }
+
+        isSubmitting = true;
+
+        var result = await Apps.CreateAsync(model);
+
+        isSubmitting = false;
+
+        if (result is not null)
+            await OnCreated.InvokeAsync(result);
+    }
+
+    private async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task HandleClose(bool _)
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="IdentityPlatform/Identity.Admin/Identity.Admin.csproj" />
+  <Project Path="IdentityPlatform/Identity.Api/Identity.Api.csproj" />
+  <Project Path="MatComponents/MatComponents.csproj" />
+</Solution>

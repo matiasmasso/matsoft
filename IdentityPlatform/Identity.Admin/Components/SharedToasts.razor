@@ -1,0 +1,97 @@
+﻿@inject ToastService Toasts
+
+
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;">
+    @foreach (var toast in activeToasts)
+    {
+        <div @key="toast.Id"
+             class="toast show @(toast.IsExiting ? "toast-exit" : "toast-animate")
+                mb-2 text-white bg-@GetBgClass(toast.Type)"
+             @onclick="() => Remove(toast.Id)"
+             role="alert">
+
+
+            <div class="d-flex align-items-center">
+                <div class="toast-icon fs-4 ms-2 me-2">
+                    @GetIcon(toast.Type)
+                </div>
+
+                <div class="toast-body">
+                    @toast.Message
+                </div>
+
+                <button type="button"
+                        class="btn-close btn-close-white me-2 m-auto"
+                        @onclick="() => Remove(toast.Id)">
+                </button>
+
+            </div>
+        </div>
+    }
+</div>
+
+
+@code {
+    private readonly List<ToastItem> activeToasts = new();
+
+    protected override void OnInitialized()
+    {
+        Toasts.OnShow += AddToast;
+    }
+
+    private void AddToast(ToastMessage message)
+    {
+        var item = new ToastItem(Guid.NewGuid(), message.Message, message.Type);
+        activeToasts.Add(item);
+        StateHasChanged();
+
+        if (item.Type == ToastType.Success)
+            _ = AutoRemove(item.Id);
+    }
+
+    private async Task AutoRemove(Guid id)
+    {
+        await Task.Delay(3000);
+        Remove(id);
+    }
+
+    private async void Remove(Guid id)
+    {
+        var toast = activeToasts.FirstOrDefault(t => t.Id == id);
+        if (toast is null)
+            return;
+
+        toast.IsExiting = true;
+        StateHasChanged();
+
+        await Task.Delay(350); // wait for slide-out animation
+
+        activeToasts.Remove(toast);
+        StateHasChanged();
+    }
+
+    private string GetBgClass(ToastType type) =>
+        type switch
+        {
+            ToastType.Success => "success",
+            ToastType.Error => "danger",
+            ToastType.Warning => "warning",
+            ToastType.Info => "info",
+            _ => "secondary"
+        };
+
+    private MarkupString GetIcon(ToastType type) =>
+        type switch
+        {
+            ToastType.Success => new("<i class='bi bi-check-circle-fill'></i>"),
+            ToastType.Error => new("<i class='bi bi-x-circle-fill'></i>"),
+            ToastType.Warning => new("<i class='bi bi-exclamation-triangle-fill'></i>"),
+            ToastType.Info => new("<i class='bi bi-info-circle-fill'></i>"),
+            _ => new("<i class='bi bi-bell-fill'></i>")
+        };
+
+    private record ToastItem(Guid Id, string Message, ToastType Type)
+    {
+        public bool IsExiting { get; set; }
+    }
+}

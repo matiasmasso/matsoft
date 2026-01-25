@@ -19,8 +19,4 @@
     <None Include="wwwroot\matcomponents.css" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ApiCore\ApiCore.csproj" />
-  </ItemGroup>
-
 </Project>

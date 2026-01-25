@@ -33,6 +33,17 @@ public class AppService
         return app;
     }
 
+    public async Task<App> UpdateAppAsync(Guid appId, string name)
+    {
+        var app = await _db.Apps.FirstOrDefaultAsync(a => a.Id == appId);
+        if (app == null)
+            throw new Exception("App not found");
+        app.Name = name;
+        _db.Apps.Update(app);
+        await _db.SaveChangesAsync();
+        return app;
+    }
+
     public async Task<App?> GetByKeyAsync(string key)
     {
         key = key.Trim().ToLowerInvariant();
