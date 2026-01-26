@@ -1,55 +1,74 @@
 using Identity.Api.Application.Apps;
 using Identity.Api.Application.Auth;
+using Identity.Api.Data;
 using Identity.Api.Domain.Users;
-using Identity.Api.Infrastructure.Persistence;
 using Identity.Api.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using OpenIddict.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// EF Core
+// EF Core + OpenIddict stores
 builder.Services.AddDbContext<IdentityDbContext>(options =>
 {
     var cs = builder.Configuration.GetConnectionString("IdentityDatabase")
         ?? throw new InvalidOperationException("Connection string 'IdentityDatabase' not found.");
 
     options.UseSqlServer(cs);
+    options.UseOpenIddict();
 });
+
+// ASP.NET Core Identity
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<IdentityDbContext>()
+    .AddDefaultTokenProviders();
+
+// Cookie authentication for interactive login
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/account/login";
+    options.LogoutPath = "/account/logout";
+});
+
+//-----------------------------------------------------------------------
+// OpenIddict
+//-----------------------------------------------------------------------
+
+builder.Services.AddOpenIddict()
+    .AddCore(options =>
+    {
+        options.UseEntityFrameworkCore()
+               .UseDbContext<IdentityDbContext>();
+    })
+    .AddServer(options =>
+    {
+        options.SetAuthorizationEndpointUris("/connect/authorize");
+        options.SetTokenEndpointUris("/connect/token");
+
+        options.AllowAuthorizationCodeFlow()
+               .RequireProofKeyForCodeExchange();
+
+        options.RegisterScopes("openid", "profile", "email");
+
+        options.UseAspNetCore()
+               .EnableAuthorizationEndpointPassthrough()
+               .EnableTokenEndpointPassthrough();
+
+        options.AddDevelopmentEncryptionCertificate()
+               .AddDevelopmentSigningCertificate();
+    })
+    .AddValidation(options =>
+    {
+        options.UseLocalServer();
+        options.UseAspNetCore();
+    });
 
 
 // Controllers
 builder.Services.AddControllers();
 
-
-var jwtSection = builder.Configuration.GetSection("Jwt");
-builder.Services.Configure<JwtOptions>(jwtSection);
-
-var jwt = jwtSection.Get<JwtOptions>()!;
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwt.Issuer,
-            ValidAudience = jwt.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey))
-        };
-    });
-
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
-builder.Services.AddAuthorization();
-
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -58,14 +77,14 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()
-            .SetIsOriginAllowed(_ => true); // temporary during development
+            .SetIsOriginAllowed(_ => true);
     });
 });
 
+// Your application services
 builder.Services.AddScoped<AppService>();
 builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<EnrollmentService>();
-
 
 var app = builder.Build();
 
@@ -76,16 +95,58 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 app.UseHttpsRedirection();
-app.UseMiddleware<JsonExceptionMiddleware>(); // before UseRouting
+app.UseMiddleware<JsonExceptionMiddleware>();
 
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseDefaultFiles();   // <-- activa index.html com a p gina per defecte
-app.UseStaticFiles();    // <-- serveix wwwroot
-
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.MapControllers();
+
+async Task RegisterClientsAsync(IServiceProvider services)
+{
+    var manager = services.GetRequiredService<IOpenIddictApplicationManager>();
+
+    if (await manager.FindByClientIdAsync("mat-album-wasm") is null)
+    {
+        await manager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = "mat-album-wasm",
+            ConsentType = OpenIddictConstants.ConsentTypes.Implicit,
+            DisplayName = "Album app",
+
+            RedirectUris =
+            {
+                new Uri("https://localhost:7297/authentication/login-callback")
+            },
+
+            PostLogoutRedirectUris =
+            {
+                new Uri("https://localhost:7297/authentication/logout-callback")
+            },
+
+            Permissions =
+            {
+                OpenIddictConstants.Permissions.Endpoints.Authorization,
+                OpenIddictConstants.Permissions.Endpoints.Token,
+                OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                OpenIddictConstants.Permissions.ResponseTypes.Code,
+                OpenIddictConstants.Permissions.Scopes.Email,
+                OpenIddictConstants.Permissions.Scopes.Profile,
+        // The OpenID scope must be added as a raw string
+        OpenIddictConstants.Permissions.Prefixes.Scope + "openid"
+            }
+        });
+    }
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    await RegisterClientsAsync(scope.ServiceProvider);
+}
 
 app.Run();

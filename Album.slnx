@@ -1,5 +1,7 @@
 <Solution>
-  <Project Path="Album/Api/Api.csproj" />
-  <Project Path="Album/DTO/DTO.csproj" />
+  <Project Path="Album/Album.api/Album.Api.csproj" Id="882c1f26-1468-406c-b61d-577bb2df7e07" />
+  <Project Path="Album/Album.Client/Album.Client.csproj" Id="d5da3624-9cdb-47a1-a577-f66dae61a9d6" />
   <Project Path="Album/Wasm/Wasm.csproj" />
+  <Project Path="Album/WasmTest/WasmTest.csproj" Id="a2c86b41-496d-4a27-9094-8383ed93c2b4" />
+  <Project Path="IdentityPlatform/Identity.Api/Identity.Api.csproj" />
 </Solution>

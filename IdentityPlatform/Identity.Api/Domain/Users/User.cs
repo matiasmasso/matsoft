@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace Identity.Api.Domain.Users;
 
-public class User
+public class User: IdentityUser
 {
-    public Guid Id { get; set; }
-    public string Email { get; set; } = string.Empty;
-    public string PasswordHash { get; set; } = string.Empty;
+    public string Name { get; set; } = default!;
+    public string? AvatarUrl { get; set; }
+
     public bool IsActive { get; set; } = true;
+    public Dictionary<string, string>? Preferences { get; set; }
 
     public ICollection<UserAppEnrollment> AppEnrollments { get; set; } = new List<UserAppEnrollment>();
 }

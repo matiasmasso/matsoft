@@ -1,0 +1,26 @@
+﻿@inject ProfileCacheService Cache
+
+@if (profile is null)
+{
+    <div class="text-center my-4">Loading profile…</div>
+}
+else
+{
+    <div class="d-flex align-items-center my-4">
+        <UserAvatar Size="80px" />
+
+        <div class="ms-3">
+            <h3 class="mb-0">@profile.Name</h3>
+            <p class="text-muted mb-0">@profile.Email</p>
+        </div>
+    </div>
+}
+
+@code {
+    private UserProfileDto? profile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        profile = await Cache.GetAsync();
+    }
+}

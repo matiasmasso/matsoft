@@ -1,0 +1,41 @@
+﻿@inject UsersService Users
+
+<SharedModal Visible="Visible"
+            Title="Delete User"
+            DialogSize="modal-sm"
+            OnClose="HandleClose"
+            Body="@BodyContent"
+            Footer="@FooterContent" />
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public UserDto User { get; set; } = default!;
+    [Parameter] public EventCallback<Guid> OnDeleted { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool isSubmitting = false;
+
+    private RenderFragment BodyContent => @<div>
+        <p>Are you sure you want to delete <strong>@User.Email</strong>?</p>
+    </div>;
+
+    private RenderFragment FooterContent => @<div>
+        <button class="btn btn-secondary" @onclick="Cancel" disabled="@isSubmitting">Cancel</button>
+        <button class="btn btn-danger" @onclick="Submit" disabled="@isSubmitting">
+            @(isSubmitting ? "Deleting..." : "Delete")
+        </button>
+    </div>;
+
+    private async Task Submit()
+    {
+        isSubmitting = true;
+        var ok = await Users.DeleteAsync(User.Id);
+        isSubmitting = false;
+
+        if (ok)
+            await OnDeleted.InvokeAsync(User.Id);
+    }
+
+    private async Task Cancel() => await OnCancel.InvokeAsync();
+    private async Task HandleClose(bool _) => await OnCancel.InvokeAsync();
+}

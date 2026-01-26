@@ -1,5 +1,6 @@
 ﻿@page "/apps"
 @inject AppsService Apps
+@inject NavigationManager Nav
 
 <h3>Applications</h3>
 
@@ -30,6 +31,16 @@
                     <td>
                         <button class="btn btn-sm btn-outline-secondary me-1" @onclick="() => ShowEdit(app)">Edit</button>
                         <button class="btn btn-sm btn-outline-danger" @onclick="() => ShowDelete(app)">Delete</button>
+
+                        <button class="btn btn-sm btn-outline-primary me-1"
+                                @onclick="() => NavToAppUsers(app.Id)">
+                            Users
+                        </button>
+
+                        <button class="btn btn-sm btn-outline-secondary"
+                                @onclick="() => NavToAppRoles(app.Id)">
+                            Roles
+                        </button>
                     </td>
                 </tr>
             }
@@ -118,5 +129,15 @@
     {
         showDelete = false;
         await LoadApps();
+    }
+
+    private void NavToAppUsers(Guid appId)
+    {
+        Nav.NavigateTo($"/apps/{appId}/users");
+    }
+
+    private void NavToAppRoles(Guid appId)
+    {
+        Nav.NavigateTo($"/apps/{appId}/roles");
     }
 }

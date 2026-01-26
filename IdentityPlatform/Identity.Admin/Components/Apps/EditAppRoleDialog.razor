@@ -1,0 +1,54 @@
+﻿@inject AppRolesService AppRoles
+
+<SharedModal Visible="Visible"
+            Title="Edit Role"
+            DialogSize="modal-md"
+            OnClose="HandleClose"
+            Body="@BodyContent"
+            Footer="@FooterContent" />
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public Guid AppId { get; set; }
+    [Parameter] public AppRoleDto Role { get; set; } = default!;
+    [Parameter] public EventCallback<AppRoleDto> OnUpdated { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool isSubmitting = false;
+    private UpdateAppRoleRequest model = new();
+
+    protected override void OnParametersSet()
+    {
+        model = new UpdateAppRoleRequest
+        {
+            Name = Role.Name
+        };
+    }
+
+    private RenderFragment BodyContent => @<div>
+        <div class="mb-3">
+            <label>Name</label>
+            <input class="form-control" @bind="model.Name" required />
+        </div>
+    </div>;
+
+    private RenderFragment FooterContent => @<div>
+        <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+        <button class="btn btn-primary" @onclick="Submit">
+            @(isSubmitting ? "Saving..." : "Save")
+        </button>
+    </div>;
+
+    private async Task Submit()
+    {
+        isSubmitting = true;
+        var result = await AppRoles.UpdateAsync(AppId, Role.Id, model);
+        isSubmitting = false;
+
+        if (result is not null)
+            await OnUpdated.InvokeAsync(result);
+    }
+
+    private async Task Cancel() => await OnCancel.InvokeAsync();
+    private async Task HandleClose(bool _) => await OnCancel.InvokeAsync();
+}

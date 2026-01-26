@@ -1,0 +1,65 @@
+﻿@inject AppRolesService AppRoles
+@inject UserRolesService UserRoles
+
+<SharedModal Visible="Visible"
+            Title="User Roles"
+            DialogSize="modal-md"
+            OnClose="HandleClose"
+            Body="@BodyContent"
+            Footer="@FooterContent" />
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public Guid AppId { get; set; }
+    [Parameter] public UserDto User { get; set; } = default!;
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private List<AppRoleDto>? roles;
+    private List<Guid>? assignedRoleIds;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        roles = await AppRoles.GetAllAsync(AppId);
+        assignedRoleIds = await UserRoles.GetAssignedRolesAsync(AppId, User.Id);
+    }
+
+    private RenderFragment BodyContent => @<div>
+        @if (roles is null || assignedRoleIds is null)
+        {
+            <p>Loading...</p>
+        }
+        else
+        {
+            @foreach (var role in roles)
+            {
+                var assigned = assignedRoleIds.Contains(role.Id);
+
+                <div class="form-check mb-2">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           checked="@assigned"
+                           @onchange="e => Toggle(role.Id, assigned)" />
+
+                    <label class="form-check-label">@role.Name</label>
+                </div>
+            }
+        }
+    </div>;
+
+    private RenderFragment FooterContent => @<div>
+        <button class="btn btn-secondary" @onclick="Close">Close</button>
+    </div>;
+
+    private async Task Toggle(Guid roleId, bool assigned)
+    {
+        if (assigned)
+            await UserRoles.UnassignAsync(AppId, User.Id, roleId);
+        else
+            await UserRoles.AssignAsync(AppId, User.Id, roleId);
+
+        assignedRoleIds = await UserRoles.GetAssignedRolesAsync(AppId, User.Id);
+    }
+
+    private async Task Close() => await OnClose.InvokeAsync();
+    private async Task HandleClose(bool _) => await OnClose.InvokeAsync();
+}

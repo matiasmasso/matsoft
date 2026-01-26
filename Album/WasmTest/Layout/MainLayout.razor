@@ -1,0 +1,33 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
+<div class="page">
+@*     <div class="sidebar">
+        <NavMenu />
+    </div> *@
+
+    <main>
+@*         <div class="top-row px-4">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div> *@
+
+        <AuthorizeView>
+    <Authorized>
+        <button @onclick="Logout">Logout</button>
+    </Authorized>
+    <NotAuthorized>
+        <button @onclick="Login">Login</button>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] NavigationManager Nav { get; set; } = default!;
+
+    void Login() => Nav.NavigateTo("authentication/login");
+    void Logout() => Nav.NavigateTo("authentication/logout");
+}
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>

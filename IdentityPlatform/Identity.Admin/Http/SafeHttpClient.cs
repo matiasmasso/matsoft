@@ -49,6 +49,9 @@ public class SafeHttpClient
         }
     }
 
+    public Task<bool> PostAsync(string url)
+    => PostAsync<object, bool>(url, new { });
+
     // -------------------------
     // PUT
     // -------------------------

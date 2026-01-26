@@ -1,0 +1,59 @@
+﻿@inject UsersService Users
+
+<SharedModal Visible="Visible"
+            Title="Edit User"
+            DialogSize="modal-md"
+            OnClose="HandleClose"
+            Body="@BodyContent"
+            Footer="@FooterContent" />
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public UserDto User { get; set; } = default!;
+    [Parameter] public EventCallback<UserDto> OnUpdated { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool isSubmitting = false;
+    private UpdateUserRequest model = new();
+
+    protected override void OnParametersSet()
+    {
+        model = new UpdateUserRequest
+        {
+            Email = User.Email,
+            IsActive = User.IsActive
+        };
+    }
+
+    private RenderFragment BodyContent => @<div>
+        <div class="mb-3">
+            <label>Email</label>
+            <input class="form-control" @bind="model.Email" required />
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" @bind="model.IsActive" />
+            <label class="form-check-label">Active</label>
+        </div>
+    </div>;
+
+    private RenderFragment FooterContent => @<div>
+        <button class="btn btn-secondary" @onclick="Cancel" disabled="@isSubmitting">Cancel</button>
+        <button class="btn btn-primary" @onclick="Submit" disabled="@isSubmitting">
+            @(isSubmitting ? "Saving..." : "Save")
+        </button>
+    </div>;
+
+    private async Task Submit()
+    {
+        isSubmitting = true;
+        var result = await Users.UpdateAsync(User.Id, model);
+        isSubmitting = false;
+
+        if (result is not null)
+            await OnUpdated.InvokeAsync(result);
+    }
+
+    private async Task Cancel() => await OnCancel.InvokeAsync();
+    private async Task HandleClose(bool _) => await OnCancel.InvokeAsync();
+}

@@ -1,5 +1,5 @@
-﻿using Identity.Api.Domain.Apps;
-using Identity.Api.Infrastructure.Persistence;
+﻿using Identity.Api.Data;
+using Identity.Api.Domain.Apps;
 using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Api.Application.Apps;

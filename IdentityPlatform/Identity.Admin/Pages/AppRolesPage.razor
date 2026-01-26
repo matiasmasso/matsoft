@@ -1,0 +1,116 @@
+﻿@page "/apps/{appId:guid}/roles"
+@inject AppRolesService AppRoles
+@inject NavigationManager Nav
+
+<h3>Roles</h3>
+
+<button class="btn btn-primary mb-3" @onclick="ShowCreate">New Role</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th style="width: 200px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (roles is null)
+        {
+            <tr><td colspan="2">Loading...</td></tr>
+        }
+        else
+        {
+            @foreach (var r in roles)
+            {
+                <tr>
+                    <td>@r.Name</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary me-1" @onclick="() => ShowEdit(r)">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ShowDelete(r)">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@if (showCreate)
+{
+    <CreateAppRoleDialog Visible="true"
+                         AppId="appId"
+                         OnCreated="HandleCreated"
+                         OnCancel="CloseCreate" />
+}
+
+@if (showEdit)
+{
+    <EditAppRoleDialog Visible="true"
+                       AppId="appId"
+                       Role="selectedRole"
+                       OnUpdated="HandleUpdated"
+                       OnCancel="CloseEdit" />
+}
+
+@if (showDelete)
+{
+    <DeleteAppRoleDialog Visible="true"
+                         AppId="appId"
+                         Role="selectedRole"
+                         OnDeleted="HandleDeleted"
+                         OnCancel="CloseDelete" />
+}
+
+@code {
+    [Parameter] public Guid AppId { get; set; }
+
+    private Guid appId => AppId;
+    private List<AppRoleDto>? roles;
+
+    private bool showCreate;
+    private bool showEdit;
+    private bool showDelete;
+
+    private AppRoleDto? selectedRole;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoles();
+    }
+
+    private async Task LoadRoles()
+    {
+        roles = await AppRoles.GetAllAsync(appId);
+    }
+
+    private void ShowCreate() => showCreate = true;
+    private void CloseCreate() => showCreate = false;
+    private async Task HandleCreated(AppRoleDto r)
+    {
+        showCreate = false;
+        await LoadRoles();
+    }
+
+    private void ShowEdit(AppRoleDto r)
+    {
+        selectedRole = r;
+        showEdit = true;
+    }
+    private void CloseEdit() => showEdit = false;
+    private async Task HandleUpdated(AppRoleDto r)
+    {
+        showEdit = false;
+        await LoadRoles();
+    }
+
+    private void ShowDelete(AppRoleDto r)
+    {
+        selectedRole = r;
+        showDelete = true;
+    }
+    private void CloseDelete() => showDelete = false;
+    private async Task HandleDeleted(Guid id)
+    {
+        showDelete = false;
+        await LoadRoles();
+    }
+}

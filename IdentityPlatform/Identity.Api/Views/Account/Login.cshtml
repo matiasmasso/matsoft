@@ -1,0 +1,17 @@
+﻿@{
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+
+<form method="post" asp-route-returnUrl="@returnUrl">
+    <div>
+        <label>Username</label>
+        <input name="username" />
+    </div>
+
+    <div>
+        <label>Password</label>
+        <input name="password" type="password" />
+    </div>
+
+    <button type="submit">Login</button>
+</form>

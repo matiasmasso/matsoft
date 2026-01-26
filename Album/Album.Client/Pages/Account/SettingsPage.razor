@@ -1,0 +1,22 @@
+﻿@page "/settings"
+@inject UserSettingsService Settings
+
+<h3>Settings</h3>
+
+<div class="mb-3">
+    <label>Theme</label>
+    <select class="form-select" @onchange="OnThemeChanged">
+        <option value="light" selected="@IsSelected("light")">Light</option>
+        <option value="dark" selected="@IsSelected("dark")">Dark</option>
+    </select>
+</div>
+
+@code {
+    private bool IsSelected(string value)
+        => Settings.Get("theme") == value;
+
+    private async Task OnThemeChanged(ChangeEventArgs e)
+    {
+        await Settings.Set("theme", e.Value?.ToString() ?? "light");
+    }
+}

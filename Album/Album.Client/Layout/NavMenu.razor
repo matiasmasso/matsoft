@@ -1,0 +1,82 @@
+﻿@inject NavigationManager Nav
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Album.Client</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <AuthorizeView>
+        <Authorized>
+            <nav class="nav flex-column">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/albums">Albums</a>
+                <a class="nav-link" href="/profile">Profile</a>
+                <a class="nav-link" href="/debug/tokens">Token Debug</a>
+                <a class="nav-link" href="/authentication/logout">Logout</a>
+            </nav>
+        </Authorized>
+
+        <NotAuthorized>
+            <nav class="nav flex-column">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/albums">Albums</a>
+                <a class="nav-link" href="/authentication/login">Login</a>
+            </nav>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-3">
+    <a class="navbar-brand" href="/">Album</a>
+
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="/albums">Albums</a>
+            </li>
+        </ul>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle d-flex align-items-center"
+                            type="button"
+                            data-bs-toggle="dropdown">
+
+                        <UserAvatar Size="32px" />
+
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                        <li><a class="dropdown-item" href="/settings">Settings</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" href="/authentication/logout">Logout</a></li>
+                    </ul>
+                </div>
+            </Authorized>
+
+            <NotAuthorized>
+                <a class="btn btn-primary" href="/authentication/login">Login</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</nav>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

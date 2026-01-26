@@ -1,9 +1,10 @@
 namespace Identity.Admin.Models.Users;
 
-public record UserDto(
-    Guid Id,
-    string Username,
-    string Email,
-    bool EmailConfirmed,
-    IEnumerable<string> Roles
-);
+public class UserDto
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = default!;
+    public bool IsActive { get; set; }
+
+}
+

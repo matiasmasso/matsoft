@@ -1,0 +1,49 @@
+﻿@inject UsersService Users
+
+<SharedModal Visible="Visible"
+            Title="Create User"
+            DialogSize="modal-md"
+            OnClose="HandleClose"
+            Body="@BodyContent"
+            Footer="@FooterContent" />
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<UserDto> OnCreated { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool isSubmitting = false;
+    private CreateUserRequest model = new();
+
+    private RenderFragment BodyContent => @<div>
+        <div class="mb-3">
+            <label>Email</label>
+            <input class="form-control" @bind="model.Email" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Password</label>
+            <input class="form-control" type="password" @bind="model.Password" required />
+        </div>
+    </div>;
+
+    private RenderFragment FooterContent => @<div>
+        <button class="btn btn-secondary" @onclick="Cancel" disabled="@isSubmitting">Cancel</button>
+        <button class="btn btn-primary" @onclick="Submit" disabled="@isSubmitting">
+            @(isSubmitting ? "Creating..." : "Create")
+        </button>
+    </div>;
+
+    private async Task Submit()
+    {
+        isSubmitting = true;
+        var result = await Users.CreateAsync(model);
+        isSubmitting = false;
+
+        if (result is not null)
+            await OnCreated.InvokeAsync(result);
+    }
+
+    private async Task Cancel() => await OnCancel.InvokeAsync();
+    private async Task HandleClose(bool _) => await OnCancel.InvokeAsync();
+}

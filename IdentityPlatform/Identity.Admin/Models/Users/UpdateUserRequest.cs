@@ -1,6 +1,7 @@
 ﻿namespace Identity.Admin.Models.Users;
 
-public record UpdateUserRequest(
-    string Email,
-    bool EmailConfirmed
-);
+public class UpdateUserRequest
+{
+    public string Email { get; set; } = default!;
+    public bool IsActive { get; set; }
+}

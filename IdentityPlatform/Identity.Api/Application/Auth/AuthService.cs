@@ -1,185 +1,62 @@
 ﻿using Identity.Api.Domain.Users;
-using Identity.Api.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Authentication;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Identity.Api.Application.Auth;
 
 public class AuthService
 {
-    private readonly IdentityDbContext _db;
-    private readonly JwtOptions _jwt;
-    private readonly IPasswordHasher<User> _hasher;
+    private readonly UserManager<User> _userManager;
+    private readonly SignInManager<User> _signInManager;
 
-    public AuthService(IdentityDbContext db, IOptions<JwtOptions> jwt, IPasswordHasher<User> hasher)
+    public AuthService(UserManager<User> userManager, SignInManager<User> signInManager)
     {
-        _db = db;
-        _jwt = jwt.Value;
-        _hasher = hasher;
+        _userManager = userManager;
+        _signInManager = signInManager;
     }
 
-    public async Task<(string accessToken, string refreshToken)> LoginAsync(string email, string password)
+    // REGISTER A NEW USER
+    public async Task<IdentityResult> RegisterAsync(string username, string email, string password)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == email);
-
-        if (user == null)
-            throw new AuthenticationException("Invalid credentials");
-
-        var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, password);
-
-        if (result == PasswordVerificationResult.Failed)
-            throw new AuthenticationException("Invalid credentials");
-
-        var accessToken = GenerateAccessToken(user);
-        var refreshToken = await GenerateRefreshToken(user.Id);
-
-        return (accessToken, refreshToken);
-    }
-
-    public async Task RegisterAsync(string email, string password)
-    {
-        // Check if email already exists
-        if (await _db.Users.AnyAsync(x => x.Email == email))
-            throw new Exception("Email already registered");
-
         var user = new User
         {
-            Id = Guid.NewGuid(),
-            Email = email,
-            IsActive = true
+            UserName = username,
+            Email = email
         };
 
-        // Hash password using built-in ASP.NET Core hasher
-        user.PasswordHash = _hasher.HashPassword(user, password);
-
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync();
+        return await _userManager.CreateAsync(user, password);
     }
 
-    private string GenerateAccessToken(User user)
+    // VALIDATE CREDENTIALS (NO TOKEN ISSUING)
+    public async Task<SignInResult> ValidateCredentialsAsync(string username, string password)
     {
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email)
-        };
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.SigningKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _jwt.Issuer,
-            audience: _jwt.Audience,
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_jwt.AccessTokenMinutes),
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private async Task<string> GenerateRefreshToken(Guid userId)
-    {
-        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-
-        var refresh = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            Token = token,
-            ExpiresAt = DateTime.UtcNow.AddDays(_jwt.RefreshTokenDays),
-            Revoked = false,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _db.RefreshTokens.Add(refresh);
-        await _db.SaveChangesAsync();
-
-        return token;
-    }
-
-    public async Task<(string access, string refresh)> RefreshAsync(string refreshToken)
-    {
-        var stored = await _db.RefreshTokens
-            .FirstOrDefaultAsync(x => x.Token == refreshToken);
-
-        if (stored == null)
-            throw new Exception("Invalid refresh token");
-
-        if (stored.Revoked)
-            throw new Exception("Refresh token has been revoked");
-
-        if (stored.ExpiresAt < DateTime.UtcNow)
-            throw new Exception("Refresh token has expired");
-
-        var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == stored.UserId);
-
+        var user = await _userManager.FindByNameAsync(username);
         if (user == null)
-            throw new Exception("User not found");
+            return SignInResult.Failed;
 
-        // Revoke old token
-        stored.Revoked = true;
-
-        // Issue new tokens
-        var newAccess = GenerateAccessToken(user);
-        var newRefresh = await GenerateRefreshToken(user.Id);
-
-        await _db.SaveChangesAsync();
-
-        return (newAccess, newRefresh);
+        return await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: false);
     }
 
-    public async Task<UserProfile> GetProfileAsync(Guid userId)
+    // INTERACTIVE SIGN-IN (COOKIE)
+    public async Task<bool> SignInAsync(string username, string password)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        var result = await _signInManager.PasswordSignInAsync(
+            username,
+            password,
+            isPersistent: true,
+            lockoutOnFailure: false);
 
-        if (user == null)
-            throw new Exception("User not found");
-
-        return new UserProfile
-        {
-            Id = user.Id,
-            Email = user.Email
-        };
+        return result.Succeeded;
     }
 
-    public async Task<UserProfile> GetFullProfileAsync(Guid userId)
+    // SIGN OUT (COOKIE)
+    public async Task SignOutAsync()
     {
-        var user = await _db.Users
-            .Include(u => u.AppEnrollments)
-                .ThenInclude(e => e.App)
-            .Include(u => u.AppEnrollments)
-                .ThenInclude(e => e.Roles)
-                    .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+        await _signInManager.SignOutAsync();
+    }
 
-        if (user == null)
-            throw new Exception("User not found");
-
-        var profile = new UserProfile
-        {
-            Id = user.Id,
-            Email = user.Email,
-            Apps = user.AppEnrollments
-                .Select(e => new AppProfile
-                {
-                    Key = e.App.Key,
-                    Roles = e.Roles
-                        .Select(r => r.Role.Name)
-                        .OrderBy(n => n)
-                        .ToList()
-                })
-                .OrderBy(a => a.Key)
-                .ToList()
-        };
-
-        return profile;
+    // GET USER BY USERNAME
+    public async Task<User?> GetUserAsync(string username)
+    {
+        return await _userManager.FindByNameAsync(username);
     }
 }

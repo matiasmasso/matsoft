@@ -1,0 +1,108 @@
+﻿@page "/apps/{appId:guid}/users"
+@inject AppEnrollmentsService AppEnrollments
+@inject UsersService Users
+
+<h3>Users in this App</h3>
+
+<button class="btn btn-primary mb-3" @onclick="ShowAddUser">Add User</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th style="width: 220px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (enrolledUsers is null)
+        {
+            <tr><td colspan="2">Loading...</td></tr>
+        }
+        else
+        {
+            @foreach (var u in enrolledUsers)
+            {
+                <tr>
+                    <td>@u.Email</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary me-1"
+                                @onclick="() => ShowRoles(u)">
+                            Roles
+                        </button>
+
+                        <button class="btn btn-sm btn-outline-danger"
+                                @onclick="() => RemoveUser(u)">
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@if (showAddUser)
+{
+    <AppAddUserDialog Visible="true"
+                      AppId="appId"
+                      AllUsers="allUsers"
+                      EnrolledUsers="enrolledUsers"
+                      OnAdded="HandleAdded"
+                      OnCancel="CloseAddUser" />
+}
+
+@if (showRoles)
+{
+    <AppUserRolesDialog Visible="true"
+                        AppId="appId"
+                        User="selectedUser"
+                        OnClose="CloseRoles" />
+}
+
+@code {
+    [Parameter] public Guid AppId { get; set; }
+    private Guid appId => AppId;
+
+    private List<UserDto>? enrolledUsers;
+    private List<UserDto>? allUsers;
+
+    private bool showAddUser;
+    private bool showRoles;
+
+    private UserDto? selectedUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        enrolledUsers = await AppEnrollments.GetUsersAsync(appId);
+        allUsers = await Users.GetAllAsync();
+    }
+
+    private void ShowAddUser() => showAddUser = true;
+    private void CloseAddUser() => showAddUser = false;
+
+    private async Task HandleAdded(UserDto u)
+    {
+        showAddUser = false;
+        await LoadData();
+    }
+
+    private void ShowRoles(UserDto u)
+    {
+        selectedUser = u;
+        showRoles = true;
+    }
+
+    private void CloseRoles() => showRoles = false;
+
+    private async Task RemoveUser(UserDto u)
+    {
+        var ok = await AppEnrollments.RemoveUserAsync(appId, u.Id);
+        if (ok)
+            await LoadData();
+    }
+}

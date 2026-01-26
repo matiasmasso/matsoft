@@ -61,10 +61,10 @@ builder.Services.AddScoped<SafeHttpClient>(sp =>
 // 7. API services (all inherit BaseApiService)
 // -----------------------------------------------------
 builder.Services.AddScoped<AppsService>();
-//builder.Services.AddScoped<UsersService>();
-//builder.Services.AddScoped<RolesService>();
-//builder.Services.AddScoped<TenantsService>();
-//builder.Services.AddScoped<ClientsService>();
+builder.Services.AddScoped<UsersService>();
+builder.Services.AddScoped<AppEnrollmentsService>();
+builder.Services.AddScoped<UserRolesService>();
+builder.Services.AddScoped<AppRolesService>();
 
 // -----------------------------------------------------
 await builder.Build().RunAsync();

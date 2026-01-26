@@ -1,4 +1,4 @@
-﻿namespace Identity.Admin.Models.Users;
+﻿namespace Identity.Admin.Models.Roles;
 
 public record RoleDto(
     string Name,

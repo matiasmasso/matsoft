@@ -1,6 +1,6 @@
-﻿using Identity.Api.Domain.Apps;
+﻿using Identity.Api.Data;
+using Identity.Api.Domain.Apps;
 using Identity.Api.Domain.Users;
-using Identity.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Api.Application.Apps;
@@ -17,7 +17,7 @@ public class EnrollmentService
     // ------------------------------------------------------------
     // 1. Enroll a user into an app
     // ------------------------------------------------------------
-    public async Task<UserAppEnrollment> EnrollUserAsync(Guid userId, Guid appId)
+    public async Task<UserAppEnrollment> EnrollUserAsync(string userId, Guid appId)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null)
@@ -109,7 +109,7 @@ public class EnrollmentService
     // ------------------------------------------------------------
     // 5. Get roles for a user in a specific app
     // ------------------------------------------------------------
-    public async Task<List<string>> GetUserRolesAsync(Guid userId, string appKey)
+    public async Task<List<string>> GetUserRolesAsync(string userId, string appKey)
     {
         appKey = appKey.Trim().ToLowerInvariant();
 

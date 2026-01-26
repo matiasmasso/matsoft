@@ -1,0 +1,77 @@
+@page "/profile"
+@using System.Text.Json
+
+@inject UserProfileService ProfileService
+@inject TypedLocalStorage Storage
+
+<h3>Profile</h3>
+
+@if (profile is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <ProfileHeader />
+
+    <div class="mb-3">
+        <img src="@profile.AvatarUrl" class="rounded-circle" style="width:120px;height:120px;" />
+    </div>
+
+    <div class="mb-3">
+        <label>Name</label>
+        <input class="form-control" @bind="profile.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label>Preferences (JSON)</label>
+        <textarea class="form-control" rows="4" @bind="preferencesJson"></textarea>
+    </div>
+
+    <button class="btn btn-primary me-2" @onclick="Save">Save</button>
+
+    <input type="file" @onchange="UploadAvatar" class="form-control mt-3" />
+}
+
+@code {
+    private UserProfileDto? profile;
+    private string preferencesJson = "{}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        profile = await ProfileService.GetAsync();
+
+        if (profile?.Preferences is not null)
+            preferencesJson = JsonSerializer.Serialize(
+    profile.Preferences,
+    new JsonSerializerOptions { WriteIndented = true }
+);
+    }
+
+    private async Task Save()
+    {
+        var dto = new UserProfileUpdateDto
+        {
+            Name = profile!.Name,
+            Preferences = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(preferencesJson)
+        };
+
+        var ok = await ProfileService.UpdateAsync(dto);
+
+        if (ok)
+            await Storage.SetAsync("profile_cache", profile);
+    }
+
+    private async Task UploadAvatar(ChangeEventArgs e)
+    {
+        if (e.Value is not null && e.Value is string)
+            return;
+
+        var file = (Microsoft.AspNetCore.Components.Forms.IBrowserFile)e.Value!;
+        using var stream = file.OpenReadStream(5_000_000);
+
+        await ProfileService.UploadAvatarAsync(stream, file.Name);
+
+        profile = await ProfileService.GetAsync();
+    }
+}

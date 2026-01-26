@@ -1,0 +1,174 @@
+﻿@page "/users"
+@inject UsersService Users
+@inject AppsService Apps
+
+<h3>Users</h3>
+
+<button class="btn btn-primary mb-3" @onclick="ShowCreate">New User</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Active</th>
+            <th style="width: 200px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (users is null)
+        {
+            <tr><td colspan="3">Loading...</td></tr>
+        }
+        else
+        {
+            @foreach (var u in users)
+            {
+                <tr>
+                    <td>@u.Email</td>
+                    <td>@(u.IsActive ? "Yes" : "No")</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary me-1" @onclick="() => ShowEdit(u)">Edit</button>
+                        <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => ShowReset(u)">Reset Password</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ShowDelete(u)">Delete</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<!-- dialogs omitted for brevity; same as before -->
+
+<!-- Dialogs -->
+@if (showCreate)
+{
+    <CreateUserDialog Visible="true"
+                      OnCreated="HandleCreated"
+                      OnCancel="CloseCreate" />
+}
+
+@if (showEdit)
+{
+    <EditUserDialog Visible="true"
+                    User="selectedUser"
+                    OnUpdated="HandleUpdated"
+                    OnCancel="CloseEdit" />
+}
+
+@if (showDelete)
+{
+    <DeleteUserDialog Visible="true"
+                      User="selectedUser"
+                      OnDeleted="HandleDeleted"
+                      OnCancel="CloseDelete" />
+}
+
+@if (showReset)
+{
+    <ResetPasswordDialog Visible="true"
+                         User="selectedUser"
+                         OnReset="HandleReset"
+                         OnCancel="CloseReset" />
+}
+
+@if (showEnroll)
+{
+    <UserEnrollmentDialog Visible="true"
+                          User="selectedUser"
+                          Apps="apps"
+                          OnEnrolled="HandleEnrolled"
+                          OnUnenrolled="HandleUnenrolled"
+                          OnCancel="CloseEnroll" />
+}
+
+@code {
+    private List<UserDto>? users;
+    private List<AppDto>? apps;
+
+    private bool showCreate;
+    private bool showEdit;
+    private bool showDelete;
+    private bool showReset;
+    private bool showEnroll;
+
+    private UserDto? selectedUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+        apps = await Apps.GetAllAsync();
+    }
+
+    private async Task LoadUsers()
+    {
+        users = await Users.GetAllAsync();
+    }
+
+    // CREATE
+    private void ShowCreate() => showCreate = true;
+    private void CloseCreate() => showCreate = false;
+    private async Task HandleCreated(UserDto u)
+    {
+        showCreate = false;
+        await LoadUsers();
+    }
+
+    // EDIT
+    private void ShowEdit(UserDto u)
+    {
+        selectedUser = u;
+        showEdit = true;
+    }
+    private void CloseEdit() => showEdit = false;
+    private async Task HandleUpdated(UserDto u)
+    {
+        showEdit = false;
+        await LoadUsers();
+    }
+
+    // DELETE
+    private void ShowDelete(UserDto u)
+    {
+        selectedUser = u;
+        showDelete = true;
+    }
+    private void CloseDelete() => showDelete = false;
+    private async Task HandleDeleted(Guid id)
+    {
+        showDelete = false;
+        await LoadUsers();
+    }
+
+    // RESET PASSWORD
+    private void ShowReset(UserDto u)
+    {
+        selectedUser = u;
+        showReset = true;
+    }
+    private void CloseReset() => showReset = false;
+    private async Task HandleReset()
+    {
+        showReset = false;
+        await LoadUsers();
+    }
+
+    // ENROLL
+    private void ShowEnroll(UserDto u)
+    {
+        selectedUser = u;
+        showEnroll = true;
+    }
+    private void CloseEnroll() => showEnroll = false;
+
+    private async Task HandleEnrolled(Guid appId)
+    {
+        showEnroll = false;
+        await LoadUsers();
+    }
+
+    private async Task HandleUnenrolled(Guid appId)
+    {
+        showEnroll = false;
+        await LoadUsers();
+    }
+}

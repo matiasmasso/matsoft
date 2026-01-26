@@ -1,0 +1,65 @@
+﻿<div class="preferences-editor">
+    @foreach (var entry in entries)
+    {
+        <div class="d-flex mb-2">
+            <input class="form-control me-2"
+                   placeholder="Key"
+                   @bind="entry.Key" />
+
+            <input class="form-control me-2"
+                   placeholder="Value"
+                   @bind="entry.Value" />
+
+            <button class="btn btn-danger"
+                    @onclick="() => Remove(entry)">
+                ✕
+            </button>
+        </div>
+    }
+
+    <button class="btn btn-secondary mt-2" @onclick="Add">Add Preference</button>
+</div>
+
+@code {
+    [Parameter] public Dictionary<string, string>? Preferences { get; set; }
+    [Parameter] public EventCallback<Dictionary<string, string>> PreferencesChanged { get; set; }
+
+    private List<PreferenceEntry> entries = new();
+
+    protected override void OnInitialized()
+    {
+        if (Preferences is not null)
+        {
+            entries = Preferences
+                .Select(kvp => new PreferenceEntry { Key = kvp.Key, Value = kvp.Value })
+                .ToList();
+        }
+    }
+
+    private async Task Add()
+    {
+        entries.Add(new PreferenceEntry());
+        await Notify();
+    }
+
+    private async Task Remove(PreferenceEntry entry)
+    {
+        entries.Remove(entry);
+        await Notify();
+    }
+
+    private async Task Notify()
+    {
+        var dict = entries
+            .Where(e => !string.IsNullOrWhiteSpace(e.Key))
+            .ToDictionary(e => e.Key, e => e.Value);
+
+        await PreferencesChanged.InvokeAsync(dict);
+    }
+
+    public class PreferenceEntry
+    {
+        public string Key { get; set; } = "";
+        public string Value { get; set; } = "";
+    }
+}

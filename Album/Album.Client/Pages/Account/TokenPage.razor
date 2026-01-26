@@ -1,0 +1,26 @@
+﻿@inject IAccessTokenProvider TokenProvider
+
+@if (token is null)
+{
+    <p>Loading tokens…</p>
+}
+else
+{
+    <h5>Access Token</h5>
+    <pre>@token.Value</pre>
+
+    <h5>Expires</h5>
+    <p>@token.Expires.ToLocalTime()</p>
+}
+
+@code {
+    private AccessToken? token;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await TokenProvider.RequestAccessToken();
+
+        if (result.TryGetToken(out var t))
+            token = t;
+    }
+}

@@ -1,0 +1,54 @@
+﻿@inject AppEnrollmentsService AppEnrollments
+
+<SharedModal Visible="Visible"
+            Title="Add User to App"
+            DialogSize="modal-md"
+            OnClose="HandleClose"
+            Body="@BodyContent"
+            Footer="@FooterContent" />
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public Guid AppId { get; set; }
+    [Parameter] public List<UserDto> AllUsers { get; set; } = new();
+    [Parameter] public List<UserDto> EnrolledUsers { get; set; } = new();
+    [Parameter] public EventCallback<UserDto> OnAdded { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool isSubmitting = false;
+
+    private IEnumerable<UserDto> AvailableUsers =>
+        AllUsers.Where(u => !EnrolledUsers.Any(e => e.Id == u.Id));
+
+    private RenderFragment BodyContent => @<div>
+        @foreach (var u in AvailableUsers)
+        {
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>@u.Email</span>
+                <button class="btn btn-sm btn-primary" @onclick="() => AddUser(u)">Add</button>
+            </div>
+        }
+
+        @if (!AvailableUsers.Any())
+        {
+            <p>All users are already enrolled.</p>
+        }
+    </div>;
+
+    private RenderFragment FooterContent => @<div>
+        <button class="btn btn-secondary" @onclick="Cancel">Close</button>
+    </div>;
+
+    private async Task AddUser(UserDto u)
+    {
+        isSubmitting = true;
+        var ok = await AppEnrollments.AddUserAsync(AppId, u.Id);
+        isSubmitting = false;
+
+        if (ok)
+            await OnAdded.InvokeAsync(u);
+    }
+
+    private async Task Cancel() => await OnCancel.InvokeAsync();
+    private async Task HandleClose(bool _) => await OnCancel.InvokeAsync();
+}
