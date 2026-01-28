@@ -1,0 +1,14 @@
+﻿@page "/logout"
+
+@inject ITokenStore TokenStore
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await TokenStore.ClearAsync();
+        (AuthState as JwtAuthenticationStateProvider)!.NotifyAuthenticationStateChanged();
+        Nav.NavigateTo("/");
+    }
+}

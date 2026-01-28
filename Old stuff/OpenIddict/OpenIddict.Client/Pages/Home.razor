@@ -1,0 +1,18 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<button class="btn btn-primary" @onclick="Login">Login</button>
+
+@code {
+    [Inject] NavigationManager Navigation { get; set; }
+
+    void Login()
+    {
+        Navigation.NavigateTo("authentication/login");
+    }
+}

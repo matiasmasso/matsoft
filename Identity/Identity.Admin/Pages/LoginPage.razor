@@ -1,0 +1,36 @@
+﻿@page "/login"
+@inject HttpClient Http
+@inject ITokenStore TokenStore
+@inject AuthenticationStateProvider AuthState
+@inject NavigationManager Nav
+
+<h3>Login</h3>
+
+<input @bind="Email" placeholder="Email" />
+<input @bind="Password" placeholder="Password" type="password" />
+<button @onclick="Login">Login</button>
+
+@code {
+    private string Email = "";
+    private string Password = "";
+
+    private async Task Login()
+    {
+        var response = await Http.PostAsJsonAsync("/auth/login", new { Email, Password });
+
+        if (!response.IsSuccessStatusCode)
+            return;
+
+        var json = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        await TokenStore.SaveTokenAsync(json!.access_token);
+
+        (AuthState as JwtAuthenticationStateProvider)!.NotifyAuthenticationStateChanged();
+
+        Nav.NavigateTo("/");
+    }
+
+    public class LoginResponse
+    {
+        public string access_token { get; set; } = "";
+    }
+}

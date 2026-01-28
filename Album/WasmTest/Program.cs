@@ -18,7 +18,15 @@ var albumApiBase = builder.Configuration["AlbumApi:BaseUrl"]
 // 2. Add OIDC authentication (always before IdentityApiAuthorizationMessageHandler) 
 builder.Services.AddOidcAuthentication(options =>
 {
-    builder.Configuration.Bind("Identity", options.ProviderOptions);
+    options.ProviderOptions.Authority = "https://localhost:5001";
+    options.ProviderOptions.ClientId = "mat-album-wasm";
+    options.ProviderOptions.ResponseType = "code";
+
+    // Clear default scopes to avoid duplicates
+    options.ProviderOptions.DefaultScopes.Clear();
+    options.ProviderOptions.DefaultScopes.Add("openid");
+    options.ProviderOptions.DefaultScopes.Add("profile");
+    options.ProviderOptions.DefaultScopes.Add("email");
 });
 
 

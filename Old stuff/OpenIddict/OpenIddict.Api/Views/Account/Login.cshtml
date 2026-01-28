@@ -1,0 +1,8 @@
+﻿@model string
+
+<h2>Login</h2>
+
+<form method="post" action="/login/submit">
+    <input type="hidden" name="returnUrl" value="@Model" />
+    <button type="submit">Login as Matias</button>
+</form>
