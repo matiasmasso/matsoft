@@ -24,31 +24,40 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user == null) return Unauthorized();
-
-        if (!await _userManager.CheckPasswordAsync(user, request.Password))
-            return Unauthorized();
-
-        var claims = new[]
+        try
         {
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null) return Unauthorized();
+
+            if (!await _userManager.CheckPasswordAsync(user, request.Password))
+                return Unauthorized();
+
+            var claims = new[]
+            {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email!)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var token = new JwtSecurityToken(
-            issuer: _config["Jwt:Issuer"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds);
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: creds);
 
-        return Ok(new
+            var accessToken = new
+            {
+                accessToken = new JwtSecurityTokenHandler().WriteToken(token)
+            };
+            return Ok(accessToken);
+        }
+        catch (Exception ex)
         {
-            access_token = new JwtSecurityTokenHandler().WriteToken(token)
-        });
+            Console.WriteLine(ex.ToString());
+            return BadRequest(ex.Message);  
+        }
     }
 
     [HttpPost("register")]

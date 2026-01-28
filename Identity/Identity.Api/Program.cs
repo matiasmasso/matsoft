@@ -1,5 +1,6 @@
 using Identity.Api.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -68,6 +69,24 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex) when (IsSqlConnectionFailure(ex))
+    {
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = "Database connection failed. Check VPN or SQL Server availability."
+        });
+    }
+});
+
+
+
 // CORS must be before auth/authorization and before endpoints
 app.UseCors();
 
@@ -81,3 +100,17 @@ app.UseStaticFiles();
 app.MapControllers();
 
 app.Run();
+
+static bool IsSqlConnectionFailure(Exception ex)
+{
+    // Direct SQL exception
+    if (ex is SqlException) return true;
+
+    // EF Core wraps SQL exceptions in InvalidOperationException or DbUpdateException
+    if (ex.InnerException is SqlException) return true;
+
+    // Async pipeline often wraps everything in AggregateException
+    if (ex is AggregateException agg && agg.InnerException is SqlException) return true;
+
+    return false;
+}

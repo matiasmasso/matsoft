@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
-using System.IdentityModel.Tokens.Jwt;
+﻿using Identity.Client.Auth;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
-
-namespace Identity.Admin.Auth;
+using System.Threading.Tasks;
 
 public class JwtAuthenticationStateProvider : AuthenticationStateProvider
 {
@@ -15,22 +14,27 @@ public class JwtAuthenticationStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var token = await _tokenStore.GetTokenAsync();
+        var token = await _tokenStore.GetToken();
 
         if (string.IsNullOrWhiteSpace(token))
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
 
-        var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token);
-
-        var identity = new ClaimsIdentity(jwt.Claims, "jwt");
+        var claims = JwtParser.ParseClaims(token);
+        var identity = new ClaimsIdentity(claims, "jwt");
         var user = new ClaimsPrincipal(identity);
 
         return new AuthenticationState(user);
     }
 
-    public void NotifyAuthenticationStateChanged()
+    public async Task SetToken(string token)
     {
+        await _tokenStore.SetToken(token);
+        NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
+
+    public async Task Logout()
+    {
+        await _tokenStore.ClearToken();
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
     }
 }

@@ -1,6 +1,9 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Identity.Admin.Auth;
+namespace Identity.Client.Auth;
 
 public class JwtHttpHandler : DelegatingHandler
 {
@@ -11,9 +14,11 @@ public class JwtHttpHandler : DelegatingHandler
         _tokenStore = tokenStore;
     }
 
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
     {
-        var token = await _tokenStore.GetTokenAsync();
+        var token = await _tokenStore.GetToken();
 
         if (!string.IsNullOrWhiteSpace(token))
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

@@ -1,0 +1,32 @@
+﻿@inherits LayoutComponentBase
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <AuthorizeView>
+                <Authorized>
+                    <div style="padding:10px; background:#e0ffe0; border-radius:4px;">
+                        Logged in
+                        <a href="/logout" style="margin-left:10px;">Logout</a>
+                    </div>
+                </Authorized>
+
+                <NotAuthorized>
+                    <div style="padding:10px; background:#ffe0e0; border-radius:4px;">
+                        Not logged in
+                        <a href="/login" style="margin-left:10px;">Login</a>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>

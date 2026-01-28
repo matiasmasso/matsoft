@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<RazorLangVersion>Latest</RazorLangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Blazor auth primitives: AuthenticationStateProvider, AuthenticationState, CascadingAuthenticationState, AddAuthorizationCore -->
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.8" />
+
+		<!-- JS interop for LocalStorageTokenStore (if you use IJSRuntime) -->
+		<PackageReference Include="Microsoft.JSInterop" Version="8.0.8" />
+
+		<!-- JWT parsing -->
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+	</ItemGroup>
+
+</Project>
