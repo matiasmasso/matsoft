@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -61,6 +62,19 @@ public class AuthController : ControllerBase
 
         return Ok();
     }
+
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult Me()
+    {
+        return Ok(new
+        {
+            User = User.Identity!.Name,
+            Claims = User.Claims.Select(c => new { c.Type, c.Value })
+        });
+    }
+
+
 }
 
 public record LoginRequest(string Email, string Password);

@@ -1,7 +1,19 @@
 ﻿@page "/"
+@inject HttpClient Http
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+
+<button @onclick="TestApi">Test API</button>
+
+@code {
+    private async Task TestApi()
+    {
+        var result = await Http.GetStringAsync("/auth/me");
+        Console.WriteLine(result);
+    }
+}
