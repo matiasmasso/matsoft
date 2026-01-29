@@ -1,0 +1,105 @@
+﻿@page "/apps/{AppId:guid}/roles"
+@inject IAppRolesService RolesService
+@inject ToastService Toasts
+@inject ModalService Modal
+@inject NavigationManager Nav
+
+<h3>Roles</h3>
+
+<button class="btn btn-primary mb-3" @onclick="Add">Add Role</button>
+
+@if (Roles is null)
+{
+    <p>Loading…</p>
+}
+else if (Roles.Count == 0)
+{
+    <p>No roles defined.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th style="width:120px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Roles)
+            {
+                <tr>
+                    <td>@r.Name</td>
+                    <td>@r.Description</td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm" @onclick="() => Edit(r.Id)">Edit</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(r.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public Guid AppId { get; set; }
+
+    private List<AppRoleDto>? Roles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            Roles = await RolesService.GetAllAsync(AppId);
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+
+    private async Task Add()
+    {
+        var result = await Modal.OpenAsync<AppRoleDialog, bool?>(
+            "New Role",
+            new() { { "AppId", AppId } }
+        );
+
+        if (result is true)
+            await Load();
+    }
+
+    private async Task Edit(Guid id)
+    {
+        var result = await Modal.OpenAsync<AppRoleDialog, bool?>(
+            "Edit Role",
+            new() { { "RoleId", id }, { "AppId", AppId } }
+        );
+
+        if (result is true)
+            await Load();
+    }
+
+    private async Task Delete(Guid id)
+    {
+        if (!await Modal.ConfirmAsync("Delete this role"))
+            return;
+
+        try
+        {
+            await RolesService.DeleteAsync(AppId, id);
+            Toasts.ShowSuccess("Deleted");
+            await Load();
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+}

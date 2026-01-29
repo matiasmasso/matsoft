@@ -1,0 +1,69 @@
+﻿@inject IUserAppRolesService UserApps
+@inject ToastService Toasts
+@inject ModalService Modal
+
+@if (Roles is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="dialog">
+        <h3>Roles</h3>
+
+        @foreach (var r in Roles)
+        {
+            <div class="mb-2">
+                <input type="checkbox" @bind="r.Assigned" />
+                <label>@r.Name</label>
+            </div>
+        }
+
+        <div class="row mt-3">
+            <button class="btn btn-primary col" @onclick="Save">Save</button>
+            <button class="btn btn-secondary col" @onclick="() => Modal.Close()">Cancel</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid UserId { get; set; }
+    [Parameter] public Guid AppId { get; set; }
+
+    private List<AppRoleAssignmentDto>? Roles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Roles = await UserApps.GetRoleAssignmentsAsync(UserId, AppId);
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+            Modal.Close();
+        }
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            var request = new UpdateUserAppRolesRequest
+            {
+                UserId = UserId,
+                AppId = AppId,
+                RoleIds = Roles!.Where(r => r.Assigned).Select(r => r.Id).ToList()
+            };
+
+            await UserApps.UpdateAssignmentsAsync(request);
+
+            Toasts.ShowSuccess("Saved");
+            Modal.Close(true);
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+}

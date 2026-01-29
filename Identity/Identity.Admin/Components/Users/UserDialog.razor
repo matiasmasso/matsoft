@@ -1,0 +1,107 @@
+﻿@inject IUsersService UsersService
+@inject ToastService Toasts
+@inject ModalService Modal
+
+@if (IsNew && CreateModel is null)
+{
+    <p>Loading…</p>
+}
+else if (!IsNew && UpdateModel is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="dialog">
+        <h3>@(IsNew ? "New User" : "Edit User")</h3>
+
+        @if (IsNew)
+        {
+            <div class="mb-2">
+                <label>Email</label>
+                <input class="input" @bind="CreateModel!.Email" />
+            </div>
+
+            <div class="mb-2">
+                <label>Name</label>
+                <input class="input" @bind="CreateModel!.Name" />
+            </div>
+
+            <div class="mb-2">
+                <label>Password</label>
+                <input class="input" type="password" @bind="CreateModel!.Password" />
+            </div>
+        }
+        else
+        {
+            <div class="mb-2">
+                <label>Email</label>
+                <input class="input" @bind="UpdateModel!.Email" />
+            </div>
+
+            <div class="mb-2">
+                <label>Name</label>
+                <input class="input" @bind="UpdateModel!.Name" />
+            </div>
+        }
+
+        <div class="row mt-3">
+            <button class="btn btn-primary col" @onclick="Save">Save</button>
+            <button class="btn btn-secondary col" @onclick="() => Modal.Close()">Cancel</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? UserId { get; set; }
+
+    private bool IsNew => UserId is null;
+
+    private CreateUserRequest? CreateModel;
+    private UpdateUserRequest? UpdateModel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsNew)
+        {
+            CreateModel = new CreateUserRequest();
+        }
+        else
+        {
+            try
+            {
+                var dto = await UsersService.GetAsync(UserId!.Value);
+
+                UpdateModel = new UpdateUserRequest
+                {
+                    Id = dto.Id,
+                    Email = dto.Email,
+                    Name = dto.Name
+                };
+            }
+            catch (SafeHttpException ex)
+            {
+                Toasts.ShowError(ex.Normalized.Message);
+                Modal.Close();
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            if (IsNew)
+                await UsersService.CreateAsync(CreateModel!);
+            else
+                await UsersService.UpdateAsync(UpdateModel!);
+
+            Toasts.ShowSuccess("Saved");
+            Modal.Close(true);
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+}

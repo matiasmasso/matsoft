@@ -1,0 +1,38 @@
+﻿@page "/login"
+@inject NavigationManager Nav
+@inject JwtAuthenticationStateProvider AuthProvider
+@inject SafeHttp Http
+
+
+<h3>Login</h3>
+
+<input @bind="Email" placeholder="Email" />
+<input @bind="Password" placeholder="Password" type="password" />
+<button @onclick="Login">Login</button>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-danger">@Error</div>
+}
+
+
+@code {
+    private string? Error;
+    private string Email = "";
+    private string Password = "";
+
+    async Task Login()
+    {
+        var result = await Http.Post<AuthResult>("/auth/login", new LoginRequest(Email, Password));
+
+        if (!result.Success)
+        {
+            Error = result.Error;
+            return;
+        }
+
+        await AuthProvider.SetToken(result.Value.AccessToken);
+        Nav.NavigateTo("/");
+
+    }
+}

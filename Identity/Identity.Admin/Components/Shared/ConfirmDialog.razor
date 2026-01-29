@@ -1,0 +1,21 @@
+﻿@inject ModalService Modal
+
+<div>
+    <p>@Message</p>
+
+    <div class="row mt-3">
+        <button class="btn btn-primary col" @onclick="Confirm">Yes</button>
+        <button class="btn btn-secondary col" @onclick="Cancel">No</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public string Title { get; set; } = "Confirm";
+
+    private void Confirm()
+        => Modal.Close(true);
+
+    private void Cancel()
+        => Modal.Close(false);
+}

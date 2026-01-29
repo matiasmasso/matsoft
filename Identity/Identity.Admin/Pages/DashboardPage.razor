@@ -1,0 +1,52 @@
+﻿@page "/"
+@inject IDashboardService Dashboard
+@inject ToastService Toasts
+
+<h2>Dashboard</h2>
+
+@if (Data is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="dashboard-grid">
+
+        <div class="tile">
+            <h3>Apps</h3>
+            <p class="count">@Data.TotalApps</p>
+        </div>
+
+        <div class="tile">
+            <h3>Users</h3>
+            <p class="count">@Data.TotalUsers</p>
+        </div>
+
+        <div class="tile">
+            <h3>Roles</h3>
+            <p class="count">@Data.TotalRoles</p>
+        </div>
+
+        <div class="tile">
+            <h3>Secrets</h3>
+            <p class="count">@Data.TotalSecrets</p>
+        </div>
+
+    </div>
+}
+
+@code {
+    private DashboardDto? Data;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Data = await Dashboard.GetAsync();
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+}

@@ -1,0 +1,102 @@
+﻿@inject IAppsService AppsService
+@inject ToastService Toasts
+@inject ModalService Modal
+
+@if (Model is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="dialog">
+        <h3>@(IsNew ? "New App" : "Edit App")</h3>
+
+        <div class="mb-2">
+            <label>Name</label>
+            <input class="input" @bind="Model.Name" />
+        </div>
+
+        <div class="mb-2">
+            <label>Client ID</label>
+            <input class="input" @bind="Model.ClientId" />
+        </div>
+
+        <div class="mb-2">
+            <label>Description</label>
+            <input class="input" @bind="Model.Description" />
+        </div>
+
+        <div class="mb-2">
+            <label>Enabled</label>
+            <input type="checkbox" @bind="Model.Enabled" />
+        </div>
+
+        @if (!IsNew)
+        {
+            <hr />
+
+            <button class="btn btn-secondary mb-2"
+                    @onclick="OpenSecrets">
+                Manage Secrets
+            </button>
+        }
+
+        <div class="row mt-3">
+            <button class="btn btn-primary col" @onclick="Save">Save</button>
+            <button class="btn btn-secondary col" @onclick="() => Modal.Close()">Cancel</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? AppId { get; set; }
+
+    private AppDto? Model;
+    private bool IsNew => AppId is null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsNew)
+        {
+            Model = new AppDto { Enabled = true };
+        }
+        else
+        {
+            try
+            {
+                Model = await AppsService.GetAsync(AppId!.Value);
+            }
+            catch (SafeHttpException ex)
+            {
+                Toasts.ShowError(ex.Normalized.Message);
+                Modal.Close();
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            if (IsNew)
+                await AppsService.CreateAsync(Model!);
+            else
+                await AppsService.UpdateAsync(Model!);
+
+            Toasts.ShowSuccess("Saved");
+            Modal.Close(true);
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+
+    private async Task OpenSecrets()
+    {
+        await Modal.OpenAsync<AppSecretsDialog>("Manage Secrets", new Dictionary<string, object>
+        {
+            ["AppId"] = Model!.Id
+        });
+    }
+}

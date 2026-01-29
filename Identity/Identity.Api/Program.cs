@@ -1,4 +1,5 @@
 using Identity.Api.Data;
+using Identity.Api.Middleware;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -93,6 +94,7 @@ app.Use(async (context, next) =>
 
 // CORS must be before auth/authorization and before endpoints
 app.UseCors();
+app.UseGlobalExceptionHandling();
 
 app.UseAuthentication();
 app.UseAuthorization();

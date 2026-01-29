@@ -1,0 +1,50 @@
+﻿@inject ModalService Modal
+
+@if (Visible)
+{
+    <div class="dialog-backdrop" @onclick="BackdropClicked">
+        <div class="dialog" @onclick:stopPropagation="true">
+            <h3>@Title</h3>
+
+            <DynamicComponent Type="ComponentType" Parameters="Parameters" />
+
+            <div class="mt-3" style="text-align:right;">
+                <button class="btn btn-secondary" @onclick="() => Modal.Close()">Close</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool Visible;
+    private string Title = "";
+    private Type? ComponentType;
+    private Dictionary<string, object>? Parameters;
+
+    protected override void OnInitialized()
+    {
+        Modal.OnShow += Show;
+        Modal.OnClose += Close;
+    }
+
+    private Task Show(ModalRequest request)
+    {
+        Title = request.Title;
+        ComponentType = request.Component;
+        Parameters = request.Parameters;
+
+        Visible = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task Close()
+    {
+        Visible = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private void BackdropClicked()
+        => Modal.Close();
+}

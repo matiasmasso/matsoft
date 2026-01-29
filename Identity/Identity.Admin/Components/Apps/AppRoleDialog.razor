@@ -1,0 +1,107 @@
+﻿@inject IAppRolesService RolesService
+@inject ToastService Toasts
+@inject ModalService Modal
+
+@if (IsNew && CreateModel is null)
+{
+    <p>Loading…</p>
+}
+else if (!IsNew && UpdateModel is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="dialog">
+        <h3>@(IsNew ? "New Role" : "Edit Role")</h3>
+
+        @if (IsNew)
+        {
+            <div class="mb-2">
+                <label>Name</label>
+                <input class="input" @bind="CreateModel!.Name" />
+            </div>
+
+            <div class="mb-2">
+                <label>Description</label>
+                <input class="input" @bind="CreateModel!.Description" />
+            </div>
+        }
+        else
+        {
+            <div class="mb-2">
+                <label>Name</label>
+                <input class="input" @bind="UpdateModel!.Name" />
+            </div>
+
+            <div class="mb-2">
+                <label>Description</label>
+                <input class="input" @bind="UpdateModel!.Description" />
+            </div>
+        }
+
+        <div class="row mt-3">
+            <button class="btn btn-primary col" @onclick="Save">Save</button>
+            <button class="btn btn-secondary col" @onclick="() => Modal.Close()">Cancel</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? RoleId { get; set; }
+    [Parameter] public Guid AppId { get; set; }
+
+    private bool IsNew => RoleId is null;
+
+    private CreateAppRoleRequest? CreateModel;
+    private UpdateAppRoleRequest? UpdateModel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsNew)
+        {
+            CreateModel = new CreateAppRoleRequest
+            {
+                AppId = AppId
+            };
+        }
+        else
+        {
+            try
+            {
+                var dto = await RolesService.GetAsync(AppId, RoleId!.Value);
+
+                UpdateModel = new UpdateAppRoleRequest
+                {
+                    Id = dto.Id,
+                    AppId = AppId,
+                    Name = dto.Name,
+                    Description = dto.Description
+                };
+            }
+            catch (SafeHttpException ex)
+            {
+                Toasts.ShowError(ex.Normalized.Message);
+                Modal.Close();
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            if (IsNew)
+                await RolesService.CreateAsync(CreateModel!);
+            else
+                await RolesService.UpdateAsync(UpdateModel!);
+
+            Toasts.ShowSuccess("Saved");
+            Modal.Close(true);
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+}

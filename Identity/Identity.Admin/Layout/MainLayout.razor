@@ -1,0 +1,33 @@
+﻿@inherits LayoutComponentBase
+
+<div class="layout">
+
+    <ToastContainer></ToastContainer>
+    <SharedModal></SharedModal>
+
+    <nav class="sidebar">
+        <div class="logo">
+            <span>Identity Admin</span>
+        </div>
+
+        <ul class="nav-list">
+            <li><NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink></li>
+            <li><NavLink href="/apps">Apps</NavLink></li>
+            <li><NavLink href="/users">Users</NavLink></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <header class="topbar">
+            <h1>@Title</h1>
+        </header>
+
+        <div class="content">
+            @Body
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+}

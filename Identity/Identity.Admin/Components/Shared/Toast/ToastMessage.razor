@@ -1,0 +1,32 @@
+﻿@inherits ComponentBase
+
+<div class="toast-message @CssClass" @onclick="HandleClick">
+    @Message.Text
+</div>
+
+@code {
+    [Parameter] public ToastMessageModel Message { get; set; } = default!;
+
+    private string CssClass => Message.Type switch
+    {
+        ToastType.Success => "toast-success",
+        ToastType.Warning => "toast-warning",
+        ToastType.Error => "toast-error",
+        _ => ""
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Message.Sticky)
+        {
+            await Task.Delay(3000);
+            Message.Remove(Message);
+        }
+    }
+
+    private void HandleClick()
+    {
+        if (Message.Sticky)
+            Message.Remove(Message);
+    }
+}

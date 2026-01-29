@@ -1,0 +1,76 @@
+﻿@inject IUserAppRolesService UserApps
+@inject ToastService Toasts
+@inject ModalService Modal
+
+@if (Apps is null)
+{
+    <p>Loading…</p>
+}
+else
+{
+    <div class="dialog">
+        <h3>Apps for @UserEmail</h3>
+
+        @if (Apps.Count == 0)
+        {
+            <p>No apps available.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>App</th>
+                        <th style="width:120px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Apps)
+                    {
+                        <tr>
+                            <td>@a.Name</td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm"
+                                        @onclick="() => EditRoles(a.Id)">
+                                    Roles
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <div class="row mt-3">
+            <button class="btn btn-secondary col" @onclick="() => Modal.Close()">Close</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid UserId { get; set; }
+    [Parameter] public string UserEmail { get; set; } = "";
+
+    private List<UserAppDto>? Apps;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Apps = await UserApps.GetUserAppsAsync(UserId);
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+            Modal.Close();
+        }
+    }
+
+    private async Task EditRoles(Guid appId)
+    {
+        await Modal.OpenAsync<UserAppRolesDialog, object?>(
+            "Roles",
+            new() { { "UserId", UserId }, { "AppId", appId } }
+        );
+    }
+}

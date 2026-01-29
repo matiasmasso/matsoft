@@ -1,0 +1,22 @@
+﻿@using Identity.Admin.Services
+@inject ToastService Toasts
+
+<div class="toast-container">
+    @foreach (var toast in Toasts.Messages)
+    {
+        <ToastMessage Message="toast" />
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Toasts.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        Toasts.OnChange -= StateHasChanged;
+    }
+
+}

@@ -1,0 +1,118 @@
+﻿@page "/users"
+@inject IUsersService UsersService
+@inject ToastService Toasts
+@inject ModalService Modal
+
+<h3>Users</h3>
+
+<button class="btn btn-primary mb-3" @onclick="Add">New User</button>
+
+@if (Users is null)
+{
+    <p>Loading…</p>
+}
+else if (Users.Count == 0)
+{
+    <p>No users found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Enabled</th>
+                <th style="width:180px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in Users)
+            {
+                <tr>
+                    <td>@u.Email</td>
+                    <td>@u.Name</td>
+                    <td>@(u.Enabled ? "Yes" : "No")</td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm" @onclick="() => Edit(u.Id)">Edit</button>
+                        <button class="btn btn-warning btn-sm" @onclick="() => Toggle(u.Id)">
+                            @(u.Enabled ? "Disable" : "Enable")
+                        </button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(u.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<UserDto>? Users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            Users = await UsersService.GetAllAsync();
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+
+    private async Task Add()
+    {
+        var result = await Modal.OpenAsync<UserDialog, bool?>("New User");
+
+        if (result is true)
+            await Load();
+    }
+
+    private async Task Edit(Guid id)
+    {
+        var result = await Modal.OpenAsync<UserDialog, bool?>(
+            "Edit User",
+            new() { { "UserId", id } }
+        );
+
+        if (result is true)
+            await Load();
+    }
+
+    private async Task Toggle(Guid id)
+    {
+        try
+        {
+            await UsersService.ToggleEnabledAsync(id);
+            Toasts.ShowSuccess("Updated");
+            await Load();
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+
+    private async Task Delete(Guid id)
+    {
+        if (!await Modal.ConfirmAsync("Delete this user"))
+            return;
+
+        try
+        {
+            await UsersService.DeleteAsync(id);
+            Toasts.ShowSuccess("Deleted");
+            await Load();
+        }
+        catch (SafeHttpException ex)
+        {
+            Toasts.ShowError(ex.Normalized.Message);
+        }
+    }
+}
