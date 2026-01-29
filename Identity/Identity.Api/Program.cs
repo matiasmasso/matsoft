@@ -12,7 +12,11 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://localhost:7002")
+        policy.WithOrigins("https://localhost:7002",
+            "https://identity.admin.matiasmasso.es",
+            "https://album.matiasmasso.es",
+            "https://gen.matiasmasso.es",
+            "https://cash.tatita.eu")
               .AllowAnyHeader()
               .AllowAnyMethod();
         // .AllowCredentials() // not needed for token/discovery
