@@ -30,8 +30,8 @@
                         <td>@app.ClientId</td>
                         <td>@(app.Enabled ? "Yes" : "No")</td>
                         <td>
-                            <button class="btn btn-secondary" @onclick="() => Edit(app.Id)">Edit</button>
-                            <button class="btn btn-danger" @onclick="() => Delete(app.Id)">Delete</button>
+                            <button class="btn" @onclick="() => Edit(app.Id)">Edit</button>
+                            <button class="btn" @onclick="() => Delete(app.Id)">Delete</button>
                         </td>
                     </tr>
                 }
@@ -71,16 +71,17 @@
 
     private async Task Edit(Guid id)
     {
-
         var result = await Modal.OpenAsync<AppDialog, bool?>(
             "Edit App",
-            new() { { "AppId", id } }
-            );
+            new Dictionary<string, object>
+            {
+                ["AppId"] = id
+            }
+        );
 
-        if (result is true)
+        if (result == true)
             await LoadApps();
     }
-
     private async Task Delete(Guid id)
     {
         if (!await Modal.ConfirmAsync("Delete this app?"))

@@ -1,101 +1,121 @@
-﻿@page "/apps/{AppId:guid}/roles"
-@inject IAppRolesService RolesService
-@inject ToastService Toasts
+﻿@page "/apps/roles"
+@using Identity.Contracts.Apps
+@inject IAppsService Apps
+@inject IAppRolesService AppRoles
 @inject ModalService Modal
-@inject NavigationManager Nav
 
-<h3>Roles</h3>
+<h3>App Roles</h3>
 
-<button class="btn btn-primary mb-3" @onclick="Add">Add Role</button>
-
-@if (Roles is null)
+@if (AppsList is null)
 {
-    <p>Loading…</p>
-}
-else if (Roles.Count == 0)
-{
-    <p>No roles defined.</p>
+    <p>Loading apps...</p>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th style="width:120px;"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var r in Roles)
-            {
-                <tr>
-                    <td>@r.Name</td>
-                    <td>@r.Description</td>
-                    <td>
-                        <button class="btn btn-secondary btn-sm" @onclick="() => Edit(r.Id)">Edit</button>
-                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(r.Id)">Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <select @onchange="OnAppChanged">
+        <option value="">-- Select an app --</option>
+        @foreach (var app in AppsList)
+        {
+            <option value="@app.Id" selected="@(app.Id == SelectedAppId)">
+                @app.Name
+            </option>
+        }
+    </select>
+
+    @if (SelectedAppId != Guid.Empty)
+    {
+        <button class="btn" @onclick="CreateRole">New Role</button>
+
+        @if (Roles is null)
+        {
+            <p>Loading roles...</p>
+        }
+        else if (Roles.Count == 0)
+        {
+            <p>No roles defined for this app.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var role in Roles)
+                    {
+                        <tr>
+                            <td>@role.Name</td>
+                            <td>@role.Description</td>
+                            <td>
+                                <button class="btn" @onclick="() => EditRole(role)">Edit</button>
+                                <button class="btn btn-danger" @onclick="() => DeleteRole(role)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
 }
 
 @code {
-    [Parameter] public Guid AppId { get; set; }
-
+    private List<AppDto>? AppsList;
     private List<AppRoleDto>? Roles;
+    private Guid SelectedAppId;
 
     protected override async Task OnInitializedAsync()
     {
-        await Load();
+        var result = await Apps.GetAllAsync();
+        AppsList = result.Value;
     }
 
-    private async Task Load()
+    private async Task OnAppChanged(ChangeEventArgs e)
     {
-        var result = await RolesService.GetAllAsync(AppId);
-        if (!result.Success) return;
+        if (Guid.TryParse(e.Value?.ToString(), out var id))
+        {
+            SelectedAppId = id;
+            await LoadRoles();
+        }
+    }
+
+    private async Task LoadRoles()
+    {
+        var result = await AppRoles.GetAllAsync(SelectedAppId);
         Roles = result.Value;
-
     }
 
-    private async Task Add()
+    private async Task CreateRole()
     {
-        var result = await Modal.OpenAsync<AppRoleDialog, bool?>(
-            "New Role",
-            new() { { "AppId", AppId } }
-        );
-
-        if (result is true)
-            await Load();
-    }
-
-    private async Task Edit(Guid id)
-    {
-        var result = await Modal.OpenAsync<AppRoleDialog, bool?>(
-            "Edit Role",
-            new() { { "RoleId", id }, { "AppId", AppId } }
-        );
-
-        if (result is true)
-            await Load();
-    }
-
-    private async Task Delete(Guid id)
-    {
-        if (!await Modal.ConfirmAsync("Delete this role"))
-            return;
-
-        try
+        var parameters = new Dictionary<string, object>
         {
-            await RolesService.DeleteAsync(AppId, id);
-            Toasts.ShowSuccess("Deleted");
-            await Load();
-        }
-        catch (SafeHttpException ex)
+            ["AppId"] = SelectedAppId
+        };
+
+        var result = await Modal.OpenAsync<AppRoleDialog>("New Role", parameters) ?? false;
+        if (result)
+            await LoadRoles();
+    }
+
+    private async Task EditRole(AppRoleDto role)
+    {
+        var parameters = new Dictionary<string, object>
         {
-            Toasts.ShowError(ex.Normalized.Message);
-        }
+            ["AppId"] = SelectedAppId,
+            ["Role"] = role
+        };
+
+        var result = await Modal.OpenAsync<AppRoleDialog>("Edit Role", parameters) ?? false;
+        if (result)
+            await LoadRoles();
+    }
+
+    private async Task DeleteRole(AppRoleDto role)
+    {
+        await AppRoles.DeleteAsync(SelectedAppId, role.Id);
+        await LoadRoles();
     }
 }

@@ -31,10 +31,13 @@
     {
         Title = request.Title;
         ComponentType = request.Component;
-        Parameters = request.Parameters;
+        Parameters = request.Parameters is Dictionary<string, object> dict
+            ? dict
+            : new Dictionary<string, object>(request.Parameters);
 
         Visible = true;
         StateHasChanged();
+
         return Task.CompletedTask;
     }
 

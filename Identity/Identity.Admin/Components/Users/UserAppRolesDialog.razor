@@ -1,55 +1,68 @@
-﻿@inject IUserAppRolesService UserApps
-@inject ToastService Toasts
+﻿@using Identity.Contracts.Apps
+@using Identity.Contracts.Users
+@inject IAppRolesService AppRoles
+@inject IUserAppRolesService UserAppRoles
 @inject ModalService Modal
 
-@if (Roles is null)
-{
-    <p>Loading…</p>
-}
-else
-{
-    <div class="dialog">
-        <h3>Roles</h3>
+<div class="dialog-body">
+    <h3>Manage Roles</h3>
 
-        @foreach (var r in Roles)
-        {
-            <div class="mb-2">
-                <input type="checkbox" @bind="r.Assigned" />
-                <label>@r.Name</label>
-            </div>
-        }
+    @if (Roles is null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <ul class="roles-list">
+            @foreach (var role in Roles)
+            {
+                <li>
+                    <input type="checkbox"
+                           checked="@role.Assigned"
+                           @onchange="e => role.Assigned = (bool)e.Value!" />
+                    @role.Name
+                </li>
+            }
+        </ul>
+    }
 
-        <div class="row mt-3">
-            <button class="btn btn-primary col" @onclick="Save">Save</button>
-            <button class="btn btn-secondary col" @onclick="() => Modal.Close()">Cancel</button>
-        </div>
+    <div class="dialog-actions">
+        <button class="btn" @onclick="Save" disabled="@Saving">Save</button>
+        <button class="btn" @onclick="Cancel">Cancel</button>
     </div>
-}
+</div>
 
 @code {
     [Parameter] public Guid UserId { get; set; }
     [Parameter] public Guid AppId { get; set; }
 
     private List<AppRoleAssignmentDto>? Roles;
+    private bool Saving;
 
     protected override async Task OnInitializedAsync()
     {
-        var retval = await UserApps.GetRoleAssignmentsAsync(UserId, AppId);
-        if (!retval.Success) return;
-        Roles = retval.Value;
-
+        Roles = (await UserAppRoles.GetRoleAssignmentsAsync(UserId, AppId)).Value;
     }
 
     private async Task Save()
     {
-             var request = new UpdateUserAppRolesRequest
-            {
-                UserId = UserId,
-                AppId = AppId,
-                RoleIds = Roles!.Where(r => r.Assigned).Select(r => r.Id).ToList()
-            };
+        Saving = true;
 
-            await UserApps.UpdateAssignmentsAsync(request);
-            Modal.Close(true);
+        var request = new UpdateUserAppRolesRequest
+        {
+            UserId = UserId,
+            AppId = AppId,
+            RoleIds = Roles
+                .Where(r => r.Assigned)
+                .Select(r => r.Id)
+                .ToList()
+        };
+
+        await UserAppRoles.UpdateAssignmentsAsync(request);
+
+        Saving = false;
+        Modal.Close(true);
     }
+
+    private void Cancel() => Modal.Close(false);
 }

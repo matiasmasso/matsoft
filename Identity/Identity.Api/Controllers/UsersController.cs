@@ -106,4 +106,20 @@ public sealed class UsersController : ControllerBase
         await _db.SaveChangesAsync();
         return NoContent();
     }
+
+
+    [HttpGet("{userId:guid}/apps")]
+    public async Task<ActionResult<List<UserAppDto>>> GetAppsForUser(Guid userId)
+    {
+        return await _db.UserApps
+    .Where(x => x.UserId == userId)
+    .Select(x => new UserAppDto
+    {
+        Id = x.AppId,
+        Name = x.App.Name
+        //,Roles = x.Roles.Select(r => r.RoleName).ToList()
+    })
+    .ToListAsync();
+
+    }
 }

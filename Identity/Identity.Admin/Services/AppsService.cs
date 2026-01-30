@@ -6,7 +6,7 @@ public sealed class AppsService
     : CrudServiceBase<AppDto, AppDto, AppDto, AppDto>, IAppsService
 {
     public AppsService(SafeHttp http)
-        : base(http, "api/apps")
+        : base(http, "apps")
     {
     }
 

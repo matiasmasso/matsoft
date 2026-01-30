@@ -2,10 +2,11 @@
 using Identity.Contracts.Apps;
 using Identity.Contracts.Users;
 
+
 public sealed class UserAppRolesService(SafeHttp http) : IUserAppRolesService
 {
     public Task<Result<List<UserAppDto>>> GetUserAppsAsync(Guid userId)
-        => http.Get<List<UserAppDto>>($"users/{userId}/apps");
+        => http.Get<List<UserAppDto>>($"userapps/{userId}/apps");
 
     public Task<Result<List<AppRoleAssignmentDto>>> GetRoleAssignmentsAsync(Guid userId, Guid appId)
         => http.Get<List<AppRoleAssignmentDto>>($"users/{userId}/apps/{appId}/roles");

@@ -1,15 +1,19 @@
 ﻿using Identity.Admin.Components.Shared;
-
-namespace Identity.Admin.Services;
+using Identity.Admin.Services;
+using Microsoft.AspNetCore.Components;
 
 public sealed class ModalService
 {
     public event Func<ModalRequest, Task>? OnShow;
     public event Func<Task>? OnClose;
 
-    public TaskCompletionSource<object?>? _tcs;
+    private TaskCompletionSource<object?>? _tcs;
 
-    public Task<TResult?> OpenAsync<TComponent, TResult>(string title, Dictionary<string, object>? parameters = null)
+    public Task<TResult?> OpenAsync<TComponent, TResult>(
+        string title,
+        IReadOnlyDictionary<string, object>? parameters = null
+    )
+        where TComponent : IComponent
     {
         _tcs = new TaskCompletionSource<object?>();
 
@@ -17,7 +21,7 @@ public sealed class ModalService
         {
             Title = title,
             Component = typeof(TComponent),
-            Parameters = parameters ?? new()
+            Parameters = parameters ?? new Dictionary<string, object>()
         };
 
         OnShow?.Invoke(request);
@@ -25,14 +29,12 @@ public sealed class ModalService
         return _tcs.Task.ContinueWith(t => (TResult?)t.Result);
     }
 
-    public Task<bool?> OpenAsync<T>(string title, object parameters)
-    {
-        var dict = parameters.GetType()
-            .GetProperties()
-            .ToDictionary(p => p.Name, p => p.GetValue(parameters)!);
-
-        return OpenAsync<bool?>(title, dict);
-    }
+    public Task<bool?> OpenAsync<TComponent>(
+        string title,
+        IReadOnlyDictionary<string, object>? parameters = null
+    )
+        where TComponent : IComponent
+        => OpenAsync<TComponent, bool?>(title, parameters);
 
     public void Close(object? result = null)
     {
@@ -50,11 +52,4 @@ public sealed class ModalService
             }
         )!;
     }
-}
-
-public sealed class ModalRequest
-{
-    public string Title { get; set; } = default!;
-    public Type Component { get; set; } = default!;
-    public Dictionary<string, object> Parameters { get; set; } = new();
 }

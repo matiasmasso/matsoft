@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
-[Route("app-roles")]
+[Route("apps/{appId:guid}/roles")]
 public sealed class AppRolesController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -15,7 +15,7 @@ public sealed class AppRolesController : ControllerBase
         _db = db;
     }
 
-    [HttpGet("{appId:guid}")]
+    [HttpGet]
     public async Task<IEnumerable<AppRoleDto>> GetRoles(Guid appId)
     {
         return await _db.AppRoles
@@ -31,12 +31,21 @@ public sealed class AppRolesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<AppRoleDto>> Create(CreateAppRoleRequest dto)
+    public async Task<ActionResult<AppRoleDto>> Create(Guid appId, CreateAppRoleRequest dto)
     {
+        if (appId != dto.AppId)
+            return BadRequest("AppId mismatch");
+
+        var exists = await _db.AppRoles
+            .AnyAsync(r => r.AppId == appId && r.Name == dto.Name);
+
+        if (exists)
+            return Conflict("A role with this name already exists in this app.");
+
         var role = new AppRole
         {
             Id = Guid.NewGuid(),
-            AppId = dto.AppId,
+            AppId = appId,
             Name = dto.Name,
             Description = dto.Description
         };
@@ -53,13 +62,18 @@ public sealed class AppRolesController : ControllerBase
         };
     }
 
-    [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, UpdateAppRoleRequest dto)
+    [HttpPut("{roleId:guid}")]
+    public async Task<IActionResult> Update(Guid appId, Guid roleId, UpdateAppRoleRequest dto)
     {
-        if (id != dto.Id) return BadRequest();
+        if (roleId != dto.Id)
+            return BadRequest("RoleId mismatch");
 
-        var role = await _db.AppRoles.FindAsync(id);
-        if (role is null) return NotFound();
+        var role = await _db.AppRoles.FindAsync(roleId);
+        if (role is null)
+            return NotFound();
+
+        if (role.AppId != appId)
+            return BadRequest("Role does not belong to this app.");
 
         role.Name = dto.Name;
         role.Description = dto.Description;
@@ -68,14 +82,19 @@ public sealed class AppRolesController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    [HttpDelete("{roleId:guid}")]
+    public async Task<IActionResult> Delete(Guid appId, Guid roleId)
     {
-        var role = await _db.AppRoles.FindAsync(id);
-        if (role is null) return NotFound();
+        var role = await _db.AppRoles.FindAsync(roleId);
+        if (role is null)
+            return NotFound();
+
+        if (role.AppId != appId)
+            return BadRequest("Role does not belong to this app.");
 
         _db.AppRoles.Remove(role);
         await _db.SaveChangesAsync();
+
         return NoContent();
     }
 }

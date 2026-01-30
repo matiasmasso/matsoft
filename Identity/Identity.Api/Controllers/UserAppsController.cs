@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
-[Route("user-apps")]
+[Route("userapps")]
 public sealed class UserAppsController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -29,7 +29,7 @@ public sealed class UserAppsController : ControllerBase
     }
 
     [HttpPost("{userId:guid}/{appId:guid}")]
-    public async Task<IActionResult> Assign(Guid userId, Guid appId)
+    public async Task<IActionResult> Enroll(Guid userId, Guid appId)
     {
         var exists = await _db.UserApps.AnyAsync(x => x.UserId == userId && x.AppId == appId);
         if (exists) return NoContent();
@@ -41,17 +41,17 @@ public sealed class UserAppsController : ControllerBase
         });
 
         await _db.SaveChangesAsync();
-        return NoContent();
+        return Ok(true);
     }
 
     [HttpDelete("{userId:guid}/{appId:guid}")]
-    public async Task<IActionResult> Remove(Guid userId, Guid appId)
+    public async Task<IActionResult> UnEnroll(Guid userId, Guid appId)
     {
         var ua = await _db.UserApps.FindAsync(userId, appId);
         if (ua is null) return NotFound();
 
         _db.UserApps.Remove(ua);
         await _db.SaveChangesAsync();
-        return NoContent();
+        return Ok(true);
     }
 }

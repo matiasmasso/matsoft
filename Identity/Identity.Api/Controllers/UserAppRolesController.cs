@@ -1,11 +1,12 @@
 ﻿using Identity.Api.Data;
 using Identity.Api.Entities;
+using Identity.Contracts.Apps;
 using Identity.Contracts.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
-[Route("user-app-roles")]
+[Route("users")]
 public sealed class UserAppRolesController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -15,29 +16,33 @@ public sealed class UserAppRolesController : ControllerBase
         _db = db;
     }
 
-    [HttpGet("{userId:guid}/{appId:guid}")]
-    public async Task<IEnumerable<UserAppRoleDto>> GetRoles(Guid userId, Guid appId)
+    [HttpGet("{userId:guid}/apps/{appId:guid}/roles")]
+    public async Task<List<AppRoleAssignmentDto>> GetAssignments(Guid userId, Guid appId)
     {
-        var roles = await _db.AppRoles
+        var allRoles = await _db.AppRoles
             .Where(r => r.AppId == appId)
-            .Select(r => new UserAppRoleDto
-            {
-                RoleId = r.Id,
-                RoleName = r.Name,
-                Assigned = _db.UserAppRoles.Any(uar => uar.UserId == userId && uar.AppRoleId == r.Id)
-            })
             .ToListAsync();
 
-        return roles;
+        var assignedRoleIds = await _db.UserAppRoles
+            .Where(x => x.UserId == userId && x.AppRole.AppId == appId)
+            .Select(x => x.AppRoleId)
+            .ToListAsync();
+
+        return allRoles
+            .Select(r => new AppRoleAssignmentDto
+            {
+                Id = r.Id,
+                Name = r.Name,
+                Assigned = assignedRoleIds.Contains(r.Id)
+            })
+            .ToList();
     }
 
-    [HttpPost("update")]
-    public async Task<IActionResult> UpdateRoles(UpdateUserAppRolesRequest dto)
+    [HttpPut("{userId:guid}/apps/{appId:guid}/roles")]
+    public async Task<IActionResult> Update(Guid userId, Guid appId, UpdateUserAppRolesRequest dto)
     {
-        var existing = await _db.UserAppRoles
-            .Where(uar => uar.UserId == dto.UserId &&
-                          uar.AppRole.AppId == dto.AppId)
-            .ToListAsync();
+        var existing = _db.UserAppRoles
+            .Where(x => x.UserId == userId && x.AppRole.AppId == appId);
 
         _db.UserAppRoles.RemoveRange(existing);
 
@@ -45,12 +50,12 @@ public sealed class UserAppRolesController : ControllerBase
         {
             _db.UserAppRoles.Add(new UserAppRole
             {
-                UserId = dto.UserId,
+                UserId = userId,
                 AppRoleId = roleId
             });
         }
 
         await _db.SaveChangesAsync();
-        return NoContent();
+        return Ok(true);
     }
 }

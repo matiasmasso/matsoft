@@ -1,70 +1,105 @@
-﻿@inject IUserAppRolesService UserApps
-@inject ToastService Toasts
+﻿@using Identity.Admin.Services
+@inject IAppsService Apps
+@inject IUserAppsService UserApps
 @inject ModalService Modal
 
-@if (Apps is null)
-{
-    <p>Loading…</p>
-}
-else
-{
-    <div class="dialog">
-        <h3>Apps for @UserEmail</h3>
+<div class="dialog-body">
+    <h3>Manage Apps</h3>
 
-        @if (Apps.Count == 0)
-        {
-            <p>No apps available.</p>
-        }
-        else
-        {
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>App</th>
-                        <th style="width:120px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var a in Apps)
+    @if (Items.Count == 0)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <ul class="apps-list">
+            @foreach (var item in Items)
+            {
+                <li style="display:flex; align-items:center; gap:1rem;">
+                    <input type="checkbox"
+                           checked="@item.IsAssigned"
+                           @onchange="e => Toggle(item, e)" />
+
+                    <span>@item.Name</span>
+
+                    @if (item.IsAssigned)
                     {
-                        <tr>
-                            <td>@a.Name</td>
-                            <td>
-                                <button class="btn btn-secondary btn-sm"
-                                        @onclick="() => EditRoles(a.Id)">
-                                    Roles
-                                </button>
-                            </td>
-                        </tr>
+                        <button class="btn" @onclick="() => ManageRoles(item.AppId)">
+                            Roles
+                        </button>
                     }
-                </tbody>
-            </table>
-        }
+                </li>
+            }
+        </ul>
 
-        <div class="row mt-3">
-            <button class="btn btn-secondary col" @onclick="() => Modal.Close()">Close</button>
-        </div>
+    }
+
+    <div class="dialog-actions">
+        <button class="btn" @onclick="Close">Close</button>
     </div>
-}
-
+</div>
 @code {
     [Parameter] public Guid UserId { get; set; }
-    [Parameter] public string UserEmail { get; set; } = "";
 
-    private List<UserAppDto>? Apps;
+    private List<UserAppListItem> Items = new();
 
     protected override async Task OnInitializedAsync()
     {
-            var result = await UserApps.GetUserAppsAsync(UserId);
-            if (!result.Success) return;
-            Apps = result.Value;
+        // 1. Load all apps
+        var allAppsResult = await Apps.GetAllAsync();
+        if (!allAppsResult.Success) return;
+        var allApps = allAppsResult.Value;
+
+        // 2. Load apps assigned to the user
+        var userAppsResult = await UserApps.GetAllAsync(UserId);
+        if (!userAppsResult.Success) return;
+        var userApps = userAppsResult.Value;
+
+        // 3. Merge
+        Items = allApps
+            .Select(a => new UserAppListItem
+            {
+                AppId = a.Id,
+                Name = a.Name,
+                IsAssigned = userApps.Any(ua => ua.Id == a.Id)
+            })
+            .ToList();
     }
 
-    private async Task EditRoles(Guid appId)
+    private async Task Toggle(UserAppListItem item, ChangeEventArgs e)
     {
-        await Modal.OpenAsync<UserAppRolesDialog, object?>(
-            "Roles",
-            new() { { "UserId", UserId }, { "AppId", appId } }
-        );
+        var isChecked = (bool)e.Value!;
+        item.IsAssigned = isChecked;
+
+        Result<bool> result;
+        if (isChecked)
+            result = await UserApps.EnrollAsync(UserId, item.AppId);
+        else
+            result = await UserApps.UnEnrollAsync(UserId, item.AppId);
+        var success = result.Success;
+    }
+
+    private async Task ManageRoles(Guid appId)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            ["UserId"] = UserId,
+            ["AppId"] = appId
+        };
+
+        var result = await Modal.OpenAsync<UserAppRolesDialog>("Manage Roles", parameters);
+
+        // No need to reload apps — roles do not affect enrollment
+    }
+
+
+    private void Close() => Modal.Close(true);
+
+    private class UserAppListItem
+    {
+        public Guid AppId { get; set; }
+        public string Name { get; set; } = default!;
+        public bool IsAssigned { get; set; }
     }
 }
+

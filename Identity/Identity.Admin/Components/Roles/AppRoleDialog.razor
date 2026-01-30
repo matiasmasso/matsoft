@@ -1,0 +1,67 @@
+﻿@using Identity.Contracts.Apps
+@inject IAppRolesService AppRoles
+@inject ModalService Modal
+
+<div class="dialog-body">
+    <h3>@(IsEdit ? "Edit Role" : "New Role")</h3>
+
+    <div>
+        <label>Name</label>
+        <input type="text" @bind="Role.Name" />
+    </div>
+
+    <div>
+        <label>Description</label>
+        <textarea @bind="Role.Description"></textarea>
+    </div>
+
+    <div class="dialog-actions">
+        <button class="btn" @onclick="Save">Save</button>
+        <button class="btn" @onclick="Cancel">Cancel</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid AppId { get; set; }
+    [Parameter] public AppRoleDto? Role { get; set; }
+
+    private bool IsEdit => Role is not null;
+
+    private CreateAppRoleRequest CreateModel = new();
+    private UpdateAppRoleRequest UpdateModel = new();
+
+    private object Model => IsEdit ? UpdateModel : CreateModel;
+
+    protected override void OnInitialized()
+    {
+        if (IsEdit)
+        {
+            UpdateModel = new UpdateAppRoleRequest
+            {
+                Id = Role!.Id,
+                AppId = Role.AppId,
+                Name = Role.Name,
+                Description = Role.Description
+            };
+        }
+        else
+        {
+            CreateModel = new CreateAppRoleRequest
+            {
+                AppId = AppId
+            };
+        }
+    }
+
+    private async Task Save()
+    {
+        if (IsEdit)
+            await AppRoles.UpdateAsync(AppId, UpdateModel);
+        else
+            await AppRoles.CreateAsync(AppId, CreateModel);
+
+        Modal.Close(true);
+    }
+
+    private void Cancel() => Modal.Close(false);
+}

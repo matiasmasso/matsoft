@@ -9,3 +9,4 @@ public interface IAppsService
     Task<Result<AppDto>> UpdateAsync(AppDto dto);
     Task<Result<bool>> DeleteAsync(Guid id);
 }
+

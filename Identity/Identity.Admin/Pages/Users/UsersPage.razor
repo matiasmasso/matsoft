@@ -73,10 +73,13 @@ else
     {
         var result = await Modal.OpenAsync<UserDialog, bool?>(
             "Edit User",
-            new() { { "UserId", id } }
+            new Dictionary<string, object>
+            {
+                ["UserId"] = id
+            }
         );
 
-        if (result is true)
+        if (result == true)
             await Load();
     }
 

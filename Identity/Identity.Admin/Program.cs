@@ -15,7 +15,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<IErrorNotifier, ToastErrorNotifier>();
-builder.Services.AddIdentityClient("https://localhost:7001");
+builder.Services.AddIdentityClient("https://identity.api.matiasmasso.es");
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<JwtAuthenticationStateProvider>();
@@ -28,9 +28,11 @@ builder.Services.AddScoped<ITokenStore, LocalStorageTokenStore>();
 
 // App-specific services
 builder.Services.AddScoped<IUsersService, UsersService>();
-builder.Services.AddScoped<IAppRolesService, AppRolesService>();
 builder.Services.AddScoped<IAppsService, AppsService>();
 builder.Services.AddScoped<IAppSecretsService, AppSecretsService>();
+builder.Services.AddScoped<IAppRolesService, AppRolesService>();
+builder.Services.AddScoped<IUserAppsService, UserAppsService>();
+builder.Services.AddScoped<IUserAppRolesService, UserAppRolesService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ModalService>();
 
