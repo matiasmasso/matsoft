@@ -2,6 +2,8 @@ using Identity.Admin;
 using Identity.Admin.Services;
 using Identity.Client.Auth;
 using Identity.Client.Extensions;
+using Identity.Client.Http;
+using Identity.Client.Notifications;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -11,7 +13,10 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+builder.Services.AddScoped<ToastService>();
+builder.Services.AddScoped<IErrorNotifier, ToastErrorNotifier>();
 builder.Services.AddIdentityClient("https://localhost:7001");
+
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<JwtAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
@@ -28,6 +33,8 @@ builder.Services.AddScoped<IAppsService, AppsService>();
 builder.Services.AddScoped<IAppSecretsService, AppSecretsService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ModalService>();
-builder.Services.AddSingleton<ToastService>();
 
-await builder.Build().RunAsync();
+var host = builder.Build().RunAsync();
+
+
+

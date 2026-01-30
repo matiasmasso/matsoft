@@ -1,79 +1,167 @@
-/* Layout container */
-.layout {
+/* Layout grid */
+.layout-root {
     display: grid;
-    grid-template-columns: 240px 1fr;
-    height: 100vh;
-    overflow: hidden;
-}
-
-/* Sidebar */
-.sidebar {
-    background: #1f2937;
-    color: white;
-    padding: 1.5rem 1rem;
-    display: flex;
-    flex-direction: column;
-}
-
-.logo {
-    font-size: 1.4rem;
-    font-weight: bold;
-    margin-bottom: 2rem;
-    text-align: center;
-}
-
-.nav-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-    .nav-list li {
-        margin-bottom: 1rem;
-    }
-
-    .nav-list a {
-        color: #d1d5db;
-        text-decoration: none;
-        padding: .5rem 1rem;
-        display: block;
-        border-radius: 6px;
-        transition: background .2s, color .2s;
-    }
-
-        .nav-list a.active {
-            background: #374151;
-            color: white;
-        }
-
-        .nav-list a:hover {
-            background: #4b5563;
-            color: white;
-        }
-
-/* Main content area */
-.main {
-    display: flex;
-    flex-direction: column;
+    grid-template-columns: 150px 1fr;
+    grid-template-rows: 50px 1fr;
     height: 100vh;
     overflow: hidden;
 }
 
 /* Top bar */
 .topbar {
-    background: #f3f4f6;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    grid-column: 1 / span 2;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 1rem;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
 }
 
-    .topbar h1 {
-        margin: 0;
-        font-size: 1.4rem;
-        font-weight: 500;
-    }
+.hamburger {
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
 
-/* Page content */
+/* Sidebar */
+.sidebar {
+    background: #333;
+    color: white;
+    padding: 1rem;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+}
+
+/* Slide-in animation */
+.sidebar-closed .sidebar {
+    transform: translateX(-150px);
+}
+
+.sidebar-open .sidebar {
+    transform: translateX(0);
+}
+
+/* Main content */
 .content {
-    padding: 1.5rem;
+    padding: 1rem;
     overflow-y: auto;
 }
+
+/* Overlay (mobile only) */
+.overlay {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .layout-root {
+        grid-template-columns: 0 1fr;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 50px;
+        left: 0;
+        width: 150px;
+        height: calc(100vh - 50px);
+        z-index: 1000;
+    }
+
+    .overlay {
+        position: fixed;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 50px);
+        background: rgba(0,0,0,0.5);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 900;
+    }
+
+    .sidebar-open .overlay {
+        display: block;
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+/* Submenu + accordion */
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.25s ease;
+    padding-left: 1rem;
+}
+
+    .submenu.open {
+        max-height: 500px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .submenu li {
+        padding: 0.25rem 0;
+    }
+
+.submenu-toggle {
+    background: none;
+    border: none;
+    color: white;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.arrow {
+    transition: transform 0.25s ease;
+}
+
+    .arrow.open {
+        transform: rotate(90deg);
+    }
+
+/* Menu items + active state */
+.menu-item {
+    display: block;
+    padding: 0.35rem 0.5rem;
+    border-radius: 4px;
+    color: white;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+    .menu-item.active {
+        background: rgba(255, 255, 255, 0.15);
+        font-weight: 600;
+    }
+
+    /* Ripple effect */
+    .menu-item::after {
+        content: "";
+        position: absolute;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        transform: scale(0);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.4s ease, opacity 0.6s ease;
+        left: var(--ripple-x, 50%);
+        top: var(--ripple-y, 50%);
+    }
+
+    .menu-item.rippling::after {
+        transform: scale(20);
+        opacity: 1;
+    }

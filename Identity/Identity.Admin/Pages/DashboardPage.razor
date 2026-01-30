@@ -1,6 +1,5 @@
 ﻿@page "/"
 @inject IDashboardService Dashboard
-@inject ToastService Toasts
 
 <h2>Dashboard</h2>
 
@@ -40,13 +39,11 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            Data = await Dashboard.GetAsync();
-        }
-        catch (SafeHttpException ex)
-        {
-            Toasts.ShowError(ex.Normalized.Message);
-        }
+        var result = await Dashboard.GetAsync();
+
+        if (result.Success)
+            Data = result.Value;
+        else
+            Data = null; // SafeHttp already showed the toast
     }
 }

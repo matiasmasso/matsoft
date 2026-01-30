@@ -1,14 +1,14 @@
-﻿    using Identity.Contracts.Users;
-namespace Identity.Admin.Services
-{
+﻿using Identity.Client.Http;
+using Identity.Contracts.Users;
 
-    public interface IUsersService
-    {
-        Task<List<UserDto>> GetAllAsync();
-        Task<UserDto> GetAsync(Guid id);
-        Task CreateAsync(CreateUserRequest request);
-        Task UpdateAsync(UpdateUserRequest request);
-        Task DeleteAsync(Guid id);
-        Task ToggleEnabledAsync(Guid id);
-    }
+namespace Identity.Admin.Services;
+
+public interface IUsersService
+{
+    Task<Result<List<UserDto>>> GetAllAsync();
+    Task<Result<UserDto>> GetAsync(Guid id);
+    Task<Result<UserDto>> CreateAsync(CreateUserRequest request);
+    Task<Result<UserDto>> UpdateAsync(UpdateUserRequest request);
+    Task<Result<bool>> DeleteAsync(Guid id);
+    Task<Result<bool>> ToggleEnabledAsync(Guid id);
 }

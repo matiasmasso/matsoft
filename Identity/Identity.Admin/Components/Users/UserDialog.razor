@@ -68,9 +68,9 @@ else
         }
         else
         {
-            try
-            {
-                var dto = await UsersService.GetAsync(UserId!.Value);
+                var result = await UsersService.GetAsync(UserId!.Value);
+                if (!result.Success) return;
+                var dto = result.Value;
 
                 UpdateModel = new UpdateUserRequest
                 {
@@ -78,12 +78,7 @@ else
                     Email = dto.Email,
                     Name = dto.Name
                 };
-            }
-            catch (SafeHttpException ex)
-            {
-                Toasts.ShowError(ex.Normalized.Message);
-                Modal.Close();
-            }
+
         }
     }
 

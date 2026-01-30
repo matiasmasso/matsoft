@@ -1,33 +1,99 @@
 ﻿@inherits LayoutComponentBase
+@inject IJSRuntime JS
 
-<div class="layout">
-
+<div class="layout-root @(SidebarOpen ? "sidebar-open" : "sidebar-closed")">
+    <!-- Modal overlays -->
     <ToastContainer></ToastContainer>
     <SharedModal></SharedModal>
 
-    <nav class="sidebar">
-        <div class="logo">
-            <span>Identity Admin</span>
-        </div>
+    <!-- Mobile overlay -->
+    <div class="overlay" @onclick="CloseSidebar"></div>
 
-        <ul class="nav-list">
-            <li><NavLink href="/" Match="NavLinkMatch.All">Dashboard</NavLink></li>
-            <li><NavLink href="/apps">Apps</NavLink></li>
-            <li><NavLink href="/users">Users</NavLink></li>
-        </ul>
-    </nav>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <nav>
+            <ul>
+                <li>
+                    <button class="submenu-toggle" @onclick="@(() => ToggleSubmenu("Users"))">
+                        Users
+                        <span class="arrow @(OpenSubmenu == "Users" ? "open" : "")">▸</span>
+                    </button>
+                    <ul class="submenu @(OpenSubmenu == "Users" ? "open" : "")">
+                        <li>
+                            <NavLink href="/users/list"
+                                     id="menu-users-list"
+                                     class="menu-item"
+                                     @onclick="@((e) => TriggerRipple("menu-users-list", e))">
+                                List
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink href="/users/create"
+                                     id="menu-users-create"
+                                     class="menu-item"
+                                     @onclick="@((e) => TriggerRipple("menu-users-create", e))">
+                                Create
+                            </NavLink>
+                        </li>
+                    </ul>
+                </li>
 
-    <div class="main">
-        <header class="topbar">
-            <h1>@Title</h1>
-        </header>
+                <li>
+                    <button class="submenu-toggle" @onclick="@(() => ToggleSubmenu("Settings"))">
+                        Settings
+                        <span class="arrow @(OpenSubmenu == "Settings" ? "open" : "")">▸</span>
+                    </button>
+                    <ul class="submenu @(OpenSubmenu == "Settings" ? "open" : "")">
+                        <li>
+                            <NavLink href="/settings/profile"
+                                     id="menu-settings-profile"
+                                     class="menu-item"
+                                     @onclick="@((e) => TriggerRipple("menu-settings-profile", e))">
+                                Profile
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink href="/settings/security"
+                                     id="menu-settings-security"
+                                     class="menu-item"
+                                     @onclick="@((e) => TriggerRipple("menu-settings-security", e))">
+                                Security
+                            </NavLink>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </aside>
 
-        <div class="content">
-            @Body
-        </div>
-    </div>
+    <!-- Top bar -->
+    <header class="topbar">
+        <button class="hamburger" @onclick="ToggleSidebar">☰</button>
+    </header>
+
+    <!-- Main content -->
+    <main class="content">
+        @Body
+    </main>
+
 </div>
 
 @code {
-    [Parameter] public string Title { get; set; } = "";
+    private bool SidebarOpen = true;
+    private string? OpenSubmenu = null;
+
+    private void ToggleSidebar() => SidebarOpen = !SidebarOpen;
+    private void CloseSidebar() => SidebarOpen = false;
+
+    private void ToggleSubmenu(string name)
+    {
+        OpenSubmenu = OpenSubmenu == name ? null : name;
+    }
+
+    private async Task TriggerRipple(string elementId, MouseEventArgs e)
+    {
+        await JS.InvokeVoidAsync("sidebarRipple", elementId, e.ClientX, e.ClientY);
+    }
 }
+
+

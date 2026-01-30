@@ -55,15 +55,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            Apps = await UserApps.GetUserAppsAsync(UserId);
-        }
-        catch (SafeHttpException ex)
-        {
-            Toasts.ShowError(ex.Normalized.Message);
-            Modal.Close();
-        }
+            var result = await UserApps.GetUserAppsAsync(UserId);
+            if (!result.Success) return;
+            Apps = result.Value;
     }
 
     private async Task EditRoles(Guid appId)

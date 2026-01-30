@@ -53,19 +53,12 @@
 
     private async Task LoadApps()
     {
-        try
-        {
-            IsLoading = true;
-            Apps = await AppsService.GetAllAsync();
-        }
-        catch (SafeHttpException ex)
-        {
-            Toasts.ShowError(ex.Normalized.Message);
-        }
-        finally
-        {
+        IsLoading = true;
+        var result = await AppsService.GetAllAsync();
+        if (!result.Success) return;
+        Apps = result.Value;
             IsLoading = false;
-        }
+
     }
 
     private async Task Add()

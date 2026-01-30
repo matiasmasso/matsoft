@@ -56,14 +56,9 @@ else
 
     private async Task Load()
     {
-        try
-        {
-            Users = await UsersService.GetAllAsync();
-        }
-        catch (SafeHttpException ex)
-        {
-            Toasts.ShowError(ex.Normalized.Message);
-        }
+        var result = await UsersService.GetAllAsync();
+        if (!result.Success) return;
+        Users = result.Value;
     }
 
     private async Task Add()

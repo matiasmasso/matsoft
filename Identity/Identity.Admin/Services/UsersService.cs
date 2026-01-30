@@ -1,23 +1,20 @@
 ﻿using Identity.Admin.Services;
+using Identity.Client.Http;
+using Identity.Client.Services;
 using Identity.Contracts.Users;
 
-public sealed class UsersService(HttpClient http) : IUsersService
+
+public sealed class UsersService
+    : CrudServiceBase<UserDto, UserDto, CreateUserRequest, UpdateUserRequest>, IUsersService
 {
-    public Task<List<UserDto>> GetAllAsync()
-        => http.SafeGetAsync<List<UserDto>>("users");
+    public UsersService(SafeHttp http)
+        : base(http, "users")
+    {
+    }
 
-    public Task<UserDto> GetAsync(Guid id)
-        => http.SafeGetAsync<UserDto>($"users/{id}");
+    protected override Guid GetId(UpdateUserRequest request) => request.Id;
 
-    public Task CreateAsync(CreateUserRequest request)
-        => http.SafePostAsync("users", request);
-
-    public Task UpdateAsync(UpdateUserRequest request)
-        => http.SafePutAsync($"users/{request.Id}", request);
-
-    public Task DeleteAsync(Guid id)
-        => http.SafeDeleteAsync($"users/{id}");
-
-    public Task ToggleEnabledAsync(Guid id)
-        => http.SafePostAsync($"users/{id}/toggle-enabled", new { });
+    public Task<Result<bool>> ToggleEnabledAsync(Guid id)
+        => _http.Post<bool>($"users/{id}/toggle-enabled", new { }, "User status updated");
 }
+

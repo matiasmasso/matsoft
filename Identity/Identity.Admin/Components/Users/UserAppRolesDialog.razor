@@ -34,22 +34,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            Roles = await UserApps.GetRoleAssignmentsAsync(UserId, AppId);
-        }
-        catch (SafeHttpException ex)
-        {
-            Toasts.ShowError(ex.Normalized.Message);
-            Modal.Close();
-        }
+        var retval = await UserApps.GetRoleAssignmentsAsync(UserId, AppId);
+        if (!retval.Success) return;
+        Roles = retval.Value;
+
     }
 
     private async Task Save()
     {
-        try
-        {
-            var request = new UpdateUserAppRolesRequest
+             var request = new UpdateUserAppRolesRequest
             {
                 UserId = UserId,
                 AppId = AppId,
@@ -57,13 +50,6 @@ else
             };
 
             await UserApps.UpdateAssignmentsAsync(request);
-
-            Toasts.ShowSuccess("Saved");
             Modal.Close(true);
-        }
-        catch (SafeHttpException ex)
-        {
-            Toasts.ShowError(ex.Normalized.Message);
-        }
     }
 }

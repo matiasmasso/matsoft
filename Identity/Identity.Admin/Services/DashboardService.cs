@@ -1,12 +1,10 @@
-﻿using Identity.Contracts.Dashboard;
-using Identity.Client.Http;
+﻿using Identity.Client.Http;
+using Identity.Contracts.Dashboard;
 
-namespace Identity.Admin.Services
+namespace Identity.Admin.Services;
+
+public sealed class DashboardService(SafeHttp http) : IDashboardService
 {
-    public sealed class DashboardService(HttpClient http) : IDashboardService
-    {
-        public Task<DashboardDto> GetAsync()
-            => http.SafeGetAsync<DashboardDto>("dashboard");
-    }
-
+    public Task<Result<DashboardDto>> GetAsync()
+        => http.Get<DashboardDto>("dashboard");
 }

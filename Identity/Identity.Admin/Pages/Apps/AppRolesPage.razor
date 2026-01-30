@@ -54,14 +54,10 @@ else
 
     private async Task Load()
     {
-        try
-        {
-            Roles = await RolesService.GetAllAsync(AppId);
-        }
-        catch (SafeHttpException ex)
-        {
-            Toasts.ShowError(ex.Normalized.Message);
-        }
+        var result = await RolesService.GetAllAsync(AppId);
+        if (!result.Success) return;
+        Roles = result.Value;
+
     }
 
     private async Task Add()

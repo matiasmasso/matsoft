@@ -9,20 +9,25 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. CORS for the WASM client
+
+// Read array from config
+var allowedOrigins = builder.Configuration
+    .GetSection("AllowedCorsOrigins")
+    .Get<string[]>();
+
+if (allowedOrigins == null || allowedOrigins.Length == 0)
+    throw new Exception("No CORS origins configured. Add AllowedCorsOrigins to appsettings.json.");
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://localhost:7002",
-            "https://identity.admin.matiasmasso.es",
-            "https://album.matiasmasso.es",
-            "https://gen.matiasmasso.es",
-            "https://cash.tatita.eu")
+        policy.WithOrigins(allowedOrigins!)
               .AllowAnyHeader()
               .AllowAnyMethod();
-        // .AllowCredentials() // not needed for token/discovery
     });
 });
+
 
 // 2. Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -44,6 +49,8 @@ builder.Services.ConfigureApplicationCookie(options =>
         return Task.CompletedTask;
     };
 });
+
+
 
 
 // 4. JWT Authentication
@@ -94,7 +101,7 @@ app.Use(async (context, next) =>
 
 // CORS must be before auth/authorization and before endpoints
 app.UseCors();
-app.UseGlobalExceptionHandling();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -67,23 +67,17 @@ else
         }
         else
         {
-            try
+            var result = await RolesService.GetAsync(AppId, RoleId!.Value);
+            if (!result.Success) return;
+            var dto = result.Value;
+            UpdateModel = new UpdateAppRoleRequest
             {
-                var dto = await RolesService.GetAsync(AppId, RoleId!.Value);
+                Id = dto.Id,
+                AppId = AppId,
+                Name = dto.Name,
+                Description = dto.Description
+            };
 
-                UpdateModel = new UpdateAppRoleRequest
-                {
-                    Id = dto.Id,
-                    AppId = AppId,
-                    Name = dto.Name,
-                    Description = dto.Description
-                };
-            }
-            catch (SafeHttpException ex)
-            {
-                Toasts.ShowError(ex.Normalized.Message);
-                Modal.Close();
-            }
         }
     }
 
@@ -92,9 +86,9 @@ else
         try
         {
             if (IsNew)
-                await RolesService.CreateAsync(CreateModel!);
+                await RolesService.CreateAsync(AppId, CreateModel!);
             else
-                await RolesService.UpdateAsync(UpdateModel!);
+                await RolesService.UpdateAsync(AppId, UpdateModel!);
 
             Toasts.ShowSuccess("Saved");
             Modal.Close(true);

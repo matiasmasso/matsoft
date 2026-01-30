@@ -1,17 +1,19 @@
-﻿using Identity.Contracts.Apps;
+﻿using Identity.Client.Http;
+using Identity.Contracts.Apps;
 using Identity.Contracts.Users;
 
-public sealed class UserAppRolesService(HttpClient http) : IUserAppRolesService
+public sealed class UserAppRolesService(SafeHttp http) : IUserAppRolesService
 {
-    public Task<List<UserAppDto>> GetUserAppsAsync(Guid userId)
-        => http.SafeGetAsync<List<UserAppDto>>($"users/{userId}/apps");
+    public Task<Result<List<UserAppDto>>> GetUserAppsAsync(Guid userId)
+        => http.Get<List<UserAppDto>>($"users/{userId}/apps");
 
-    public Task<List<AppRoleAssignmentDto>> GetRoleAssignmentsAsync(Guid userId, Guid appId)
-        => http.SafeGetAsync<List<AppRoleAssignmentDto>>($"users/{userId}/apps/{appId}/roles");
+    public Task<Result<List<AppRoleAssignmentDto>>> GetRoleAssignmentsAsync(Guid userId, Guid appId)
+        => http.Get<List<AppRoleAssignmentDto>>($"users/{userId}/apps/{appId}/roles");
 
-    public Task UpdateAssignmentsAsync(UpdateUserAppRolesRequest request)
-        => http.SafePutAsync(
+    public Task<Result<bool>> UpdateAssignmentsAsync(UpdateUserAppRolesRequest request)
+        => http.Put<bool>(
             $"users/{request.UserId}/apps/{request.AppId}/roles",
-            request
+            request,
+            "Role assignments updated successfully"
         );
 }

@@ -1,10 +1,11 @@
-﻿using Identity.Contracts.Apps;
+﻿using Identity.Client.Http;
+using Identity.Contracts.Apps;
 
 public interface IAppRolesService
 {
-    Task<List<AppRoleDto>> GetAllAsync(Guid appId);
-    Task<AppRoleDto> GetAsync(Guid appId, Guid roleId);
-    Task CreateAsync(CreateAppRoleRequest request);
-    Task UpdateAsync(UpdateAppRoleRequest request);
-    Task DeleteAsync(Guid appId, Guid roleId);
+    Task<Result<List<AppRoleDto>>> GetAllAsync(Guid appId);
+    Task<Result<AppRoleDto>> GetAsync(Guid appId, Guid roleId);
+    Task<Result<AppRoleDto>> CreateAsync(Guid appId, CreateAppRoleRequest request);
+    Task<Result<AppRoleDto>> UpdateAsync(Guid appId, UpdateAppRoleRequest request);
+    Task<Result<bool>> DeleteAsync(Guid appId, Guid roleId);
 }

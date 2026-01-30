@@ -62,15 +62,9 @@ else
         }
         else
         {
-            try
-            {
-                Model = await AppsService.GetAsync(AppId!.Value);
-            }
-            catch (SafeHttpException ex)
-            {
-                Toasts.ShowError(ex.Normalized.Message);
-                Modal.Close();
-            }
+            var result = await AppsService.GetAsync(AppId!.Value);
+            if (!result.Success) return;
+            Model = result.Value;
         }
     }
 
