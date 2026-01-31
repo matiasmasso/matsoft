@@ -1,4 +1,30 @@
-﻿
-@code {
+﻿<nav class="menu">
+    @foreach (var item in model.Items)
+    {
+        <div class="menu-item">
+            <NavLink href="/home" @onclick="@(() => ItemClickAsync(item))">@item.Title</NavLink>
+        </div>
+    }
+</nav>
 
+@code {
+    [Parameter] public EventCallback<MenuModel.Item> OnClick { get; set; }
+    private MenuModel model = new();
+
+    private record MenuiItem(string Caption, string Target);
+
+    protected override void OnInitialized()
+    {
+        model = new();
+        model.AddItem("Inici", "/");
+        model.AddItem("Apps", "/apps");
+        model.AddItem("Usuaris", "/users");
+        model.AddItem("Rols", "/apps/roles");
+    }
+
+    private async Task ItemClickAsync(MenuModel.Item item)
+    {
+        model.SelectedItem = item;
+        await OnClick.InvokeAsync(item);
+    }
 }

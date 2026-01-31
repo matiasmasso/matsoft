@@ -7,6 +7,7 @@
     flex-direction: column;
     gap: .75rem;
     pointer-events: none; /* container ignores clicks */
+    cursor:pointer;
 }
 
 

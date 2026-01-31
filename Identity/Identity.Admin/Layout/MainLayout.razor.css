@@ -9,6 +9,7 @@ header {
     justify-content: space-between;
     padding: 10px;
     align-items: center;
+    z-index: 1000;
 }
 
 .logo {
@@ -52,11 +53,8 @@ main {
 }
 
 
-.menu a {
-    display:block;
-    text-decoration:none;
-    color: black;
-}
+
+
 
 
 @media (max-width: 768px) {
@@ -77,10 +75,24 @@ main {
         transition: transform 0.3s ease;
     }
 
+    .sidebar {
+        background: #222;
+        color: white;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: transform 0.3s ease;
+        /* Right border shadow */
+        box-shadow: 4px 0 12px rgba(0,0,0,0.35);
+    }
+
         /* When open */
         .sidebar.open {
             transform: translateX(0);
         }
+
+
 
     /* Main should NOT move on mobile */
     main {
