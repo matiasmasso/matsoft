@@ -1,0 +1,14 @@
+﻿.side-nav .nav-link {
+    display: block;
+    text-decoration: none;
+    color: black;
+}
+
+
+@media (max-width: 768px) {
+    .side-nav .nav-link {
+        padding: 10px 15px;
+        border-bottom: 1px solid #ddd;
+        color: white;
+    }
+}

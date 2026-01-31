@@ -1,9 +1,11 @@
-﻿<nav class="menu">
+﻿<nav class="side-nav">
     @foreach (var item in model.Items)
     {
-        <div class="menu-item">
-            <NavLink href="/home" @onclick="@(() => ItemClickAsync(item))">@item.Title</NavLink>
-        </div>
+        <NavLink class="nav-link"
+                 href="@item.Url"
+                 @onclick="@(async e => await ItemClickAsync(item))">
+            @item.Title
+        </NavLink>
     }
 </nav>
 

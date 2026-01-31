@@ -31,14 +31,34 @@
 
 </div>
 
+@inject IJSRuntime JS
+
 @code {
-    private bool SidebarOpen = true;
+    private bool SidebarOpen = true;   // desktop default
+    private bool IsMobile = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            IsMobile = await JS.InvokeAsync<bool>("isMobile");
+
+            // Mobile default = closed
+            if (IsMobile)
+                SidebarOpen = false;
+
+            StateHasChanged();
+        }
+    }
 
     void ToggleSidebar() => SidebarOpen = !SidebarOpen;
-    void CloseSidebar() => SidebarOpen = false;
 
-    void MenuItemClick(MenuModel.Item item)
+    async Task MenuItemClick(MenuModel.Item item)
     {
-        CloseSidebar();
+        // Only close sidebar on mobile
+        if (IsMobile)
+            SidebarOpen = false;
+
     }
 }
+
