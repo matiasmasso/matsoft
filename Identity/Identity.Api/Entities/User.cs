@@ -1,9 +1,8 @@
 ﻿using Identity.Api.Entities;
+using Microsoft.AspNetCore.Identity;
 
-public sealed class User
+public sealed class User : IdentityUser<Guid>
 {
-    public Guid Id { get; set; }
-    public string Email { get; set; } = default!;
     public string DisplayName { get; set; } = default!;
     public bool Enabled { get; set; }
 

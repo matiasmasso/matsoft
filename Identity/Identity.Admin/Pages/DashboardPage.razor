@@ -1,4 +1,7 @@
 ﻿@page "/"
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
 @inject IDashboardService Dashboard
 
 <h2>Dashboard</h2>
@@ -35,6 +38,7 @@ else
 }
 
 @code {
+
     private DashboardDto? Data;
 
     protected override async Task OnInitializedAsync()

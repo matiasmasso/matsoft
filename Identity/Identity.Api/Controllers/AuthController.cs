@@ -12,10 +12,10 @@ namespace Identity.Api.Controllers;
 [Route("auth")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<User> _userManager;
     private readonly IConfiguration _config;
 
-    public AuthController(UserManager<IdentityUser> userManager, IConfiguration config)
+    public AuthController(UserManager<User> userManager, IConfiguration config)
     {
         _userManager = userManager;
         _config = config;
@@ -34,7 +34,7 @@ public class AuthController : ControllerBase
 
             var claims = new[]
             {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email!)
         };
 
@@ -63,7 +63,7 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] LoginRequest request)
     {
-        var user = new IdentityUser { UserName = request.Email, Email = request.Email };
+        var user = new User { UserName = request.Email, Email = request.Email, DisplayName=request.Email };
         var result = await _userManager.CreateAsync(user, request.Password);
 
         if (!result.Succeeded)

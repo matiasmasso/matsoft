@@ -5,7 +5,7 @@ public sealed class UserAppRoleConfiguration : IEntityTypeConfiguration<UserAppR
 {
     public void Configure(EntityTypeBuilder<UserAppRole> b)
     {
-        b.ToTable("UserAppRoles");
+        //b.ToTable("UserAppRoles");
 
         b.HasKey(x => new { x.UserId, x.AppRoleId });
 

@@ -1,8 +1,8 @@
-﻿public sealed class AppRole
+﻿using Microsoft.AspNetCore.Identity;
+
+public sealed class AppRole : IdentityRole<Guid>
 {
-    public Guid Id { get; set; }
     public Guid AppId { get; set; }
-    public string Name { get; set; } = default!;
     public string? Description { get; set; }
 
     public App App { get; set; } = default!;

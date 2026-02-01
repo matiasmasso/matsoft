@@ -15,7 +15,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<IErrorNotifier, ToastErrorNotifier>();
-builder.Services.AddIdentityClient("https://identity.api.matiasmasso.es");
+builder.Services.AddIdentityClient("https://localhost:7001");
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<JwtAuthenticationStateProvider>();
